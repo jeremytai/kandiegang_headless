@@ -1,0 +1,5 @@
+{
+  "name": "Kandie Gang / React x Headless Wordpress",
+  "description": "A high-fidelity cycling club platform integrated with a type-safe WordPress bridge using GraphQL. Features dynamic editorial content, editorial layouts, and high-performance data fetching.",
+  "requestFramePermissions": []
+}

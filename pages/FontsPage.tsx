@@ -1,0 +1,313 @@
+/**
+ * FontsPage.tsx
+ * A comprehensive showcase of all fonts used in the application.
+ * Features:
+ * - Display of all font families (GT-Pressura, GT-Pressura-Mono, Cambon)
+ * - All available weights and styles
+ * - Sample text at various sizes
+ * - Character set displays
+ * - Usage examples
+ */
+
+import React from 'react';
+import { motion } from 'framer-motion';
+
+export const FontsPage: React.FC = () => {
+  // Helper function to get font showcase class name
+  const getFontClass = (family: string): string => {
+    if (family === 'GT-Pressura') return 'font-showcase-gt-pressura';
+    if (family === 'GT-Pressura-Mono') return 'font-showcase-gt-pressura-mono';
+    if (family === 'Cambon') return 'font-showcase-cambon';
+    return '';
+  };
+
+  // Helper function to get font weight class
+  const getFontWeightClass = (weight: number): string => {
+    const weightMap: Record<number, string> = {
+      400: 'font-weight-400',
+      500: 'font-weight-500',
+      600: 'font-weight-600',
+      700: 'font-weight-700'
+    };
+    return weightMap[weight] || '';
+  };
+
+  // Helper function to get font style class
+  const getFontStyleClass = (style: string): string => {
+    return style === 'italic' ? 'font-style-italic' : 'font-style-normal';
+  };
+
+  const fontFamilies = [
+    {
+      name: 'GT-Pressura',
+      description: 'Headlines',
+      family: 'GT-Pressura',
+      weights: [
+        { weight: 700, style: 'normal', label: 'Bold' }
+      ],
+      sample: 'The quick brown fox jumps over the lazy dog',
+      sizes: ['text-6xl', 'text-4xl', 'text-2xl', 'text-xl'],
+      usage: 'Used for all headings (h1, h2, h3, h4, h5, h6)'
+    },
+    {
+      name: 'GT-Pressura-Mono',
+      description: 'Subheadlines',
+      family: 'GT-Pressura-Mono',
+      weights: [
+        { weight: 400, style: 'normal', label: 'Regular' },
+        { weight: 700, style: 'normal', label: 'Bold' }
+      ],
+      sample: 'The quick brown fox jumps over the lazy dog',
+      sizes: ['text-4xl', 'text-3xl', 'text-2xl', 'text-xl'],
+      usage: 'Used for subheadlines with the .subheadline class'
+    },
+    {
+      name: 'Cambon',
+      description: 'Body text and paragraphs',
+      family: 'Cambon',
+      weights: [
+        { weight: 400, style: 'normal', label: 'Regular' },
+        { weight: 400, style: 'italic', label: 'Italic' },
+        { weight: 500, style: 'normal', label: 'Medium' },
+        { weight: 600, style: 'normal', label: 'SemiBold' },
+        { weight: 700, style: 'normal', label: 'Bold' }
+      ],
+      sample: 'The quick brown fox jumps over the lazy dog. 1234567890',
+      sizes: ['text-2xl', 'text-xl', 'text-lg', 'text-base'],
+      usage: 'Used for all body text, paragraphs, and list items'
+    }
+  ];
+
+  const characterSets = {
+    uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    lowercase: 'abcdefghijklmnopqrstuvwxyz',
+    numbers: '0123456789',
+    punctuation: '.,;:!?\'"()[]{}@#$%^&*-+=/\\|<>`~'
+  };
+
+  return (
+    <div className="bg-white min-h-screen py-20 px-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-20 text-center"
+        >
+          <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-slate-900 mb-6">
+            Typography Showcase
+          </h1>
+          <p className="text-xl text-slate-500 max-w-2xl mx-auto font-light">
+            A comprehensive display of all fonts used throughout the Kandie Gang website
+          </p>
+        </motion.div>
+
+        {/* Font Families */}
+        {fontFamilies.map((font, index) => (
+          <motion.section
+            key={font.name}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="mb-32"
+          >
+            <div className="border-b border-slate-200 pb-8 mb-12">
+              <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-slate-900 mb-3">
+                {font.name}
+              </h2>
+              <p className="text-lg text-slate-500 font-light">{font.description}</p>
+              <p className="text-sm text-slate-400 mt-2 font-mono">
+                font-family: '{font.family}'
+              </p>
+              <p className="text-sm text-slate-400 mt-1">
+                Usage: {font.usage}
+              </p>
+            </div>
+
+            {/* Weights and Styles */}
+            <div className="space-y-16 mb-16">
+              {font.weights.map((weight, weightIndex) => (
+                <div key={`${weight.weight}-${weight.style}`} className="space-y-8">
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-4 py-2 rounded-full">
+                      {weight.label} ({weight.weight})
+                      {weight.style === 'italic' && ' • Italic'}
+                    </span>
+                    <code className="text-xs text-slate-400 font-mono">
+                      font-weight: {weight.weight}; font-style: {weight.style};
+                    </code>
+                  </div>
+
+                  {/* Size Samples */}
+                  <div className="space-y-6">
+                    {font.sizes.map((size, sizeIndex) => (
+                      <div key={sizeIndex} className="border-l-4 border-[#f9f100] pl-6">
+                        <div className="flex items-baseline gap-4 mb-2">
+                          <span className="text-xs font-mono text-slate-400 min-w-[80px]">
+                            {size}
+                          </span>
+                          <span
+                            className={`${size} ${getFontClass(font.family)} ${getFontWeightClass(weight.weight)} ${getFontStyleClass(weight.style)}`}
+                          >
+                            {font.sample}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Character Set */}
+            <div className="bg-slate-50 rounded-2xl p-8 space-y-6">
+              <h3 className="text-xl font-bold text-slate-900">Character Set</h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                    Uppercase
+                  </p>
+                  <p className={`text-2xl ${getFontClass(font.family)}`}>
+                    {characterSets.uppercase}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                    Lowercase
+                  </p>
+                  <p className={`text-2xl ${getFontClass(font.family)}`}>
+                    {characterSets.lowercase}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                    Numbers
+                  </p>
+                  <p className={`text-2xl ${getFontClass(font.family)}`}>
+                    {characterSets.numbers}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                    Punctuation
+                  </p>
+                  <p className={`text-xl ${getFontClass(font.family)}`}>
+                    {characterSets.punctuation}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        ))}
+
+        {/* CSS Variables Reference */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-32 bg-slate-900 text-white rounded-3xl p-12"
+        >
+          <h2 className="text-4xl font-bold mb-8">CSS Variables</h2>
+          <div className="space-y-4 font-mono text-sm">
+            <div className="bg-slate-800 rounded-lg p-4">
+              <div className="text-slate-400 mb-2">CSS Custom Properties:</div>
+              <div className="space-y-2 text-slate-200">
+                <div><span className="text-[#f9f100]">--font-headline:</span> 'GT-Pressura', sans-serif</div>
+                <div><span className="text-[#f9f100]">--font-subheadline:</span> 'GT-Pressura-Mono', monospace</div>
+                <div><span className="text-[#f9f100]">--font-body:</span> 'Cambon', serif</div>
+              </div>
+            </div>
+            <div className="bg-slate-800 rounded-lg p-4">
+              <div className="text-slate-400 mb-2">Utility Classes:</div>
+              <div className="space-y-2 text-slate-200">
+                <div><span className="text-[#f9f100]">.font-headline</span> - Apply GT-Pressura</div>
+                <div><span className="text-[#f9f100]">.font-subheadline</span> - Apply GT-Pressura-Mono</div>
+                <div><span className="text-[#f9f100]">.font-body</span> - Apply Cambon</div>
+                <div><span className="text-[#f9f100]">.subheadline</span> - Apply GT-Pressura-Mono to subheadlines</div>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Usage Examples */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-32"
+        >
+          <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-slate-900 mb-12">
+            Usage Examples
+          </h2>
+          <div className="space-y-16">
+            {/* Headline Example */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+                Headline (GT-Pressura)
+              </h3>
+              <div className="border border-slate-200 rounded-2xl p-8 bg-slate-50">
+                <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-slate-900 mb-4">
+                  Say hello to Kandie Gang.
+                </h1>
+                <p className="text-sm text-slate-500 font-mono">
+                  &lt;h1 className="text-6xl font-bold"&gt;
+                </p>
+              </div>
+            </div>
+
+            {/* Subheadline Example */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+                Subheadline (GT-Pressura-Mono)
+              </h3>
+              <div className="border border-slate-200 rounded-2xl p-8 bg-slate-50">
+                <h2 className="text-3xl md:text-4xl font-subheadline font-bold text-slate-900 mb-4">
+                  Built for busy households
+                </h2>
+                <p className="text-sm text-slate-500 font-mono">
+                  &lt;h2 className="subheadline"&gt;
+                </p>
+              </div>
+            </div>
+
+            {/* Body Text Example */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+                Body Text (Cambon)
+              </h3>
+              <div className="border border-slate-200 rounded-2xl p-8 bg-slate-50">
+                <p className="text-lg md:text-xl text-slate-700 leading-relaxed font-light mb-4">
+                  We believe that robots belong in our homes. Not just to perform tasks, but to unlock human potential by removing the burden of repetitive chores.
+                </p>
+                <p className="text-sm text-slate-500 font-mono">
+                  &lt;p&gt; (automatically uses Cambon)
+                </p>
+              </div>
+            </div>
+
+            {/* Mixed Example */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+                Mixed Typography
+              </h3>
+              <div className="border border-slate-200 rounded-2xl p-8 bg-slate-50">
+                <h1 className="text-5xl font-bold tracking-tighter text-slate-900 mb-4">
+                  The Future of Home Robotics
+                </h1>
+                <h2 className="text-2xl font-subheadline font-bold text-slate-700 mb-6">
+                  Powered by state-of-the-art AI
+                </h2>
+                <p className="text-lg text-slate-600 leading-relaxed font-light mb-4">
+                  Kandie Gang simplifies the complexities of daily life through intelligent automation and elegant design.
+                </p>
+                <p className="text-base text-slate-500 italic leading-relaxed">
+                  Every aspect is designed to blend into your living space while providing maximum utility.
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+      </div>
+    </div>
+  );
+};

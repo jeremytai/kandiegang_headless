@@ -1,0 +1,79 @@
+/**
+ * Custom Font Declarations
+ * GT-Pressure Bold: Headlines
+ * Cambon: Body/Paragraphs
+ * GT-Pressure Mono: Subheadlines
+ */
+
+/* GT-Pressure Bold - Headlines */
+@font-face {
+  font-family: 'GT-Pressura';
+  src: url('/fonts/gt-pressura/GT-Pressura-VF-Mini.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* GTPressura alias (Arena naming convention) */
+@font-face {
+  font-family: 'GTPressura';
+  src: url('/fonts/gt-pressura/GT-Pressura-VF-Mini.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* GT-Pressure Mono - Subheadlines */
+@font-face {
+  font-family: 'GT-Pressura-Mono';
+  src: url('/fonts/gt-pressura-mono/GT-Pressura-Mono.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT-Pressura-Mono';
+  src: url('/fonts/gt-pressura-mono/GT-Pressura-Mono.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Cambon - Body/Paragraphs */
+/* Note: Using available font files with numeric naming convention */
+@font-face {
+  font-family: 'Cambon';
+  src: url('/fonts/cambon/Cambon-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  font-variant: normal;
+}
+
+@font-face {
+  font-family: 'Cambon';
+  src: url('/fonts/cambon/Cambon-400i.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  font-variant: normal;
+}
+
+@font-face {
+  font-family: 'Cambon';
+  src: url('/fonts/cambon/Cambon-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  font-variant: normal;
+}
+
+@font-face {
+  font-family: 'Cambon';
+  src: url('/fonts/cambon/Cambon-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  font-variant: normal;
+}

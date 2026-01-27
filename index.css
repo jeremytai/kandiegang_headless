@@ -1,0 +1,462 @@
+
+@import url('/fonts/fonts.css');
+
+/* Tailwind CSS directives - valid and required for Tailwind to work */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 
+   * Color Palette
+   * 
+   * Primary Colors:
+   * - Breath (#FDF9F0): Very light creamy off-white - ideal for backgrounds
+   * - Ecru (#F6F1E7): Light beige - subtle background variations
+   * - Ink (#1F2223): Very dark gray, almost black - primary text color
+   * 
+   * Secondary Colors:
+   * - Purple Rain (#46519C): Medium-dark desaturated blue-purple
+   * - Current (#2A3577): Dark deep desaturated blue
+   * - Blush (#F2ADAA): Light soft muted pink
+   * - Drift (#09B7BB): Vibrant bright teal/cyan
+   * - Signal (#FFF200): Bright neon yellow - accents and highlights
+   * 
+   * Usage:
+   * - CSS Variables: var(--color-primary-breath), var(--color-secondary-signal), etc.
+   * - Utility Classes: .bg-primary-ink, .text-secondary-drift, .border-primary-ecru, etc.
+   */
+  
+  /* Primary Colors */
+  --color-primary-breath: #FDF9F0;
+  --color-primary-ecru: #F6F1E7;
+  --color-primary-ink: #1F2223;
+  
+  /* Secondary Colors */
+  --color-secondary-purple-rain: #46519C;
+  --color-secondary-current: #2A3577;
+  --color-secondary-blush: #F2ADAA;
+  --color-secondary-drift: #09B7BB;
+  --color-secondary-signal: #FFF200;
+  
+  /* 
+   * Typography
+   * 
+   * Font Families:
+   * - --sans: GTPressura (sans-serif) - for UI elements and headings
+   * - --serif: Cambon (serif) - for body text
+   * - --heading: Uses sans (GTPressura) for headings
+   * 
+   * Typography Scale:
+   * - Base font size: 17px (used as reference for all calculations)
+   * - All font sizes are calculated relative to base-font-size
+   * - Uses calc() for responsive, scalable typography
+   * - Heading sizes: h1 (75px), h2 (58px), h3 (40px), h4 (35px), h5 (25px), h6 (17px)
+   * - Text sizes: large (20px), normal (17px), small (14px), tiny (12px)
+   */
+  --sans: "GTPressura", sans-serif;
+  --serif: "Cambon", serif;
+  --heading: var(--sans);
+  
+  /* Typography Scale */
+  --base-font-size: 17;
+  --line-height: 1.5;
+  --font-normal: calc((var(--base-font-size) / 16) * 1rem);
+  --h1: calc((75 / var(--base-font-size)) * 1rem);
+  --h2: calc((58 / var(--base-font-size)) * 1rem);
+  --h3: calc((40 / var(--base-font-size)) * 1rem);
+  --h4: calc((35 / var(--base-font-size)) * 1rem);
+  --h5: calc((25 / var(--base-font-size)) * 1rem);
+  --h6: calc((17 / var(--base-font-size)) * 1rem);
+  --small-heading: calc((16 / var(--base-font-size)) * 1rem);
+  --font-large: calc((20 / var(--base-font-size)) * 1rem);
+  --font-small: calc((14 / var(--base-font-size)) * 1rem);
+  --font-tiny: calc((12 / var(--base-font-size)) * 1rem);
+  
+  /* Legacy Typography Variables (for backward compatibility) */
+  --font-headline: 'GT-Pressura', sans-serif;
+  --font-subheadline: 'GT-Pressura-Mono', monospace;
+  --font-body: 'Cambon', serif;
+}
+
+body {
+  font-family: var(--serif);
+  font-size: var(--font-normal);
+  line-height: var(--line-height);
+  scroll-behavior: smooth;
+  background-color: var(--color-secondary-signal);
+  margin: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Selection Styles */
+::selection {
+  background-color: var(--color-secondary-signal);
+  color: black;
+}
+
+/* Custom Scrollbar Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* scrollbar-width is not supported in older browsers, but -ms-overflow-style handles IE/Edge */
+}
+
+@supports (scrollbar-width: none) {
+  .no-scrollbar {
+    scrollbar-width: none; /* Firefox and modern browsers */
+  }
+}
+
+.scroll-padding-x-6 {
+  scroll-padding-left: 1.5rem;
+  scroll-padding-right: 1.5rem;
+}
+
+/* Smooth Scrolling for the whole document */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom text balance utility */
+@supports (text-wrap: balance) {
+  .text-balance {
+    text-wrap: balance; /* Modern browsers */
+  }
+}
+
+/* Typography Utilities - Arena Style */
+.font-sans {
+  font-family: var(--sans);
+}
+
+.font-serif {
+  font-family: var(--serif);
+}
+
+.font-heading {
+  font-family: var(--heading);
+}
+
+/* Legacy Typography Utilities (for backward compatibility) */
+.font-headline {
+  font-family: var(--font-headline);
+}
+
+.font-subheadline {
+  font-family: var(--font-subheadline);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Arena Typography Scale Utilities */
+.text-h1 {
+  font-size: var(--h1);
+}
+
+.text-h2 {
+  font-size: var(--h2);
+}
+
+.text-h3 {
+  font-size: var(--h3);
+}
+
+.text-h4 {
+  font-size: var(--h4);
+}
+
+.text-h5 {
+  font-size: var(--h5);
+}
+
+.text-h6 {
+  font-size: var(--h6);
+}
+
+.text-small-heading {
+  font-size: var(--small-heading);
+}
+
+.text-large {
+  font-size: var(--font-large);
+}
+
+.text-small {
+  font-size: var(--font-small);
+}
+
+.text-tiny {
+  font-size: var(--font-tiny);
+}
+
+/* Color Utilities - Primary Colors */
+.bg-primary-breath {
+  background-color: var(--color-primary-breath);
+}
+
+.bg-primary-ecru {
+  background-color: var(--color-primary-ecru);
+}
+
+.bg-primary-ink {
+  background-color: var(--color-primary-ink);
+}
+
+.text-primary-breath {
+  color: var(--color-primary-breath);
+}
+
+.text-primary-ecru {
+  color: var(--color-primary-ecru);
+}
+
+.text-primary-ink {
+  color: var(--color-primary-ink);
+}
+
+.border-primary-breath {
+  border-color: var(--color-primary-breath);
+}
+
+.border-primary-ecru {
+  border-color: var(--color-primary-ecru);
+}
+
+.border-primary-ink {
+  border-color: var(--color-primary-ink);
+}
+
+/* Color Utilities - Secondary Colors */
+.bg-secondary-purple-rain {
+  background-color: var(--color-secondary-purple-rain);
+}
+
+.bg-secondary-current {
+  background-color: var(--color-secondary-current);
+}
+
+.bg-secondary-blush {
+  background-color: var(--color-secondary-blush);
+}
+
+.bg-secondary-drift {
+  background-color: var(--color-secondary-drift);
+}
+
+.bg-secondary-signal {
+  background-color: var(--color-secondary-signal);
+}
+
+.text-secondary-purple-rain {
+  color: var(--color-secondary-purple-rain);
+}
+
+.text-secondary-current {
+  color: var(--color-secondary-current);
+}
+
+.text-secondary-blush {
+  color: var(--color-secondary-blush);
+}
+
+.text-secondary-drift {
+  color: var(--color-secondary-drift);
+}
+
+.text-secondary-signal {
+  color: var(--color-secondary-signal);
+}
+
+.border-secondary-purple-rain {
+  border-color: var(--color-secondary-purple-rain);
+}
+
+.border-secondary-current {
+  border-color: var(--color-secondary-current);
+}
+
+.border-secondary-blush {
+  border-color: var(--color-secondary-blush);
+}
+
+.border-secondary-drift {
+  border-color: var(--color-secondary-drift);
+}
+
+.border-secondary-signal {
+  border-color: var(--color-secondary-signal);
+}
+
+/* Font Showcase Utilities */
+.font-showcase-gt-pressura {
+  font-family: 'GT-Pressura', sans-serif;
+}
+
+.font-showcase-gt-pressura-mono {
+  font-family: 'GT-Pressura-Mono', monospace;
+}
+
+.font-showcase-cambon {
+  font-family: 'Cambon', serif;
+}
+
+.font-weight-400 {
+  font-weight: 400;
+}
+
+.font-weight-500 {
+  font-weight: 500;
+}
+
+.font-weight-600 {
+  font-weight: 600;
+}
+
+.font-weight-700 {
+  font-weight: 700;
+}
+
+.font-style-normal {
+  font-style: normal;
+}
+
+.font-style-italic {
+  font-style: italic;
+}
+
+/* Apply fonts to semantic HTML elements - Arena Style */
+h1 {
+  font-family: var(--heading);
+  font-size: var(--h1);
+  font-weight: 700;
+  line-height: var(--line-height);
+}
+
+h2 {
+  font-family: var(--heading);
+  font-size: var(--h2);
+  font-weight: 700;
+  line-height: var(--line-height);
+}
+
+h3 {
+  font-family: var(--heading);
+  font-size: var(--h3);
+  font-weight: 700;
+  line-height: var(--line-height);
+}
+
+h4 {
+  font-family: var(--heading);
+  font-size: var(--h4);
+  font-weight: 700;
+  line-height: var(--line-height);
+}
+
+h5 {
+  font-family: var(--heading);
+  font-size: var(--h5);
+  font-weight: 700;
+  line-height: var(--line-height);
+}
+
+h6 {
+  font-family: var(--heading);
+  font-size: var(--h6);
+  font-weight: 700;
+  line-height: var(--line-height);
+}
+
+/* Subheadlines - use .subheadline class for GT-Pressure Mono */
+.subheadline {
+  font-family: var(--font-subheadline);
+}
+
+/* Body text - paragraphs and list items use Cambon */
+p, li {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Buttons and links inherit from parent, but can be overridden */
+button, a {
+  font-family: inherit;
+}
+
+/* Responsive container adjustments */
+.container-wide {
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+
+    .rounded {
+        border-radius: .25rem
+    }
+
+    .rounded-\[6px\] {
+        border-radius: 6px
+    }
+
+    .rounded-\[calc\(theme\(borderRadius\.xl\)-1px\)\] {
+        border-radius: calc(.75rem - 1px)
+    }
+
+    .rounded-full {
+        border-radius: 3.40282e+38px
+    }
+
+    .rounded-lg {
+        border-radius: var(--radius-lg)
+    }
+
+    .rounded-md {
+        border-radius: var(--radius-md)
+    }
+
+    .rounded-sm {
+        border-radius: var(--radius-sm)
+    }
+
+    .rounded-xl {
+        border-radius: var(--radius-xl)
+    }
+
+    .rounded-xs {
+        border-radius: var(--radius-xs)
+    }
+
+    .rounded-t-xl {
+        border-top-left-radius: var(--radius-xl);
+        border-top-right-radius: var(--radius-xl)
+    }
+
+    .rounded-tl-2xl {
+        border-top-left-radius: var(--radius-2xl)
+    }
+
+    .rounded-tr-2xl {
+        border-top-right-radius: var(--radius-2xl)
+    }
+
+    .bg-kandiegang-hero {
+        background-image: url('https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/11/08124931/250621_kandiegang-19-2048x1365.jpg');
+    }
