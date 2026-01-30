@@ -7,16 +7,31 @@
  * - Responsive: Adjusted font sizing and text balancing for all screen widths.
  */
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Star, ArrowRight } from 'lucide-react';
 
+const HEADLINE_IMAGES = [
+  '/images/Rapha-Ride-Leader-Pro-Team-Lightweight-RCC-Gilet.jpeg',
+  '/images/1428c19bbc9d6b5257e2d2847823c7de.jpg',
+];
+
+const ROTATE_INTERVAL_MS = 3000;
+
 export const HeadlineSection: React.FC = () => {
   const ref = useRef<HTMLDivElement>(null);
+  const [imageIndex, setImageIndex] = useState(0);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"]
   });
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setImageIndex((i) => (i + 1) % HEADLINE_IMAGES.length);
+    }, ROTATE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
 
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
@@ -28,8 +43,16 @@ export const HeadlineSection: React.FC = () => {
         className="w-full flex flex-col items-center text-center z-10 px-6"
       >
         
-        <h1 className="text-5xl md:text-8xl lg:text-[8.5vw] font-bold tracking-tighter leading-[0.85] text-slate-900 mb-2 md:mb-4 text-balance">
-          You've found us!
+        <h1 className="text-5xl md:text-8xl lg:text-[8.5vw] font-bold tracking-tighter leading-[0.85] text-slate-900 mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em]">
+          You've found us{' '}
+          <img
+            key={imageIndex}
+            src={HEADLINE_IMAGES[imageIndex]}
+            alt=""
+            className="inline-block w-[0.85em] h-[0.85em] min-w-[2.5rem] min-h-[2.5rem] md:min-w-[3.5rem] md:min-h-[3.5rem] rounded-full object-cover align-middle mx-0.5"
+            aria-hidden
+          />
+          !
         </h1>
 
         {/* <button className="bg-black text-white px-6 md:px-8 py-3.5 md:py-4 rounded-full font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-black/10 active:scale-95 text-sm md:text-base group">
