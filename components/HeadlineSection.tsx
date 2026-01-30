@@ -22,14 +22,14 @@ export const HeadlineSection: React.FC = () => {
   const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
 
   return (
-    <section ref={ref} className="relative bg-white pt-20 md:pt-40 pb-16 md:pb-20">
+    <section ref={ref} className="relative bg-primary-breath pt-20 md:pt-40 pb-16 md:pb-20">
       <motion.div 
         style={{ opacity, scale }}
         className="w-full flex flex-col items-center text-center z-10 px-6"
       >
         
         <h1 className="text-5xl md:text-8xl lg:text-[8.5vw] font-bold tracking-tighter leading-[0.85] text-slate-900 mb-2 md:mb-4 text-balance">
-          Hej there!
+          You've found us!
         </h1>
 
         {/* <button className="bg-black text-white px-6 md:px-8 py-3.5 md:py-4 rounded-full font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-black/10 active:scale-95 text-sm md:text-base group">

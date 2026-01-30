@@ -31,7 +31,7 @@ export const ExpandingHero: React.FC = () => {
   });
 
   return (
-    <section ref={containerRef} className="relative h-[150vh] md:h-[180vh] bg-white">
+    <section ref={containerRef} className="relative h-[150vh] md:h-[180vh] bg-primary-breath">
       <div className="sticky top-0 h-screen w-full flex flex-col items-center overflow-hidden">
         <motion.div 
           style={{ 
@@ -39,7 +39,7 @@ export const ExpandingHero: React.FC = () => {
             width: "100%",
             height: "100vh"
           }}
-          className="relative bg-breath overflow-hidden flex flex-col"
+          className="relative bg-secondary-purple-rain overflow-hidden flex flex-col"
         >
           <div className="relative flex-1 w-full h-full overflow-hidden">
             <img 
