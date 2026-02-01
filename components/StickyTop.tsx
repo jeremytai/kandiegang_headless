@@ -84,7 +84,7 @@ export const StickyTop: React.FC = () => {
             stiffness: 200,
             layout: { duration: 0.4 }
           }}
-          className={`w-full bg-[#f2f2f2]/60 backdrop-blur-2xl border border-black/20 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.15)] overflow-hidden pointer-events-auto ${
+          className={`w-full bg-white backdrop-blur-2xl border border-black/20 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.15)] overflow-hidden pointer-events-auto ${
             isExpanded ? 'max-w-[640px] rounded-[16px]' : 'max-w-[340px] rounded-[16px]'
           }`}
         >

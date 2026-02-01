@@ -1,79 +1,102 @@
 /**
  * Custom Font Declarations
- * GT-Pressure Bold: Headlines
- * Cambon: Body/Paragraphs
- * GT-Pressure Mono: Subheadlines
+ * IvyOra Display: Headings (Thin, Light, Regular)
+ * GTPlanar: Body text
  */
 
-/* GT-Pressure Bold - Headlines */
+/* IvyOra Display - Thin */
 @font-face {
-  font-family: 'GT-Pressura';
-  src: url('/fonts/gt-pressura/GT-Pressura-VF-Mini.woff2') format('woff2');
-  font-weight: 700;
+  font-family: "IvyOra Disp Thi";
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
+  src: url('/fonts/ivy-ora/IvyOraDispThin.woff2') format('woff2');
 }
 
-/* GTPressura alias (Arena naming convention) */
+/* IvyOra Display - Light */
 @font-face {
-  font-family: 'GTPressura';
-  src: url('/fonts/gt-pressura/GT-Pressura-VF-Mini.woff2') format('woff2');
-  font-weight: 700;
+  font-family: "IvyOra Disp Lt";
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
+  src: url('/fonts/ivy-ora/IvyOraDispLight.woff2') format('woff2');
 }
 
-/* GT-Pressure Mono - Subheadlines */
+/* IvyOra Display - Regular */
 @font-face {
-  font-family: 'GT-Pressura-Mono';
-  src: url('/fonts/gt-pressura-mono/GT-Pressura-Mono.woff2') format('woff2');
+  font-family: "IvyOra Disp Reg";
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/ivy-ora/IvyOraDispRegular.woff2') format('woff2');
+}
+
+/* GTPlanar - 250 */
+@font-face {
+  font-family: 'GTPlanar';
+  font-weight: 250;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/gt-planar/GTPlanar250.woff2') format('woff2');
+}
+
+/* GTPlanar - 300 (Thin) */
+@font-face {
+  font-family: 'GTPlanar';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/gt-planar/GTPlanarThin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'GTPlanar';
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+  src: url('/fonts/gt-planar/GTPlanarThinItalic.woff2') format('woff2');
+}
+
+/* GTPlanar - 400 */
+@font-face {
+  font-family: 'GTPlanar';
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  src: url('/fonts/gt-planar/GTPlanarRegular.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'GT-Pressura-Mono';
-  src: url('/fonts/gt-pressura-mono/GT-Pressura-Mono.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Cambon - Body/Paragraphs */
-/* Note: Using available font files with numeric naming convention */
-@font-face {
-  font-family: 'Cambon';
-  src: url('/fonts/cambon/Cambon-400.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  font-variant: normal;
-}
-
-@font-face {
-  font-family: 'Cambon';
-  src: url('/fonts/cambon/Cambon-400i.woff2') format('woff2');
+  font-family: 'GTPlanar';
   font-weight: 400;
   font-style: italic;
   font-display: swap;
-  font-variant: normal;
+  src: url('/fonts/gt-planar/GTPlanarItalic.woff2') format('woff2');
 }
 
+/* GTPlanar - 700 */
 @font-face {
-  font-family: 'Cambon';
-  src: url('/fonts/cambon/Cambon-500.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-  font-variant: normal;
-}
-
-@font-face {
-  font-family: 'Cambon';
-  src: url('/fonts/cambon/Cambon-700.woff2') format('woff2');
+  font-family: 'GTPlanar';
   font-weight: 700;
   font-style: normal;
   font-display: swap;
-  font-variant: normal;
+  src: url('/fonts/gt-planar/GTPlanarBold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'GTPlanar';
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+  src: url('/fonts/gt-planar/GTPlanarBoldItalic.woff2') format('woff2');
+}
+
+/* GTPlanar Fallback - metrics for layout before load */
+@font-face {
+  font-family: 'GTPlanar Fallback';
+  src: local("Arial");
+  ascent-override: 91.35%;
+  descent-override: 18.54%;
+  line-gap-override: 0%;
+  size-adjust: 104.65%;
 }

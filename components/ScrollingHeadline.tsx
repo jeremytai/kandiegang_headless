@@ -35,15 +35,16 @@ export const ScrollingHeadline: React.FC = () => {
     <section ref={containerRef} className="relative h-[250vh] bg-white">
       <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden px-6">
         <div className="relative flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-6 w-full text-center">
-          <motion.div style={{ y: mundaneY, opacity: mundaneOpacity }} className="font-bold text-[14vw] lg:text-[10vw] leading-none tracking-tighter text-slate-900">Mundane</motion.div>
-          <motion.div style={{ y: madeY, opacity: madeOpacity }} className="font-bold text-[14vw] lg:text-[10vw] leading-none tracking-tighter text-slate-900">made</motion.div>
-          <motion.div style={{ y: magicY, opacity: magicOpacity }} className="font-bold text-[14vw] lg:text-[10vw] leading-none tracking-tighter text-slate-900">magic</motion.div>
+          <motion.div style={{ y: mundaneY, opacity: mundaneOpacity }} className="font-bold text-[14vw] lg:text-[10vw] leading-none tracking-tighter text-slate-900">It's a</motion.div>
+          <motion.div style={{ y: madeY, opacity: madeOpacity }} className="font-bold text-[14vw] lg:text-[10vw] leading-none tracking-tighter text-slate-900">Love</motion.div>
+          <motion.div style={{ y: magicY, opacity: magicOpacity }} className="font-bold text-[14vw] lg:text-[10vw] leading-none tracking-tighter text-slate-900">Story</motion.div>
         </div>
         <motion.p 
           style={{ opacity: useTransform(smoothProgress, [0.7, 0.9], [0, 1]) }}
           className="mt-12 text-slate-500 text-lg md:text-xl max-w-xl text-center leading-relaxed font-light"
         >
-          Powered by state-of-the-art AI models and an ever-expanding Skill Library, Kandie Gang simplifies the complexities of daily life.
+          We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).
+
         </motion.p>
       </div>
     </section>

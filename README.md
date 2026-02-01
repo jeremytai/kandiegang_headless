@@ -4,13 +4,13 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 
 ## ✨ Features
 
-- **🎨 Premium UI/UX**: High-fidelity animations with Framer Motion, scroll-driven effects, and glassmorphic design elements
+- **🎨 Premium UI/UX**: High-fidelity animations with Framer Motion and GSAP, scroll-driven effects, and glassmorphic design elements
 - **📝 Headless WordPress**: Type-safe GraphQL integration for dynamic content management
 - **🌐 Multi-Page Routing**: Landing, About, Community, Stories (Journal), Contact, and Fonts showcase pages
 - **🤖 AI-Powered Content**: Real-time weather data via Google Gemini API with search grounding
 - **📱 Fully Responsive**: Mobile-first design with Tailwind CSS
-- **⚡ Performance Optimized**: Query caching, retry logic, and optimized image loading
-- **🎭 Advanced Animations**: Spring physics, scroll progress tracking, and shared layout transitions
+- **⚡ Performance Optimized**: Build-time WebP conversion and responsive image widths (Sharp), query caching, retry logic
+- **🎭 Advanced Animations**: Animated headline (split-type char reveal + color fill), spring physics, scroll progress tracking
 
 ## 🚀 Tech Stack
 
@@ -19,8 +19,10 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **Vite**: Lightning-fast build tool and dev server
 - **React Router DOM 7**: Client-side routing with modern API
 - **Tailwind CSS**: Utility-first styling for responsive design
-- **Framer Motion**: State-of-the-art animation engine for scroll-driven effects, spring physics, and shared layout transitions
+- **Framer Motion**: Scroll-driven effects, spring physics, shared layout transitions
+- **GSAP + SplitType**: Animated headline (character reveal, color fill: grey → signal yellow → headline color)
 - **Lucide React**: Clean, consistent iconography
+- **Sharp** (dev): Build-time image optimization — convert JPG/PNG to WebP and generate responsive widths (400, 800, 1200)
 - **Google Gemini API**: Real-time data fetching (e.g., weather grounding) for dynamic experiences
 - **WordPress GraphQL**: Headless CMS integration via WPGraphQL
 
@@ -73,6 +75,7 @@ kandiegang_headless/
 ├── components/          # Reusable UI components
 │   ├── AboutHero.tsx
 │   ├── AdaptationGrid.tsx
+│   ├── AnimatedHeadline.tsx   # Split-type char reveal + color fill (GSAP)
 │   ├── CompanySection.tsx
 │   ├── ExpandingHero.tsx
 │   ├── FAQSection.tsx
@@ -91,11 +94,16 @@ kandiegang_headless/
 │   ├── StoriesPage.tsx
 │   └── FontsPage.tsx   # Typography showcase
 ├── lib/                # Utility libraries
-│   └── wordpress.ts    # WordPress GraphQL bridge
+│   ├── wordpress.ts    # WordPress GraphQL bridge
+│   └── images.ts       # WebP / responsive image helpers (imageSrc, imageSrcSet)
 ├── hooks/              # Custom React hooks
 │   └── useScrollThreshold.ts
-├── public/             # Static assets
-│   └── fonts/         # Custom font files
+├── scripts/
+│   └── optimize-images.js   # Build: convert public/images to WebP + 400/800/1200w in dist
+├── public/             # Static assets (copied to dist; images optimized at build)
+│   ├── fonts/          # IvyOra Display, GTPlanar (see public/fonts/fonts.css)
+│   └── images/         # Source images (JPG/PNG); build outputs WebP to dist
+│       └── guides/     # Guide photos used in HeadlineSection and CompanySection
 ├── App.tsx             # Main application component
 ├── index.tsx           # Application entry point
 ├── vite.config.ts      # Vite configuration
@@ -106,10 +114,12 @@ kandiegang_headless/
 
 ### Core Interactive Sections
 
-- **`ExpandingHero.tsx`**: A hero section that expands from a rounded card to full-width using `clip-path` and `inset` properties based on scroll progress.
-- **`HorizontalRevealSection.tsx`**: A horizontal scrolling gallery that pins to the screen, featuring a segmented navigation pill that highlights the active section.
-- **`ScrollingHeadline.tsx`**: An assembly animation where words ("Mundane made magic") fly into place as the user scrolls.
-- **`CompanySection.tsx`**: Includes the "TeamLink" interaction where profile images spring into view and follow the cursor on hover.
+- **`HeadlineSection.tsx`**: Hero headline "You found us [photo]!" with `AnimatedHeadline` (char reveal + color fill) and rotating guide photos from `public/images/guides`.
+- **`AnimatedHeadline.tsx`**: Reusable headline with SplitType (lines/words/chars) and GSAP: chars slide up on scroll, then color animates light grey → signal yellow → headline purple. Use `imageSrc` / `imageSrcSet` from `lib/images` for WebP and responsive widths.
+- **`ExpandingHero.tsx`**: Hero section that expands from a rounded card to full-width using `clip-path` and `inset` based on scroll progress; uses responsive WebP via `lib/images`.
+- **`HorizontalRevealSection.tsx`**: Horizontal scrolling gallery that pins to the screen, with a segmented navigation pill for the active section.
+- **`ScrollingHeadline.tsx`**: Assembly animation where words ("Mundane made magic") fly into place as the user scrolls.
+- **`CompanySection.tsx`**: "Your Guides" with TeamLink: profile images (from `public/images/guides`) spring into view and follow the cursor on hover. Guide names are derived from filenames—**first name only**, i.e. the part before the first underscore (e.g. `katrin_h.jpg` → "Katrin"; `jeremy.jpg` → "Jeremy"). Pills use secondary colors (Purple Rain, Current, Drift, Blush, Signal) with white text; on Signal (yellow) pills, text uses Current or Purple Rain for contrast. Guides are displayed in **random order** (shuffled once on mount).
 - **`AboutHero.tsx`**: Immersive hero section with video background for the About page.
 - **`AdaptationGrid.tsx`**: Showcases real-world autonomous tasks in a grid layout.
 - **`FAQSection.tsx`**: Expandable FAQ section with smooth animations.
@@ -192,17 +202,16 @@ const data = await wpQuery<{ posts: { nodes: WPPost[] } }>(
 
 ### Typography
 
-The project uses a carefully curated typography system with three custom font families:
+The project uses IvyOra Display for headings and GTPlanar for body text (all normal weight; headings are not bold):
 
-- **GT-Pressura** (`--font-headline`): Bold (700) - Used for all headings (h1-h6)
-- **GT-Pressura-Mono** (`--font-subheadline`): Regular (400) and Bold (700) - Used for subheadlines
-- **Cambon** (`--font-body`): Regular (400), Italic (400), Medium (500), SemiBold (600), Bold (700) - Used for body text and paragraphs
+- **IvyOra Display** (`public/fonts/ivy-ora/`): Thin (`--font-heading-thin`), Light (`--font-heading-light`), Regular (`--font-heading-regular`) — used for h1–h6 and headline components
+- **GTPlanar** (`public/fonts/gt-planar/`): Weights 250, 300, 400, 700 (normal/italic) — used for body text, paragraphs, and subheadlines (`--font-body`)
 
-All fonts are loaded via `@font-face` declarations in `public/fonts/fonts.css` and can be accessed through CSS variables or utility classes:
-- CSS Variables: `var(--font-headline)`, `var(--font-subheadline)`, `var(--font-body)`
-- Utility Classes: `.font-headline`, `.font-subheadline`, `.font-body`, `.subheadline`
+Fonts are loaded in `public/fonts/fonts.css`. Use CSS variables or utility classes:
+- **Variables**: `var(--font-heading-thin)`, `var(--font-heading-light)`, `var(--font-heading-regular)`, `var(--font-body)`
+- **Utility classes**: `.font-heading`, `.font-heading-thin`, `.font-heading-light`, `.font-heading-regular`, `.font-body`, `.font-headline`, `.font-subheadline`
 
-Visit `/fonts` to see a comprehensive typography showcase with all weights, styles, character sets, and usage examples.
+Visit `/fonts` for the full typography showcase (IvyOra + GTPlanar).
 
 ### Color Palette
 
@@ -229,11 +238,16 @@ Colors can be accessed via:
   - Text: `.text-primary-ink`, `.text-secondary-drift`
   - Border: `.border-primary-ecru`, `.border-secondary-purple-rain`
 
+### Images
+
+- **Guide photos**: Place JPG/PNG in `public/images/guides/` with filenames like `firstname_suffix.jpg` (e.g. `katrin_h.jpg`, `emma_b.jpg`). The **display name** in CompanySection is the part before the first underscore, capitalized (no underscore = whole name, e.g. `jeremy.jpg` → "Jeremy"). Used in `HeadlineSection` (rotating avatar) and `CompanySection` (TeamLink hover, random order). Reference via `imageSrc('/images/guides/<basePath>', 400)` for small avatars or `imageSrc('/images/guides/<basePath>')` for full size.
+- **Build optimization**: `npm run build` runs `scripts/optimize-images.js` after Vite: all images under `dist/images/` are converted to WebP (full + 400w, 800w, 1200w) and originals are removed. Use `lib/images.ts`: `imageSrc(basePath, width?)` and `imageSrcSet(basePath)` so dev uses `.jpg` from `public/` and production uses `.webp` from `dist/`.
+
 ### Design Principles
 
 - **Glassmorphism**: Use `backdrop-blur-xl` combined with high-transparency backgrounds (`bg-white/80` or `bg-slate-100/50`) and subtle borders
 - **Color System**: Use the structured primary/secondary color palette via CSS variables or utility classes for consistency
-- **Typography**: Leverage the three-font system (GT-Pressura for headlines, GT-Pressura-Mono for subheadlines, Cambon for body) with appropriate weights
+- **Typography**: Use IvyOra Display for headings (normal weight) and GTPlanar for body; see `index.css` and `public/fonts/fonts.css`
 - **Spacing**: Generous white space (p-20+) to emphasize the premium minimalist feel
 - **Animations**: Smooth, spring-based animations with consistent timing functions
 - **Responsive**: Mobile-first approach with breakpoints at `md:` (768px) and `lg:` (1024px)
@@ -261,7 +275,7 @@ All editorial content (About, Community, Stories) can be managed through WordPre
 npm run build
 ```
 
-This creates an optimized production build in the `dist/` directory.
+This runs `vite build` then `scripts/optimize-images.js`: images in `public/images/` (and subdirs like `guides/`) are converted to WebP and responsive widths (400, 800, 1200) in `dist/images/`. Original JPG/PNG are not copied to `dist`. Use `imageSrc()` and `imageSrcSet()` from `lib/images` in components so dev uses `.jpg` from `public/` and production uses `.webp` from `dist/`.
 
 ### Deployment
 

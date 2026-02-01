@@ -42,10 +42,9 @@
   /* 
    * Typography
    * 
-   * Font Families:
-   * - --sans: GTPressura (sans-serif) - for UI elements and headings
-   * - --serif: Cambon (serif) - for body text
-   * - --heading: Uses sans (GTPressura) for headings
+   * Heading fonts (IvyOra Display - separate families by weight name):
+   * - --font-heading-thin, --font-heading-light, --font-heading-regular
+   * Body font: GTPlanar (one family, use font-weight in CSS)
    * 
    * Typography Scale:
    * - Base font size: 17px (used as reference for all calculations)
@@ -54,9 +53,16 @@
    * - Heading sizes: h1 (75px), h2 (58px), h3 (40px), h4 (35px), h5 (25px), h6 (17px)
    * - Text sizes: large (20px), normal (17px), small (14px), tiny (12px)
    */
-  --sans: "GTPressura", sans-serif;
-  --serif: "Cambon", serif;
-  --heading: var(--sans);
+  --font-heading-light: "IvyOra Disp Lt", sans-serif;
+  --font-heading-regular: "IvyOra Disp Reg", sans-serif;
+  --font-heading-thin: "IvyOra Disp Thi", sans-serif;
+  --font-body: "GTPlanar", "GTPlanar Fallback", sans-serif;
+  --font-size: 16px;
+  --font-weight: 300;
+
+  --sans: var(--font-body);
+  --serif: var(--font-body);
+  --heading: var(--font-heading-regular);
   
   /* Typography Scale */
   --base-font-size: 17;
@@ -74,14 +80,14 @@
   --font-tiny: calc((12 / var(--base-font-size)) * 1rem);
   
   /* Legacy Typography Variables (for backward compatibility) */
-  --font-headline: 'GT-Pressura', sans-serif;
-  --font-subheadline: 'GT-Pressura-Mono', monospace;
-  --font-body: 'Cambon', serif;
+  --font-headline: var(--font-heading-regular);
+  --font-subheadline: var(--font-body);
 }
 
 body {
-  font-family: var(--serif);
+  font-family: var(--font-body);
   font-size: var(--font-normal);
+  font-weight: var(--font-weight);
   line-height: var(--line-height);
   scroll-behavior: smooth;
   background-color: var(--color-secondary-signal);
@@ -146,6 +152,30 @@ html {
 
 .font-heading {
   font-family: var(--heading);
+}
+
+.font-heading-thin {
+  font-family: var(--font-heading-thin);
+  font-weight: normal;
+}
+
+.font-heading-light {
+  font-family: var(--font-heading-light);
+  font-weight: normal;
+}
+
+.font-heading-regular {
+  font-family: var(--font-heading-regular);
+  font-weight: normal;
+}
+
+.font-heading {
+  font-weight: normal;
+}
+
+/* AnimatedHeadline: clip chars sliding up */
+.animated-headline-line {
+  overflow: hidden;
 }
 
 /* Legacy Typography Utilities (for backward compatibility) */
@@ -301,16 +331,28 @@ html {
 }
 
 /* Font Showcase Utilities */
-.font-showcase-gt-pressura {
-  font-family: 'GT-Pressura', sans-serif;
+.font-showcase-ivyora-thin {
+  font-family: var(--font-heading-thin);
 }
 
-.font-showcase-gt-pressura-mono {
-  font-family: 'GT-Pressura-Mono', monospace;
+.font-showcase-ivyora-light {
+  font-family: var(--font-heading-light);
 }
 
-.font-showcase-cambon {
-  font-family: 'Cambon', serif;
+.font-showcase-ivyora-regular {
+  font-family: var(--font-heading-regular);
+}
+
+.font-showcase-gt-planar {
+  font-family: var(--font-body);
+}
+
+.font-weight-250 {
+  font-weight: 250;
+}
+
+.font-weight-300 {
+  font-weight: 300;
 }
 
 .font-weight-400 {
@@ -337,55 +379,55 @@ html {
   font-style: italic;
 }
 
-/* Apply fonts to semantic HTML elements - Arena Style */
+/* Apply fonts to semantic HTML elements - IvyOra headings use normal weight (not bold) */
 h1 {
   font-family: var(--heading);
   font-size: var(--h1);
-  font-weight: 700;
+  font-weight: normal;
   line-height: var(--line-height);
 }
 
 h2 {
   font-family: var(--heading);
   font-size: var(--h2);
-  font-weight: 700;
+  font-weight: normal;
   line-height: var(--line-height);
 }
 
 h3 {
   font-family: var(--heading);
   font-size: var(--h3);
-  font-weight: 700;
+  font-weight: normal;
   line-height: var(--line-height);
 }
 
 h4 {
   font-family: var(--heading);
   font-size: var(--h4);
-  font-weight: 700;
+  font-weight: normal;
   line-height: var(--line-height);
 }
 
 h5 {
   font-family: var(--heading);
   font-size: var(--h5);
-  font-weight: 700;
+  font-weight: normal;
   line-height: var(--line-height);
 }
 
 h6 {
   font-family: var(--heading);
   font-size: var(--h6);
-  font-weight: 700;
+  font-weight: normal;
   line-height: var(--line-height);
 }
 
-/* Subheadlines - use .subheadline class for GT-Pressure Mono */
+/* Subheadlines - use .subheadline class */
 .subheadline {
   font-family: var(--font-subheadline);
 }
 
-/* Body text - paragraphs and list items use Cambon */
+/* Body text - paragraphs and list items use GTPlanar */
 p, li {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;

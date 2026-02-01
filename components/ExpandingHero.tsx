@@ -11,6 +11,7 @@
 
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { imageSrc, imageSrcSet } from '../lib/images';
 
 export const ExpandingHero: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,7 +44,9 @@ export const ExpandingHero: React.FC = () => {
         >
           <div className="relative flex-1 w-full h-full overflow-hidden">
             <img 
-              src="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/11/10163101/250401_kandiegang_seasonopener_abbett.jpg?w=2000&q=80&auto=format" 
+              src={imageSrc('/images/250701_photosafari-12')}
+              srcSet={imageSrcSet('/images/250701_photosafari-12')}
+              sizes="100vw"
               className="w-full h-full object-cover"
               alt="We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men)."
               loading="lazy"
