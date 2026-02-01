@@ -1,0 +1,108 @@
+/**
+ * Animated blob background – Blush only, subtle.
+ * Use .animated-blob-contained on wrapper when inside a section (absolute fill).
+ */
+
+.animated-blob-wrapper {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: -1;
+  background: var(--color-primary-breath);
+}
+
+.animated-blob-wrapper.animated-blob-contained {
+  position: absolute;
+  z-index: 0;
+}
+
+/* Edge fade – blobs soften to background, no hard edge */
+.animated-blob-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50%,
+    transparent 0%,
+    transparent 30%,
+    var(--color-primary-breath) 75%,
+    var(--color-primary-breath) 100%
+  );
+}
+
+/* Noise overlay – subtle */
+.animated-blob-noise {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.animated-blob-svg-blur {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.animated-blob-interactive-container {
+  position: absolute;
+  inset: 0;
+  filter: url(#animatedBlobGoo);
+}
+
+.animated-blob-gradients {
+  position: absolute;
+  inset: 0;
+}
+
+.animated-blob-gradients > div {
+  position: absolute;
+  width: 45vw;
+  height: 45vw;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+}
+
+/* Static blobs – Blush only */
+.animated-blob-g1 {
+  background: var(--color-secondary-blush);
+  top: 10%;
+  left: 10%;
+}
+
+.animated-blob-g2 {
+  background: var(--color-secondary-blush);
+  top: 60%;
+  left: 20%;
+}
+
+.animated-blob-g3 {
+  background: var(--color-secondary-blush);
+  top: 20%;
+  left: 60%;
+}
+
+.animated-blob-g4 {
+  background: var(--color-secondary-blush);
+  top: 70%;
+  left: 70%;
+}
+
+.animated-blob-g5 {
+  background: var(--color-secondary-blush);
+  top: 40%;
+  left: 40%;
+}
+
+/* Cursor-following blob – Blush, very subtle */
+.animated-blob-interactive {
+  width: 35vw;
+  height: 35vw;
+  background: var(--color-secondary-blush);
+  opacity: 0.06;
+  transform: translate(50vw, 50vh);
+}
