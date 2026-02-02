@@ -8,6 +8,7 @@
  */
 
 import React, { useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { AnimatedBlob } from './AnimatedBlob';
 
@@ -40,7 +41,9 @@ export const ScrollingHeadline: React.FC = () => {
         <div className="relative flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-6 w-full text-center font-heading-light text-secondary-blush">
           <motion.div style={{ y: mundaneY, opacity: mundaneOpacity }} className="text-[14vw] lg:text-[10vw] leading-none tracking-normal">It's a</motion.div>
           <motion.div style={{ y: madeY, opacity: madeOpacity }} className="text-[14vw] lg:text-[10vw] leading-none tracking-normal">Love</motion.div>
-          <motion.div style={{ y: magicY, opacity: magicOpacity }} className="text-[14vw] lg:text-[10vw] leading-none tracking-normal">Story</motion.div>
+          <motion.div style={{ y: magicY, opacity: magicOpacity }} className="text-[14vw] lg:text-[10vw] leading-none tracking-normal">
+            <Link to="/stories" className="hover:underline focus:outline-none focus:underline cursor-pointer">Story</Link>
+          </motion.div>
         </div>
         <motion.p 
           style={{ opacity: useTransform(smoothProgress, [0.7, 0.9], [0, 1]) }}

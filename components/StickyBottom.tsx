@@ -38,7 +38,9 @@ export const StickyBottom: React.FC = () => {
   if (isDismissed && !isContactPage) {
     return (
       <button 
+        type="button"
         onClick={handleResetDismiss}
+        aria-label="Show sticky bar again"
         className="fixed bottom-6 right-6 z-[70] bg-white border border-slate-200 p-3 rounded-full shadow-lg hover:scale-110 transition-transform pointer-events-auto"
       >
         <Zap className="w-4 h-4 text-slate-900" />
@@ -64,11 +66,11 @@ export const StickyBottom: React.FC = () => {
               layout
               className="w-full bg-[#f9f100] border border-black/[0.03] rounded-full px-6 py-4 flex justify-between items-center shadow-2xl shadow-black/10 transition-transform active:scale-[0.98] cursor-pointer"
             >
-               <span className="text-[11px] font-bold text-black uppercase tracking-tight">
-                 Join the Founding Family
+               <span className="text-[11px] font-bold text-bold uppercase tracking-tight">
+                 Become a Kandie Gang Cycling Club Member
                </span>
                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-medium text-black/60">Apply to the beta</span>
+                  <span className="text-[11px] font-medium text-black/60">Support the movement</span>
                   <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
                </div>
             </motion.div>

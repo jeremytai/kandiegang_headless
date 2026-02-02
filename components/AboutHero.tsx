@@ -21,31 +21,16 @@ export const AboutHero: React.FC = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
-          <h1 className="mx-auto pt-6 md:pt-10 text-5xl md:text-8xl lg:text-[10vw] font-bold tracking-tighter text-slate-900 leading-[0.8] mb-2 text-balance">
-            Kandie Gang
-          </h1>
-          <h1 className="mx-auto text-5xl md:text-8xl lg:text-[10vw] font-bold tracking-tighter text-slate-400/80 leading-[0.8] text-balance">
-            The helpful robotics company
-          </h1>
         </motion.div>
       </div>
 
       <div className="col-span-1 col-start-1 min-h-[400px] h-full overflow-hidden rounded-xl bg-black md:row-start-1 md:h-full relative shadow-inner">
-        <video 
-          autoPlay 
-          muted 
-          loop 
-          playsInline
+        <img
+          src="/images/250621_hamburg-14.jpg"
+          alt="Kandie Gang"
           className="absolute inset-0 h-full w-full object-cover opacity-80"
-        >
-          <source src="https://stream.mux.com/nO7qOC7BAVniKPLrWS2vr5HeKWj801jW00JhjJilIX8lQ.m3u8" type="application/x-mpegURL" />
-          <img 
-            src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=2070&auto=format&fit=crop" 
-            alt="Kandie Gang Robotics"
-            className="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-          />
-        </video>
+          loading="eager"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/10" />
       </div>
     </section>

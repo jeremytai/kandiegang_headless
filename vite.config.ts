@@ -19,6 +19,23 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
-      }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: (id) => {
+              if (id.includes('node_modules')) {
+                if (id.includes('framer-motion')) return 'framer-motion';
+                if (id.includes('gsap')) return 'gsap';
+                if (id.includes('react-router')) return 'react-router';
+                if (id.includes('@google/genai')) return 'genai';
+                if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
+                if (id.includes('lucide-react')) return 'lucide';
+              }
+            },
+          },
+        },
+        chunkSizeWarningLimit: 600,
+      },
     };
 });

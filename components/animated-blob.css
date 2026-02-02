@@ -64,7 +64,7 @@
   height: 45vw;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.12;
+  opacity: 0.18;
 }
 
 /* Static blobs – Blush only */
@@ -98,11 +98,11 @@
   left: 40%;
 }
 
-/* Cursor-following blob – Blush, very subtle */
+/* Cursor-following blob – Blush */
 .animated-blob-interactive {
   width: 35vw;
   height: 35vw;
   background: var(--color-secondary-blush);
-  opacity: 0.06;
+  opacity: 0.14;
   transform: translate(50vw, 50vh);
 }

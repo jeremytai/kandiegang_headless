@@ -27,9 +27,9 @@ export const FloatingBetaBar: React.FC = () => {
         to="/" 
         className="flex w-full max-w-[95vw] md:max-w-[400px] justify-between gap-1 rounded-full bg-[#f9f100] px-5 py-4 text-[13px] font-bold leading-4 backdrop-blur-xl shadow-2xl shadow-black/10 transition-transform active:scale-95 border border-black/5"
       >
-        <p className="text-black uppercase tracking-tight">Join the Founding Family</p>
+        <p className="text-black uppercase tracking-tight">Become a Kandie Gang Member</p>
         <div className="flex items-center gap-2">
-          <p className="text-right text-black/60 font-medium">Apply to the beta</p>
+          <p className="text-right text-black/60 font-medium">Support the Kandie Gang</p>
           <span className="inline-block h-2 w-2 rounded-full bg-black animate-pulse"></span>
         </div>
       </Link>

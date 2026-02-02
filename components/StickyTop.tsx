@@ -148,17 +148,17 @@ export const StickyTop: React.FC = () => {
                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
                    <div className="space-y-6">
                      <nav className="flex flex-col gap-4">
-                        <NavLink label="Community" to="/community" onClick={handleToggle} />
-                        <NavLink label="Journal" to="/stories" onClick={handleToggle} />
+                        <NavLink label="Stories" to="/stories" onClick={handleToggle} />
+                        <NavLink label="Cycling Club" to="/cyclingclub" onClick={handleToggle} />
+                        <NavLink label="Shop" to="/shop" onClick={handleToggle} />
                         <NavLink label="About" to="/about" onClick={handleToggle} />
-                        <NavLink label="Contact" to="/contact" onClick={handleToggle} />
                      </nav>
                    </div>
                    <div 
                      className="rounded-xl p-6 flex flex-col justify-center border border-black/[0.03] bg-cover bg-center bg-no-repeat aspect-[4/3] bg-kandiegang-hero"
                    >
                       <div className="h-px bg-black/10 w-12 mb-4" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-black">Kandie Gang</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-black"></span>
                    </div>
                 </div>
               </motion.div>

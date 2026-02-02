@@ -35,6 +35,7 @@ const GUIDE_IMAGES = [
   'christian_m',
   'emma_b',
   'jeremy',
+  'kathi_s',
   'katrin_h',
   'michael_m',
   'rilana_s',
@@ -42,21 +43,19 @@ const GUIDE_IMAGES = [
   'saskia_s',
   'silvia_b_',
   'tanja_d',
+  'wiepke_h',
 ] as const;
 
 /** Secondary pill styles: background + text. White text on dark/secondary; Signal (yellow) uses current or purple-rain text. */
 const PILL_STYLES = [
   'bg-secondary-purple-rain text-white',
-  'bg-secondary-current text-white',
   'bg-secondary-drift text-white',
   'bg-secondary-blush text-white',
   'bg-secondary-signal text-secondary-current',
   'bg-secondary-purple-rain text-white',
-  'bg-secondary-current text-white',
   'bg-secondary-drift text-white',
   'bg-secondary-blush text-white',
   'bg-secondary-signal text-secondary-purple-rain',
-  'bg-secondary-current text-white',
 ] as const;
 
 const TeamLink: React.FC<{
@@ -108,7 +107,7 @@ const TeamLink: React.FC<{
             }}
             className="hidden lg:block"
           >
-            <div className="h-[140px] w-[140px] overflow-hidden rounded-full shadow-2xl border-4 border-white bg-white">
+            <div className="h-[140px] w-[140px] overflow-hidden rounded-full shadow-2xl border-2 border-white bg-white">
               <img
                 alt={name}
                 loading="lazy"
@@ -130,7 +129,7 @@ export const CompanySection: React.FC = () => {
   return (
     <section className="py-40 px-6 bg-breath flex flex-col items-center">
       <div className="max-w-4xl w-full text-center">
-      <h2 className="text-3xl md:text-7xl font-light tracking-tight text-secondary-current text-balance mb-12 md:mb-16">Kandie Gang Ride Guides</h2>
+      <h2 className="text-3xl md:text-7xl font-light tracking-tight text-secondary-current text-balance mb-12 md:mb-16">Kandie Gang Guides</h2>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-6">
           {shuffledGuides.map((basePath, i) => (
             <TeamLink
@@ -142,8 +141,8 @@ export const CompanySection: React.FC = () => {
             />
           ))}
         </div>
-        <p className="mt-20 text-slate-400 text-sm font-light">
-          And 20+ more pioneers in Hamburg and San Francisco.
+        <p className="mt-20 text-slate-400 text-md font-light">
+        Our weekly Tuesday Social Road Rides are based in Hamburg and led by our knowledgeable Ride Guides. Besides the road rides, we often organize gravel rides and activities based around cycling culture.
         </p>
       </div>
     </section>

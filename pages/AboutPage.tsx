@@ -11,61 +11,63 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Shield, Zap, Heart, Cpu, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowUpRight, Loader2, AlertCircle } from 'lucide-react';
 import { CompanySection } from '../components/CompanySection';
+import { CompanyValuesSection } from '../components/CompanyValuesSection.tsx';
 import { AboutHero } from '../components/AboutHero';
 import { ImageMarquee } from '../components/ImageMarquee';
-import { getPageBySlug, WPPage } from '../lib/wordpress';
+import { NewsletterSection } from '../components/NewsletterSection';
+// WordPress fetch – re-enable when ready (getPageBySlug)
+import { WPPage } from '../lib/wordpress';
 
 export const AboutPage: React.FC = () => {
+  // const [page, setPage] = useState<WPPage | null>(null);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
+  // useEffect(() => {
+  //   const fetchPage = async () => {
+  //     setLoading(true);
+  //     setError(null);
+  //     try {
+  //       const pageData = await getPageBySlug('about');
+  //       if (pageData) {
+  //         setPage(pageData);
+  //       } else {
+  //         setError('Page not found in WordPress');
+  //       }
+  //     } catch (err) {
+  //       console.error('Failed to fetch About page:', err);
+  //       setError('Failed to load content from WordPress');
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchPage();
+  // }, []);
+
   const [page, setPage] = useState<WPPage | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchPage = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const pageData = await getPageBySlug('about');
-        if (pageData) {
-          setPage(pageData);
-        } else {
-          setError('Page not found in WordPress');
-        }
-      } catch (err) {
-        console.error('Failed to fetch About page:', err);
-        setError('Failed to load content from WordPress');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPage();
-  }, []);
 
   // Default content to display if WordPress content is not available
   const defaultContent = {
-    intro: "We believe that robots belong in our homes. Not just to perform tasks, but to unlock human potential by removing the burden of repetitive chores.",
-    visionTitle: "Building a future where your home works for you.",
+    intro: "We're on a mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).",
+    visionTitle: "A cycling culture in which every rider and path belong.",
     visionText: [
-      "The home is our most private, sacred space. Bringing a robot into that space requires a radical commitment to safety, privacy, and aesthetic harmony.",
-      "At Kandie Gang, we're not just building hardware; we're building a new kind of relationship between humans and machines. One built on trust, utility, and elegance."
+      "By breaking old norms and centering diversity, creativity, and empathy, every ride, path, and connection becomes a space shaped by those who show up and participate.",
+      "Through group rides, community meetups, and shared creative projects, we actively welcome people of all identities and backgrounds, encouraging participation over perfection."
     ]
   };
-
-  // Extract content from WordPress HTML or use defaults
-  const introText = page?.content 
-    ? extractTextFromHTML(page.content, 0, 200) || defaultContent.intro
-    : defaultContent.intro;
 
   return (
     <div className="bg-white overflow-x-hidden">
       <AboutHero />
 
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-3">
         <AnimatePresence mode="wait">
+          {/* WordPress loader – re-enable when ready
           {loading ? (
             <motion.div
               key="loading"
@@ -78,14 +80,14 @@ export const AboutPage: React.FC = () => {
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span className="text-sm font-medium">Loading content from WordPress...</span>
               </div>
-              {/* Skeleton loader */}
               <div className="mt-8 space-y-4">
                 <div className="h-8 bg-slate-100 rounded w-3/4 animate-pulse" />
                 <div className="h-8 bg-slate-100 rounded w-full animate-pulse" />
                 <div className="h-8 bg-slate-100 rounded w-5/6 animate-pulse" />
               </div>
             </motion.div>
-          ) : error ? (
+          ) : */
+          error ? (
             <motion.div
               key="error"
               initial={{ opacity: 0, y: 20 }}
@@ -107,31 +109,22 @@ export const AboutPage: React.FC = () => {
               </motion.div>
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               key="content"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="my-40 max-w-3xl"
+              className="my-12"
             >
-              {page?.content ? (
-                <div 
-                  className="text-3xl md:text-4xl font-light text-slate-500 leading-tight tracking-tight prose prose-lg max-w-none"
-                  dangerouslySetInnerHTML={{ __html: page.content }}
-                />
-              ) : (
-                <p className="text-3xl md:text-4xl font-light text-slate-500 leading-tight tracking-tight">
-                  {introText}
-                </p>
-              )}
+              {/* Intro moved into section below to span all columns */}
             </motion.div>
           )}
         </AnimatePresence>
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-20 mb-40">
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-20 mb-40 mt-0">
           <div className="space-y-8">
-            <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Our Vision</h2>
-            <h3 className="text-4xl md:text-5xl font-bold tracking-tighter text-slate-900 leading-none">
+            <h2 className="text-xs font-normal font-gtplanar uppercase tracking-[0.3em] text-secondary-purple-rain">Our Vision</h2>
+            <h3 className="text-4xl md:text-5xl font-light tracking-normal text-secondary-purple-rain">
               {page?.title ? extractTextFromHTML(page.title) || defaultContent.visionTitle : defaultContent.visionTitle}
             </h3>
           </div>
@@ -153,36 +146,12 @@ export const AboutPage: React.FC = () => {
 
       <ImageMarquee />
 
-      <div className="max-w-7xl mx-auto px-6">
-        <section className="my-60">
-          <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-20 text-center">Our Principles</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-            <PrincipleCard 
-              icon={<Shield className="w-6 h-6" />}
-              title="Safety first"
-              desc="Compliant control and soft-body mechanics ensure Kandie Gang is always safe around pets, children, and fragile objects."
-            />
-            <PrincipleCard 
-              icon={<Zap className="w-6 h-6" />}
-              title="Real utility"
-              desc="We focus on the tasks people actually dislike—the mundane repetitive chores that eat up your evening."
-            />
-            <PrincipleCard 
-              icon={<Heart className="w-6 h-6" />}
-              title="Privacy by design"
-              desc="All vision processing happens locally. Your home data never leaves your front door."
-            />
-            <PrincipleCard 
-              icon={<Cpu className="w-6 h-6" />}
-              title="Continuous Learning"
-              desc="The Skill Library allows Kandie Gang to get smarter every day, learning from a collective intelligence network."
-            />
-          </div>
-        </section>
+      <div className="max-w-7xl mx-auto px-3">
+        <CompanyValuesSection />
 
         <CompanySection />
 
-        <section className="py-40 border-t border-slate-100 mb-20">
+        {/* <section className="py-40 border-t border-slate-100 mb-20">
           <div className="flex flex-col items-center text-center">
             <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-20">Backed by the best</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-20 gap-y-12 items-center opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
@@ -196,31 +165,35 @@ export const AboutPage: React.FC = () => {
                <InvestorLogo name="Khosla Ventures" />
             </div>
           </div>
+        </section> */}
+
+        <section className="relative rounded-[16px] p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
+          <img
+            src="/images/230902_7mesh-47.JPG"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-slate-900/50" aria-hidden />
+          <div className="relative z-10 flex flex-col items-center">
+            <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">Want to  partner with us?</h2>
+            <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
+              We're a collective of cyclists, creatives, and dreamers based in Hamburg, Germany.
+            </p>
+            <Link
+              to="/contact"
+              className="bg-white text-black px-10 py-5 rounded-full font-bold flex items-center gap-3 hover:bg-slate-100 transition-all active:scale-95 inline-flex"
+            >
+              Contact us <ArrowUpRight className="w-5 h-5" />
+            </Link>
+          </div>
         </section>
 
-        <section className="bg-slate-50 rounded-[48px] p-12 md:p-24 flex flex-col items-center text-center mb-40">
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-slate-900 mb-8">Want to build with us?</h2>
-          <p className="text-xl text-slate-500 mb-12 max-w-xl font-light">
-            We're a team of engineers, designers, and dreamers based in Hamburg and SF.
-          </p>
-          <button className="bg-black text-white px-10 py-5 rounded-full font-bold flex items-center gap-3 hover:bg-slate-800 transition-all active:scale-95">
-            View open roles <ArrowUpRight className="w-5 h-5" />
-          </button>
-        </section>
+        <NewsletterSection />
       </div>
     </div>
   );
 };
-
-const PrincipleCard = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
-  <div className="space-y-6 group">
-    <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-900 group-hover:bg-[#f9f100] transition-colors duration-500">
-      {icon}
-    </div>
-    <h3 className="text-xl font-bold tracking-tight text-slate-900">{title}</h3>
-    <p className="text-slate-500 leading-relaxed font-light">{desc}</p>
-  </div>
-);
 
 const InvestorLogo = ({ name }: { name: string }) => (
   <span className="text-lg md:text-2xl font-bold tracking-tighter text-slate-900 whitespace-nowrap cursor-default hover:text-black transition-colors">

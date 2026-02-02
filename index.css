@@ -191,6 +191,11 @@ html {
   font-family: var(--font-body);
 }
 
+.font-gt-planar,
+.font-gtplanar {
+  font-family: var(--font-body);
+}
+
 /* Arena Typography Scale Utilities */
 .text-h1 {
   font-size: var(--h1);
@@ -502,3 +507,19 @@ button, a {
     .bg-kandiegang-hero {
         background-image: url('https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/11/08124931/250621_kandiegang-19-2048x1365.jpg');
     }
+
+/* Logo entrance: slide up from below with slight spin */
+@keyframes logo-enter {
+    from {
+        opacity: 0;
+        transform: translateY(1.5rem) rotate(-12deg);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) rotate(0);
+    }
+}
+
+.animate-logo-enter {
+    animation: logo-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

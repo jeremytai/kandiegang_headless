@@ -9,6 +9,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **🌐 Multi-Page Routing**: Landing, About, Community, Stories (Journal), Contact, and Fonts showcase pages
 - **🤖 AI-Powered Content**: Real-time weather data via Google Gemini API with search grounding
 - **📱 Fully Responsive**: Mobile-first design with Tailwind CSS
+- **📬 Newsletter (Substack)**: Signup modal embeds your Substack publication’s form; optional env var
 - **⚡ Performance Optimized**: Build-time WebP conversion and responsive image widths (Sharp), query caching, retry logic
 - **🎭 Advanced Animations**: Animated headline (split-type char reveal + color fill), spring physics, scroll progress tracking
 
@@ -57,6 +58,10 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
    # WordPress GraphQL Endpoint
    VITE_WP_GRAPHQL_URL=https://your-wordpress-site.com/graphql
    
+   # Substack newsletter publication URL (optional)
+   # Your Substack publication base URL (e.g. https://yoursubstack.substack.com)
+   VITE_SUBSTACK_PUBLICATION=https://yoursubstack.substack.com
+   
    # Google Gemini API Key (for weather data)
    GEMINI_API_KEY=your_gemini_api_key_here
    ```
@@ -81,6 +86,8 @@ kandiegang_headless/
 │   ├── FAQSection.tsx
 │   ├── FloatingBetaBar.tsx
 │   ├── Footer.tsx
+│   ├── NewsletterSection.tsx   # Newsletter bar + Subscribe (opens NewsletterModal)
+│   ├── NewsletterModal.tsx     # Substack embed signup form
 │   ├── HeadlineSection.tsx
 │   ├── HorizontalRevealSection.tsx
 │   ├── ImageMarquee.tsx
@@ -123,6 +130,8 @@ kandiegang_headless/
 - **`AboutHero.tsx`**: Immersive hero section with video background for the About page.
 - **`AdaptationGrid.tsx`**: Showcases real-world autonomous tasks in a grid layout.
 - **`FAQSection.tsx`**: Expandable FAQ section with smooth animations.
+- **`NewsletterSection.tsx`**: Newsletter signup bar (“Get the latest in your inbox” / “Sign up to our newsletter”) with a Subscribe button; opens `NewsletterModal`.
+- **`NewsletterModal.tsx`**: Centered modal that embeds your Substack publication’s signup form in an iframe when `VITE_SUBSTACK_PUBLICATION` is set. Includes a link to open the subscribe page in a new tab.
 
 ### UI Utilities
 
@@ -175,6 +184,21 @@ const data = await wpQuery<{ posts: { nodes: WPPost[] } }>(
 1. Install the [WPGraphQL plugin](https://www.wpgraphql.com/) on your WordPress site
 2. Configure the GraphQL endpoint URL in your `.env` file
 3. The app will automatically use the demo endpoint if no URL is provided
+
+## 📬 Newsletter (Substack)
+
+The newsletter signup on the landing page (after the FAQ) embeds your **Substack** publication’s signup form in a modal. No backend is required.
+
+### Setup
+
+1. Create or use an existing **Substack** publication (e.g. `https://yoursubstack.substack.com`).
+2. In your project root, add to `.env` or `.env.local`:
+   ```env
+   VITE_SUBSTACK_PUBLICATION=https://yoursubstack.substack.com
+   ```
+3. Restart the dev server so the new env var is picked up.
+
+The modal embeds Substack’s signup form via iframe (`/embed`). Users can subscribe without leaving your site. A link to “Open subscribe page in new tab” is also shown. If `VITE_SUBSTACK_PUBLICATION` is not set, the modal shows instructions to set the env var.
 
 ## 🛠️ Development
 
@@ -290,6 +314,7 @@ The app can be deployed to any static hosting service:
 
 Make sure to set environment variables in your hosting platform:
 - `VITE_WP_GRAPHQL_URL`: Your WordPress GraphQL endpoint
+- `VITE_SUBSTACK_PUBLICATION`: (Optional) Substack publication base URL for newsletter signup embed
 - `GEMINI_API_KEY`: Your Google Gemini API key
 
 ## 📝 License

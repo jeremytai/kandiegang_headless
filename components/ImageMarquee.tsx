@@ -14,18 +14,18 @@ import { motion } from 'framer-motion';
 
 export const ImageMarquee: React.FC = () => {
   const images = [
-    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1535378917042-10a22c95931a?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1523961131990-5ea7c61b2107?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=1200&auto=format&fit=crop",
+    "/images/231112_stevenscup_neuduvenstedt-10.jpg?q=80&w=1200&auto=format&fit=crop",
+    "/images/240707_humanrides-75.jpg?q=80&w=1200&auto=format&fit=crop",
+    "/images/230422_kandiegang_radbahn-50.jpg?q=80&w=1200&auto=format&fit=crop",
+    "/images/250401_hamburg-37.jpg?q=80&w=1200&auto=format&fit=crop",
+    "/images/230422_kandiegang_radbahn-50.jpg?q=80&w=1200&auto=format&fit=crop",
+    "/images/251031_halloween_gravelo_abbett-86.jpg?q=80&w=1200&auto=format&fit=crop",
   ];
 
   const marqueeImages = [...images, ...images];
 
   return (
-    <section className="w-full overflow-hidden py-32 bg-white">
+    <section className="w-full overflow-hidden py-12 lg:py-16 bg-white">
       <motion.div 
         className="flex gap-[12vw] pl-[6vw]"
         animate={{ x: ["0%", "-50%"] }}
