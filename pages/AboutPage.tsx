@@ -171,7 +171,7 @@ export const AboutPage: React.FC = () => {
 
       </div>
 
-      <div className="w-full mx-4 md:mx-6">
+      <div className="w-full px-4 md:px-6">
         <section className="relative rounded-xl p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
           <img
             src="/images/230902_7mesh-47.JPG"

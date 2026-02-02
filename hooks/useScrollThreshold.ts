@@ -7,12 +7,14 @@ import { useState, useEffect } from 'react';
  * @returns boolean - Whether the scroll position is past the threshold
  */
 export const useScrollThreshold = (threshold: number = 300) => {
-  const [isPastThreshold, setIsPastThreshold] = useState(false);
+  const [isPastThreshold, setIsPastThreshold] = useState(() =>
+    typeof window !== 'undefined' ? window.scrollY >= threshold : false
+  );
 
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      if (scrollY > threshold) {
+      if (scrollY >= threshold) {
         setIsPastThreshold(true);
       } else {
         setIsPastThreshold(false);

@@ -523,3 +523,20 @@ button, a {
 .animate-logo-enter {
     animation: logo-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+
+/* Shared section side margins (matches NewsletterSection, Get involved, FAQ) */
+.section-side-margin {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+@media (min-width: 768px) {
+  .section-side-margin {
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+  }
+}
+
+/* KandieGangCyclingClubPage: benefit pill tooltip (position set via ref) */
+.benefit-tooltip-position {
+  transform: translate(-50%, -100%);
+}

@@ -15,7 +15,7 @@ export const NewsletterSection: React.FC = () => {
   return (
     <>
       <section
-        className="relative mx-4 my-4 grid h-[20vh] min-h-[110px] grid-cols-1 grid-rows-1 overflow-hidden rounded-xl bg-secondary-current md:mx-6 md:my-6 md:h-[110px]"
+        className="section-side-margin relative my-4 grid h-[20vh] min-h-[110px] grid-cols-1 grid-rows-1 overflow-hidden rounded-xl bg-secondary-current md:my-6 md:h-[110px]"
         aria-label="Newsletter signup"
       >
         <div className="relative z-10 col-span-1 col-start-1 row-start-1 flex flex-col items-center justify-center gap-1 p-6 md:flex-row md:gap-4">

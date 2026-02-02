@@ -28,6 +28,7 @@ export const Footer: React.FC = () => {
             <ul className="col-span-3 flex flex-col gap-2 pb-4 md:col-span-2 md:gap-3">
               <li><p className="text-secondary-current uppercase tracking-widest text-[10px] font-bold mb-1">Explore</p></li>
               <FooterLink to="/community" label="Community" />
+              <FooterLink to="/ridelevels" label="Ride Levels" />
               <FooterLink to="/stories" label="Stories" />
               <FooterLink to="/shop" label="Shop" />
             </ul>
@@ -35,6 +36,7 @@ export const Footer: React.FC = () => {
             <ul className="col-span-3 flex flex-col gap-2 pb-4 md:col-span-2 md:gap-3">
               <li><p className="text-secondary-current uppercase tracking-widest text-[10px] font-bold mb-1">About</p></li>
               <FooterLink to="/about" label="Company" />
+              <FooterLink to="/kandiecode" label="Kandie Code" />
               <FooterLink to="/waiver" label="Ride Waiver" />
               <FooterLink to="/privacy-policy" label="Privacy Policy" />
             </ul>

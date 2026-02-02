@@ -149,7 +149,7 @@ export const StickyTop: React.FC = () => {
                    <div className="space-y-6">
                      <nav className="flex flex-col gap-4">
                         <NavLink label="Stories" to="/stories" onClick={handleToggle} />
-                        <NavLink label="Cycling Club" to="/cyclingclub" onClick={handleToggle} />
+                        <NavLink label="Cycling Club" to="/kandiegangcyclingclub" onClick={handleToggle} />
                         <NavLink label="Shop" to="/shop" onClick={handleToggle} />
                         <NavLink label="About" to="/about" onClick={handleToggle} />
                      </nav>

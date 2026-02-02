@@ -31,6 +31,9 @@ import { ContactPage } from './pages/ContactPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { ImprintPage } from './pages/ImprintPage';
 import { WaiverPage } from './pages/WaiverPage';
+import { KandieCodePage } from './pages/KandieCodePage';
+import { RideLevelsPage } from './pages/RideLevelsPage';
+import { KandieGangCyclingClubPage } from './pages/KandieGangCyclingClubPage';
 import { Footer } from './components/Footer';
 
 const App: React.FC = () => {
@@ -108,6 +111,9 @@ const App: React.FC = () => {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/imprint" element={<ImprintPage />} />
           <Route path="/waiver" element={<WaiverPage />} />
+          <Route path="/kandiecode" element={<KandieCodePage />} />
+          <Route path="/ridelevels" element={<RideLevelsPage />} />
+          <Route path="/kandiegangcyclingclub" element={<KandieGangCyclingClubPage />} />
           <Route path="/fonts" element={<FontsPage />} />
         </Routes>
         
@@ -116,7 +122,7 @@ const App: React.FC = () => {
 
       {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
       <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
-      {['/', '/stories', '/about'].includes(location.pathname) && <StickyBottom />}
+      {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && <StickyBottom />}
     </div>
   );
 };

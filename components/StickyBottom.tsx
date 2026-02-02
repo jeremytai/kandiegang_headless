@@ -2,7 +2,7 @@
  * StickyBottom.tsx
  * A high-fidelity call-to-action bar that sticks to the bottom of the viewport.
  * Features:
- * - Appears only after the user scrolls past a 300px threshold.
+ * - Visible on page load (no scroll threshold).
  * - Smoothly slides down and fades out when the user scrolls deep into the landing page.
  * - Glass-morphic yellow design matching the Kandie Gang brand.
  * - Persistent dismissal logic saved to localStorage.
@@ -20,7 +20,7 @@ export const StickyBottom: React.FC = () => {
   });
   
   const location = useLocation();
-  const isPastThreshold = useScrollThreshold(300);
+  const isPastThreshold = useScrollThreshold(0);
   const isContactPage = location.pathname === '/contact';
 
   const { scrollY } = useScroll();
@@ -33,7 +33,7 @@ export const StickyBottom: React.FC = () => {
     localStorage.removeItem('sunday_nav_dismissed');
   };
 
-  const isActiveInThreshold = !isDismissed && isPastThreshold && !isContactPage;
+  const isActive = !isDismissed && isPastThreshold && !isContactPage;
 
   if (isDismissed && !isContactPage) {
     return (
@@ -54,7 +54,7 @@ export const StickyBottom: React.FC = () => {
       className="fixed inset-x-0 bottom-6 z-[70] pointer-events-none flex flex-col items-center px-6"
     >
       <AnimatePresence>
-        {isActiveInThreshold && (
+        {isActive && (
           <motion.div
             initial={{ y: 100, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
