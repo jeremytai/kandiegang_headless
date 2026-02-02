@@ -146,9 +146,11 @@ export const AboutPage: React.FC = () => {
 
       <ImageMarquee />
 
-      <div className="max-w-7xl mx-auto px-3">
+      <div className="w-full">
         <CompanyValuesSection />
+      </div>
 
+      <div className="max-w-7xl mx-auto px-3">
         <CompanySection />
 
         {/* <section className="py-40 border-t border-slate-100 mb-20">
@@ -167,7 +169,10 @@ export const AboutPage: React.FC = () => {
           </div>
         </section> */}
 
-        <section className="relative rounded-[16px] p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
+      </div>
+
+      <div className="w-full mx-4 md:mx-6">
+        <section className="relative rounded-xl p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
           <img
             src="/images/230902_7mesh-47.JPG"
             alt=""
@@ -188,7 +193,9 @@ export const AboutPage: React.FC = () => {
             </Link>
           </div>
         </section>
+      </div>
 
+      <div className="w-full">
         <NewsletterSection />
       </div>
     </div>

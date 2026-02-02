@@ -8,7 +8,7 @@
  */
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
 // Reusable Components
@@ -28,11 +28,16 @@ import { CommunityPage } from './pages/CommunityPage';
 import { StoriesPage } from './pages/StoriesPage';
 import { FontsPage } from './pages/FontsPage';
 import { ContactPage } from './pages/ContactPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { ImprintPage } from './pages/ImprintPage';
+import { WaiverPage } from './pages/WaiverPage';
 import { Footer } from './components/Footer';
 
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
+  const visitedPathsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (isLoading) {
@@ -44,6 +49,15 @@ const App: React.FC = () => {
       document.body.style.overflow = 'unset';
     };
   }, [isLoading]);
+
+  // Scroll to top on internal navigation only when visiting a route for the first time this session
+  useEffect(() => {
+    const pathname = location.pathname;
+    if (!visitedPathsRef.current.has(pathname)) {
+      window.scrollTo(0, 0);
+      visitedPathsRef.current.add(pathname);
+    }
+  }, [location.pathname]);
 
   const { scrollYProgress } = useScroll({
     target: sentinelRef,
@@ -91,6 +105,9 @@ const App: React.FC = () => {
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/imprint" element={<ImprintPage />} />
+          <Route path="/waiver" element={<WaiverPage />} />
           <Route path="/fonts" element={<FontsPage />} />
         </Routes>
         
@@ -99,7 +116,7 @@ const App: React.FC = () => {
 
       {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
       <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
-      <StickyBottom />
+      {['/', '/stories', '/about'].includes(location.pathname) && <StickyBottom />}
     </div>
   );
 };

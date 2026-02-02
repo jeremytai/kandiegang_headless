@@ -2,7 +2,7 @@
  * CompanyValuesSection.tsx
  * Values block inspired by Sunday.ai company page.
  * Two-column layout: heading block (Our Values / The principles that guide us) and a list of
- * value items (title + description) with top borders, rounded background, and responsive spacing.
+ * value items (title + description) with top borders and responsive spacing.
  */
 
 import React from 'react';
@@ -47,7 +47,7 @@ export const CompanyValuesSection: React.FC = () => {
       className="pt-16 pb-8 lg:pt-24 lg:pb-12"
       data-section-title="company-values"
     >
-      <div className="grid grid-cols-12 gap-x-6 gap-y-5 rounded-2xl bg-secondary-purple-rain px-4 pt-16 pb-16 text-primary transition-colors duration-300 lg:px-8 lg:pt-12 lg:pb-20">
+      <div className="grid grid-cols-12 gap-x-6 gap-y-5 bg-secondary-purple-rain px-4 pt-16 pb-16 text-primary transition-colors duration-300 lg:px-8 lg:pt-12 lg:pb-20">
         <div className="col-span-full pb-8 lg:col-span-4">
           <h3 className="text-xs font-normal font-gtplanar uppercase tracking-[0.3em] text-white mb-8">
             Our Values
