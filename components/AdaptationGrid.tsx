@@ -23,7 +23,7 @@ interface AdaptationCardProps {
 const AdaptationMediaCard: React.FC<AdaptationCardProps> = ({ videoSrc, poster, label, tags }) => {
   return (
     <div className="relative w-[82vw] md:w-full shrink-0 snap-start">
-      <div className="group relative aspect-video overflow-hidden rounded-[24px] bg-black border border-slate-100 shadow-xl">
+      <div className="group relative aspect-video overflow-hidden rounded-xl bg-black border border-slate-100 shadow-xl">
         <video 
           autoPlay 
           muted 

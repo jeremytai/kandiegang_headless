@@ -5,7 +5,7 @@
  * light grey → signal yellow → headline color.
  */
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitType from 'split-type';
@@ -18,7 +18,7 @@ const COLOR_HEADLINE = '#46519C'; // --color-secondary-purple-rain
 
 export type AnimatedHeadlineProps = {
   text: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
   className?: string;
   colorAfterReveal?: boolean;
 };

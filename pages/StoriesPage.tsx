@@ -123,7 +123,7 @@ export const StoriesPage: React.FC = () => {
                     viewport={{ once: true }}
                     className="group cursor-pointer grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-center"
                   >
-                    <div className="lg:col-span-7 overflow-hidden rounded-[32px] md:rounded-[48px] aspect-[16/10] bg-slate-100 relative shadow-2xl shadow-black/5">
+                    <div className="lg:col-span-7 overflow-hidden rounded-xl aspect-[16/10] bg-slate-100 relative shadow-2xl shadow-black/5">
                       <img 
                         src={featuredStory.featuredImage?.node.sourceUrl || "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1200"} 
                         className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
@@ -168,7 +168,7 @@ export const StoriesPage: React.FC = () => {
                     transition={{ delay: i * 0.1 }}
                     className="group cursor-pointer flex flex-col"
                   >
-                    <div className="overflow-hidden rounded-[32px] md:rounded-[40px] aspect-video bg-slate-100 mb-6 md:mb-10 shadow-lg group-hover:shadow-xl transition-shadow duration-500">
+                    <div className="overflow-hidden rounded-xl aspect-video bg-slate-100 mb-6 md:mb-10 shadow-lg group-hover:shadow-xl transition-shadow duration-500">
                       <img 
                         src={story.featuredImage?.node.sourceUrl || "https://images.unsplash.com/photo-1546776310-eef45dd6d63c?q=80&w=800"} 
                         className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 

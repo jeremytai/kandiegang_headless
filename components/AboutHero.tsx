@@ -30,7 +30,7 @@ export const AboutHero: React.FC = () => {
         </motion.div>
       </div>
 
-      <div className="col-span-1 col-start-1 min-h-[400px] h-full overflow-hidden rounded-[24px] md:rounded-[48px] bg-black md:row-start-1 md:h-full relative shadow-inner">
+      <div className="col-span-1 col-start-1 min-h-[400px] h-full overflow-hidden rounded-xl bg-black md:row-start-1 md:h-full relative shadow-inner">
         <video 
           autoPlay 
           muted 

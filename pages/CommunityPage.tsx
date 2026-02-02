@@ -147,7 +147,7 @@ export const CommunityPage: React.FC = () => {
             <TechFeature label="Proprioceptive Feedback Loops" />
           </ul>
         </div>
-        <div className="relative aspect-square bg-slate-100 rounded-[48px] overflow-hidden group shadow-2xl">
+        <div className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden group shadow-2xl">
           <img 
             src="https://images.unsplash.com/photo-1555255707-c07966088b7b?q=80&w=1000&auto=format&fit=crop" 
             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
@@ -163,7 +163,7 @@ export const CommunityPage: React.FC = () => {
       <section className="py-40 bg-slate-900 text-white px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-32">
-            <div className="relative aspect-[4/3] bg-white/5 rounded-[48px] overflow-hidden order-2 lg:order-1 border border-white/10">
+            <div className="relative aspect-[4/3] bg-white/5 rounded-xl overflow-hidden order-2 lg:order-1 border border-white/10">
                <video 
                  autoPlay 
                  muted 

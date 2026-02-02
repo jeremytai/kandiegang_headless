@@ -27,7 +27,7 @@ export const ExpandingHero: React.FC = () => {
   const clipPath = useTransform(entryProgress, (v) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const padding = isMobile ? '4vw' : '2vw';
-    const radius = isMobile ? '32px' : '48px';
+    const radius = '12px'; // rounded-xl
     return `inset(0px calc(${padding} * (1 - ${v})) round calc(${radius} * (1 - ${v})))`;
   });
 

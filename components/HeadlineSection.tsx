@@ -7,14 +7,14 @@
  * - Responsive: Adjusted font sizing and text balancing for all screen widths.
  */
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { AnimatedHeadline } from './AnimatedHeadline';
 import { imageSrc } from '../lib/images';
 
 /** Guide photos from public/images/guides (base path without extension). */
 const HEADLINE_IMAGE_BASES = [
-  '/images/guides/björn_h',
+  '/images/guides/bjoern_h',
   '/images/guides/christian_m',
   '/images/guides/emma_b',
   '/images/guides/jeremy',
@@ -27,11 +27,21 @@ const HEADLINE_IMAGE_BASES = [
   '/images/guides/tanja_d',
 ];
 
+function shuffle<T>(arr: readonly T[]): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 const ROTATE_INTERVAL_MS = 3000;
 
 export const HeadlineSection: React.FC = () => {
   const ref = useRef<HTMLDivElement>(null);
   const [imageIndex, setImageIndex] = useState(0);
+  const shuffledBases = useMemo(() => shuffle(HEADLINE_IMAGE_BASES), []);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"]
@@ -39,10 +49,10 @@ export const HeadlineSection: React.FC = () => {
 
   useEffect(() => {
     const id = setInterval(() => {
-      setImageIndex((i) => (i + 1) % HEADLINE_IMAGE_BASES.length);
+      setImageIndex((i) => (i + 1) % shuffledBases.length);
     }, ROTATE_INTERVAL_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [shuffledBases.length]);
 
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
@@ -58,7 +68,7 @@ export const HeadlineSection: React.FC = () => {
           <AnimatedHeadline text="You found us " as="span" />
           <img
             key={imageIndex}
-            src={imageSrc(HEADLINE_IMAGE_BASES[imageIndex], 400)}
+            src={imageSrc(shuffledBases[imageIndex], 400)}
             alt=""
             className="inline-block w-[0.85em] h-[0.85em] min-w-[2.5rem] min-h-[2.5rem] md:min-w-[3.5rem] md:min-h-[3.5rem] rounded-full object-cover align-middle mx-0.5"
             aria-hidden

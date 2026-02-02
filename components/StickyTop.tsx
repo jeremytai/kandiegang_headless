@@ -155,7 +155,7 @@ export const StickyTop: React.FC = () => {
                      </nav>
                    </div>
                    <div 
-                     className="rounded-2xl p-6 flex flex-col justify-center border border-black/[0.03] bg-cover bg-center bg-no-repeat aspect-[4/3] bg-kandiegang-hero"
+                     className="rounded-xl p-6 flex flex-col justify-center border border-black/[0.03] bg-cover bg-center bg-no-repeat aspect-[4/3] bg-kandiegang-hero"
                    >
                       <div className="h-px bg-black/10 w-12 mb-4" />
                       <span className="text-[10px] font-bold uppercase tracking-wider text-black">Kandie Gang</span>

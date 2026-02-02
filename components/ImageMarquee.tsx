@@ -38,7 +38,7 @@ export const ImageMarquee: React.FC = () => {
         {marqueeImages.map((src, idx) => (
           <div 
             key={idx}
-            className={`relative flex-none overflow-hidden rounded-[24px] md:rounded-[40px] bg-slate-100 shadow-sm
+            className={`relative flex-none overflow-hidden rounded-xl bg-slate-100 shadow-sm
               ${idx % 2 === 0 ? 'w-[75vw] md:w-[28vw] aspect-[3/4]' : 'w-[85vw] md:w-[38vw] aspect-[16/10]'}
             `}
           >

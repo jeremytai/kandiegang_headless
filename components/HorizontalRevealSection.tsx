@@ -10,14 +10,32 @@
  */
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, MotionValue } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 
-const SegmentedNav: React.FC<{ activeIndex: number, onSelect: (index: number) => void, progress: MotionValue<number> }> = ({ activeIndex, onSelect, progress }) => {
-  const segments = ["Features", "360°", "Anatomy"];
+const SegmentedNav: React.FC<{
+  activeIndex: number;
+  onSelect: (index: number) => void;
+  progress: MotionValue<number>;
+  sectionInView: MotionValue<number>;
+}> = ({ activeIndex, onSelect, progress, sectionInView }) => {
+  const segments = ["Let's Ride", "Stories", "Membership", "Shop"];
   
-  const opacity = useTransform(progress, [0, 0.1, 0.9, 1], [0, 1, 1, 0]);
-  const y = useTransform(progress, [0, 0.1, 0.9, 1], [40, 0, 0, 40]);
+  // Visible only when section is in viewport; within section, hide when leaving
+  const opacityInSection = useTransform(progress, [0, 0, 0.9, 1], [1, 1, 1, 0]);
+  const opacity = useTransform([opacityInSection, sectionInView], ([o, v]) => (o as number) * (v as number));
+  // Animate up from bottom when section enters view, down only when leaving section (not when at Shop)
+  const y = useTransform(
+    [sectionInView, progress],
+    ([v, p]: (number | string)[]) => {
+      const vn = v as number;
+      const pn = p as number;
+      if (pn > 0.92) return 40 * (pn - 0.92) / 0.08; // slide down only when really leaving section
+      if (vn < 0.1) return 40; // below when section not in view
+      if (vn < 0.2) return 40 - 40 * (vn - 0.1) / 0.1; // slide up as section enters
+      return 0;
+    }
+  );
 
   return (
     <motion.div 
@@ -50,19 +68,19 @@ const SegmentedNav: React.FC<{ activeIndex: number, onSelect: (index: number) =>
 };
 
 const HorizontalCard: React.FC<{ title: string, desc: string, img: string }> = ({ title, desc, img }) => (
-  <div className="relative flex-none w-[90vw] md:w-[60vw] aspect-[4/5] md:aspect-[16/10] rounded-[32px] md:rounded-[48px] overflow-hidden p-8 md:p-20 flex flex-col justify-center bg-slate-900 text-white shadow-2xl group">
+  <div className="relative flex-none w-[90vw] md:w-[60vw] aspect-[4/5] md:aspect-[16/10] rounded-xl overflow-hidden p-8 md:p-20 flex flex-col justify-end bg-slate-900 text-white shadow-2xl group">
     <div className="relative z-10 max-w-xl">
-      <h3 className="text-4xl md:text-8xl font-bold tracking-tighter mb-4 md:mb-8 group-hover:scale-105 transition-transform duration-700 origin-left text-balance">{title}</h3>
-      <p className="opacity-60 text-base md:text-2xl leading-relaxed font-light tracking-tight text-balance">{desc}</p>
+      <h3 className="text-3xl md:text-5xl font-light tracking-tight mb-2 md:mb-3 group-hover:scale-105 transition-transform duration-700 origin-left text-balance">{title}</h3>
+      <p className="opacity-60 text-sm md:text-base leading-relaxed font-light tracking-tight text-balance">{desc}</p>
     </div>
     <div className="absolute inset-0 z-0">
       <img 
         src={img} 
-        className="w-full h-full object-cover opacity-50 grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:opacity-60" 
+        className="w-full h-full object-cover" 
         alt={title} 
         loading="lazy"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
     </div>
   </div>
 );
@@ -76,34 +94,52 @@ export const HorizontalRevealSection: React.FC = () => {
     offset: ["start start", "end end"]
   });
 
-  // Calculate transform based on card width + gap
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-75%"]);
+  // Section in viewport: nav visible whenever section overlaps viewport (including at top when "Let's Ride" is selected)
+  const { scrollYProgress: sectionInViewProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"]
+  });
+  // Nav appears only after section is well in view (not as soon as it overlaps viewport)
+  const sectionInView = useTransform(sectionInViewProgress, [0, 0.75, 0.98, 1], [0, 1, 1, 0]);
+
+  const cardCount = 4;
+  // Each card (1–4) lines up to the same left edge as the 1st card; last card less translation so it's not too far left.
+  const xTarget = useTransform(
+    scrollYProgress,
+    [0, 0.25, 0.5, 0.75, 0.85, 1],
+    ["0%", "-20%", "-37%", "-58%", "-58%", "-58%"]
+  );
+  // Spring with a little bounce when Shop (4th card) reaches its end point
+  const x = useSpring(xTarget, { stiffness: 320, damping: 24 });
   
   useEffect(() => {
     return scrollYProgress.on("change", (v) => {
-      if (v < 0.35) setActiveIndex(0);
-      else if (v < 0.70) setActiveIndex(1);
-      else setActiveIndex(2);
+      const segment = Math.min(Math.floor(v * cardCount), cardCount - 1);
+      setActiveIndex(segment);
     });
   }, [scrollYProgress]);
 
   const scrollToSegment = (index: number) => {
     if (!sectionRef.current) return;
     const scrollHeight = sectionRef.current.scrollHeight;
-    const targetY = sectionRef.current.offsetTop + (scrollHeight / 3) * index;
+    // Each pill scrolls so its card is in the same x position as the 1st card at start (same left margin).
+    // Last (4th) card: same left margin as 1st card.
+    const progressPerSegment = [0, 0.25, 0.5, 0.75];
+    const progress = progressPerSegment[Math.min(index, cardCount - 1)] ?? 0;
+    const targetY = sectionRef.current.offsetTop + scrollHeight * progress;
     window.scrollTo({ top: targetY, behavior: 'smooth' });
   };
 
   const indicators = [0, 1, 2, 3];
   
   return (
-    <section ref={sectionRef} className="relative h-[400vh] md:h-[500vh] bg-[#fdfdfd]">
+    <section ref={sectionRef} className="relative h-[400vh] md:h-[500vh] bg-secondary-purple-rain">
       <div className="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden">
-        <div className="absolute top-12 md:top-20 left-0 w-full px-8 md:px-16 flex justify-between items-start z-20">
-          <h2 className="text-3xl md:text-7xl font-bold tracking-tighter text-[#111827] text-balance">Designed for real use</h2>
+        <div className="absolute top-12 md:top-20 left-0 w-full px-8 md:px-16 pb-12 md:pb-16 flex justify-between items-start z-20">
+          <h2 className="text-3xl md:text-7xl font-light tracking-tight text-secondary-current text-balance">Community is Our Catalyst</h2>
           <div className="hidden md:flex items-center gap-2 text-slate-400 font-medium text-xs md:text-sm pt-4">
-            <span className="tracking-tight uppercase tracking-widest text-[10px]">Scroll to explore</span>
-            <ChevronRight className="w-4 h-4" />
+            <span className="tracking-tight uppercase tracking-widest text-secondary-current text-[10px]">Scroll down to explore</span>
+            <ChevronRight className="w-4 h-4 text-secondary-current" />
           </div>
         </div>
 
@@ -122,30 +158,33 @@ export const HorizontalRevealSection: React.FC = () => {
           })}
         </div>
 
-        <motion.div style={{ x }} className="flex gap-6 md:gap-8 px-[5vw] md:px-[15vw] items-center">
+        <motion.div
+          style={{ x }}
+          className="flex gap-6 md:gap-8 pl-[2vw] md:pl-[4vw] pr-[5vw] md:pr-[15vw] items-center min-w-max mt-16 md:mt-24"
+        >
           <HorizontalCard 
-            title="Features"
-            desc="Every aspect of Kandie Gang is designed to blend into your living space while providing maximum utility."
-            img="https://picsum.photos/seed/feature-memo/1200/800"
+            title="Let's Ride"
+            desc="People join us for our community rides, to exchange bicycle knowledge and build friendships—no matter their gender, race or social background."
+            img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/09/06220134/250923_kandiegangsocialride-20-scaled.jpg"
           />
           <HorizontalCard 
-            title="360° Visibility"
-            desc="Lidar and high-res vision sensors give Kandie Gang a perfect understanding of its surroundings in all directions."
-            img="https://picsum.photos/seed/vision-memo/1200/800"
+            title="Stories"
+            desc="We believe actions speak louder than words. Because belonging emerges when people show up, ride, and co-create together."
+            img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/11/10165246/251031_halloween_gravelo_abbett-89.jpg"
           />
           <HorizontalCard 
-            title="Anatomy"
-            desc="Compliant control actuators and passive stability make Kandie Gang the safest household robot ever built."
-            img="https://picsum.photos/seed/anatomy-memo/1200/800"
+            title="Membership"
+            desc="An annual subscription includes early access to weekly local rides, members only access to photos, discounts on products, and much more."
+            img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/04/08130454/250401_kandiegang_seasonopener_2025-14-2048x1539.jpg"
           />
           <HorizontalCard 
-            title="Soft Mechanics"
-            desc="Soft-to-the-touch shell, with no sharp corners and can be wiped down with any household cleaning product."
-            img="https://picsum.photos/seed/clean-memo/1200/800"
+            title="Shop"
+            desc="Excluive Kandie Gang products including limited edition apparel and accessories because we believe in the power of collectivism and standing out from the crowd."
+            img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/06/24094519/250621_hamburg-17-768x577.jpg"
           />
         </motion.div>
 
-        <SegmentedNav activeIndex={activeIndex} onSelect={scrollToSegment} progress={scrollYProgress} />
+        <SegmentedNav activeIndex={activeIndex} onSelect={scrollToSegment} progress={scrollYProgress} sectionInView={sectionInView} />
       </div>
     </section>
   );

@@ -31,7 +31,7 @@ function firstNameFromFilename(filename: string): string {
 
 /** Guide image base paths (no extension) under public/images/guides. Names are derived from filename. */
 const GUIDE_IMAGES = [
-  'björn_h',
+  'bjoern_h',
   'christian_m',
   'emma_b',
   'jeremy',
@@ -85,7 +85,7 @@ const TeamLink: React.FC<{
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`relative inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border-0 px-4 py-2 text-[13px] font-semibold transition-colors hover:opacity-90 group ${pillClassName}`}
+      className={`relative inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border-0 px-6 py-3 text-[15px] md:text-base font-semibold transition-colors hover:opacity-90 group ${pillClassName}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseMove={handleMouseMove}
@@ -130,9 +130,7 @@ export const CompanySection: React.FC = () => {
   return (
     <section className="py-40 px-6 bg-breath flex flex-col items-center">
       <div className="max-w-4xl w-full text-center">
-        <h3 className="text-[10px] font-bold text-purple-rain-400 uppercase tracking-[0.3em] mb-12">
-          Your Guides
-        </h3>
+      <h2 className="text-3xl md:text-7xl font-light tracking-tight text-secondary-current text-balance mb-12 md:mb-16">Kandie Gang Ride Guides</h2>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-6">
           {shuffledGuides.map((basePath, i) => (
             <TeamLink
