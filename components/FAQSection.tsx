@@ -9,6 +9,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { NewsletterModal } from './NewsletterModal';
 
 interface FAQItemProps {
   question: string;
@@ -54,6 +55,7 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, children, isOpen, onClick }
 
 export const FAQSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [newsletterModalOpen, setNewsletterModalOpen] = useState(false);
 
   const toggleIndex = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -106,9 +108,9 @@ export const FAQSection: React.FC = () => {
             >
               <p>On our Tuesday Social Rides, we regularly host well over over fifty riders. Therefore, we have a few guidelines that we ask you to follow that can found here:</p>
               <ul className="space-y-3 pl-2 border-l-2 border-slate-100">
-                <li className="pl-3"><strong><a href="https://discord.gg/zddt89Q4hm" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Kandie Code 🔗</a>:</strong> Wir möchten hier nochmal ein paar 'Kandie Codes' ansprechen, die wir als selbstverständlich sehen und in der Kandie Gang als 'Kandie Kodex' im Verhalten miteinander verstehen.</li>
-                <li className="pl-3"><strong><a href="https://www.strava.com/clubs/968945" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Ride Levels:🔗</a></strong> Du willst bei einem Kandie Ride mitfahren und willst das für Dich passende Level finden? Dann bist Du hier genau richtig, denn hier findest Du die Eckdaten zu den vier Gruppen.</li>
-                <li className="pl-3"><strong><a href="https://www.instagram.com/kandie_gang/" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Accidents happen:🔗</a></strong> Bitte unterschreibe den Haftungsausschluss für jede Saison oder, falls du dir unsicher bist, vor jeder Gruppenfahrt.</li>
+                <li className="pl-3"><strong><a href="/#/kandiecode" className="text-secondary-drift hover:underline">Kandie Code</a>:</strong> Wir möchten hier nochmal ein paar 'Kandie Codes' ansprechen, die wir als selbstverständlich sehen und in der Kandie Gang als 'Kandie Kodex' im Verhalten miteinander verstehen.</li>
+                <li className="pl-3"><strong><a href="/#/ridelevels" className="text-secondary-drift hover:underline">Ride Levels:</a></strong> Du willst bei einem Kandie Ride mitfahren und willst das für Dich passende Level finden? Dann bist Du hier genau richtig, denn hier findest Du die Eckdaten zu den vier Gruppen.</li>
+                <li className="pl-3"><strong><a href="/#/waiver" className="text-secondary-drift hover:underline">Accidents happen:</a></strong> Bitte unterschreibe den Haftungsausschluss für jede Saison oder, falls du dir unsicher bist, vor jeder Gruppenfahrt.</li>
               </ul>
               
               <p><br />You don't have to have a paid membership to join a ride but it does help us keep things running smoothly. The best way to join a ride is connecting with us through our <a href="https://discord.gg/zddt89Q4hm" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Discord Server 🔗</a>: or reach out to one of our guides.</p>
@@ -123,7 +125,7 @@ export const FAQSection: React.FC = () => {
               <p>To join one of our hosted social rides, group workouts, races, and other cycling events throughout the year the best way is to connect with us on one of the following platforms:</p>
               <br />
               <ul className="space-y-3 pl-2 border-l-2 border-slate-100">
-              <li className="pl-3"><strong><a href="https://discord.gg/zddt89Q4hm" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Kandie Gang Newsletter 🔗</a>:</strong> sign-up to receive updates on our rides and activities.</li>
+              <li className="pl-3"><strong><button type="button" onClick={() => setNewsletterModalOpen(true)} className="text-secondary-drift hover:underline bg-transparent border-none p-0 font-inherit cursor-pointer inline text-left">Kandie Gang Newsletter</button>:</strong> sign-up to receive updates on our rides and activities.</li>
               <li className="pl-3"><strong><a href="https://discord.gg/zddt89Q4hm" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Discord Server 🔗</a>:</strong> this is where we coordinate our rides and events, share information, and connect with one another.</li>
                 <li className="pl-3"><strong><a href="https://www.strava.com/clubs/968945" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Strava Club:🔗</a></strong> we all use Strava to track our rides and post our rides to the club page. That said, our Discord server is more up-to-date.</li>
                 <li className="pl-3"><strong><a href="https://www.instagram.com/kandie_gang/" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Instagram:🔗</a></strong> this is where we document our rides and events. Long-term we are definitely looking to move more of our content to our website.</li>
@@ -133,6 +135,8 @@ export const FAQSection: React.FC = () => {
         </div>
         </div>
       </div>
+
+      <NewsletterModal isOpen={newsletterModalOpen} onClose={() => setNewsletterModalOpen(false)} />
     </section>
   );
 };
