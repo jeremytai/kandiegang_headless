@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { useContactModal } from '../context/ContactModalContext';
 
 const SECTION_SPACING = 'mb-12 md:mb-16';
 const SUBSECTION_SPACING = 'mb-6';
@@ -15,7 +16,9 @@ const SUBHEADING_CLASS = 'font-semibold text-primary-ink text-base md:text-lg mb
 const LIST_CLASS = 'list-disc pl-5 space-y-2 text-slate-600 text-[15px] md:text-base leading-relaxed mb-4';
 const LINK_CLASS = 'text-secondary-current underline underline-offset-2 hover:text-secondary-purple-rain transition-colors';
 
-export const PrivacyPolicyPage: React.FC = () => (
+export const PrivacyPolicyPage: React.FC = () => {
+  const { openContactModal } = useContactModal();
+  return (
   <div className="min-h-screen bg-white">
     {/* Hero — Sunday.ai style: single title + effective date */}
     <header className="pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left">
@@ -23,10 +26,14 @@ export const PrivacyPolicyPage: React.FC = () => (
         Privacy Policy
       </h1>
       <p className="text-slate-500 text-sm md:text-base">
-        Last updated: 2025. For questions, contact us at{' '}
-        <a href="mailto:hallo@kandiegang.com" className={LINK_CLASS}>
-          hallo@kandiegang.com
-        </a>
+        Last updated: 2025. For questions,{' '}
+        <button
+          type="button"
+          onClick={openContactModal}
+          className={`${LINK_CLASS} cursor-pointer bg-transparent border-0 p-0 font-inherit`}
+        >
+          contact us
+        </button>
         .
       </p>
     </header>
@@ -333,4 +340,5 @@ export const PrivacyPolicyPage: React.FC = () => (
       </section>
     </main>
   </div>
-);
+  );
+};

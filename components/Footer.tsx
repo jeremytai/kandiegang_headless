@@ -11,10 +11,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useContactModal } from '../context/ContactModalContext';
+import { useCookieConsent } from '../context/CookieConsentContext';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { openContactModal } = useContactModal();
+  const { openCookiePreferences } = useCookieConsent();
 
   return (
     <footer className="relative bg-white border-t border-slate-50 font-medium text-[13px]">
@@ -66,7 +68,7 @@ export const Footer: React.FC = () => {
             <ul className="col-span-3 flex flex-col gap-2 pb-4 md:hidden">
               <li><p className="text-slate-900 uppercase tracking-widest text-[10px] font-bold mb-1">Legal</p></li>
               <FooterLink to="/" label="Terms of Service" />
-              <FooterLink to="/" label="Privacy and Cookies" />
+              <FooterCookieLink onOpenCookiePreferences={openCookiePreferences} />
             </ul>
           </div>
         </div>
@@ -83,6 +85,15 @@ export const Footer: React.FC = () => {
               <Link to="/privacy-policy" className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black whitespace-nowrap">
                 Privacy Policy
               </Link>
+            </li>
+            <li className="flex flex-col items-start self-end">
+              <button
+                type="button"
+                onClick={openCookiePreferences}
+                className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black whitespace-nowrap text-left"
+              >
+                Privacy and Cookies
+              </button>
             </li>
             <li className="flex flex-col items-start self-end">
               <Link to="/imprint" className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black whitespace-nowrap">
@@ -112,6 +123,18 @@ const FooterContactLink: React.FC<{ onOpenContact: () => void }> = ({ onOpenCont
       className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black block text-left w-full"
     >
       Contact
+    </button>
+  </li>
+);
+
+const FooterCookieLink: React.FC<{ onOpenCookiePreferences: () => void }> = ({ onOpenCookiePreferences }) => (
+  <li>
+    <button
+      type="button"
+      onClick={onOpenCookiePreferences}
+      className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black block text-left w-full"
+    >
+      Cookies
     </button>
   </li>
 );

@@ -37,7 +37,10 @@ import { RideLevelsPage } from './pages/RideLevelsPage';
 import { KandieGangCyclingClubPage } from './pages/KandieGangCyclingClubPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { Footer } from './components/Footer';
+import { CookieBanner } from './components/CookieBanner';
+import { CookiePreferencesModal } from './components/CookiePreferencesModal';
 import { ContactModalProvider } from './context/ContactModalContext';
+import { CookieConsentProvider, useCookieConsent } from './context/CookieConsentContext';
 
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -83,54 +86,63 @@ const App: React.FC = () => {
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
   return (
-    <ContactModalProvider>
-    <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
-      <Preloader onComplete={() => setIsLoading(false)} />
+    <CookieConsentProvider>
+      <ContactModalProvider>
+        <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
+          <Preloader onComplete={() => setIsLoading(false)} />
 
-      <WeatherStatusBackground />
-      <StickyTop />
+          <WeatherStatusBackground />
+          <StickyTop />
 
-      {/* Main Content */}
-      <motion.div 
-        style={{ scale, borderRadius, opacity, y, transformOrigin: 'bottom center' }}
-        className="relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)]"
-      >
-        <Routes>
-          <Route path="/" element={
-            <>
-              <LandingPage />
-              <HorizontalRevealSection />
-              <CompanySection />
-              <FAQSection />
-            </>
-          } />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/community" element={<CommunityPage />} />
-          <Route path="/stories" element={<StoriesPage />} />
-          <Route path="/story/:slug" element={<StoryPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/imprint" element={<ImprintPage />} />
-          <Route path="/waiver" element={<WaiverPage />} />
-          <Route path="/kandiecode" element={<KandieCodePage />} />
-          <Route path="/ridelevels" element={<RideLevelsPage />} />
-          <Route path="/kandiegangcyclingclub" element={<KandieGangCyclingClubPage />} />
-          <Route path="/fonts" element={<FontsPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+          {/* Main Content */}
+          <motion.div
+            style={{ scale, borderRadius, opacity, y, transformOrigin: 'bottom center' }}
+            className="relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)]"
+          >
+            <Routes>
+              <Route path="/" element={
+                <>
+                  <LandingPage />
+                  <HorizontalRevealSection />
+                  <CompanySection />
+                  <FAQSection />
+                </>
+              } />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/community" element={<CommunityPage />} />
+              <Route path="/stories" element={<StoriesPage />} />
+              <Route path="/story/:slug" element={<StoryPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/imprint" element={<ImprintPage />} />
+              <Route path="/waiver" element={<WaiverPage />} />
+              <Route path="/kandiecode" element={<KandieCodePage />} />
+              <Route path="/ridelevels" element={<RideLevelsPage />} />
+              <Route path="/kandiegangcyclingclub" element={<KandieGangCyclingClubPage />} />
+              <Route path="/fonts" element={<FontsPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
 
-        {/* Newsletter signup before footer on all pages */}
-        <NewsletterSection />
-        <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
-        <Footer />
-      </motion.div>
+            {/* Newsletter signup before footer on all pages */}
+            <NewsletterSection />
+            <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
+            <Footer />
+          </motion.div>
 
-      {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
-      <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
-      {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && <StickyBottom />}
-    </div>
-    </ContactModalProvider>
+          {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
+          <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
+          {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && <StickyBottom />}
+        </div>
+      </ContactModalProvider>
+      <CookieBanner />
+      <CookiePreferencesModalWrapper />
+    </CookieConsentProvider>
   );
+};
+
+const CookiePreferencesModalWrapper: React.FC = () => {
+  const { isPreferencesOpen, closeCookiePreferences } = useCookieConsent();
+  return <CookiePreferencesModal isOpen={isPreferencesOpen} onClose={closeCookiePreferences} />;
 };
 
 const LandingPage = () => (
