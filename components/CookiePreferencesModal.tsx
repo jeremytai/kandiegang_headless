@@ -9,6 +9,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useCookieConsent, type ConsentPreferences } from '../context/CookieConsentContext';
 
+/** Switch control with literal aria-checked for ARIA validators that reject expressions. */
+const CookieSwitch: React.FC<{
+  checked: boolean;
+  onToggle: () => void;
+  'aria-label': string;
+}> = ({ checked, onToggle, 'aria-label': ariaLabel }) => {
+  const baseClass =
+    'relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-secondary-purple-rain focus:ring-offset-2';
+  const thumbClass =
+    'pointer-events-none inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white shadow transition-transform';
+  return checked ? (
+    <button
+      type="button"
+      role="switch"
+      aria-checked="true"
+      aria-label={ariaLabel}
+      onClick={onToggle}
+      className={`${baseClass} bg-secondary-purple-rain`}
+    >
+      <span className={`${thumbClass} translate-x-6`} />
+    </button>
+  ) : (
+    <button
+      type="button"
+      role="switch"
+      aria-checked="false"
+      aria-label={ariaLabel}
+      onClick={onToggle}
+      className={`${baseClass} bg-slate-200`}
+    >
+      <span className={`${thumbClass} translate-x-1`} />
+    </button>
+  );
+};
+
 interface CookiePreferencesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -114,44 +149,22 @@ export const CookiePreferencesModal: React.FC<CookiePreferencesModalProps> = ({ 
                     <p className="font-medium text-slate-900">Analytics</p>
                     <p className="mt-0.5 text-sm text-slate-500">Helps us understand how visitors use the site.</p>
                   </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={prefs.analytics ? 'true' : 'false'}
+                  <CookieSwitch
+                    checked={prefs.analytics}
+                    onToggle={() => setPrefs((p) => ({ ...p, analytics: !p.analytics }))}
                     aria-label={prefs.analytics ? 'Analytics cookies on' : 'Analytics cookies off'}
-                    onClick={() => setPrefs((p) => ({ ...p, analytics: !p.analytics }))}
-                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-secondary-purple-rain focus:ring-offset-2 ${
-                      prefs.analytics ? 'bg-secondary-purple-rain' : 'bg-slate-200'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white shadow transition-transform ${
-                        prefs.analytics ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
+                  />
                 </div>
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="font-medium text-slate-900">Marketing</p>
                     <p className="mt-0.5 text-sm text-slate-500">Used for relevant ads and campaigns.</p>
                   </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={prefs.marketing ? 'true' : 'false'}
+                  <CookieSwitch
+                    checked={prefs.marketing}
+                    onToggle={() => setPrefs((p) => ({ ...p, marketing: !p.marketing }))}
                     aria-label={prefs.marketing ? 'Marketing cookies on' : 'Marketing cookies off'}
-                    onClick={() => setPrefs((p) => ({ ...p, marketing: !p.marketing }))}
-                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-secondary-purple-rain focus:ring-offset-2 ${
-                      prefs.marketing ? 'bg-secondary-purple-rain' : 'bg-slate-200'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white shadow transition-transform ${
-                        prefs.marketing ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
+                  />
                 </div>
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
