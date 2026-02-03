@@ -92,7 +92,7 @@ export const Footer: React.FC = () => {
                 onClick={openCookiePreferences}
                 className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black whitespace-nowrap text-left"
               >
-                Privacy and Cookies
+                Cookies
               </button>
             </li>
             <li className="flex flex-col items-start self-end">

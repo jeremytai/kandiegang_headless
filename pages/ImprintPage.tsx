@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { useContactModal } from '../context/ContactModalContext';
 
 const SECTION_SPACING = 'mb-12 md:mb-16';
 const PARAGRAPH_CLASS = 'text-slate-600 text-[15px] md:text-base leading-relaxed mb-4';
@@ -13,7 +14,9 @@ const HEADING_CLASS = 'font-heading text-primary-ink text-xl md:text-2xl font-no
 const SUBHEADING_CLASS = 'font-semibold text-primary-ink text-base md:text-lg mb-2 mt-6';
 const LINK_CLASS = 'text-secondary-current underline underline-offset-2 hover:text-secondary-purple-rain transition-colors';
 
-export const ImprintPage: React.FC = () => (
+export const ImprintPage: React.FC = () => {
+  const { openContactModal } = useContactModal();
+  return (
   <div className="min-h-screen bg-white">
     {/* Hero — same style as PrivacyPolicyPage */}
     <header className="pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left">
@@ -42,9 +45,13 @@ export const ImprintPage: React.FC = () => (
         <h3 className={SUBHEADING_CLASS}>Contact</h3>
         <p className={PARAGRAPH_CLASS}>
           E-Mail:{' '}
-          <a href="mailto:hallo@kandiegang.com" className={LINK_CLASS}>
-            hallo@kandiegang.com
-          </a>
+          <button
+            type="button"
+            onClick={openContactModal}
+            className={`${LINK_CLASS} bg-transparent border-none cursor-pointer p-0 font-inherit`}
+          >
+            hallo [AT] kandiegang.com
+          </button>
         </p>
 
         <p className={PARAGRAPH_CLASS}>
@@ -59,7 +66,7 @@ export const ImprintPage: React.FC = () => (
 
         <h3 className={SUBHEADING_CLASS}>Represented by</h3>
         <p className={PARAGRAPH_CLASS}>
-          Jeremy Abbett
+          Jeremy Tai Abbett
         </p>
       </section>
 
@@ -81,4 +88,5 @@ export const ImprintPage: React.FC = () => (
       </section>
     </main>
   </div>
-);
+  );
+};
