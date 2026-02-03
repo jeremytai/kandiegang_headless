@@ -114,7 +114,7 @@ export const StickyTop: React.FC = () => {
               {!isContactPage && (
                 <button 
                   onClick={handleToggle}
-                  className="bg-transparent text-black w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-300 hover:scale-[1.05] active:scale-95 transition-all"
+                  className="group bg-transparent text-secondary-purple-rain w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-[var(--color-secondary-purple-rain)] hover:text-white hover:scale-[1.05] active:scale-95"
                   aria-label={isExpanded ? "Close Menu" : "Open Menu"}
                 >
                   <AnimatePresence mode="wait">
@@ -125,7 +125,7 @@ export const StickyTop: React.FC = () => {
                       exit={{ opacity: 0, rotate: 45 }}
                       transition={{ duration: 0.2 }}
                     >
-                      {isExpanded ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                      {isExpanded ? <X className="w-4 h-4 text-secondary-purple-rain group-hover:text-white" /> : <Menu className="w-4 h-4 text-secondary-purple-rain group-hover:text-white" />}
                     </motion.div>
                   </AnimatePresence>
                 </button>
@@ -174,7 +174,7 @@ const NavLink = ({ label, to, onClick }: { label: string, to: string, onClick: (
   <Link 
     to={to} 
     onClick={onClick}
-    className="text-2xl font-bold font-sans text-slate-900 hover:translate-x-2 transition-transform duration-300 block tracking-tight"
+    className="font-body text-2xl font-regular text-secondary-purple-rain hover:translate-x-2 transition-transform duration-300 block tracking-tight"
   >
     {label}
   </Link>

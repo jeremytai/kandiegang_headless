@@ -1,6 +1,5 @@
-
 /**
- * HeadlineSection.tsx
+ * HomepageRotatingHeadline.tsx
  * The primary introduction block for the landing page.
  * Features:
  * - High-impact, geometric typography that defines the brand's aesthetic.
@@ -14,9 +13,12 @@ import { imageSrc } from '../lib/images';
 
 /** Guide photos from public/images/guides (base path without extension). */
 const HEADLINE_IMAGE_BASES = [
+  '/images/guides/bjoern_h',
+  '/images/guides/christian_m',
   '/images/guides/emma_b',
   '/images/guides/jeremy',
   '/images/guides/katrin_h',
+  '/images/guides/michael_m',
   '/images/guides/rilana_s',
   '/images/guides/ruth_p',
   '/images/guides/saskia_s',
@@ -35,7 +37,7 @@ function shuffle<T>(arr: readonly T[]): T[] {
 
 const ROTATE_INTERVAL_MS = 3000;
 
-export const HeadlineSection: React.FC = () => {
+export const HomepageRotatingHeadline: React.FC = () => {
   const ref = useRef<HTMLDivElement>(null);
   const [imageIndex, setImageIndex] = useState(0);
   const shuffledBases = useMemo(() => shuffle(HEADLINE_IMAGE_BASES), []);
@@ -55,12 +57,12 @@ export const HeadlineSection: React.FC = () => {
   const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
 
   return (
-    <section ref={ref} className="relative bg-primary-breath pt-20 md:pt-40 pb-16 md:pb-20">
-      <motion.div 
+    <section ref={ref} className="relative bg-primary-breath pt-[calc(4.5rem+2em)] pb-[2em] md:pt-40 md:pb-20">
+      <motion.div
         style={{ opacity, scale }}
-        className="w-full flex flex-col items-center text-center z-10 px-6"
+        className="w-full flex flex-col items-center justify-center text-center z-10 px-6"
       >
-        
+
         <h1 className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em]">
           <AnimatedHeadline text="You found us " as="span" />
           <img

@@ -14,8 +14,8 @@ import { motion } from 'framer-motion';
 
 export const AboutHero: React.FC = () => {
   return (
-    <section className="relative grid grid-rows-2 bg-white p-3 min-h-[90vh] md:h-screen md:grid-cols-1 md:grid-rows-1">
-      <div className="relative z-10 col-span-1 col-start-1 row-start-1 flex flex-col justify-center p-4 py-12 md:justify-center md:p-6 md:py-6 text-center">
+    <section className="relative grid grid-rows-1 bg-white pt-[0.8rem] px-3 pb-3 min-h-0 md:min-h-[90vh] md:h-screen md:grid-cols-1 md:grid-rows-1 md:p-3">
+      <div className="relative z-10 col-span-1 col-start-1 row-start-1 hidden flex-col justify-center p-4 py-12 md:flex md:justify-center md:p-6 md:py-6 text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -24,7 +24,7 @@ export const AboutHero: React.FC = () => {
         </motion.div>
       </div>
 
-      <div className="col-span-1 col-start-1 min-h-[400px] h-full overflow-hidden rounded-xl bg-black md:row-start-1 md:h-full relative shadow-inner">
+      <div className="col-span-1 col-start-1 row-start-1 min-h-[280px] h-full overflow-hidden rounded-xl bg-black md:min-h-[400px] md:h-full relative shadow-inner">
         <img
           src="/images/250621_hamburg-14.jpg"
           alt="Kandie Gang"

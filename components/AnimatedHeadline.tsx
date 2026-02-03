@@ -21,6 +21,8 @@ export type AnimatedHeadlineProps = {
   as?: React.ElementType;
   className?: string;
   colorAfterReveal?: boolean;
+  /** Line-height for the headline (default 1.1). Use ~1.25–1.35 for multi-line to avoid clipping. */
+  lineHeight?: number;
 };
 
 export function AnimatedHeadline({
@@ -28,6 +30,7 @@ export function AnimatedHeadline({
   as: Tag = 'h2',
   className = '',
   colorAfterReveal = true,
+  lineHeight = 1.1,
 }: AnimatedHeadlineProps) {
   const headlineRef = useRef<HTMLElement | null>(null);
 
@@ -36,7 +39,7 @@ export function AnimatedHeadline({
     if (!el) return;
 
     const split = new SplitType(el, {
-      types: 'lines, words, chars',
+      types: 'lines,words,chars',
       lineClass: 'animated-headline-line',
     });
 
@@ -126,7 +129,7 @@ export function AnimatedHeadline({
       aria-label={text}
       className={className}
       style={{
-        lineHeight: 1.1,
+        lineHeight,
         overflow: 'hidden',
         display: 'inline-block',
       }}

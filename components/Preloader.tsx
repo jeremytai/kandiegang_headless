@@ -108,11 +108,11 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
             y: "-100%",
             transition: { duration: 1.1, ease: [0.85, 0, 0.15, 1] } 
           }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#f9f100]"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-secondary-purple-rain"
         >
           <div className="relative flex flex-col items-center">
             {/* Animated Icon Container */}
-            <div className="w-32 h-32 md:w-48 md:h-48 flex items-center justify-center text-black">
+            <div className="w-32 h-32 md:w-48 md:h-48 flex items-center justify-center text-secondary-current">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={iconIndex}
@@ -138,19 +138,19 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
                 key={iconIndex} // Change text as icons change
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 0.6, y: 0 }}
-                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.5em] text-black"
+                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.5em] text-secondary-current"
               >
-                {progress < 20 ? "INITIATING" : 
-                 progress < 40 ? "CALIBRATING" : 
-                 progress < 60 ? "INDEXING" : 
-                 progress < 80 ? "PROCESSING" : 
-                 progress < 100 ? "FINALIZING" : "SYSTEMS READY"}
+                {progress < 20 ? "Diversity" : 
+                 progress < 40 ? "Authencity" : 
+                 progress < 60 ? "Openness" : 
+                 progress < 80 ? "Playful" : 
+                 progress < 100 ? "Community" : "Let's GOOOO!"}
               </motion.p>
               
               {/* Minimal Progress Line */}
               <div className="w-40 h-[2px] bg-black/10 rounded-full relative overflow-hidden">
                 <motion.div 
-                  className="absolute inset-y-0 left-0 bg-black"
+                  className="absolute inset-y-0 left-0 bg-secondary-current"
                   initial={{ width: "0%" }}
                   animate={{ width: `${progress}%` }}
                   transition={{ ease: "easeOut" }}
@@ -162,11 +162,19 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
           {/* Branded Bottom Info */}
           <div className="absolute bottom-12 left-0 w-full px-12 flex justify-between items-end">
             <div className="space-y-1">
-               <p className="text-[9px] font-bold text-black/40 uppercase tracking-widest">Kandie Gang Labs</p>
-               <p className="text-[9px] font-medium text-black/30">System v2.6.4 (Production)</p>
+               <p className="text-[9px] font-bold text-black/40 uppercase tracking-widest">Kandie Kollektiv UG</p>
+               <p className="text-[9px] font-medium text-black/30">
+                {(() => {
+                  const raw = import.meta.env.VITE_LAST_GIT_DATE;
+                  if (!raw) return 'Last updated —';
+                  const d = new Date(raw);
+                  const formatted = Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+                  return `Last updated ${formatted}`;
+                })()}
+              </p>
             </div>
             <div className="text-[9px] font-bold text-black/40 uppercase tracking-widest">
-              MEMO-OS_HAMBURG_BRIDGE
+              MEMO-OS_Abbett_Labs
             </div>
           </div>
         </motion.div>

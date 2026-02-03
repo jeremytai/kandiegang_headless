@@ -1,9 +1,19 @@
 import path from 'path';
+import { execSync } from 'child_process';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
+function getLastGitDate(): string {
+  try {
+    return execSync('git log -1 --format=%cI', { encoding: 'utf-8' }).trim();
+  } catch {
+    return '';
+  }
+}
+
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    const lastGitDate = getLastGitDate();
     return {
       server: {
         port: 3000,
@@ -13,7 +23,8 @@ export default defineConfig(({ mode }) => {
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'import.meta.env.VITE_WP_GRAPHQL_URL': JSON.stringify(env.VITE_WP_GRAPHQL_URL || 'https://demo.wp-graphql.org/graphql')
+        'import.meta.env.VITE_WP_GRAPHQL_URL': JSON.stringify(env.VITE_WP_GRAPHQL_URL || 'https://demo.wp-graphql.org/graphql'),
+        'import.meta.env.VITE_LAST_GIT_DATE': JSON.stringify(lastGitDate),
       },
       resolve: {
         alias: {

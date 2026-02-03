@@ -1,16 +1,15 @@
 /**
  * KandieGangCyclingClubPage.tsx
  * "Join the club" page inspired by Sunday.ai beta-program.
- * Hero, benefit pills, what you get, get involved CTAs, FAQ, newsletter.
- * Uses existing CSS and reusable components (NewsletterSection).
+ * Hero, benefit pills, what you get, get involved CTAs, FAQ.
+ * Newsletter is shown globally before the footer in App.
  */
 
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ArrowUpRight } from 'lucide-react';
-import { NewsletterSection } from '../components/NewsletterSection';
-
+import { AnimatedHeadline } from '../components/AnimatedHeadline';
 /** Hero gallery images (Sunday beta-program style). */
 const HERO_IMAGES = [
   '/images/250401_kandiegang_seasonopener_2025-28-scaled.jpg',
@@ -75,7 +74,7 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     question: 'Do I need a paid membership to join a ride?',
     answer: (
       <>
-        No. You can join rides without a paid membership. Membership helps us keep things running and supports the community.
+        No. You can join rides without a paid membership. That said, memberships help us keep things running and supports the community.
       </>
     ),
   },
@@ -83,8 +82,8 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     question: 'What are the ride levels?',
     answer: (
       <>
-        We have four groups so you can find the right pace. Details and guidelines are on our{' '}
-        <a href="https://www.strava.com/clubs/968945" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Strava club</a> and in the Kandie Code on Discord.
+        We have four groups so you can find the right pace. Details and guidelines can be found{' '}
+        <a href="/#/ridelevels" className="text-secondary-drift hover:underline">here</a> and in the FAQs on Discord.
       </>
     ),
   },
@@ -92,8 +91,8 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     question: 'What is the Kandie Code?',
     answer: (
       <>
-        The Kandie Code is our shared set of guidelines for how we ride and treat each other. We ask everyone to read and follow it. You can find it in our{' '}
-        <a href="https://discord.gg/zddt89Q4hm" target="_blank" rel="noopener noreferrer" className="text-secondary-drift hover:underline">Discord</a>.
+        The Kandie Code is our shared set of guidelines for how we ride and treat each other. We ask everyone to read and follow it. You can find it {' '}
+        <a href="/#/kandiecode" className="text-secondary-drift hover:underline">here</a>.
       </>
     ),
   },
@@ -313,10 +312,13 @@ export const KandieGangCyclingClubPage: React.FC = () => {
           <div className="flex w-full flex-col items-center justify-center gap-12 text-center px-6">
             {/* Headlines */}
             <div>
-              <h1 className="font-heading text-secondary-current text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-normal tracking-normal">
-                Join the Kandie Gang Cycling Club
-              </h1>
-              <h2 className="mt-3 font-gtplanar text-secondary-drift text-base md:text-lg lg:text-xl font-normal tracking-tight">
+              <AnimatedHeadline
+                as="h1"
+                text="Join the Kandie Gang Cycling Club"
+                className="font-heading text-secondary-purple-rain text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-thin tracking-normal"
+                lineHeight={1.25}
+              />
+              <h2 className="mt-3 inline-block w-fit rounded-full bg-secondary-purple-rain px-3 py-1.5 text-sm font-light text-white font-body tracking-tight">
                 Ride with us
               </h2>
             </div>
@@ -354,9 +356,12 @@ export const KandieGangCyclingClubPage: React.FC = () => {
           <div className="m-auto flex w-full flex-col items-center justify-center gap-6 pt-[var(--header-height,5rem)] text-center lg:gap-12 lg:pt-0">
             {/* Headlines */}
             <div className="px-4 max-lg:py-12 lg:px-6">
-              <h1 className="font-heading text-primary-ink text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-normal tracking-tight">
-                Join the Kandie Gang Cycling Club
-              </h1>
+              <AnimatedHeadline
+                as="h1"
+                text="Join the Kandie Gang Cycling Club"
+                className="font-heading text-secondary-purple-rain  text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-normal tracking-tight"
+                lineHeight={1.25}
+              />
               <h2 className="mt-3 font-gtplanar text-secondary-drift text-base md:text-lg lg:text-xl font-normal tracking-tight">
                 Ride with us
               </h2>
@@ -536,11 +541,6 @@ export const KandieGangCyclingClubPage: React.FC = () => {
           </div>
         </div>
       </section>
-
-      {/* Newsletter — reuse existing component (margin from NewsletterSection matches homepage) */}
-      <div id="newsletter" className="mb-8">
-        <NewsletterSection />
-      </div>
     </div>
   );
 };

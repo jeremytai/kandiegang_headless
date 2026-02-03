@@ -14,7 +14,7 @@ import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 // Reusable Components
 import { Preloader } from './components/Preloader';
 import { WeatherStatusBackground } from './components/WeatherStatusBackground';
-import { HeadlineSection } from './components/HeadlineSection';
+import { HomepageRotatingHeadline } from './components/HomepageRotatingHeadline';
 import { ExpandingHero } from './components/ExpandingHero';
 import { CompanySection } from './components/CompanySection';
 import { ScrollingHeadline } from './components/ScrollingHeadline';
@@ -26,6 +26,7 @@ import { NewsletterSection } from './components/NewsletterSection';
 import { AboutPage } from './pages/AboutPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { StoriesPage } from './pages/StoriesPage';
+import { StoryPage } from './pages/StoryPage';
 import { FontsPage } from './pages/FontsPage';
 import { ContactPage } from './pages/ContactPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
@@ -34,7 +35,9 @@ import { WaiverPage } from './pages/WaiverPage';
 import { KandieCodePage } from './pages/KandieCodePage';
 import { RideLevelsPage } from './pages/RideLevelsPage';
 import { KandieGangCyclingClubPage } from './pages/KandieGangCyclingClubPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 import { Footer } from './components/Footer';
+import { ContactModalProvider } from './context/ContactModalContext';
 
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -75,11 +78,12 @@ const App: React.FC = () => {
 
   // Refined transforms to create a more balanced "frame" effect that matches the provided screenshot
   const scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
-  const borderRadius = useTransform(smoothProgress, [0, 0.6], [0, 48]);
+  const borderRadius = useTransform(smoothProgress, [0, 0.6], [0, 24]);
   const opacity = useTransform(smoothProgress, [0, 0.9], [1, 0.95]);
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
   return (
+    <ContactModalProvider>
     <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
       <Preloader onComplete={() => setIsLoading(false)} />
 
@@ -98,15 +102,12 @@ const App: React.FC = () => {
               <HorizontalRevealSection />
               <CompanySection />
               <FAQSection />
-
-              {/* Newsletter signup (Sunday.ai style) — small spacer before footer for scroll reveal */}
-              <NewsletterSection />
-              <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
             </>
           } />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/stories" element={<StoriesPage />} />
+          <Route path="/story/:slug" element={<StoryPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/imprint" element={<ImprintPage />} />
@@ -115,8 +116,12 @@ const App: React.FC = () => {
           <Route path="/ridelevels" element={<RideLevelsPage />} />
           <Route path="/kandiegangcyclingclub" element={<KandieGangCyclingClubPage />} />
           <Route path="/fonts" element={<FontsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
-        
+
+        {/* Newsletter signup before footer on all pages */}
+        <NewsletterSection />
+        <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
         <Footer />
       </motion.div>
 
@@ -124,12 +129,13 @@ const App: React.FC = () => {
       <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
       {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && <StickyBottom />}
     </div>
+    </ContactModalProvider>
   );
 };
 
 const LandingPage = () => (
   <>
-    <HeadlineSection />
+    <HomepageRotatingHeadline />
     <ExpandingHero />
     <ScrollingHeadline />
   </>

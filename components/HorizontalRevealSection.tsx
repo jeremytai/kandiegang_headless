@@ -10,6 +10,7 @@
  */
 
 import React, { useRef, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring, MotionValue } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 
@@ -67,28 +68,62 @@ const SegmentedNav: React.FC<{
   );
 };
 
-const HorizontalCard: React.FC<{ title: string, desc: string, img: string }> = ({ title, desc, img }) => (
-  <div className="relative flex-none w-[90vw] md:w-[60vw] aspect-[4/5] md:aspect-[16/10] rounded-xl overflow-hidden p-8 md:p-20 flex flex-col justify-end bg-slate-900 text-white shadow-2xl group">
-    <div className="relative z-10 max-w-xl">
+const HorizontalCard: React.FC<{ title: string; desc: string; img: string; to?: string }> = ({ title, desc, img, to }) => {
+  const content = (
+    <>
       <h3 className="text-3xl md:text-5xl font-light tracking-tight mb-2 md:mb-3 group-hover:scale-105 transition-transform duration-700 origin-left text-balance">{title}</h3>
-      <p className="opacity-60 text-sm md:text-base leading-relaxed font-light tracking-tight text-balance">{desc}</p>
+      <p className="opacity-60 text-sm md:text-base leading-tight font-light tracking-tight text-balance">{desc}</p>
+    </>
+  );
+  return (
+    <div className="relative flex-none w-[90vw] md:w-[60vw] aspect-[4/5] md:aspect-[16/10] rounded-xl overflow-hidden p-8 md:p-20 flex flex-col justify-end bg-slate-900 text-white shadow-2xl group">
+      <div className="relative z-10 max-w-xl">
+        {to ? (
+          <Link to={to} className="block text-white no-underline hover:text-white focus:text-white focus:outline-none">
+            {content}
+          </Link>
+        ) : (
+          content
+        )}
+      </div>
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={img} 
+          className="w-full h-full object-cover" 
+          alt={title} 
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+      </div>
     </div>
-    <div className="absolute inset-0 z-0">
-      <img 
-        src={img} 
-        className="w-full h-full object-cover" 
-        alt={title} 
-        loading="lazy"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-    </div>
-  </div>
-);
+  );
+};
+
+const MOBILE_BREAKPOINT = 768;
 
 export const HorizontalRevealSection: React.FC = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const cardsRowRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  
+  const [viewportWidth, setViewportWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1024));
+  const [gapPx, setGapPx] = useState(24);
+
+  useEffect(() => {
+    const updateMeasurements = () => {
+      setViewportWidth(window.innerWidth);
+      const row = cardsRowRef.current;
+      if (row) {
+        const gap = getComputedStyle(row).gap;
+        const gapNum = parseFloat(gap) || 24;
+        setGapPx(gapNum);
+      }
+    };
+    
+    updateMeasurements();
+    window.addEventListener('resize', updateMeasurements);
+    return () => window.removeEventListener('resize', updateMeasurements);
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"]
@@ -103,14 +138,51 @@ export const HorizontalRevealSection: React.FC = () => {
   const sectionInView = useTransform(sectionInViewProgress, [0, 0.75, 0.98, 1], [0, 1, 1, 0]);
 
   const cardCount = 4;
-  // Each card (1–4) lines up to the same left edge as the 1st card; last card less translation so it's not too far left.
-  const xTarget = useTransform(
+  const isMobile = viewportWidth < MOBILE_BREAKPOINT;
+
+  // Mobile: x in pixels so the active card is centered (use viewport width for centering)
+  const cardWidthPx = (90 / 100) * viewportWidth;
+  const plPx = (2 / 100) * viewportWidth;
+  const cardCenter0Px = plPx + cardWidthPx / 2;
+  const viewportCenterPx = viewportWidth / 2;
+  const mobileXValues = [0, 1, 2, 3].map((i) =>
+    viewportCenterPx - (cardCenter0Px + i * (cardWidthPx + gapPx))
+  );
+
+  const xTargetDesktop = useTransform(
     scrollYProgress,
     [0, 0.25, 0.5, 0.75, 0.85, 1],
     ["0%", "-20%", "-37%", "-58%", "-58%", "-58%"]
   );
-  // Spring with a little bounce when Shop (4th card) reaches its end point
-  const x = useSpring(xTarget, { stiffness: 320, damping: 24 });
+  // Mobile: center each card at its scroll target (0, 0.25, 0.5, 0.75) with smooth transitions
+  const xTargetMobile = useTransform(
+    scrollYProgress,
+    [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1],
+    [
+      mobileXValues[0],
+      (mobileXValues[0] + mobileXValues[1]) / 2,
+      mobileXValues[1],
+      (mobileXValues[1] + mobileXValues[2]) / 2,
+      mobileXValues[2],
+      (mobileXValues[2] + mobileXValues[3]) / 2,
+      mobileXValues[3],
+      mobileXValues[3],
+      mobileXValues[3]
+    ]
+  );
+  const xDesktop = useSpring(xTargetDesktop, { stiffness: 320, damping: 24 });
+  // Spring only on first and last card; middle cards (Stories, Membership) use direct transform (no bounce)
+  const xMobileSpring = useSpring(xTargetMobile, { stiffness: 320, damping: 24 });
+  const springWeight = useTransform(
+    scrollYProgress,
+    [0, 0.2, 0.3, 0.5, 0.7, 0.8, 1],
+    [1, 1, 0, 0, 0, 1, 1]
+  );
+  const xMobile = useTransform(
+    [xMobileSpring, xTargetMobile, springWeight],
+    ([spring, direct, w]) => (w as number) * (spring as number) + (1 - (w as number)) * (direct as number)
+  );
+  const x = isMobile ? xMobile : xDesktop;
   
   useEffect(() => {
     return scrollYProgress.on("change", (v) => {
@@ -121,12 +193,16 @@ export const HorizontalRevealSection: React.FC = () => {
 
   const scrollToSegment = (index: number) => {
     if (!sectionRef.current) return;
-    const scrollHeight = sectionRef.current.scrollHeight;
-    // Each pill scrolls so its card is in the same x position as the 1st card at start (same left margin).
-    // Last (4th) card: same left margin as 1st card.
+    const sectionHeight = sectionRef.current.scrollHeight;
+    const sectionTop = sectionRef.current.offsetTop;
+    // useScroll with ["start start", "end end"] means:
+    // progress 0 = section top at viewport top
+    // progress 1 = section bottom at viewport bottom
+    // So scroll range is (sectionHeight - viewportHeight)
+    const scrollRange = sectionHeight - window.innerHeight;
     const progressPerSegment = [0, 0.25, 0.5, 0.75];
     const progress = progressPerSegment[Math.min(index, cardCount - 1)] ?? 0;
-    const targetY = sectionRef.current.offsetTop + scrollHeight * progress;
+    const targetY = sectionTop + scrollRange * progress;
     window.scrollTo({ top: targetY, behavior: 'smooth' });
   };
 
@@ -136,7 +212,7 @@ export const HorizontalRevealSection: React.FC = () => {
     <section ref={sectionRef} className="relative h-[400vh] md:h-[500vh] bg-secondary-purple-rain">
       <div className="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden">
         <div className="absolute top-12 md:top-20 left-0 w-full px-8 md:px-16 pb-12 md:pb-16 flex justify-between items-start z-20">
-          <h2 className="text-3xl md:text-7xl font-light tracking-tight text-secondary-current text-balance">Community is Our Catalyst</h2>
+          <h2 className="text-5xl md:text-7xl font-light tracking-tight text-secondary-current text-balance">Community is Our Catalyst</h2>
           <div className="hidden md:flex items-center gap-2 text-slate-400 font-medium text-xs md:text-sm pt-4">
             <span className="tracking-tight uppercase tracking-widest text-secondary-current text-[10px]">Scroll down to explore</span>
             <ChevronRight className="w-4 h-4 text-secondary-current" />
@@ -159,6 +235,7 @@ export const HorizontalRevealSection: React.FC = () => {
         </div>
 
         <motion.div
+          ref={cardsRowRef}
           style={{ x }}
           className="flex gap-6 md:gap-8 pl-[2vw] md:pl-[4vw] pr-[5vw] md:pr-[15vw] items-center min-w-max mt-16 md:mt-24"
         >
@@ -166,21 +243,25 @@ export const HorizontalRevealSection: React.FC = () => {
             title="Let's Ride"
             desc="People join us for our community rides, to exchange bicycle knowledge and build friendships—no matter their gender, race or social background."
             img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/09/06220134/250923_kandiegangsocialride-20-scaled.jpg"
+            to="/kandiegangcyclingclub"
           />
           <HorizontalCard 
             title="Stories"
             desc="We believe actions speak louder than words. Because belonging emerges when people show up, ride, and co-create together."
             img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/11/10165246/251031_halloween_gravelo_abbett-89.jpg"
+            to="/stories"
           />
           <HorizontalCard 
             title="Membership"
             desc="An annual subscription includes early access to weekly local rides, members only access to photos, discounts on products, and much more."
             img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/04/08130454/250401_kandiegang_seasonopener_2025-14-2048x1539.jpg"
+            to="/kandiegangcyclingclub"
           />
           <HorizontalCard 
             title="Shop"
             desc="Excluive Kandie Gang products including limited edition apparel and accessories because we believe in the power of collectivism and standing out from the crowd."
             img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/06/24094519/250621_hamburg-17-768x577.jpg"
+            to="/shop"
           />
         </motion.div>
 

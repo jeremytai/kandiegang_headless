@@ -1,5 +1,5 @@
 /**
- * FloatingBetaBar.tsx
+ * FloatingClubMemberBar.tsx
  * A secondary call-to-action pill visible upon initial page load.
  * Features:
  * - Directs users to the beta application.
@@ -11,9 +11,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
-export const FloatingBetaBar: React.FC = () => {
+export const FloatingClubMemberBar: React.FC = () => {
   const { scrollY } = useScroll();
-  
+
   const opacity = useTransform(scrollY, [0, 200], [1, 0]);
   const y = useTransform(scrollY, [0, 200], [0, 50]);
   const pointerEvents = useTransform(scrollY, (v) => v > 150 ? 'none' : 'auto');
@@ -23,8 +23,8 @@ export const FloatingBetaBar: React.FC = () => {
       style={{ opacity, y, pointerEvents: pointerEvents as any }}
       className="fixed bottom-8 left-0 w-full z-40 flex justify-center px-6"
     >
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         className="flex w-full max-w-[95vw] md:max-w-[400px] justify-between gap-1 rounded-full bg-[#f9f100] px-5 py-4 text-[13px] font-bold leading-4 backdrop-blur-xl shadow-2xl shadow-black/10 transition-transform active:scale-95 border border-black/5"
       >
         <p className="text-black uppercase tracking-tight">Become a Kandie Gang Member</p>

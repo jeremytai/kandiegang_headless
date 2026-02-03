@@ -161,8 +161,8 @@ export const WeatherStatusBackground: React.FC = () => {
   }, [location.timezone]);
 
   return (
-    <div className="fixed inset-0 z-0 flex flex-col items-center overflow-hidden bg-secondary-signal px-6 pt-16 pb-8 md:px-12 md:pt-24 md:pb-12">
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center space-y-10 text-center md:space-y-16">
+    <div className="fixed inset-0 z-0 flex flex-col items-center overflow-hidden rounded-none bg-secondary-signal px-6 pt-16 pb-[max(2rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] md:px-12 md:pt-24 md:pb-12">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-end pb-6 space-y-10 text-center md:justify-center md:pb-0 md:space-y-16">
         <p className="font-heading max-w-[280px] text-balance text-xl font-light tracking-normal text-slate-900 md:max-w-none md:text-3xl">
           {(weather.condition === 'Loading...'
             ? "Let's figure out what to wear\nfor today's ride."
@@ -191,7 +191,7 @@ export const WeatherStatusBackground: React.FC = () => {
       </div>
 
       <div className="flex justify-center">
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-0.2">
           <span className="inline-block animate-logo-enter">
             <img
               src="/logos/kandiegang_logo.svg"

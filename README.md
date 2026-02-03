@@ -64,6 +64,9 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
    
    # Google Gemini API Key (for weather data)
    GEMINI_API_KEY=your_gemini_api_key_here
+   
+   # Formspree contact form ID (optional – for /contact and Contact modal)
+   VITE_FORMSPREE_CONTACT_FORM_ID=your_formspree_form_id
    ```
 
 4. **Start the development server**
@@ -82,13 +85,15 @@ kandiegang_headless/
 │   ├── AdaptationGrid.tsx
 │   ├── AnimatedHeadline.tsx   # Split-type char reveal + color fill (GSAP)
 │   ├── CompanySection.tsx
+│   ├── ContactForm.tsx         # Formspree contact form (honeypot spam protection)
+│   ├── ContactModal.tsx        # Modal with ContactForm (e.g. from About "Contact us")
 │   ├── ExpandingHero.tsx
 │   ├── FAQSection.tsx
-│   ├── FloatingBetaBar.tsx
+│   ├── FloatingClubMemberBar.tsx
 │   ├── Footer.tsx
 │   ├── NewsletterSection.tsx   # Newsletter bar + Subscribe (opens NewsletterModal)
 │   ├── NewsletterModal.tsx     # Substack embed signup form
-│   ├── HeadlineSection.tsx
+│   ├── HomepageRotatingHeadline.tsx
 │   ├── HorizontalRevealSection.tsx
 │   ├── ImageMarquee.tsx
 │   ├── Preloader.tsx
@@ -110,7 +115,7 @@ kandiegang_headless/
 ├── public/             # Static assets (copied to dist; images optimized at build)
 │   ├── fonts/          # IvyOra Display, GTPlanar (see public/fonts/fonts.css)
 │   └── images/         # Source images (JPG/PNG); build outputs WebP to dist
-│       └── guides/     # Guide photos used in HeadlineSection and CompanySection
+│       └── guides/     # Guide photos used in HomepageRotatingHeadline and CompanySection
 ├── App.tsx             # Main application component
 ├── index.tsx           # Application entry point
 ├── vite.config.ts      # Vite configuration
@@ -121,7 +126,7 @@ kandiegang_headless/
 
 ### Core Interactive Sections
 
-- **`HeadlineSection.tsx`**: Hero headline "You found us [photo]!" with `AnimatedHeadline` (char reveal + color fill) and rotating guide photos from `public/images/guides`.
+- **`HomepageRotatingHeadline.tsx`**: Hero headline "You found us [photo]!" with `AnimatedHeadline` (char reveal + color fill) and rotating guide photos from `public/images/guides`.
 - **`AnimatedHeadline.tsx`**: Reusable headline with SplitType (lines/words/chars) and GSAP: chars slide up on scroll, then color animates light grey → signal yellow → headline purple. Use `imageSrc` / `imageSrcSet` from `lib/images` for WebP and responsive widths.
 - **`ExpandingHero.tsx`**: Hero section that expands from a rounded card to full-width using `clip-path` and `inset` based on scroll progress; uses responsive WebP via `lib/images`.
 - **`HorizontalRevealSection.tsx`**: Horizontal scrolling gallery that pins to the screen, with a segmented navigation pill for the active section.
@@ -136,7 +141,7 @@ kandiegang_headless/
 ### UI Utilities
 
 - **`StickyTop.tsx` / `StickyBottom.tsx`**: Glassmorphic floating containers that house primary navigation. They feature "scroll out" logic to disappear when the user moves deep into the page.
-- **`FloatingBetaBar.tsx`**: A call-to-action pill visible on page load that gracefully exits as the user scrolls past the hero.
+- **`FloatingClubMemberBar.tsx`**: A call-to-action pill visible on page load that gracefully exits as the user scrolls past the hero.
 - **`Preloader.tsx`**: Loading animation that displays on initial page load.
 - **`Footer.tsx`**: Site footer with navigation and links.
 - **`ImageMarquee.tsx`**: Infinite scrolling image gallery.
@@ -189,7 +194,7 @@ const data = await wpQuery<{ posts: { nodes: WPPost[] } }>(
 
 The newsletter signup on the landing page (after the FAQ) embeds your **Substack** publication’s signup form in a modal. No backend is required.
 
-### Setup
+### Substack setup
 
 1. Create or use an existing **Substack** publication (e.g. `https://yoursubstack.substack.com`).
 2. In your project root, add to `.env` or `.env.local`:
@@ -199,6 +204,36 @@ The newsletter signup on the landing page (after the FAQ) embeds your **Substack
 3. Restart the dev server so the new env var is picked up.
 
 The modal embeds Substack’s signup form via iframe (`/embed`). Users can subscribe without leaving your site. A link to “Open subscribe page in new tab” is also shown. If `VITE_SUBSTACK_PUBLICATION` is not set, the modal shows instructions to set the env var.
+
+## 📧 Contact form (Formspree)
+
+The contact form on the **Contact** page (`/contact`) and in the **Contact modal** (opened from the About page "Contact us" button) is powered by [Formspree](https://formspree.io). No backend is required. Spam is reduced with a honeypot field (`_gotcha`); Formspree ignores submissions where the honeypot is filled.
+
+### Contact form setup
+
+1. Create a form at [formspree.io](https://formspree.io) and copy the form ID (the value after `/f/` in your form endpoint, e.g. `xyzabcde`).
+2. In your project root, add to `.env` or `.env.local`:
+   ```env
+   VITE_FORMSPREE_CONTACT_FORM_ID=your_formspree_form_id
+   ```
+3. **Enable AJAX submissions**: This app submits the form via JavaScript (no redirect). In your [Formspree form settings](https://formspree.io/forms), either **disable reCAPTCHA** for that form, or add your own **reCAPTCHA keys** (v3). Otherwise submissions will return 403 with: *"In order to submit via AJAX, you need to set a custom key or reCAPTCHA must be disabled."*
+4. Restart the dev server so the new env var is picked up.
+
+The shared `ContactForm` component (`components/ContactForm.tsx`) is used on both the Contact page and inside `ContactModal`. If `VITE_FORMSPREE_CONTACT_FORM_ID` is not set, the form area shows instructions to set the env var. On submit errors, the form displays Formspree’s error message when available. For stronger spam protection after enabling AJAX, you can add reCAPTCHA v3 or Turnstile in your Formspree dashboard.
+
+### Discord notifications
+
+You can send each contact form submission to a Discord channel using [Formspree’s Discord plugin](https://help.formspree.io/hc/en-us/articles/1500002137941-Send-Discord-notifications) (Personal, Professional, Business plans).
+
+1. **Create a Discord webhook**
+   - In Discord: right‑click your server → **Server Settings** → **Integrations** (you need server owner or integration permissions).
+   - Click **Create Webhook**, choose the channel, set name/avatar (e.g. “Formspree” and [Formspree logo](https://formspree.io/static/img/logo.png)), then **Copy Webhook URL**.
+
+2. **Connect in Formspree**
+   - Open your form in the [Formspree dashboard](https://formspree.io/forms) → **Plugins** tab.
+   - Click the **Discord** plugin, paste the webhook URL, and click **Connect**. Formspree will send a test message to confirm.
+
+Submissions will appear as messages in that channel. The contact form already sends a hidden `_subject` field (“New contact form submission”), which Formspree uses to set the subject/title of the Discord message. To change the channel later, disconnect the plugin and reconnect with a different webhook.
 
 ## 🛠️ Development
 
@@ -264,7 +299,7 @@ Colors can be accessed via:
 
 ### Images
 
-- **Guide photos**: Place JPG/PNG in `public/images/guides/` with filenames like `firstname_suffix.jpg` (e.g. `katrin_h.jpg`, `emma_b.jpg`). The **display name** in CompanySection is the part before the first underscore, capitalized (no underscore = whole name, e.g. `jeremy.jpg` → "Jeremy"). Used in `HeadlineSection` (rotating avatar) and `CompanySection` (TeamLink hover, random order). Reference via `imageSrc('/images/guides/<basePath>', 400)` for small avatars or `imageSrc('/images/guides/<basePath>')` for full size.
+- **Guide photos**: Place JPG/PNG in `public/images/guides/` with filenames like `firstname_suffix.jpg` (e.g. `katrin_h.jpg`, `emma_b.jpg`). The **display name** in CompanySection is the part before the first underscore, capitalized (no underscore = whole name, e.g. `jeremy.jpg` → "Jeremy"). Used in `HomepageRotatingHeadline` (rotating avatar) and `CompanySection` (TeamLink hover, random order). Reference via `imageSrc('/images/guides/<basePath>', 400)` for small avatars or `imageSrc('/images/guides/<basePath>')` for full size.
 - **Build optimization**: `npm run build` runs `scripts/optimize-images.js` after Vite: all images under `dist/images/` are converted to WebP (full + 400w, 800w, 1200w) and originals are removed. Use `lib/images.ts`: `imageSrc(basePath, width?)` and `imageSrcSet(basePath)` so dev uses `.jpg` from `public/` and production uses `.webp` from `dist/`.
 
 ### Design Principles
@@ -303,10 +338,12 @@ This runs `vite build` then `scripts/optimize-images.js`: images in `public/imag
 
 ### Deployment
 
+The app uses path-based routing (no hash in URLs). SPA fallback is configured so direct visits and refreshes to routes like `/story/foo` work: `vercel.json` (Vercel) and `public/_redirects` (Netlify, copied to `dist` on build) serve `index.html` for all paths.
+
 The app can be deployed to any static hosting service:
 
-- **Vercel**: Connect your repository and deploy automatically
-- **Netlify**: Use the build command `npm run build` and publish directory `dist`
+- **Vercel**: Connect your repository and deploy automatically (uses `vercel.json` for rewrites)
+- **Netlify**: Use the build command `npm run build` and publish directory `dist` (uses `_redirects` from `public/`)
 - **Cloudflare Pages**: Similar setup to Netlify
 - **Traditional Hosting**: Upload the `dist/` folder to your web server
 
@@ -315,6 +352,7 @@ The app can be deployed to any static hosting service:
 Make sure to set environment variables in your hosting platform:
 - `VITE_WP_GRAPHQL_URL`: Your WordPress GraphQL endpoint
 - `VITE_SUBSTACK_PUBLICATION`: (Optional) Substack publication base URL for newsletter signup embed
+- `VITE_FORMSPREE_CONTACT_FORM_ID`: (Optional) Formspree form ID for the contact form (Contact page and modal)
 - `GEMINI_API_KEY`: Your Google Gemini API key
 
 ## 📝 License

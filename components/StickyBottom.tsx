@@ -62,18 +62,19 @@ export const StickyBottom: React.FC = () => {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="w-full max-w-3xl pointer-events-auto"
           >
-            <motion.div 
+            <motion.a
+              href="/#/kandiegangcyclingclub"
               layout
-              className="w-full bg-[#f9f100] border border-black/[0.03] rounded-full px-6 py-4 flex justify-between items-center shadow-2xl shadow-black/10 transition-transform active:scale-[0.98] cursor-pointer"
+              className="w-full bg-[#f9f100] border border-black/[0.03] rounded-full px-6 py-4 flex justify-between items-center shadow-2xl shadow-black/10 transition-transform active:scale-[0.98] cursor-pointer no-underline text-inherit"
             >
-               <span className="text-[11px] font-bold text-bold uppercase tracking-tight">
-                 Become a Kandie Gang Cycling Club Member
+               <span className="text-[11px] font-bold text-bold text-gtplanar tracking-normal">
+                 Become a Member
                </span>
                <div className="flex items-center gap-2">
                   <span className="text-[11px] font-medium text-black/60">Support the movement</span>
                   <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
                </div>
-            </motion.div>
+            </motion.a>
           </motion.div>
         )}
       </AnimatePresence>

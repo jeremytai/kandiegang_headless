@@ -64,18 +64,18 @@ export const NewsletterModal: React.FC<NewsletterModalProps> = ({ isOpen, onClos
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-3 right-3 z-10 rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              className="absolute top-3 right-3 z-10 rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
               aria-label="Close"
             >
               <X className="h-6 w-6" />
             </button>
             <div className="flex flex-1 flex-col overflow-hidden">
-              <h2
+              <h1
                 id="newsletter-modal-title"
-                className="shrink-0 px-5 pt-6 pb-2 text-center text-xl font-medium tracking-tight text-slate-900 md:px-6 md:text-2xl"
+                className="shrink-0 px-5 pt-6 pb-2 text-center text-xl font-light tracking-normal text-secondary-purple-rain md:px-6 md:text-3xl"
               >
-                Get the latest updates in your inbox
-              </h2>
+                Occasional Updates
+              </h1>
               {embedUrl ? (
                 <>
                   <div className="min-h-0 flex-1 px-4 pb-4 md:px-5">

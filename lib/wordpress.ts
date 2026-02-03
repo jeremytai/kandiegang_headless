@@ -47,6 +47,11 @@ export interface WPPage {
   };
 }
 
+export interface WPCategory {
+  name: string;
+  slug: string;
+}
+
 export interface GraphQLResponse<T> {
   data?: T;
   errors?: Array<{ message: string }>;
@@ -168,7 +173,7 @@ export const GET_POSTS_QUERY = `
             sourceUrl
           }
         }
-        categories(first: 1) {
+        categories {
           nodes {
             name
           }
@@ -178,6 +183,20 @@ export const GET_POSTS_QUERY = `
             name
           }
         }
+      }
+    }
+  }
+`;
+
+/**
+ * Query to fetch categories from WordPress (for filtering, nav, etc.).
+ */
+export const GET_CATEGORIES_QUERY = `
+  query GetCategories($first: Int!) {
+    categories(first: $first, where: { hideEmpty: true }) {
+      nodes {
+        name
+        slug
       }
     }
   }
@@ -293,6 +312,25 @@ export async function getPostBySlug(slug: string): Promise<WPPost | null> {
   } catch (error) {
     console.error(`Failed to fetch post with slug "${slug}":`, error);
     return null;
+  }
+}
+
+/**
+ * Fetches categories from WordPress for filtering and navigation.
+ * @param first - Max number of categories to return (default 100)
+ * @returns List of categories (name, slug)
+ */
+export async function getCategories(first = 100): Promise<WPCategory[]> {
+  try {
+    const data = await wpQuery<{ categories: { nodes: WPCategory[] } }>(
+      GET_CATEGORIES_QUERY,
+      { first },
+      { useCache: true }
+    );
+    return data.categories?.nodes ?? [];
+  } catch (error) {
+    console.warn('Failed to fetch categories:', error);
+    return [];
   }
 }
 

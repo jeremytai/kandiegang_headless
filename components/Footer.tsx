@@ -10,9 +10,11 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useContactModal } from '../context/ContactModalContext';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const { openContactModal } = useContactModal();
 
   return (
     <footer className="relative bg-white border-t border-slate-50 font-medium text-[13px]">
@@ -20,7 +22,7 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-12 gap-6 p-6 pb-12 md:pb-40">
           <div className="col-span-12 flex flex-col items-center py-16 md:col-span-6 md:items-start md:py-0">
             <p className="text-center md:text-left text-secondary-current tracking-tight text-base font-normal">
-              <span className="font-bold">Kandie Gang</span><br />We provide a safe space that brings FLINTA* and BIPOC<br />closer to cycling culture (without excluding men).
+              <span className="font-bold">Kandie Gang</span><br />We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).
             </p>
           </div>
 
@@ -28,15 +30,16 @@ export const Footer: React.FC = () => {
             <ul className="col-span-3 flex flex-col gap-2 pb-4 md:col-span-2 md:gap-3">
               <li><p className="text-secondary-current uppercase tracking-widest text-[10px] font-bold mb-1">Explore</p></li>
               <FooterLink to="/community" label="Community" />
-              <FooterLink to="/ridelevels" label="Ride Levels" />
               <FooterLink to="/stories" label="Stories" />
               <FooterLink to="/shop" label="Shop" />
+              <FooterContactLink onOpenContact={openContactModal} />
             </ul>
 
             <ul className="col-span-3 flex flex-col gap-2 pb-4 md:col-span-2 md:gap-3">
-              <li><p className="text-secondary-current uppercase tracking-widest text-[10px] font-bold mb-1">About</p></li>
-              <FooterLink to="/about" label="Company" />
+              <li><p className="text-secondary-current uppercase tracking-widest text-[10px] font-bold mb-1">Kandie Gang</p></li>
+              <FooterLink to="/about" label="About Us" />
               <FooterLink to="/kandiecode" label="Kandie Code" />
+              <FooterLink to="/ridelevels" label="Ride Levels" />
               <FooterLink to="/waiver" label="Ride Waiver" />
               <FooterLink to="/privacy-policy" label="Privacy Policy" />
             </ul>
@@ -75,10 +78,10 @@ export const Footer: React.FC = () => {
             </p>
           </div>
           
-          <ul className="col-span-6 hidden md:flex md:flex-row md:gap-8 lg:col-span-4 justify-end">
+          <ul className="col-span-6 flex flex-row flex-wrap gap-4 justify-end md:gap-8 lg:col-span-4">
             <li className="flex flex-col items-start self-end">
               <Link to="/privacy-policy" className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black whitespace-nowrap">
-                Privacy Policy 
+                Privacy Policy
               </Link>
             </li>
             <li className="flex flex-col items-start self-end">
@@ -98,5 +101,17 @@ const FooterLink = ({ to, label }: { to: string; label: string }) => (
     <Link to={to} className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black block">
       {label}
     </Link>
+  </li>
+);
+
+const FooterContactLink: React.FC<{ onOpenContact: () => void }> = ({ onOpenContact }) => (
+  <li>
+    <button
+      type="button"
+      onClick={onOpenContact}
+      className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black block text-left w-full"
+    >
+      Contact
+    </button>
   </li>
 );

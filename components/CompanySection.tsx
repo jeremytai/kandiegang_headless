@@ -9,6 +9,7 @@
  */
 
 import React, { useRef, useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, useSpring, AnimatePresence } from 'framer-motion';
 import { imageSrc } from '../lib/images';
 
@@ -46,6 +47,27 @@ const GUIDE_IMAGES = [
   'wiepke_h',
 ] as const;
 
+/**
+ * Optional URL for each guide (key = base path from GUIDE_IMAGES).
+ * Add Strava, Instagram, personal site, or internal path (e.g. /guides/jeremy).
+ * Omit or leave empty to show the pill without a link.
+ */
+const GUIDE_LINKS: Partial<Record<(typeof GUIDE_IMAGES)[number], string>> = {
+  jeremy: 'https://www.strava.com/athletes/4653468',
+  emma_b: 'https://www.instagram.com/kandie_gang/',
+  rilana_s: 'https://www.strava.com/athletes/50138380',
+  silvia_b_: 'https://www.instagram.com/kandie_gang/',
+  tanja_d: 'https://www.strava.com/athletes/103874645',
+  wiepke_h: 'https://www.strava.com/athletes/93143903',
+  bjoern_h: 'https://www.instagram.com/kandie_gang/',
+  christian_m: 'https://www.strava.com/athletes/25770175',
+  katrin_h: 'https://www.strava.com/athletes/41164599',
+  michael_m: 'https://www.strava.com/athletes/41164599',
+  ruth_p: 'https://www.instagram.com/kandie_gang/',
+  saskia_s: 'https://www.instagram.com/kandie_gang/',
+  kathi_s: 'https://www.strava.com/athletes/5526439',
+};
+
 /** Secondary pill styles: background + text. White text on dark/secondary; Signal (yellow) uses current or purple-rain text. */
 const PILL_STYLES = [
   'bg-secondary-purple-rain text-white',
@@ -58,14 +80,19 @@ const PILL_STYLES = [
   'bg-secondary-signal text-secondary-purple-rain',
 ] as const;
 
+const pillClass = (className: string) =>
+  `relative inline-flex items-center justify-center gap-1 rounded-full border-0 px-6 py-3 text-[15px] md:text-base font-semibold transition-colors hover:opacity-90 group ${className}`;
+
 const TeamLink: React.FC<{
   name: string;
-  url: string;
+  url: string | undefined;
   image: string;
   pillClassName: string;
 }> = ({ name, url, image, pillClassName }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const containerRef = useRef<HTMLAnchorElement>(null);
+  const containerRef = useRef<HTMLElement | null>(null);
+  const hasLink = url && url !== '#';
+  const isInternal = hasLink && url.startsWith('/');
 
   const springConfig = { damping: 25, stiffness: 200 };
   const mouseX = useSpring(0, springConfig);
@@ -78,17 +105,8 @@ const TeamLink: React.FC<{
     mouseY.set(e.clientY - rect.top);
   };
 
-  return (
-    <a
-      ref={containerRef}
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`relative inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border-0 px-6 py-3 text-[15px] md:text-base font-semibold transition-colors hover:opacity-90 group ${pillClassName}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onMouseMove={handleMouseMove}
-    >
+  const content = (
+    <>
       {name}
       <AnimatePresence>
         {isHovered && (
@@ -120,7 +138,49 @@ const TeamLink: React.FC<{
           </motion.div>
         )}
       </AnimatePresence>
-    </a>
+    </>
+  );
+
+  if (hasLink && isInternal) {
+    return (
+      <Link
+        to={url}
+        ref={containerRef as React.RefObject<HTMLAnchorElement | null>}
+        className={pillClass(`${pillClassName} cursor-pointer`)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onMouseMove={handleMouseMove}
+      >
+        {content}
+      </Link>
+    );
+  }
+  if (hasLink) {
+    return (
+      <a
+        ref={containerRef as React.RefObject<HTMLAnchorElement | null>}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={pillClass(`${pillClassName} cursor-pointer`)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onMouseMove={handleMouseMove}
+      >
+        {content}
+      </a>
+    );
+  }
+  return (
+    <span
+      ref={containerRef}
+      className={pillClass(pillClassName)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
+    >
+      {content}
+    </span>
   );
 };
 
@@ -135,14 +195,14 @@ export const CompanySection: React.FC = () => {
             <TeamLink
               key={basePath}
               name={firstNameFromFilename(basePath)}
-              url="#"
+              url={GUIDE_LINKS[basePath]}
               image={imageSrc(`/images/guides/${basePath}`, 400)}
               pillClassName={PILL_STYLES[i % PILL_STYLES.length]}
             />
           ))}
         </div>
         <p className="mt-20 text-slate-400 text-md font-light">
-        Our weekly Tuesday Social Road Rides are based in Hamburg and led by our knowledgeable Ride Guides. Besides the road rides, we often organize gravel rides and activities based around cycling culture.
+        Our weekly Tuesday Social Road Rides are based in Hamburg and led by our Ride Guides. Besides the road rides, we often organize gravel rides and activities based around cycling culture.
         </p>
       </div>
     </section>

@@ -13,12 +13,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { CompanySection } from '../components/CompanySection';
 import { CompanyValuesSection } from '../components/CompanyValuesSection.tsx';
 import { AboutHero } from '../components/AboutHero';
+import { AnimatedHeadline } from '../components/AnimatedHeadline';
+import { useContactModal } from '../context/ContactModalContext';
 import { ImageMarquee } from '../components/ImageMarquee';
-import { NewsletterSection } from '../components/NewsletterSection';
 // WordPress fetch – re-enable when ready (getPageBySlug)
 import { WPPage } from '../lib/wordpress';
 
@@ -50,6 +51,7 @@ export const AboutPage: React.FC = () => {
   const [page, setPage] = useState<WPPage | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { openContactModal } = useContactModal();
 
   // Default content to display if WordPress content is not available
   const defaultContent = {
@@ -122,11 +124,14 @@ export const AboutPage: React.FC = () => {
         </AnimatePresence>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-20 mb-40 mt-0">
-          <div className="space-y-8">
+          <div className="space-y-3 md:space-y-8">
             <h2 className="text-xs font-normal font-gtplanar uppercase tracking-[0.3em] text-secondary-purple-rain">Our Vision</h2>
-            <h3 className="text-4xl md:text-5xl font-light tracking-normal text-secondary-purple-rain">
-              {page?.title ? extractTextFromHTML(page.title) || defaultContent.visionTitle : defaultContent.visionTitle}
-            </h3>
+            <AnimatedHeadline
+              as="h3"
+              text={page?.title ? extractTextFromHTML(page.title) || defaultContent.visionTitle : defaultContent.visionTitle}
+              className="text-4xl md:text-5xl font-light tracking-normal text-secondary-purple-rain"
+              lineHeight={1.25}
+            />
           </div>
           <div className="space-y-6 text-lg md:text-xl text-slate-500 font-light leading-relaxed">
             {page?.content ? (
@@ -185,18 +190,18 @@ export const AboutPage: React.FC = () => {
             <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
               We're a collective of cyclists, creatives, and dreamers based in Hamburg, Germany.
             </p>
-            <Link
-              to="/contact"
-              className="bg-white text-black px-10 py-5 rounded-full font-bold flex items-center gap-3 hover:bg-slate-100 transition-all active:scale-95 inline-flex"
+            <button
+              type="button"
+              onClick={openContactModal}
+              className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-white bg-transparent px-6 py-4 text-sm font-medium text-secondary-blush transition-colors hover:border-secondary-blush hover:bg-secondary-blush hover:text-white active:scale-95 md:gap-2 md:text-base"
             >
-              Contact us <ArrowUpRight className="w-5 h-5" />
-            </Link>
+              <span>Contact us</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-blush/20 p-1 transition-colors group-hover:bg-white">
+                <ArrowRight className="h-3 w-3 text-secondary-blush transition-colors" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </span>
+            </button>
           </div>
         </section>
-      </div>
-
-      <div className="w-full">
-        <NewsletterSection />
       </div>
     </div>
   );
