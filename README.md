@@ -7,7 +7,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **🎨 Premium UI/UX**: High-fidelity animations with Framer Motion and GSAP, scroll-driven effects, and glassmorphic design elements
 - **📝 Headless WordPress**: Type-safe GraphQL integration for dynamic content management
 - **🌐 Multi-Page Routing**: Landing, About, Community, Stories (Journal), Contact, and Fonts showcase pages
-- **🤖 AI-Powered Content**: Real-time weather data via Google Gemini API with search grounding
+- **🌤️ Real-Time Weather**: Location from IP (ip-api.com), current conditions from Open-Meteo, and cycling outfit suggestions based on temp and condition
 - **📱 Fully Responsive**: Mobile-first design with Tailwind CSS
 - **📬 Newsletter (Substack)**: Signup modal embeds your Substack publication’s form; optional env var
 - **⚡ Performance Optimized**: Build-time WebP conversion and responsive image widths (Sharp), query caching, retry logic
@@ -24,7 +24,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **GSAP + SplitType**: Animated headline (character reveal, color fill: grey → signal yellow → headline color)
 - **Lucide React**: Clean, consistent iconography
 - **Sharp** (dev): Build-time image optimization — convert JPG/PNG to WebP and generate responsive widths (400, 800, 1200)
-- **Google Gemini API**: Real-time data fetching (e.g., weather grounding) for dynamic experiences
+- **Open-Meteo + ip-api**: Real-time weather and geolocation for the weather status bar (no API keys required)
 - **WordPress GraphQL**: Headless CMS integration via WPGraphQL
 
 ## 📦 Installation
@@ -33,7 +33,6 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 
 - Node.js 18+ and npm
 - A WordPress site with WPGraphQL plugin installed (optional - demo endpoint available)
-- Google Gemini API key (optional - for weather features)
 
 ### Setup
 
@@ -61,9 +60,6 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
    # Substack newsletter publication URL (optional)
    # Your Substack publication base URL (e.g. https://yoursubstack.substack.com)
    VITE_SUBSTACK_PUBLICATION=https://yoursubstack.substack.com
-   
-   # Google Gemini API Key (for weather data)
-   GEMINI_API_KEY=your_gemini_api_key_here
    
    # Formspree contact form ID (optional – for /contact and Contact modal)
    VITE_FORMSPREE_CONTACT_FORM_ID=your_formspree_form_id
@@ -99,7 +95,8 @@ kandiegang_headless/
 │   ├── Preloader.tsx
 │   ├── ScrollingHeadline.tsx
 │   ├── StickyBottom.tsx
-│   └── StickyTop.tsx
+│   ├── StickyTop.tsx
+│   └── WeatherStatusBackground.tsx   # Weather bar: ip-api + Open-Meteo, outfit suggestions
 ├── pages/              # Page components
 │   ├── AboutPage.tsx
 │   ├── CommunityPage.tsx
@@ -145,6 +142,7 @@ kandiegang_headless/
 - **`Preloader.tsx`**: Loading animation that displays on initial page load.
 - **`Footer.tsx`**: Site footer with navigation and links.
 - **`ImageMarquee.tsx`**: Infinite scrolling image gallery.
+- **`WeatherStatusBackground.tsx`**: Fixed yellow background on the landing page showing date (location timezone), location (from IP via ip-api.com), temperature and condition (Open-Meteo), and cycling outfit suggestion. Location defaults to Hamburg if IP lookup fails. No API keys required.
 
 ### Pages
 
@@ -315,12 +313,13 @@ Colors can be accessed via:
 
 ### Weather Integration
 
-Real-time weather data for Hamburg is fetched using the **Gemini 3 Flash** model with Google Search grounding. This demonstrates how AI can be used to inject contextually relevant, "magic" data into a mundane landing page.
+The weather status bar uses **Open-Meteo** for current conditions and **ip-api.com** for location (no API keys required). Location defaults to Hamburg if IP lookup fails.
 
-The weather widget displays:
-- Current date and time (Hamburg timezone)
-- Location (Hamburg, Germany)
-- Temperature and condition with appropriate icons
+- **Location**: Resolved from the visitor’s IP (ip-api.com) for lat/lon, city, and timezone.
+- **Weather**: Fetched from Open-Meteo (`/v1/forecast`) for temperature and WMO weather code; codes are mapped to display labels and icons.
+- **Cycling outfit suggestion**: In-app logic based on temperature and condition (e.g. rain/snow) — not from an external AI.
+
+The bar displays: date (in the resolved timezone), location label, temperature and condition with icons, and a short outfit suggestion.
 
 ### WordPress Content
 
@@ -353,7 +352,6 @@ Make sure to set environment variables in your hosting platform:
 - `VITE_WP_GRAPHQL_URL`: Your WordPress GraphQL endpoint
 - `VITE_SUBSTACK_PUBLICATION`: (Optional) Substack publication base URL for newsletter signup embed
 - `VITE_FORMSPREE_CONTACT_FORM_ID`: (Optional) Formspree form ID for the contact form (Contact page and modal)
-- `GEMINI_API_KEY`: Your Google Gemini API key
 
 ## 📝 License
 
