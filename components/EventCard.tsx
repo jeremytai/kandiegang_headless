@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { imageSrc } from '../lib/images';
 
 export interface EventCardProps {
@@ -72,16 +73,14 @@ export const EventCard: React.FC<EventCardProps> = ({
 
         {/* Content */}
         <div className="order-3 md:order-2 flex flex-col justify-center gap-4 md:pl-2">
-          <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-3">
             <h3 className="text-2xl md:text-3xl lg:text-4xl font-heading-thin tracking-tight text-secondary-purple-rain">
               {title}
             </h3>
             {tag && (
-              <div>
-                <span className="inline-flex items-center rounded-full bg-secondary-blush/70 px-3 py-1.5 text-[0.75rem] font-medium text-primary-ink/90 tracking-wide">
-                  {tag}
-                </span>
-              </div>
+              <span className="inline-flex items-center rounded-full bg-secondary-blush/70 px-3 py-1.5 text-[0.75rem] font-medium text-primary-ink/90 tracking-wide">
+                {tag}
+              </span>
             )}
           </div>
 
@@ -89,10 +88,15 @@ export const EventCard: React.FC<EventCardProps> = ({
             {description}
           </p>
 
-          <span className="inline-flex items-center gap-2 text-sm font-medium text-secondary-purple-rain group-hover:underline underline-offset-4">
-            <span className="text-base">→</span>
+          <button
+            type="button"
+            className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-secondary-purple-rain bg-transparent px-4 py-2 text-xs md:text-sm font-medium text-secondary-purple-rain transition-colors hover:border-secondary-purple-rain hover:bg-secondary-purple-rain hover:text-white active:scale-95"
+          >
             <span>Go to event</span>
-          </span>
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-purple-rain/10 p-1 transition-colors group-hover:bg-white">
+              <ArrowRight className="h-3 w-3 text-secondary-purple-rain transition-colors group-hover:text-secondary-purple-rain" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+            </span>
+          </button>
         </div>
       </Link>
     </article>
