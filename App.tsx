@@ -104,9 +104,8 @@ const App: React.FC = () => {
     restDelta: 0.001
   });
 
-  // Refined transforms to create a more balanced "frame" effect that matches the provided screenshot
+  // Frame: rounded corners (Tailwind class), scale/opacity change on scroll. No overflow-clip so section rounded corners show.
   const scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
-  const borderRadius = useTransform(smoothProgress, [0, 0.6], [0, 24]);
   const opacity = useTransform(smoothProgress, [0, 0.9], [1, 0.95]);
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
@@ -121,8 +120,8 @@ const App: React.FC = () => {
 
           {/* Main Content */}
           <motion.div
-            style={{ scale, borderRadius, opacity, y, transformOrigin: 'bottom center' }}
-            className="relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)]"
+            style={{ scale, opacity, y, transformOrigin: 'bottom center' }}
+            className="relative z-10 bg-white min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)] rounded-3xl overflow-hidden p-3 md:p-4"
           >
             <Routes>
               <Route element={<PageTransition />}>
