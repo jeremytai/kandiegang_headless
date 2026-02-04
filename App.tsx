@@ -64,6 +64,13 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Google Analytics: send page_view on each SPA route change
+  useEffect(() => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('config', 'GT-5TJ2FPQ8', { page_path: location.pathname });
+    }
+  }, [location.pathname]);
+
   const { scrollYProgress } = useScroll({
     target: sentinelRef,
     offset: ["start end", "end end"]

@@ -55,9 +55,12 @@ export const ExpandingHero: React.FC<ExpandingHeroProps> = ({ imageUrl, imageAlt
               src={src}
               srcSet={srcSet}
               sizes="100vw"
+              width={1920}
+              height={1080}
               className="w-full h-full object-cover"
               alt={imageAlt}
               loading={imageUrl ? 'eager' : 'lazy'}
+              fetchPriority={imageUrl ? undefined : 'high'}
             />
             <div className="absolute inset-0 bg-black/5" />
           </div>

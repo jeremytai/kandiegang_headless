@@ -70,8 +70,7 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
   useEffect(() => {
     let current = 0;
     const interval = setInterval(() => {
-      // Vary the speed for a more natural feel
-      const increment = Math.random() * 8 + 2;
+      const increment = Math.random() * 12 + 6;
       current = Math.min(current + increment, 100);
       setProgress(current);
 
@@ -79,10 +78,10 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
         clearInterval(interval);
         setTimeout(() => {
           setIsExiting(true);
-          setTimeout(onComplete, 1100);
-        }, 800);
+          setTimeout(onComplete, 550);
+        }, 300);
       }
-    }, 100);
+    }, 80);
 
     return () => clearInterval(interval);
   }, [onComplete]);
@@ -104,9 +103,9 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
       {!isExiting && (
         <motion.div
           initial={{ y: 0 }}
-          exit={{ 
+          exit={{
             y: "-100%",
-            transition: { duration: 1.1, ease: [0.85, 0, 0.15, 1] } 
+            transition: { duration: 0.55, ease: [0.85, 0, 0.15, 1] }
           }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-secondary-purple-rain"
         >
