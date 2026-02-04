@@ -101,7 +101,14 @@ const App: React.FC = () => {
           {/* Main Content */}
           <motion.div
             style={{ scale, opacity, y, transformOrigin: 'bottom center' }}
-            className="relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)] rounded-[24px]"
+            className={[
+              "relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)]",
+              // On the homepage we want the "breath" background to read as a flat edge at the top,
+              // while keeping the bottom corners rounded.
+              location.pathname === '/'
+                ? 'rounded-b-[24px] rounded-t-none'
+                : 'rounded-[24px]',
+            ].join(' ')}
           >
             <Routes>
               <Route element={<PageTransition />}>
