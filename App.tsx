@@ -16,6 +16,10 @@ import { Preloader } from './components/Preloader';
 import { WeatherStatusBackground } from './components/WeatherStatusBackground';
 import { HomepageRotatingHeadline } from './components/HomepageRotatingHeadline';
 import { ExpandingHero } from './components/ExpandingHero';
+import { ScrollingHeadline } from './components/ScrollingHeadline';
+import { HorizontalRevealSection } from './components/HorizontalRevealSection';
+import { CompanySection } from './components/CompanySection';
+import { FAQSection } from './components/FAQSection';
 import { StickyTop } from './components/StickyTop';
 import { StickyBottom } from './components/StickyBottom';
 import { NewsletterSection } from './components/NewsletterSection';
@@ -97,6 +101,9 @@ const App: React.FC = () => {
   const opacity = useTransform(smoothProgress, [0, 0.9], [1, 0.95]);
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
+  // Production: minimal landing on /. Localhost (dev): full site for development.
+  const isMinimalLanding = import.meta.env.PROD;
+
   return (
     <CookieConsentProvider>
       <ContactModalProvider>
@@ -104,7 +111,7 @@ const App: React.FC = () => {
           <Preloader onComplete={() => setIsLoading(false)} />
 
           <WeatherStatusBackground />
-          {location.pathname !== '/' && <StickyTop />}
+          {(!isMinimalLanding || location.pathname !== '/') && <StickyTop />}
 
           {/* Main Content */}
           <motion.div
@@ -117,7 +124,18 @@ const App: React.FC = () => {
           >
             <Routes>
               <Route element={<PageTransition />}>
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={
+                  isMinimalLanding ? (
+                    <LandingPage minimal />
+                  ) : (
+                    <>
+                      <LandingPage />
+                      <HorizontalRevealSection />
+                      <CompanySection />
+                      <FAQSection />
+                    </>
+                  )
+                } />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/community" element={<CommunityPage />} />
                 <Route path="/stories" element={<StoriesPage />} />
@@ -135,8 +153,8 @@ const App: React.FC = () => {
               </Route>
             </Routes>
 
-            {/* Newsletter and footer hidden on minimal landing (/) */}
-            {location.pathname !== '/' && (
+            {/* Newsletter and footer: show on all pages in dev; in prod hide on minimal landing (/) */}
+            {(!isMinimalLanding || location.pathname !== '/') && (
               <>
                 <NewsletterSection />
                 <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
@@ -147,7 +165,7 @@ const App: React.FC = () => {
 
           {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
           <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
-          {['/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && <StickyBottom />}
+          {(isMinimalLanding ? ['/stories', '/about', '/kandiegangcyclingclub'] : ['/', '/stories', '/about', '/kandiegangcyclingclub']).includes(location.pathname) && <StickyBottom />}
         </div>
       </ContactModalProvider>
       <CookieBanner />
@@ -161,11 +179,12 @@ const CookiePreferencesModalWrapper: React.FC = () => {
   return <CookiePreferencesModal isOpen={isPreferencesOpen} onClose={closeCookiePreferences} />;
 };
 
-/** Minimal landing: "You found us" headline + hero image only (until full site is ready). */
-const LandingPage = () => (
+/** Landing: minimal = logo + headline + hero only (prod). Full = + ScrollingHeadline + sections (dev). */
+const LandingPage = ({ minimal = false }: { minimal?: boolean }) => (
   <>
-    <HomepageRotatingHeadline />
+    <HomepageRotatingHeadline minimal={minimal} />
     <ExpandingHero />
+    {!minimal && <ScrollingHeadline />}
   </>
 );
 

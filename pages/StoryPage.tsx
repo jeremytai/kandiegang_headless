@@ -12,6 +12,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { getPostBySlug, WPPost } from '../lib/wordpress';
 import { ExpandingHero } from '../components/ExpandingHero';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();
@@ -78,6 +79,12 @@ export const StoryPage: React.FC = () => {
       cancelled = true;
     };
   }, [slug]);
+
+  usePageMeta(
+    post ? `${stripHtml(post.title)} | Kandie Gang` : 'Story | Kandie Gang',
+    post ? stripHtml(post.excerpt) : null,
+    post?.featuredImage?.node?.sourceUrl ?? null
+  );
 
   if (!slug) {
     return (

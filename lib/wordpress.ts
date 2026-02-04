@@ -7,7 +7,7 @@
 
 // WordPress GraphQL endpoint from environment variable
 // Falls back to demo endpoint if not configured
-const WP_GRAPHQL_URL = import.meta.env.VITE_WP_GRAPHQL_URL || 'https://demo.wp-graphql.org/graphql';
+const WP_GRAPHQL_URL = import.meta.env.VITE_WP_GRAPHQL_URL || 'https://wp-origin.kandiegang.com/graphql';
 
 export interface WPPost {
   id: string;
@@ -19,6 +19,7 @@ export interface WPPost {
   featuredImage?: {
     node: {
       sourceUrl: string;
+      altText?: string;
     };
   };
   categories?: {
@@ -50,6 +51,12 @@ export interface WPPage {
 export interface WPCategory {
   name: string;
   slug: string;
+}
+
+/** Relay-style pageInfo for cursor-based pagination of posts. */
+export interface WPPostsPageInfo {
+  hasNextPage: boolean;
+  endCursor: string | null;
 }
 
 export interface GraphQLResponse<T> {
@@ -153,14 +160,15 @@ export async function wpQuery<T>(
 
 /**
  * Optimized query to fetch posts for the Journal/Stories page.
- * Efficiency Analysis: 
- * - Only requests specific nodes (avoiding edges/cursors when possible for simple lists).
+ * Supports cursor-based pagination via optional $after.
+ * Efficiency Analysis:
+ * - Only requests specific nodes (avoiding edges when not needed).
  * - Filters for minimal metadata (Title, Excerpt, Date, Category).
- * - Requests optimized image source URLs.
+ * - Requests optimized image source URLs and pageInfo for load-more.
  */
 export const GET_POSTS_QUERY = `
-  query GetPosts($first: Int!) {
-    posts(first: $first, where: { orderby: { field: DATE, order: DESC } }) {
+  query GetPosts($first: Int!, $after: String) {
+    posts(first: $first, after: $after, where: { orderby: { field: DATE, order: DESC } }) {
       nodes {
         id
         title
@@ -184,9 +192,92 @@ export const GET_POSTS_QUERY = `
           }
         }
       }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
 `;
+
+/** Response shape for GET_POSTS_QUERY (used when category query is unavailable). */
+export type GetPostsResponse = {
+  posts: { nodes: WPPost[]; pageInfo: WPPostsPageInfo };
+};
+
+/**
+ * Fetches posts from a category by slug (e.g. "social-rides").
+ * Used for the Stories page when stories are sourced from a single category.
+ * Supports cursor-based pagination via optional $after.
+ */
+export const GET_CATEGORY_POSTS_QUERY = `
+  query GetCategoryPosts($categorySlug: String!, $first: Int!, $after: String) {
+    category(id: $categorySlug, idType: SLUG) {
+      id
+      name
+      posts(first: $first, after: $after) {
+        nodes {
+          id
+          title
+          excerpt
+          date
+          uri
+          featuredImage {
+            node {
+              sourceUrl
+              altText
+            }
+          }
+          categories {
+            nodes {
+              name
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;
+
+/** Response shape for GET_CATEGORY_POSTS_QUERY. */
+export type CategoryPostsResponse = {
+  category: {
+    id: string;
+    name: string;
+    posts: {
+      nodes: WPPost[];
+      pageInfo: WPPostsPageInfo;
+    };
+  } | null;
+};
+
+/**
+ * Fetches posts for a category by slug with optional cursor pagination.
+ * @param categorySlug - Category slug (e.g. "social-rides")
+ * @param first - Number of posts to fetch
+ * @param after - Cursor for next page (null for first page)
+ * @returns Posts nodes and pageInfo, or null if category not found
+ */
+export async function getCategoryPosts(
+  categorySlug: string,
+  first: number,
+  after?: string | null
+): Promise<{ nodes: WPPost[]; pageInfo: WPPostsPageInfo } | null> {
+  const data = await wpQuery<CategoryPostsResponse>(
+    GET_CATEGORY_POSTS_QUERY,
+    { categorySlug, first, after: after ?? null },
+    { useCache: true }
+  );
+  if (!data.category?.posts) return null;
+  return {
+    nodes: data.category.posts.nodes,
+    pageInfo: data.category.posts.pageInfo,
+  };
+}
 
 /**
  * Query to fetch categories from WordPress (for filtering, nav, etc.).

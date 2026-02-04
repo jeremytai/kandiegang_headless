@@ -184,9 +184,10 @@ const data = await wpQuery<{ posts: { nodes: WPPost[] } }>(
 
 ### WordPress Setup
 
-1. Install the [WPGraphQL plugin](https://www.wpgraphql.com/) on your WordPress site
-2. Configure the GraphQL endpoint URL in your `.env` file
-3. The app will automatically use the demo endpoint if no URL is provided
+1. **Install WPGraphQL** on your WordPress site: [WPGraphQL plugin](https://www.wpgraphql.com/). Optionally add [WPGraphQL for ACF](https://www.wpgraphql.com/extensions/wpgraphql-for-acf/) if you use Advanced Custom Fields later.
+2. **Set the env var**: In `.env` (copy from `.env.example`), set `VITE_WP_GRAPHQL_URL` to your GraphQL endpoint (e.g. `https://your-wordpress-site.com/graphql`). If unset, the app uses the public demo endpoint.
+3. **CORS**: Your WordPress site must allow your frontend origin (e.g. `http://localhost:3000`, or your production domain) in CORS so the browser can call the GraphQL API. Use your host’s CORS settings or a plugin that allows the GraphQL endpoint for your origin.
+4. **Validate**: Run the app and open `/stories` and a `/story/:slug`; posts should load. If you see “Unable to connect to WordPress” or “Showing archived content”, check the URL and CORS.
 
 ## 📬 Newsletter (Substack)
 

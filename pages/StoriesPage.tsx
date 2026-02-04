@@ -9,62 +9,143 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
-import { wpQuery, GET_POSTS_QUERY, WPPost, getCategories, WPCategory } from '../lib/wordpress';
+import {
+  getCategoryPosts,
+  wpQuery,
+  GET_POSTS_QUERY,
+  GetPostsResponse,
+  WPPost,
+  WPPostsPageInfo,
+  getCategories,
+  WPCategory,
+  clearWPCache,
+} from '../lib/wordpress';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
+import { usePageMeta } from '../hooks/usePageMeta';
 
+const STORIES_CATEGORY_SLUG = 'social-rides';
 const POSTS_FIRST = 24;
 
 export const StoriesPage: React.FC = () => {
   const [posts, setPosts] = useState<WPPost[]>([]);
+  const [pageInfo, setPageInfo] = useState<WPPostsPageInfo | null>(null);
   const [categories, setCategories] = useState<WPCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadMoreLoading, setLoadMoreLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStories = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchStories = async (append = false, invalidateCache = false) => {
+    if (invalidateCache) clearWPCache();
+    if (!append) {
+      setLoading(true);
+      setError(null);
+    }
+    const after = append ? pageInfo?.endCursor ?? null : null;
     try {
-      const [postsData, categoriesData] = await Promise.all([
-        wpQuery<{ posts: { nodes: WPPost[] } }>(
-          GET_POSTS_QUERY,
-          { first: POSTS_FIRST },
-          { useCache: true }
-        ),
-        getCategories(),
-      ]);
+      let result: { nodes: WPPost[]; pageInfo: WPPostsPageInfo } | null = null;
+      let categoriesData: WPCategory[] | null = null;
 
-      const nodes = postsData.posts.nodes;
-      if (nodes.length === 0) {
-        setError("No posts found in WordPress");
-        setPosts(FALLBACK_STORIES);
-        setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
+      try {
+        result = await getCategoryPosts(STORIES_CATEGORY_SLUG, POSTS_FIRST, after);
+        if (import.meta.env.DEV && result) {
+          console.log('[Stories] Loaded from category "%s": %d posts', STORIES_CATEGORY_SLUG, result.nodes.length);
+        }
+      } catch (categoryErr) {
+        if (import.meta.env.DEV) {
+          console.warn('[Stories] Category query failed, falling back to all posts:', categoryErr);
+        }
+      }
+
+      if (!result && !append) {
+        try {
+          const postsData = await wpQuery<GetPostsResponse>(
+            GET_POSTS_QUERY,
+            { first: POSTS_FIRST, after },
+            { useCache: !append }
+          );
+          result = {
+            nodes: postsData.posts.nodes,
+            pageInfo: postsData.posts.pageInfo,
+          };
+          if (import.meta.env.DEV && result) {
+            console.log('[Stories] Loaded from all posts: %d posts', result.nodes.length);
+          }
+        } catch (postsErr) {
+          if (import.meta.env.DEV) {
+            console.error('[Stories] WordPress fetch failed:', postsErr);
+          }
+          throw postsErr;
+        }
+      }
+
+      if (!append) {
+        categoriesData = await getCategories().catch(() => []);
+      }
+
+      if (!result) {
+        if (!append) {
+          setError("No posts found in WordPress");
+          setPosts(FALLBACK_STORIES);
+          setPageInfo({ hasNextPage: false, endCursor: null });
+          setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
+        }
       } else {
-        setPosts(nodes);
-        if (categoriesData.length > 0) {
-          setCategories(categoriesData);
+        const { nodes, pageInfo: nextPageInfo } = result;
+        if (!append && nodes.length === 0) {
+          setError("No posts found in WordPress");
+          setPosts(FALLBACK_STORIES);
+          setPageInfo({ hasNextPage: false, endCursor: null });
+          setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
+        } else if (append) {
+          setPosts((prev) => [...prev, ...nodes]);
+          setPageInfo(nextPageInfo);
         } else {
-          setCategories(deriveCategoriesFromPosts(nodes));
+          setPosts(nodes);
+          setPageInfo(nextPageInfo);
+          if (categoriesData && categoriesData.length > 0) {
+            setCategories(categoriesData);
+          } else {
+            setCategories(deriveCategoriesFromPosts(nodes));
+          }
         }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.warn("Falling back to mock data due to connection error:", errorMessage);
-
-      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        setError("Unable to connect to WordPress. Showing archived content.");
-      } else if (errorMessage.includes('GraphQL Error')) {
-        setError("WordPress configuration error. Showing archived content.");
-      } else {
-        setError("Archive access only. Live connection pending.");
+      if (!append) {
+        console.warn("Falling back to mock data due to connection error:", errorMessage);
+        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+          setError("Unable to connect to WordPress. Check WordPress URL and CORS. Showing archived content.");
+        } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
+          setError("WordPress access denied. Check URL and CORS. Showing archived content.");
+        } else if (errorMessage.includes('GraphQL Error')) {
+          setError("WordPress configuration error. Showing archived content.");
+        } else {
+          setError("Archive access only. Live connection pending.");
+        }
+        setPosts(FALLBACK_STORIES);
+        setPageInfo({ hasNextPage: false, endCursor: null });
+        setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
       }
-
-      setPosts(FALLBACK_STORIES);
-      setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
     } finally {
-      setLoading(false);
+      if (append) {
+        setLoadMoreLoading(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
+
+  const loadMore = () => {
+    if (!pageInfo?.hasNextPage || loadMoreLoading) return;
+    setLoadMoreLoading(true);
+    fetchStories(true);
+  };
+
+  usePageMeta(
+    'Stories | Kandie Gang',
+    "Since our start in 2021, we've had some epic shared experiences. Here are some of our most memorable stories."
+  );
 
   useEffect(() => {
     fetchStories();
@@ -93,7 +174,7 @@ export const StoriesPage: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
             >
-              Since our start in 2021, we've had our share of ups and downs. Here are some of our most memorable stories.
+              Since our start in 2021, we've had has some epic share experiences. Here are some of our most memorable stories.
             </motion.p>
             
             {error && (
@@ -133,8 +214,8 @@ export const StoriesPage: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {/* Category filter - hidden for now */}
-              {false && categories.length > 0 && (
+              {/* Category filter */}
+              {categories.length > 0 && (
                 <nav className="mb-10 md:mb-14 flex flex-wrap items-center gap-2" aria-label="Filter by category">
                   <button
                     type="button"
@@ -203,9 +284,23 @@ export const StoriesPage: React.FC = () => {
         </AnimatePresence>
 
         {!loading && (
-          <div className="mt-24 md:mt-48 flex justify-center">
-            <button 
-              onClick={fetchStories}
+          <div className="mt-24 md:mt-48 flex flex-col items-center gap-4">
+            {pageInfo?.hasNextPage && (
+              <button
+                type="button"
+                onClick={loadMore}
+                disabled={loadMoreLoading}
+                className="px-8 md:px-10 py-4 md:py-5 rounded-full border-2 border-secondary-purple-rain text-secondary-purple-rain font-bold hover:bg-secondary-purple-rain hover:text-white transition-all duration-300 flex items-center gap-3 active:scale-95 shadow-sm text-sm md:text-base disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loadMoreLoading ? (
+                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
+                ) : null}
+                {loadMoreLoading ? 'Loading…' : 'Load more'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => fetchStories(false, true)}
               className="px-8 md:px-10 py-4 md:py-5 rounded-full border-2 border-slate-100 text-slate-900 font-bold hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300 flex items-center gap-3 active:scale-95 shadow-sm text-sm md:text-base"
             >
               <RefreshCw className="w-4 h-4 md:w-5 md:h-5" /> Sync Updates
