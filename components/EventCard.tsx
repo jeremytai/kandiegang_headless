@@ -72,14 +72,16 @@ export const EventCard: React.FC<EventCardProps> = ({
 
         {/* Content */}
         <div className="order-3 md:order-2 flex flex-col justify-center gap-4 md:pl-2">
-          <div className="inline-flex items-center gap-3">
+          <div className="space-y-2">
             <h3 className="text-2xl md:text-3xl lg:text-4xl font-heading-thin tracking-tight text-secondary-purple-rain">
               {title}
             </h3>
             {tag && (
-              <span className="inline-flex items-center rounded-full bg-secondary-blush/80 px-3 py-1 text-[0.75rem] font-medium text-primary-ink">
-                {tag}
-              </span>
+              <div>
+                <span className="inline-flex items-center rounded-full bg-secondary-blush/70 px-3 py-1.5 text-[0.75rem] font-medium text-primary-ink/90 tracking-wide">
+                  {tag}
+                </span>
+              </div>
             )}
           </div>
 
