@@ -88,15 +88,17 @@ export const EventCard: React.FC<EventCardProps> = ({
             {description}
           </p>
 
-          <button
-            type="button"
-            className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-secondary-purple-rain bg-transparent px-4 py-2 text-xs md:text-sm font-medium text-secondary-purple-rain transition-colors hover:border-secondary-purple-rain hover:bg-secondary-purple-rain hover:text-white active:scale-95"
-          >
-            <span>Go to event</span>
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-purple-rain/10 p-1 transition-colors group-hover:bg-white">
-              <ArrowRight className="h-3 w-3 text-secondary-purple-rain transition-colors group-hover:text-secondary-purple-rain" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-            </span>
-          </button>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-secondary-purple-rain bg-transparent px-3 py-1.5 text-[0.7rem] md:text-xs font-medium text-secondary-purple-rain transition-colors hover:border-secondary-purple-rain hover:bg-secondary-purple-rain hover:text-white active:scale-95"
+            >
+              <span>Go to event</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-purple-rain/10 p-1 transition-colors group-hover:bg-white">
+                <ArrowRight className="h-3 w-3 text-secondary-purple-rain transition-colors group-hover:text-secondary-purple-rain" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </span>
+            </button>
+          </div>
         </div>
       </Link>
     </article>
