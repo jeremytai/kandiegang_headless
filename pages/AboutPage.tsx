@@ -182,6 +182,8 @@ export const AboutPage: React.FC = () => {
           <img
             src={imageSrc('/images/230902_7mesh-47')}
             alt=""
+            width={1920}
+            height={1080}
             className="absolute inset-0 w-full h-full object-cover"
             aria-hidden
           />

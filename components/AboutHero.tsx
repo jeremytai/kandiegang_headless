@@ -29,6 +29,8 @@ export const AboutHero: React.FC = () => {
         <img
           src={imageSrc('/images/250621_hamburg-14')}
           alt="Kandie Gang"
+          width={1920}
+          height={1080}
           className="absolute inset-0 h-full w-full object-cover opacity-80"
           loading="eager"
         />

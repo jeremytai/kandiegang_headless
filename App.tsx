@@ -43,10 +43,32 @@ import { PageTransition } from './components/PageTransition';
 import { ContactModalProvider } from './context/ContactModalContext';
 import { CookieConsentProvider, useCookieConsent } from './context/CookieConsentContext';
 
+const PRELOADER_SEEN_KEY = 'kandiegang_preloader_seen';
+
+function getInitialLoading(): boolean {
+  try {
+    if (typeof window !== 'undefined' && sessionStorage.getItem(PRELOADER_SEEN_KEY) === '1') {
+      return false;
+    }
+  } catch {
+    /* ignore */
+  }
+  return true;
+}
+
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(getInitialLoading);
   const location = useLocation();
+
+  const handlePreloaderComplete = () => {
+    try {
+      sessionStorage.setItem(PRELOADER_SEEN_KEY, '1');
+    } catch {
+      /* ignore */
+    }
+    setIsLoading(false);
+  };
 
   useEffect(() => {
     if (isLoading) {
@@ -92,7 +114,7 @@ const App: React.FC = () => {
     <CookieConsentProvider>
       <ContactModalProvider>
         <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
-          <Preloader onComplete={() => setIsLoading(false)} />
+          {isLoading && <Preloader onComplete={handlePreloaderComplete} />}
 
           <WeatherStatusBackground />
           <StickyTop />

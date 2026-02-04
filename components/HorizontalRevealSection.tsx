@@ -89,6 +89,8 @@ const HorizontalCard: React.FC<{ title: string; desc: string; img: string; to?: 
       <div className="absolute inset-0 z-0">
         <img 
           src={img} 
+          width={1200}
+          height={800}
           className="w-full h-full object-cover" 
           alt={title} 
           loading="lazy"

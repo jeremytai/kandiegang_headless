@@ -73,6 +73,8 @@ export const FAQSection: React.FC = () => {
           <img
             src={imageSrc('/images/250401_kandiegang_seasonopener_2025-28-scaled')}
             alt="Kandie Gang social ride"
+            width={800}
+            height={450}
             className="w-3/3 max-w-full rounded-xl object-cover aspect-video md:aspect-[16/9]"
             loading="lazy"
           />

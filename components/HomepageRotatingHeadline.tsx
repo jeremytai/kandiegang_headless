@@ -69,6 +69,8 @@ export const HomepageRotatingHeadline: React.FC = () => {
             key={imageIndex}
             src={imageSrc(shuffledBases[imageIndex], 400)}
             alt=""
+            width={400}
+            height={400}
             className="inline-block w-[0.85em] h-[0.85em] min-w-[2.5rem] min-h-[2.5rem] md:min-w-[3.5rem] md:min-h-[3.5rem] rounded-full object-cover align-middle mx-0.5"
             aria-hidden
           />
