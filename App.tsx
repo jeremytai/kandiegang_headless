@@ -16,12 +16,8 @@ import { Preloader } from './components/Preloader';
 import { WeatherStatusBackground } from './components/WeatherStatusBackground';
 import { HomepageRotatingHeadline } from './components/HomepageRotatingHeadline';
 import { ExpandingHero } from './components/ExpandingHero';
-import { CompanySection } from './components/CompanySection';
-import { ScrollingHeadline } from './components/ScrollingHeadline';
-import { HorizontalRevealSection } from './components/HorizontalRevealSection';
 import { StickyTop } from './components/StickyTop';
 import { StickyBottom } from './components/StickyBottom';
-import { FAQSection } from './components/FAQSection';
 import { NewsletterSection } from './components/NewsletterSection';
 import { AboutPage } from './pages/AboutPage';
 import { CommunityPage } from './pages/CommunityPage';
@@ -62,7 +58,18 @@ const App: React.FC = () => {
 
   // Scroll to top on every route change (Athletics-style: new page loads from top)
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+    scrollToTop();
+    // Run again after paint so we win over layout/transition; avoids scroll sticking mid-page
+    const raf = requestAnimationFrame(() => {
+      scrollToTop();
+      requestAnimationFrame(scrollToTop);
+    });
+    return () => cancelAnimationFrame(raf);
   }, [location.pathname]);
 
   // Google Analytics: send page_view on each SPA route change
@@ -110,14 +117,7 @@ const App: React.FC = () => {
           >
             <Routes>
               <Route element={<PageTransition />}>
-                <Route path="/" element={
-                  <>
-                    <LandingPage />
-                    <HorizontalRevealSection />
-                    <CompanySection />
-                    <FAQSection />
-                  </>
-                } />
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/community" element={<CommunityPage />} />
                 <Route path="/stories" element={<StoriesPage />} />
@@ -135,15 +135,19 @@ const App: React.FC = () => {
               </Route>
             </Routes>
 
-            {/* Newsletter signup before footer on all pages */}
-            <NewsletterSection />
-            <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
-            <Footer />
+            {/* Newsletter and footer hidden on minimal landing (/) */}
+            {location.pathname !== '/' && (
+              <>
+                <NewsletterSection />
+                <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
+                <Footer />
+              </>
+            )}
           </motion.div>
 
           {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
           <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
-          {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && <StickyBottom />}
+          {['/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && <StickyBottom />}
         </div>
       </ContactModalProvider>
       <CookieBanner />
@@ -157,11 +161,11 @@ const CookiePreferencesModalWrapper: React.FC = () => {
   return <CookiePreferencesModal isOpen={isPreferencesOpen} onClose={closeCookiePreferences} />;
 };
 
+/** Minimal landing: "You found us" headline + hero image only (until full site is ready). */
 const LandingPage = () => (
   <>
     <HomepageRotatingHeadline />
     <ExpandingHero />
-    <ScrollingHeadline />
   </>
 );
 
