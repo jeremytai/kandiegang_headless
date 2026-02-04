@@ -12,17 +12,22 @@ const HEADING_CLASS = 'font-heading text-primary-ink text-xl md:text-2xl font-no
 const INTRO_CLASS = 'text-slate-600 text-[15px] md:text-base leading-relaxed mb-8';
 
 /** Shared content for KandieCodePage and KandieCodeModal. */
-export const KandieCodeContent: React.FC<{ variant?: 'page' | 'modal' }> = ({ variant = 'page' }) => {
+export const KandieCodeContent: React.FC<{ variant?: 'page' | 'modal'; headerAction?: React.ReactNode }> = ({ variant = 'page', headerAction }) => {
   const isModal = variant === 'modal';
   return (
     <>
-      <header className={isModal ? 'pt-4 pb-6 px-6 max-w-4xl mx-auto' : 'pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left'}>
-        <h1 id={isModal ? 'kandiecode-modal-title' : undefined} className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4">
-          Kandie Code
-        </h1>
-        <p className="text-slate-500 text-sm md:text-base">
-          Kandie Kodex — unser gemeinsames Verhalten in der Kandie Gang
-        </p>
+      <header className={isModal ? 'pt-24 pb-6 px-6 max-w-4xl mx-auto' : 'pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left'}>
+        <div className={isModal ? 'flex items-start justify-between gap-4' : undefined}>
+          <div className={isModal ? 'min-w-0 flex-1' : undefined}>
+            <h1 id={isModal ? 'kandiecode-modal-title' : undefined} className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4">
+              Kandie Code
+            </h1>
+            <p className="text-slate-500 text-sm md:text-base">
+              Kandie Kodex — unser gemeinsames Verhalten in der Kandie Gang
+            </p>
+          </div>
+          {isModal && headerAction && <div className="shrink-0">{headerAction}</div>}
+        </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-6 pb-24 md:pb-32">

@@ -85,7 +85,7 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     answer: (
       <>
         We have four groups so you can find the right pace. Details and guidelines can be found{' '}
-        <a href="/#/ridelevels" className="text-secondary-drift hover:underline">here</a> and in the FAQs on Discord.
+        <a href="/ridelevels" className="text-secondary-drift hover:underline">here</a> and in the FAQs on Discord.
       </>
     ),
   },
@@ -94,7 +94,7 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     answer: (
       <>
         The Kandie Code is our shared set of guidelines for how we ride and treat each other. We ask everyone to read and follow it. You can find it {' '}
-        <a href="/#/kandiecode" className="text-secondary-drift hover:underline">here</a>.
+        <a href="/kandiecode" className="text-secondary-drift hover:underline">here</a>.
       </>
     ),
   },
@@ -320,9 +320,9 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                 className="font-heading text-secondary-purple-rain text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-thin tracking-normal"
                 lineHeight={1.25}
               />
-              <h2 className="mt-3 inline-block w-fit rounded-full bg-secondary-purple-rain px-3 py-1.5 text-sm font-light text-white font-body tracking-tight">
+              <span className="mt-3 inline-block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
                 Ride with us
-              </h2>
+              </span>
             </div>
 
             {/* Body text */}
@@ -364,9 +364,9 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                 className="font-heading text-secondary-purple-rain  text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-normal tracking-tight"
                 lineHeight={1.25}
               />
-              <h2 className="mt-3 font-gtplanar text-secondary-drift text-base md:text-lg lg:text-xl font-normal tracking-tight">
+              <span className="mt-3 inline-block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
                 Ride with us
-              </h2>
+              </span>
             </div>
 
             {/* Mobile: horizontal image carousel */}

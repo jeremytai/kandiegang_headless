@@ -55,16 +55,20 @@ export const KandieCodeModal: React.FC<KandieCodeModalProps> = ({ isOpen, onClos
             aria-modal="true"
             aria-labelledby="kandiecode-modal-title"
           >
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute top-3 right-3 z-10 rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-              aria-label="Close"
-            >
-              <X className="h-6 w-6" />
-            </button>
             <div className="flex flex-1 flex-col overflow-y-auto">
-              <KandieCodeContent variant="modal" />
+              <KandieCodeContent
+                variant="modal"
+                headerAction={
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    aria-label="Close"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                }
+              />
             </div>
           </motion.div>
         </>

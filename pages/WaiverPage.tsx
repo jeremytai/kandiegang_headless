@@ -13,17 +13,22 @@ const HEADING_CLASS = 'font-heading text-primary-ink text-xl md:text-2xl font-no
 const LIST_ITEM_CLASS = 'text-slate-600 text-[15px] md:text-base leading-relaxed mb-4 pl-4 border-l-2 border-slate-200';
 
 /** Shared content for WaiverPage and WaiverModal. */
-export const WaiverContent: React.FC<{ variant?: 'page' | 'modal'; onSignWaiver?: () => void }> = ({ variant = 'page', onSignWaiver }) => {
+export const WaiverContent: React.FC<{ variant?: 'page' | 'modal'; onSignWaiver?: () => void; headerAction?: React.ReactNode }> = ({ variant = 'page', onSignWaiver, headerAction }) => {
   const isModal = variant === 'modal';
   return (
     <>
-      <header className={isModal ? 'pt-4 pb-6 px-6 max-w-4xl mx-auto' : 'pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left'}>
-        <h1 id={isModal ? 'waiver-modal-title' : undefined} className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4">
-          Ride Waiver
-        </h1>
-        <p className="text-slate-500 text-sm md:text-base">
-          Haftungsausschluss für gemeinsame sportliche Aktivitäten der Kandie Gang
-        </p>
+      <header className={isModal ? 'pt-24 pb-6 px-6 max-w-4xl mx-auto' : 'pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left'}>
+        <div className={isModal ? 'flex items-start justify-between gap-4' : undefined}>
+          <div className={isModal ? 'min-w-0 flex-1' : undefined}>
+            <h1 id={isModal ? 'waiver-modal-title' : undefined} className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4">
+              Ride Waiver
+            </h1>
+            <p className="text-slate-500 text-sm md:text-base">
+              Haftungsausschluss für gemeinsame sportliche Aktivitäten der Kandie Gang
+            </p>
+          </div>
+          {isModal && headerAction && <div className="shrink-0">{headerAction}</div>}
+        </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-6 pb-24 md:pb-32">

@@ -55,16 +55,21 @@ export const WaiverModal: React.FC<WaiverModalProps> = ({ isOpen, onClose, onSig
             aria-modal="true"
             aria-labelledby="waiver-modal-title"
           >
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute top-3 right-3 z-10 rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-              aria-label="Close"
-            >
-              <X className="h-6 w-6" />
-            </button>
             <div className="flex flex-1 flex-col overflow-y-auto">
-              <WaiverContent variant="modal" onSignWaiver={onSignWaiver} />
+              <WaiverContent
+                variant="modal"
+                onSignWaiver={onSignWaiver}
+                headerAction={
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    aria-label="Close"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                }
+              />
             </div>
           </motion.div>
         </>
