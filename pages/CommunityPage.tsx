@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Cpu, Shield, Eye, Database, Share2, Zap, Loader2, AlertCircle } from 'lucide-react';
 import { AdaptationGrid } from '../components/AdaptationGrid';
 import { getPageBySlug, WPPage } from '../lib/wordpress';
+import { AnimatedHeadline } from '../components/AnimatedHeadline';
 
 export const CommunityPage: React.FC = () => {
   const [page, setPage] = useState<WPPage | null>(null);
@@ -53,83 +54,63 @@ export const CommunityPage: React.FC = () => {
 
   return (
     <div className="bg-white selection:bg-[#f9f100] selection:text-black overflow-x-hidden">
-      <section className="relative h-[90vh] flex flex-col items-center justify-center text-center px-6 border-b border-slate-50">
-        <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="max-w-5xl"
-            >
-              <div className="flex flex-col items-center gap-6">
-                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-                <span className="text-sm font-medium text-slate-400">Loading content from WordPress...</span>
-                {/* Skeleton loader */}
-                <div className="w-full space-y-4 mt-8">
-                  <div className="h-4 bg-slate-100 rounded w-48 mx-auto animate-pulse" />
-                  <div className="h-16 bg-slate-100 rounded w-3/4 mx-auto animate-pulse" />
-                  <div className="h-6 bg-slate-100 rounded w-2/3 mx-auto animate-pulse" />
-                </div>
-              </div>
-            </motion.div>
-          ) : error ? (
-            <motion.div
-              key="error"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="max-w-5xl"
-            >
-              <div className="flex items-center justify-center gap-3 text-amber-600 bg-amber-50 px-5 py-3 rounded-full border border-amber-100 mb-8">
-                <AlertCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">{error}</span>
-              </div>
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
+      {/* Header: match StoriesPage header styling */}
+      <section className="bg-primary-breath pt-32 md:pt-40 pb-16 md:pb-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <header className="mb-10 md:mb-16 relative">
+            <AnimatedHeadline
+              text="Community"
+              as="h1"
+              className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8 block"
+            />
+
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: 0.1 }}
+                className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
               >
-                <span className="text-xs font-bold uppercase tracking-[0.4em] text-slate-400 mb-8 block">{defaultHero.subtitle}</span>
-                <h1 className="text-6xl md:text-8xl lg:text-[9vw] font-bold tracking-tighter text-slate-900 leading-[0.85] mb-12">
-                  The future of <br/>
-                  <span className="text-slate-400/70">embodied AI.</span>
-                </h1>
-                <p className="text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
-                  {defaultHero.description}
-                </p>
-              </motion.div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="content"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-5xl"
-            >
-              <span className="text-xs font-bold uppercase tracking-[0.4em] text-slate-400 mb-8 block">
-                {page?.title ? extractTextFromHTML(page.title) || defaultHero.subtitle : defaultHero.subtitle}
-              </span>
-              {page?.content ? (
-                <div 
-                  className="prose prose-xl max-w-none text-center"
-                  dangerouslySetInnerHTML={{ __html: page.content }}
-                />
-              ) : (
-                <>
-                  <h1 className="text-6xl md:text-8xl lg:text-[9vw] font-bold tracking-tighter text-slate-900 leading-[0.85] mb-12">
-                    The future of <br/>
-                    <span className="text-slate-400/70">embodied AI.</span>
-                  </h1>
-                  <p className="text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
-                    {defaultHero.description}
-                  </p>
-                </>
+                {defaultHero.description}
+              </motion.p>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-xs font-bold text-amber-600 bg-amber-50 px-5 py-2.5 rounded-full border border-amber-100 flex items-center gap-2 shadow-sm w-fit"
+                >
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{error}</span>
+                </motion.div>
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </header>
+
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="py-10 md:py-14 flex flex-col items-center justify-center space-y-4"
+              >
+                <Loader2 className="w-8 h-8 animate-spin text-slate-300" />
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Loading</span>
+              </motion.div>
+            ) : page?.content ? (
+              <motion.div
+                key="content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="prose prose-lg md:prose-xl max-w-none text-primary-ink"
+                dangerouslySetInnerHTML={{ __html: page.content }}
+              />
+            ) : null}
+          </AnimatePresence>
+        </div>
       </section>
 
       <section className="py-40 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
