@@ -23,6 +23,8 @@ export type AnimatedHeadlineProps = {
   colorAfterReveal?: boolean;
   /** Line-height for the headline (default 1.1). Use ~1.25–1.35 for multi-line to avoid clipping. */
   lineHeight?: number;
+  /** When true, headline spans full container width (block, 100%) instead of shrinking to content. */
+  fullWidth?: boolean;
 };
 
 export function AnimatedHeadline({
@@ -31,6 +33,7 @@ export function AnimatedHeadline({
   className = '',
   colorAfterReveal = true,
   lineHeight = 1.1,
+  fullWidth = false,
 }: AnimatedHeadlineProps) {
   const headlineRef = useRef<HTMLElement | null>(null);
 
@@ -131,7 +134,8 @@ export function AnimatedHeadline({
       style={{
         lineHeight,
         overflow: 'hidden',
-        display: 'inline-block',
+        display: fullWidth ? 'block' : 'inline-block',
+        width: fullWidth ? '100%' : undefined,
       }}
     >
       {text}

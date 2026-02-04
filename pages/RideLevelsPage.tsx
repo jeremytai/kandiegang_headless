@@ -63,35 +63,45 @@ const LEVELS = [
   },
 ] as const;
 
+/** Shared content for RideLevelsPage and RideLevelsModal. */
+export const RideLevelsContent: React.FC<{ variant?: 'page' | 'modal' }> = ({ variant = 'page' }) => {
+  const isModal = variant === 'modal';
+  return (
+    <>
+      <header className={isModal ? 'pt-4 pb-6 px-6 max-w-4xl mx-auto' : 'pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left'}>
+        <h1 id={isModal ? 'ridelevels-modal-title' : undefined} className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4">
+          Ride Levels
+        </h1>
+        <p className="text-slate-500 text-sm md:text-base">
+          Eckdaten zu den vier Kandie-Gruppen — finde Dein passendes Level
+        </p>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-6 pb-24 md:pb-32">
+        <p className={PARAGRAPH_CLASS}>
+          Du willst bei einem Kandie Ride mitfahren und willst das für Dich passende Level finden? Dann bist Du hier genau richtig, denn hier findest Du die Eckdaten zu den vier Gruppen.
+        </p>
+
+        {LEVELS.map((level) => (
+          <section key={level.id} id={level.id} className={SECTION_SPACING}>
+            <h2 className={LEVEL_HEADING_CLASS}>{level.name}</h2>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/50 overflow-hidden">
+              {level.specs.map(({ label, value }) => (
+                <div key={label} className={SPEC_ROW_CLASS}>
+                  <span className={SPEC_LABEL}>{label}</span>
+                  <span className={SPEC_VALUE}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </main>
+    </>
+  );
+};
+
 export const RideLevelsPage: React.FC = () => (
   <div className="min-h-screen bg-white">
-    <header className="pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left">
-      <h1 className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4">
-        Ride Levels
-      </h1>
-      <p className="text-slate-500 text-sm md:text-base">
-        Eckdaten zu den vier Kandie-Gruppen — finde Dein passendes Level
-      </p>
-    </header>
-
-    <main className="max-w-3xl mx-auto px-6 pb-24 md:pb-32">
-      <p className={PARAGRAPH_CLASS}>
-        Du willst bei einem Kandie Ride mitfahren und willst das für Dich passende Level finden? Dann bist Du hier genau richtig, denn hier findest Du die Eckdaten zu den vier Gruppen.
-      </p>
-
-      {LEVELS.map((level) => (
-        <section key={level.id} id={level.id} className={SECTION_SPACING}>
-          <h2 className={LEVEL_HEADING_CLASS}>{level.name}</h2>
-          <div className="rounded-xl border border-slate-100 bg-slate-50/50 overflow-hidden">
-            {level.specs.map(({ label, value }) => (
-              <div key={label} className={SPEC_ROW_CLASS}>
-                <span className={SPEC_LABEL}>{label}</span>
-                <span className={SPEC_VALUE}>{value}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
-    </main>
+    <RideLevelsContent variant="page" />
   </div>
 );

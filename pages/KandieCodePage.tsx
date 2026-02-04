@@ -11,20 +11,21 @@ const PARAGRAPH_CLASS = 'text-slate-600 text-[15px] md:text-base leading-relaxed
 const HEADING_CLASS = 'font-heading text-primary-ink text-xl md:text-2xl font-normal tracking-tight mb-4';
 const INTRO_CLASS = 'text-slate-600 text-[15px] md:text-base leading-relaxed mb-8';
 
-export const KandieCodePage: React.FC = () => (
-  <div className="min-h-screen bg-white">
-    {/* Hero — same style as WaiverPage / ImprintPage */}
-    <header className="pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left">
-      <h1 className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4">
-        Kandie Code
-      </h1>
-      <p className="text-slate-500 text-sm md:text-base">
-        Kandie Kodex — unser gemeinsames Verhalten in der Kandie Gang
-      </p>
-    </header>
+/** Shared content for KandieCodePage and KandieCodeModal. */
+export const KandieCodeContent: React.FC<{ variant?: 'page' | 'modal' }> = ({ variant = 'page' }) => {
+  const isModal = variant === 'modal';
+  return (
+    <>
+      <header className={isModal ? 'pt-4 pb-6 px-6 max-w-4xl mx-auto' : 'pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left'}>
+        <h1 id={isModal ? 'kandiecode-modal-title' : undefined} className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4">
+          Kandie Code
+        </h1>
+        <p className="text-slate-500 text-sm md:text-base">
+          Kandie Kodex — unser gemeinsames Verhalten in der Kandie Gang
+        </p>
+      </header>
 
-    {/* Content — single column, readable width */}
-    <main className="max-w-3xl mx-auto px-6 pb-24 md:pb-32">
+      <main className="max-w-3xl mx-auto px-6 pb-24 md:pb-32">
       <p className={INTRO_CLASS}>
         Wir möchten hier nochmal ein paar &apos;Kandie Codes&apos; ansprechen, die wir als selbstverständlich sehen und in der Kandie Gang als &apos;Kandie Kodex&apos; im Verhalten miteinander verstehen.
       </p>
@@ -70,6 +71,13 @@ export const KandieCodePage: React.FC = () => (
           Wir Kandies sind freundlich zueinander, grüßen uns, stellen uns vor den Rides mit Namen vor und pflegen einen smoothen Umgangston. Andere Teilnehmerinnen, Autofahrerinnen und andere Radfahrgruppen werden stets respektvoll behandelt.
         </p>
       </section>
-    </main>
+      </main>
+    </>
+  );
+};
+
+export const KandieCodePage: React.FC = () => (
+  <div className="min-h-screen bg-white">
+    <KandieCodeContent variant="page" />
   </div>
 );

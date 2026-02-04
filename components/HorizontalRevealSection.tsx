@@ -245,7 +245,7 @@ export const HorizontalRevealSection: React.FC = () => {
             title="Let's Ride"
             desc="People join us for our community rides, to exchange bicycle knowledge and build friendships—no matter their gender, race or social background."
             img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/09/06220134/250923_kandiegangsocialride-20-scaled.jpg"
-            to="/kandiegangcyclingclub"
+            to="/community"
           />
           <HorizontalCard 
             title="Stories"
