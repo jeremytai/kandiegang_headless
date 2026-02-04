@@ -68,20 +68,6 @@ export const CommunityPage: React.FC = () => {
       month: 'Thursday',
       location: 'Hamburg',
     },
-    {
-      id: 'prettigood-ride',
-      href: '/kandiegangcyclingclub',
-      imageBase: '/images/prettigoodride',
-      title: 'PRETTI GOOD RIDE',
-      tag: 'Gravel',
-      description: 'A mixed-terrain adventure with photo stops, snacks and plenty of good vibes.',
-      startDate: '2026-06-21T09:00:00.000Z',
-      endDate: '2026-06-21T15:00:00.000Z',
-      year: '2026',
-      days: 'June 21',
-      month: 'Saturday',
-      location: 'Hamburg',
-    },
   ];
 
   return (
