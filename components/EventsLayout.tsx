@@ -9,9 +9,11 @@ export interface EventsLayoutEvent extends EventCardProps {
 
 interface EventsLayoutProps {
   events: EventsLayoutEvent[];
+  /** When true, renders a top border (e.g. for event blocks that are not the first on the page). */
+  showTopBorder?: boolean;
 }
 
-export const EventsLayout: React.FC<EventsLayoutProps> = ({ events }) => {
+export const EventsLayout: React.FC<EventsLayoutProps> = ({ events, showTopBorder }) => {
   const now = new Date();
 
   const futureEvents = events
@@ -31,7 +33,9 @@ export const EventsLayout: React.FC<EventsLayoutProps> = ({ events }) => {
   const [nextEvent, ...upcomingEvents] = futureEvents;
 
   return (
-    <section className="flex flex-col gap-12 md:gap-16">
+    <section
+      className={`flex flex-col gap-12 md:gap-16 ${showTopBorder ? 'pt-8 border-t border-black/10' : ''}`}
+    >
       {nextEvent && (
         <div className="w-full">
           <EventCard {...nextEvent} />

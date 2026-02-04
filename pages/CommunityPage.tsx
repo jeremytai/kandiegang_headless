@@ -24,6 +24,20 @@ const communityEvents: EventsLayoutEvent[] = [
     month: 'Thursday',
     location: 'Hamburg',
   },
+  {
+    id: 'kandiegang-gravel-ride',
+    href: '/kandiegangcyclingclub',
+    imageBase: '/images/251031_halloween_gravelo_abbett-86',
+    title: 'Kandie Gang Gravel Ride',
+    tag: 'Gravel',
+    description: 'Explore Hamburg’s gravel and dirt roads. Bring your gravel or all-road bike.',
+    startDate: '2026-06-21T09:00:00.000Z',
+    endDate: '2026-06-21T14:00:00.000Z',
+    year: '2026',
+    days: 'Jun 21',
+    month: 'Sunday',
+    location: 'Hamburg',
+  },
 ];
 
 export const CommunityPage: React.FC = () => (
@@ -45,8 +59,9 @@ export const CommunityPage: React.FC = () => (
 
       <section className="bg-white pt-4 md:pt-6 pb-16 md:pb-12">
         <div className="section-side-margin max-w-7xl mx-auto space-y-8">
-          <EventsLayout events={communityEvents} />
+          <EventsLayout events={[communityEvents[0]]} />
           <ThreeThingsToDo />
+          <EventsLayout events={[communityEvents[1]]} showTopBorder />
         </div>
       </section>
     </div>
