@@ -16,3 +16,5 @@ declare global {
     gtag?: (command: string, ...args: unknown[]) => void;
   }
 }
+
+export {};

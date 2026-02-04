@@ -66,8 +66,9 @@ const App: React.FC = () => {
 
   // Google Analytics: send page_view on each SPA route change
   useEffect(() => {
-    if (typeof window.gtag === 'function') {
-      window.gtag('config', 'GT-5TJ2FPQ8', { page_path: location.pathname });
+    const gtag = (window as unknown as { gtag?: (command: string, ...args: unknown[]) => void }).gtag;
+    if (typeof gtag === 'function') {
+      gtag('config', 'GT-5TJ2FPQ8', { page_path: location.pathname });
     }
   }, [location.pathname]);
 
