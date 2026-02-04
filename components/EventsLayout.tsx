@@ -33,13 +33,13 @@ export const EventsLayout: React.FC<EventsLayoutProps> = ({ events }) => {
   return (
     <section className="flex flex-col gap-12 md:gap-16">
       {nextEvent && (
-        <div className="max-w-5xl mx-auto w-full">
+        <div className="w-full">
           <EventCard {...nextEvent} />
         </div>
       )}
 
       {upcomingEvents.length > 0 && (
-        <div className="max-w-5xl mx-auto w-full grid grid-cols-1 gap-8 md:gap-10 lg:gap-12 md:grid-cols-2 items-start">
+        <div className="w-full grid grid-cols-1 gap-8 md:gap-10 lg:gap-12 md:grid-cols-2 xl:grid-cols-3 items-start">
           {upcomingEvents.map((event) => (
             <EventCard key={event.id} {...event} />
           ))}
