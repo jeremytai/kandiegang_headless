@@ -60,7 +60,7 @@ export const StickyBottom: React.FC = () => {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 100, opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="w-full max-w-3xl pointer-events-auto"
+            className="w-full max-w-md sm:max-w-lg md:max-w-xl pointer-events-auto"
           >
             <motion.a
               href="/#/kandiegangcyclingclub"
