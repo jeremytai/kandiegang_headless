@@ -35,6 +35,7 @@ import { WaiverPage } from './pages/WaiverPage';
 import { KandieCodePage } from './pages/KandieCodePage';
 import { RideLevelsPage } from './pages/RideLevelsPage';
 import { KandieGangCyclingClubPage } from './pages/KandieGangCyclingClubPage';
+import { EventPage } from './pages/EventPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { Footer } from './components/Footer';
 import { CookieBanner } from './components/CookieBanner';
@@ -128,6 +129,7 @@ const App: React.FC = () => {
                 <Route path="/kandiecode" element={<KandieCodePage />} />
                 <Route path="/ridelevels" element={<RideLevelsPage />} />
                 <Route path="/kandiegangcyclingclub" element={<KandieGangCyclingClubPage />} />
+                <Route path="/event/:slug" element={<EventPage />} />
                 <Route path="/fonts" element={<FontsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>

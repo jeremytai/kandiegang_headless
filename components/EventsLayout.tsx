@@ -33,14 +33,9 @@ export const EventsLayout: React.FC<EventsLayoutProps> = ({ events }) => {
   return (
     <section className="flex flex-col gap-12 md:gap-16">
       {nextEvent && (
-        <>
-          <div className="w-full">
-            <EventCard {...nextEvent} />
-          </div>
-          {upcomingEvents.length > 0 && (
-            <div className="mt-8 h-px w-full bg-slate-200/70" />
-          )}
-        </>
+        <div className="w-full">
+          <EventCard {...nextEvent} />
+        </div>
       )}
 
       {upcomingEvents.length > 0 && (

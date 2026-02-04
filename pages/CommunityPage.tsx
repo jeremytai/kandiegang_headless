@@ -48,9 +48,9 @@ export const CommunityPage: React.FC = () => {
 
   // Default content
   const defaultHero = {
-    subtitle: "Community Technology",
-    title: "The future of embodied AI.",
-    description: "Connections are at the heart of Kandie Gang. We create rides, events, and initiatives where participants feel supported and heard. A strong community fuels culture, participation, and growth."
+    subtitle: "Upcoming rides & events",
+    title: "Community",
+    description: "Join us on rides, events, and initiatives where you feel supported and heard."
   };
 
   const communityEvents: EventsLayoutEvent[] = [
@@ -73,13 +73,14 @@ export const CommunityPage: React.FC = () => {
   return (
     <div className="bg-white selection:bg-[#f9f100] selection:text-black overflow-x-hidden">
       {/* Header: match StoriesPage header styling */}
-      <section className="bg-primary-breath pt-32 md:pt-40 pb-16 md:pb-24">
+      <section className="bg-whiteeath pt-32 md:pt-40 pb-16 md:pb-24">
         <div className="max-w-7xl mx-auto px-6">
           <header className="mb-10 md:mb-16 relative">
             <AnimatedHeadline
-              text="Community"
+              text="Community is the heart of Kandie Gang."
               as="h1"
-              className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8 block"
+              lineHeight={1.5}
+              className="text-4xl md:text-6xl lg:text-[6.5vw] font-heading-light tracking-normal text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8 block"
             />
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -131,18 +132,9 @@ export const CommunityPage: React.FC = () => {
         </div>
       </section>
 
-      <section className="bg-primary-breath/40 py-16 md:py-24">
+      <section className="bg-white py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-6 space-y-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading-thin tracking-tight text-secondary-purple-rain">
-                Upcoming rides & events
-              </h2>
-              <p className="mt-3 text-sm md:text-base text-primary-ink/80 max-w-xl">
-                Join the Kandie Gang community out on the roads and trails. Here&apos;s a taste of what&apos;s coming.
-              </p>
-            </div>
-          </div>
+          
 
           <EventsLayout events={communityEvents} />
         </div>
