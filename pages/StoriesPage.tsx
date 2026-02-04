@@ -174,7 +174,7 @@ export const StoriesPage: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
             >
-              Since our start in 2021, we've had has some epic share experiences. Here are some of our most memorable stories.
+              Since our start in 2021, we've had has some epic shared experiences. Here are some of our most memorable stories.
             </motion.p>
             
             {error && (

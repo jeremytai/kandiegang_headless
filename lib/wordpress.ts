@@ -5,9 +5,60 @@
  * Optimized for performance and clean architecture.
  */
 
+import { STORY_BLOCKS_QUERY } from './graphql/storyBlocks';
+import type { StoryBlocksData } from './storyGalleries';
+
 // WordPress GraphQL endpoint from environment variable
 // Falls back to demo endpoint if not configured
 const WP_GRAPHQL_URL = import.meta.env.VITE_WP_GRAPHQL_URL || 'https://wp-origin.kandiegang.com/graphql';
+
+// Only rewrite media URLs when a CDN base is explicitly set (e.g. public S3 or CloudFront).
+const MEDIA_CDN_BASE = (import.meta.env.VITE_MEDIA_CDN_URL as string | undefined)?.replace(/\/$/, '');
+
+const S3_BUCKET_BASE = 'https://leckerbisschen.s3.eu-central-1.amazonaws.com';
+
+/** Matches /wp-content/uploads/YYYY/MM/DDDDDDDD/ in a URL (8-digit upload folder used by S3/WordPress). */
+const UPLOADS_8DIGIT_FOLDER = /\/wp-content\/uploads\/\d{4}\/\d{2}\/(\d{8})\//;
+
+/**
+ * If referenceUrl contains the 8-digit upload folder (e.g. .../2025/11/10165246/...), insert it into url
+ * when url has .../uploads/YYYY/MM/filename (missing that folder). API often returns paths without the 8-digit segment; the featured image URL usually has it.
+ */
+function ensureUploadsPathWith8DigitFolder(url: string, referenceUrl: string | undefined): string {
+  if (!referenceUrl) return url;
+  const match = referenceUrl.match(UPLOADS_8DIGIT_FOLDER);
+  if (!match) return url;
+  const eightDigits = match[1];
+  // Already has 8-digit folder after year/month?
+  if (UPLOADS_8DIGIT_FOLDER.test(url)) return url;
+  // Replace /uploads/YYYY/MM/ with /uploads/YYYY/MM/DDDDDDDD/
+  const inject = url.replace(
+    /(\/wp-content\/uploads\/\d{4}\/\d{2})\/(?!\d{8}\/)/,
+    `$1/${eightDigits}/`
+  );
+  return inject === url ? url : inject;
+}
+
+/**
+ * Normalizes media URLs so images load correctly.
+ * - If VITE_MEDIA_CDN_URL is set: WordPress domains (and S3) are replaced with that CDN.
+ * - referenceImageUrl: when set (e.g. post featured image URL), used to fix gallery paths that are missing the 8-digit upload folder (e.g. .../2025/11/10165246/) so they match the working path structure.
+ */
+export function transformMediaUrl(url: string, referenceImageUrl?: string): string {
+  if (!url) return url;
+  let out = url;
+  // Fix path: inject 8-digit folder from reference if missing (so S3/WordPress path matches)
+  out = ensureUploadsPathWith8DigitFolder(out, referenceImageUrl);
+  if (MEDIA_CDN_BASE) {
+    out = out
+      .replace(/^https:\/\/www\.kandiegang\.com/, MEDIA_CDN_BASE)
+      .replace(/^https:\/\/kandiegang\.com/, MEDIA_CDN_BASE)
+      .replace(/^http:\/\/www\.kandiegang\.com/, MEDIA_CDN_BASE)
+      .replace(/^http:\/\/kandiegang\.com/, MEDIA_CDN_BASE)
+      .replace(new RegExp(`^${S3_BUCKET_BASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), MEDIA_CDN_BASE);
+  }
+  return out;
+}
 
 export interface WPPost {
   id: string;
@@ -402,6 +453,22 @@ export async function getPostBySlug(slug: string): Promise<WPPost | null> {
     return data.post;
   } catch (error) {
     console.error(`Failed to fetch post with slug "${slug}":`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetches a post by slug with editor blocks and media items for block-based rendering.
+ * Use with normalizeBlocks() and StoryBlocksRenderer.
+ * @param slug - The post slug
+ * @returns Story blocks data (post + mediaItems) or null if not found / query unsupported
+ */
+export async function getStoryBlocks(slug: string): Promise<StoryBlocksData | null> {
+  try {
+    const data = await wpQuery<StoryBlocksData>(STORY_BLOCKS_QUERY, { slug }, { useCache: true });
+    return data;
+  } catch (error) {
+    console.warn(`Failed to fetch story blocks for slug "${slug}":`, error);
     return null;
   }
 }

@@ -9,9 +9,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { getPostBySlug, WPPost } from '../lib/wordpress';
+import { getPostBySlug, getStoryBlocks, WPPost } from '../lib/wordpress';
+import { buildMediaMap, normalizeBlocks } from '../lib/storyGalleries';
+import type { NormalizedBlock } from '../lib/storyGalleries';
 import { ExpandingHero } from '../components/ExpandingHero';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
+import { StoryBlocksRenderer } from '../components/StoryBlocksRenderer';
 import { usePageMeta } from '../hooks/usePageMeta';
 
 function stripHtml(html: string): string {
@@ -41,6 +44,7 @@ const DEMO_POST: WPPost = {
 export const StoryPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<WPPost | null>(null);
+  const [normalizedBlocks, setNormalizedBlocks] = useState<NormalizedBlock[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,28 +57,55 @@ export const StoryPage: React.FC = () => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    getPostBySlug(slug)
-      .then((data) => {
-        if (!cancelled) {
-          if (data) {
-            setPost(data);
-          } else if (slug === DEMO_POST_SLUG) {
-            setPost(DEMO_POST);
-          } else {
-            setPost(null);
-            setError('Story not found');
-          }
+    setNormalizedBlocks(null);
+
+    async function load() {
+      try {
+        const blocksData = await getStoryBlocks(slug);
+        if (cancelled) return;
+        if (blocksData?.post && blocksData.post.editorBlocks?.length) {
+          const referenceImageUrl = blocksData.post.featuredImage?.node?.sourceUrl;
+          const mediaMap = buildMediaMap(
+            blocksData.mediaItems?.nodes ?? [],
+            referenceImageUrl
+          );
+          const normalized = normalizeBlocks(blocksData.post.editorBlocks, mediaMap);
+          setNormalizedBlocks(normalized);
+          setPost({
+            id: `blocks-${slug}`,
+            title: blocksData.post.title,
+            excerpt: blocksData.post.excerpt ?? '',
+            date: blocksData.post.date ?? '',
+            uri: blocksData.post.uri ?? `/story/${slug}`,
+            featuredImage: blocksData.post.featuredImage,
+          });
+          return;
         }
-      })
-      .catch((err) => {
+        const fallbackPost = await getPostBySlug(slug);
+        if (cancelled) return;
+        if (fallbackPost) {
+          setPost(fallbackPost);
+        } else if (slug === DEMO_POST_SLUG) {
+          setPost(DEMO_POST);
+        } else {
+          setPost(null);
+          setError('Story not found');
+        }
+      } catch (err) {
         if (!cancelled) {
           console.error('Failed to fetch story:', err);
-          setError('Failed to load story');
+          const fallbackPost = await getPostBySlug(slug).catch(() => null);
+          if (!cancelled) {
+            if (fallbackPost) setPost(fallbackPost);
+            else if (slug === DEMO_POST_SLUG) setPost(DEMO_POST);
+            else setError('Failed to load story');
+          }
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+    load();
     return () => {
       cancelled = true;
     };
@@ -176,11 +207,18 @@ export const StoryPage: React.FC = () => {
                 </Link>
               </div>
 
-              {post.content && (
-                <div
-                  className="prose prose-lg max-w-none text-slate-700 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: post.content }}
+              {normalizedBlocks && normalizedBlocks.length > 0 ? (
+                <StoryBlocksRenderer
+                  blocks={normalizedBlocks}
+                  className="prose prose-lg max-w-none"
                 />
+              ) : (
+                post.content && (
+                  <div
+                    className="prose prose-lg max-w-none text-slate-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                  />
+                )
               )}
             </div>
           </motion.article>

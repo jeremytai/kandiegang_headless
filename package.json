@@ -16,7 +16,8 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router-dom": "^7.11.0",
-    "split-type": "^0.3.4"
+    "split-type": "^0.3.4",
+    "yet-another-react-lightbox": "^3.28.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
