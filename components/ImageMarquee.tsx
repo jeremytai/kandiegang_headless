@@ -11,17 +11,20 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { imageSrc } from '../lib/images';
+
+/** Base paths for marquee images. Use 1200w in prod for good quality at reasonable size. */
+const MARQUEE_IMAGE_BASES = [
+  '/images/231112_stevenscup_neuduvenstedt-10',
+  '/images/240707_humanrides-75',
+  '/images/230422_kandiegang_radbahn-50',
+  '/images/250401_hamburg-37',
+  '/images/230422_kandiegang_radbahn-50',
+  '/images/251031_halloween_gravelo_abbett-86',
+];
 
 export const ImageMarquee: React.FC = () => {
-  const images = [
-    "/images/231112_stevenscup_neuduvenstedt-10.jpg?q=80&w=1200&auto=format&fit=crop",
-    "/images/240707_humanrides-75.jpg?q=80&w=1200&auto=format&fit=crop",
-    "/images/230422_kandiegang_radbahn-50.jpg?q=80&w=1200&auto=format&fit=crop",
-    "/images/250401_hamburg-37.jpg?q=80&w=1200&auto=format&fit=crop",
-    "/images/230422_kandiegang_radbahn-50.jpg?q=80&w=1200&auto=format&fit=crop",
-    "/images/251031_halloween_gravelo_abbett-86.jpg?q=80&w=1200&auto=format&fit=crop",
-  ];
-
+  const images = MARQUEE_IMAGE_BASES.map((base) => imageSrc(base, 1200));
   const marqueeImages = [...images, ...images];
 
   return (

@@ -20,6 +20,7 @@ import { AboutHero } from '../components/AboutHero';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { useContactModal } from '../context/ContactModalContext';
 import { ImageMarquee } from '../components/ImageMarquee';
+import { imageSrc } from '../lib/images';
 // WordPress fetch – re-enable when ready (getPageBySlug)
 import { WPPage } from '../lib/wordpress';
 
@@ -179,7 +180,7 @@ export const AboutPage: React.FC = () => {
       <div className="w-full px-4 md:px-6">
         <section className="relative rounded-xl p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
           <img
-            src="/images/230902_7mesh-47.JPG"
+            src={imageSrc('/images/230902_7mesh-47')}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
             aria-hidden

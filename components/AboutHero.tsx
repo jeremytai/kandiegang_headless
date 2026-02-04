@@ -11,6 +11,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { imageSrc } from '../lib/images';
 
 export const AboutHero: React.FC = () => {
   return (
@@ -26,7 +27,7 @@ export const AboutHero: React.FC = () => {
 
       <div className="col-span-1 col-start-1 row-start-1 min-h-[280px] h-full overflow-hidden rounded-xl bg-black md:min-h-[400px] md:h-full relative shadow-inner">
         <img
-          src="/images/250621_hamburg-14.jpg"
+          src={imageSrc('/images/250621_hamburg-14')}
           alt="Kandie Gang"
           className="absolute inset-0 h-full w-full object-cover opacity-80"
           loading="eager"

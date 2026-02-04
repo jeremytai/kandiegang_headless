@@ -174,7 +174,7 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
               </p>
             </div>
             <div className="text-[9px] font-bold text-black/40 uppercase tracking-widest">
-              MEMO-OS_Abbett_Labs
+              Abbett_Labs
             </div>
           </div>
         </motion.div>

@@ -9,8 +9,9 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { ExpandingHero } from '../components/ExpandingHero';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
+import { imageSrc } from '../lib/images';
 
-const NOT_FOUND_IMAGE = '/images/230902_7mesh-59.JPG';
+const NOT_FOUND_IMAGE_BASE = '/images/230902_7mesh-59';
 
 export const NotFoundPage: React.FC = () => (
   <div className="bg-primary-breath min-h-screen selection:bg-[#f9f100] selection:text-black">
@@ -34,7 +35,7 @@ export const NotFoundPage: React.FC = () => (
         </div>
       </section>
 
-      <ExpandingHero imageUrl={NOT_FOUND_IMAGE} imageAlt="Kandie Gang" />
+      <ExpandingHero imageUrl={imageSrc(NOT_FOUND_IMAGE_BASE)} imageAlt="Kandie Gang" />
 
       <div className="max-w-4xl mx-auto px-6 pb-40">
         <div className="sticky top-0 z-10 -mx-6 px-6 pt-6 pb-2 bg-primary-breath/90 backdrop-blur-sm">

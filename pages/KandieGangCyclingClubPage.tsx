@@ -10,13 +10,15 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ArrowUpRight } from 'lucide-react';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
-/** Hero gallery images (Sunday beta-program style). */
-const HERO_IMAGES = [
-  '/images/250401_kandiegang_seasonopener_2025-28-scaled.jpg',
-  '/images/250701_photosafari-12.jpg',
-  '/images/250701_photosafari-40.jpg',
-  '/images/250923_kandiegangsocialride-10-2048x1539.jpg',
-  '/images/251031_halloween_gravelo_abbett-86.jpg',
+import { imageSrc } from '../lib/images';
+
+/** Hero gallery image base paths (no extension). Resolved via imageSrc() for dev .jpg / prod .webp. */
+const HERO_IMAGE_BASES = [
+  '/images/250401_kandiegang_seasonopener_2025-28-scaled',
+  '/images/250701_photosafari-12',
+  '/images/250701_photosafari-40',
+  '/images/250923_kandiegangsocialride-10-2048x1539',
+  '/images/251031_halloween_gravelo_abbett-86',
 ];
 
 const BENEFIT_PILLS = [
@@ -243,7 +245,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
           {/* Left column — scrolling images */}
           <div className="w-1/2 p-3">
             <div className="flex flex-col gap-3">
-              {HERO_IMAGES.map((src, i) => (
+              {HERO_IMAGE_BASES.map((src, i) => (
                 <div
                   key={src}
                   ref={(el) => { imageScrollRefs.current[i] = el; }}
@@ -255,7 +257,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                     loading={i === 0 ? undefined : 'lazy'}
                     width={1920}
                     height={2400}
-                    src={src}
+                    src={imageSrc(src)}
                     className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
                   />
                 </div>
@@ -275,7 +277,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
           }`}
         >
           <div className="pointer-events-auto flex flex-col gap-3">
-            {HERO_IMAGES.map((src, i) => (
+            {HERO_IMAGE_BASES.map((src, i) => (
               <button
                 key={src}
                 type="button"
@@ -294,7 +296,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                   loading="lazy"
                   width={1920}
                   height={2400}
-                  src={src}
+                  src={imageSrc(src)}
                   className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-[1.15]"
                 />
               </button>
@@ -378,10 +380,10 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                   const slideWidth = el.children[0]?.clientWidth || 0;
                   const gap = 8;
                   const index = Math.round(el.scrollLeft / (slideWidth + gap));
-                  setActiveImageIndex(Math.min(Math.max(0, index), HERO_IMAGES.length - 1));
+                  setActiveImageIndex(Math.min(Math.max(0, index), HERO_IMAGE_BASES.length - 1));
                 }}
               >
-                {HERO_IMAGES.map((src, i) => (
+                {HERO_IMAGE_BASES.map((src, i) => (
                   <div
                     key={src}
                     className="aspect-[3/4] flex-none snap-center overflow-hidden rounded-lg max-lg:w-[calc(100vw-(var(--spacing,1rem)*8))]"
@@ -392,7 +394,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                       loading={i === 0 ? undefined : 'lazy'}
                       width={1920}
                       height={2400}
-                      src={src}
+                      src={imageSrc(src)}
                       className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
                     />
                   </div>
@@ -403,7 +405,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
             {/* Mobile: thumbnail indicators */}
             <div className="w-fit py-4 lg:hidden">
               <div className="flex h-full justify-center gap-3">
-                {HERO_IMAGES.map((src, i) => (
+                {HERO_IMAGE_BASES.map((src, i) => (
                   <button
                     key={i}
                     type="button"
@@ -428,7 +430,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                     loading="lazy"
                     width={1920}
                     height={2400}
-                    src={src}
+                    src={imageSrc(src)}
                     className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
                     />
                   </button>
