@@ -17,6 +17,7 @@ import { Cpu, Shield, Eye, Database, Share2, Zap, Loader2, AlertCircle } from 'l
 import { AdaptationGrid } from '../components/AdaptationGrid';
 import { getPageBySlug, WPPage } from '../lib/wordpress';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
+import { EventsLayout, EventsLayoutEvent } from '../components/EventsLayout';
 
 export const CommunityPage: React.FC = () => {
   const [page, setPage] = useState<WPPage | null>(null);
@@ -49,8 +50,39 @@ export const CommunityPage: React.FC = () => {
   const defaultHero = {
     subtitle: "Community Technology",
     title: "The future of embodied AI.",
-    description: "Kandie Gang is powered by a proprietary stack of world-class perception, reasoning, and hardware safety."
+    description: "Connections are at the heart of Kandie Gang. We create rides, events, and initiatives where participants feel supported and heard. A strong community fuels culture, participation, and growth."
   };
+
+  const communityEvents: EventsLayoutEvent[] = [
+    {
+      id: 'kandiegang-social-ride',
+      href: '/kandiegangcyclingclub',
+      imageBase: '/images/250701_photosafari-12',
+      title: 'Kandie Gang Social Ride',
+      tag: 'Social Ride',
+      description: 'A relaxed, no-drop evening ride to explore Hamburg together. All levels welcome.',
+      startDate: '2026-05-14T18:00:00.000Z',
+      endDate: '2026-05-14T20:30:00.000Z',
+      year: '2026',
+      days: 'May 14',
+      month: 'Thursday',
+      location: 'Hamburg',
+    },
+    {
+      id: 'prettigood-ride',
+      href: '/kandiegangcyclingclub',
+      imageBase: '/images/prettigoodride',
+      title: 'PRETTI GOOD RIDE',
+      tag: 'Gravel',
+      description: 'A mixed-terrain adventure with photo stops, snacks and plenty of good vibes.',
+      startDate: '2026-06-21T09:00:00.000Z',
+      endDate: '2026-06-21T15:00:00.000Z',
+      year: '2026',
+      days: 'June 21',
+      month: 'Saturday',
+      location: 'Hamburg',
+    },
+  ];
 
   return (
     <div className="bg-white selection:bg-[#f9f100] selection:text-black overflow-x-hidden">
@@ -113,110 +145,33 @@ export const CommunityPage: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-40 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-        <div className="space-y-8">
-          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-900">
-            <Eye className="w-8 h-8" />
+      <section className="bg-primary-breath/40 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-6 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading-thin tracking-tight text-secondary-purple-rain">
+                Upcoming rides & events
+              </h2>
+              <p className="mt-3 text-sm md:text-base text-primary-ink/80 max-w-xl">
+                Join the Kandie Gang community out on the roads and trails. Here&apos;s a taste of what&apos;s coming.
+              </p>
+            </div>
           </div>
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-slate-900">The world's best perception.</h2>
-          <p className="text-xl text-slate-500 font-light leading-relaxed">
-            Kandie Gang uses a multimodal transformer-based vision system that understands context, depth, and semantics in real-time. It doesn't just see objects; it understands their utility and state.
-          </p>
-          <ul className="space-y-4">
-            <TechFeature label="Real-time Semantic Segmentation" />
-            <TechFeature label="Low-latency Lidar SLAM" />
-            <TechFeature label="Proprioceptive Feedback Loops" />
-          </ul>
-        </div>
-        <div className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden group shadow-2xl">
-          <img 
-            src="https://images.unsplash.com/photo-1555255707-c07966088b7b?q=80&w=1000&auto=format&fit=crop" 
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
-            alt="Perception" 
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+
+          <EventsLayout events={communityEvents} />
         </div>
       </section>
 
       <AdaptationGrid />
 
-      <section className="py-40 bg-slate-900 text-white px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-32">
-            <div className="relative aspect-[4/3] bg-white/5 rounded-xl overflow-hidden order-2 lg:order-1 border border-white/10">
-               <video 
-                 autoPlay 
-                 muted 
-                 loop 
-                 playsInline
-                 className="w-full h-full object-cover opacity-80"
-               >
-                 <source src="https://stream.mux.com/nO7qOC7BAVniKPLrWS2vr5HeKWj801jW00JhjJilIX8lQ.m3u8" type="application/x-mpegURL" />
-                 <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop" alt="Intelligence" />
-               </video>
-            </div>
-            <div className="space-y-8 order-1 lg:order-2">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-[#f9f100]">
-                <Cpu className="w-8 h-8" />
-              </div>
-              <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">Embodied Intelligence.</h2>
-              <p className="text-xl text-slate-400 font-light leading-relaxed">
-                We've moved beyond narrow AI. Kandie Gang features a Large Behavior Model (LBM) that learns by observation and imitation. It translates natural language instructions into precise physical actions.
-              </p>
-              <div className="pt-8 grid grid-cols-2 gap-8">
-                 <Stat value="10^12" label="Parameters" />
-                 <Stat value="24/7" label="Active Learning" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-60 px-6 bg-[#f9f100] flex flex-col items-center text-center">
-         <Share2 className="w-16 h-16 text-black mb-12" />
-         <h2 className="text-5xl md:text-8xl font-bold tracking-tighter text-black mb-8">The Shared Skill Library.</h2>
-         <p className="text-2xl text-black/70 max-w-3xl font-light leading-tight tracking-tight mb-16">
-           When one Kandie Gang learns how to fold a new type of laundry or clean a specific brand of espresso machine, the entire community benefits. 
-           Collective intelligence at the scale of every home.
-         </p>
-         <button className="bg-black text-white px-12 py-5 rounded-full font-bold text-lg hover:scale-105 active:scale-95 transition-all shadow-2xl">
-           Explore Skills
-         </button>
-      </section>
-
-      <section className="py-40 px-6 max-w-3xl mx-auto text-center">
-        <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-12">Performance Specs</h3>
-        <div className="space-y-12">
-           <Spec label="Payload" value="5kg per arm" />
-           <Spec label="Reach" value="850mm" />
-           <Spec label="Degrees of Freedom" value="28 Total" />
-           <Spec label="Battery Life" value="12-14 Hours" />
-        </div>
-      </section>
     </div>
   );
 };
-
-const TechFeature = ({ label }: { label: string }) => (
-  <li className="flex items-center gap-3 text-slate-900 font-medium">
-    <div className="w-1.5 h-1.5 rounded-full bg-[#f9f100]" />
-    {label}
-  </li>
-);
 
 const Stat = ({ value, label }: { value: string, label: string }) => (
   <div>
     <div className="text-4xl font-bold text-white mb-2">{value}</div>
     <div className="text-xs font-bold uppercase tracking-widest text-slate-500">{label}</div>
-  </div>
-);
-
-const FeatureCard = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
-  <div className="bg-slate-50 p-12 rounded-[40px] space-y-6 hover:bg-slate-100 transition-colors duration-500">
-    <div className="text-slate-900 mb-8">{icon}</div>
-    <h3 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h3>
-    <p className="text-slate-500 leading-relaxed font-light">{desc}</p>
   </div>
 );
 
