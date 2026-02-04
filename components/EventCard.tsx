@@ -49,13 +49,19 @@ export const EventCard: React.FC<EventCardProps> = ({
           </div>
         </div>
 
-        {/* Date & location (Vertica-inspired) */}
+        {/* Date & location */}
         <div className="order-2 md:order-3 flex items-stretch justify-end text-secondary-purple-rain">
           <div className="flex items-center gap-6 w-full md:w-auto justify-end">
-            <time className="flex flex-col items-end font-light leading-tight">
-              <span className="text-[0.8rem] md:text-sm opacity-70">{year}</span>
-              <span className="text-3xl md:text-4xl lg:text-[2.8rem] tracking-tight">{days}</span>
-              <span className="mt-2 text-[0.85rem] md:text-sm">{month}</span>
+            <time className="flex flex-col items-stretch font-light leading-tight text-center">
+              <span className="mb-1 w-full text-center text-[0.8rem] md:text-sm opacity-70">
+                {year}
+              </span>
+              <span className="text-3xl md:text-4xl lg:text-[2.8rem] leading-none tracking-tight">
+                {days}
+              </span>
+              <span className="mt-2 w-full text-center text-[0.85rem] md:text-sm">
+                {month}
+              </span>
             </time>
 
             <div className="hidden md:flex items-center gap-4">
@@ -88,7 +94,7 @@ export const EventCard: React.FC<EventCardProps> = ({
             {description}
           </p>
 
-          <div className="flex justify-end">
+          <div className="flex justify-start">
             <button
               type="button"
               className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-secondary-purple-rain bg-transparent px-3 py-1.5 text-[0.7rem] md:text-xs font-medium text-secondary-purple-rain transition-colors hover:border-secondary-purple-rain hover:bg-secondary-purple-rain hover:text-white active:scale-95"
