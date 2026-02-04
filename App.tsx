@@ -84,8 +84,7 @@ const App: React.FC = () => {
   });
 
   // Frame: keep rounded corners visible from the start.
-  // We avoid animating borderRadius here because children can visually "square off" the corners
-  // unless the frame clips them; instead, we clip with overflow + add padding so section rounding still shows.
+  // Keep spacing aligned with commit 37f4691 by NOT adding extra frame padding.
   const scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
   const opacity = useTransform(smoothProgress, [0, 0.9], [1, 0.95]);
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
@@ -102,7 +101,7 @@ const App: React.FC = () => {
           {/* Main Content */}
           <motion.div
             style={{ scale, opacity, y, transformOrigin: 'bottom center' }}
-            className="relative z-10 bg-white min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)] rounded-[24px] overflow-hidden p-3 md:p-4"
+            className="relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)] rounded-[24px]"
           >
             <Routes>
               <Route element={<PageTransition />}>
