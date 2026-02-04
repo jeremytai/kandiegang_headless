@@ -57,12 +57,16 @@ export const HomepageRotatingHeadline: React.FC = () => {
   const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
 
   return (
-    <section ref={ref} className="relative bg-primary-breath pt-[calc(4.5rem+2em)] pb-[2em] md:pt-40 md:pb-20">
+    <section ref={ref} className="relative bg-primary-breath pt-12 pb-[2em] md:pt-20 md:pb-20">
       <motion.div
         style={{ opacity, scale }}
         className="w-full flex flex-col items-center justify-center text-center z-10 px-6"
       >
-
+        <img
+          src="/logos/kandiegang_logo.svg"
+          alt="Kandie Gang"
+          className="h-10 md:h-12 w-auto mb-8 md:mb-10"
+        />
         <h1 className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em]">
           <AnimatedHeadline text="You found us " as="span" />
           <img

@@ -104,7 +104,7 @@ const App: React.FC = () => {
           <Preloader onComplete={() => setIsLoading(false)} />
 
           <WeatherStatusBackground />
-          <StickyTop />
+          {location.pathname !== '/' && <StickyTop />}
 
           {/* Main Content */}
           <motion.div
