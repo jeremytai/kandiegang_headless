@@ -71,19 +71,26 @@ export const EventCard: React.FC<EventCardProps> = ({
           </span>
         </div>
 
-        {/* Date & location */}
-        <div className="flex flex-col items-end justify-between text-secondary-purple-rain">
-          <time className="flex flex-col items-end font-light leading-tight">
-            <span className="text-[0.8rem] opacity-70">{year}</span>
-            <span className="text-2xl md:text-3xl lg:text-[2.2rem] tracking-tight">{days}</span>
-            <span className="mt-1 text-[0.8rem]">{month}</span>
-          </time>
-          <span className="mt-8 hidden text-[0.8rem] tracking-[0.25em] uppercase md:block origin-center rotate-90 translate-y-4">
-            {location}
-          </span>
-          <span className="mt-3 text-[0.8rem] tracking-[0.15em] uppercase md:hidden">
-            {location}
-          </span>
+        {/* Date & location (Vertica-inspired) */}
+        <div className="flex items-stretch justify-end text-secondary-purple-rain">
+          <div className="flex items-center gap-6">
+            <time className="flex flex-col items-end font-light leading-tight">
+              <span className="text-[0.8rem] md:text-sm opacity-70">{year}</span>
+              <span className="text-3xl md:text-4xl lg:text-[2.8rem] tracking-tight">{days}</span>
+              <span className="mt-2 text-[0.85rem] md:text-sm">{month}</span>
+            </time>
+
+            <div className="hidden md:flex items-center gap-4">
+              <div className="h-24 w-px bg-secondary-purple-rain/20" />
+              <span className="text-sm tracking-[0.3em] uppercase origin-center rotate-90 translate-y-1">
+                {location}
+              </span>
+            </div>
+
+            <span className="mt-3 text-[0.8rem] tracking-[0.18em] uppercase md:hidden">
+              {location}
+            </span>
+          </div>
         </div>
       </Link>
     </article>
