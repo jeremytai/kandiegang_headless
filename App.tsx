@@ -103,11 +103,8 @@ const App: React.FC = () => {
             style={{ scale, opacity, y, transformOrigin: 'bottom center' }}
             className={[
               "relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)]",
-              // On the homepage we want the "breath" background to read as a flat edge at the top,
-              // while keeping the bottom corners rounded.
-              location.pathname === '/'
-                ? 'rounded-b-[24px] rounded-t-none'
-                : 'rounded-[24px]',
+              // Keep a flat edge at the top on all pages, while keeping the bottom corners rounded.
+              'rounded-b-[24px] rounded-t-none',
             ].join(' ')}
           >
             <Routes>
