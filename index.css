@@ -60,6 +60,20 @@
   --font-size: 16px;
   --font-weight: 300;
 
+  /*
+   * Radius scale
+   *
+   * Some utility classes in this project (e.g. `.rounded-xl`) reference CSS variables
+   * like `--radius-xl`. If these variables are missing, border-radius becomes invalid
+   * and corners render as square.
+   */
+  --radius-xs: 0.125rem; /* 2px */
+  --radius-sm: 0.25rem;  /* 4px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.5rem;   /* 8px */
+  --radius-xl: 0.75rem;  /* 12px */
+  --radius-2xl: 1rem;    /* 16px */
+
   --sans: var(--font-body);
   --serif: var(--font-body);
   --heading: var(--font-heading-regular);

@@ -101,7 +101,7 @@ const App: React.FC = () => {
           {/* Main Content */}
           <motion.div
             style={{ scale, opacity, y, transformOrigin: 'bottom center' }}
-            className="relative z-10 bg-white min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)] rounded-3xl overflow-hidden p-3 md:p-4"
+            className="relative z-10 bg-white min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)] rounded-[24px] overflow-hidden p-3 md:p-4"
           >
             <Routes>
               <Route element={<PageTransition />}>
