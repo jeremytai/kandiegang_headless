@@ -105,8 +105,8 @@ const App: React.FC = () => {
   const opacity = useTransform(smoothProgress, [0, 0.9], [1, 0.95]);
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
-  // Production: minimal landing on /. Localhost (dev): full site for development.
-  const isMinimalLanding = import.meta.env.PROD;
+  // Full site everywhere: nav, scroll sections, newsletter, footer on /.
+  const isMinimalLanding = false;
 
   return (
     <CookieConsentProvider>
