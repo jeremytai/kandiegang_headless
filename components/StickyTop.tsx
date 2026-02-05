@@ -32,7 +32,7 @@ function isCyclingMember(plans: string[] | null | undefined): boolean {
   );
 }
 
-function isGuide(plans: string[] | null | undefined): boolean {
+function isGuideFromPlans(plans: string[] | null | undefined): boolean {
   if (!Array.isArray(plans)) return false;
   return plans.some((p) => p.toLowerCase().includes('guide'));
 }
@@ -52,8 +52,9 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
   const { scrollY } = useScroll();
   const isLoggedIn = Boolean(user);
   const avatarUrl = profile?.avatar_url ?? null;
+  const isGuide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
   const showMemberAreaLink =
-    isLoggedIn && (isCyclingMember(profile?.membership_plans) || isGuide(profile?.membership_plans));
+    isLoggedIn && (isCyclingMember(profile?.membership_plans) || isGuide);
 
   const showLoginTooltip = useCallback(() => {
     const el = loginButtonRef.current;

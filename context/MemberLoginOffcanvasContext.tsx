@@ -70,8 +70,8 @@ function isCyclingMember(plans: string[] | null | undefined): boolean {
   );
 }
 
-/** True if profile has a plan indicating Kandie Gang Guide. */
-function isGuide(plans: string[] | null | undefined): boolean {
+/** True if profile has a plan name containing "guide". */
+function isGuideFromPlans(plans: string[] | null | undefined): boolean {
   if (!Array.isArray(plans)) return false;
   return plans.some((p) => p.toLowerCase().includes('guide'));
 }
@@ -112,7 +112,7 @@ function MemberOffcanvasAccountContent({
   const memberSinceFormatted = formatMemberSince(profile?.member_since ?? null);
   const daysLeft = getDaysLeft(profile?.membership_expiration ?? null);
   const showCyclingMember = isCyclingMember(profile?.membership_plans);
-  const showGuide = isGuide(profile?.membership_plans);
+  const showGuide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
   const hasRolePills = showCyclingMember || showGuide;
 
   if (!user) return null;

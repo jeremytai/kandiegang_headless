@@ -32,7 +32,8 @@ The app loads the row in **`profiles`** where `profiles.id = user.id` and expose
 | `wp_user_id` | integer | Legacy WordPress link; not shown in UI. |
 | `is_member` | boolean | Drives “Active” vs “no membership” on `/members`. |
 | `membership_source` | enum | `wordpress` \| `supabase` \| `unknown`; shown on members page. |
-| `membership_plans` | text[] | Plan names; available for future UI. |
+| `membership_plans` | text[] | Plan names; e.g. Cycling Club + Guide plan. Drives “Kandie Gang Cycling Member” / “Kandie Gang Guide” pills. |
+| `is_guide` | boolean | Kandie Gang Guide flag (manual or synced from WordPress role). Combined with plan names for display. |
 | `member_since` | date | Available for future UI. |
 | `membership_expiration` | date | Available for future UI. |
 
@@ -56,7 +57,7 @@ The app only trusts Supabase as the source of truth when `membership_source` is 
 4. Edit the row:
    - **is_member** → set to `true`.
    - **membership_source** → set to `supabase`.
-   - Optionally: **display_name**, **member_since**, **membership_expiration**, **membership_plans** (array, e.g. `{"Kandie Gang Cycling Club Membership"}`).
+   - Optionally: **display_name**, **member_since**, **membership_expiration**, **membership_plans** (array, e.g. `{"Kandie Gang Cycling Club Membership"}`), **is_guide** (true for Kandie Gang Guides).
 5. Save.
 
 ---

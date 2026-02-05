@@ -10,6 +10,17 @@ import { AnimatedHeadline } from '../components/AnimatedHeadline';
 const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
 const MEMBERS_ONLY_POSTS_FIRST = 20;
 
+/** Greetings in obscure languages (all mean "hello"). One is chosen at random per page load. */
+const HELLO_GREETINGS = [
+  'Shwmae',      // Welsh
+  'Kaixo',       // Basque
+  'Aluu',        // Greenlandic
+  'Yá\'át\'ééh', // Navajo
+  'Kia ora',     // Māori
+  'Demat',       // Breton
+  'Bures',       // Northern Sami
+];
+
 function isCyclingMember(plans: string[] | null | undefined): boolean {
   if (!Array.isArray(plans)) return false;
   const lower = plans.map((p) => p.toLowerCase());
@@ -20,7 +31,7 @@ function isCyclingMember(plans: string[] | null | undefined): boolean {
   );
 }
 
-function isGuide(plans: string[] | null | undefined): boolean {
+function isGuideFromPlans(plans: string[] | null | undefined): boolean {
   if (!Array.isArray(plans)) return false;
   return plans.some((p) => p.toLowerCase().includes('guide'));
 }
@@ -33,9 +44,20 @@ export const MembersAreaPage: React.FC = () => {
   const [membersOnlyPosts, setMembersOnlyPosts] = useState<WPPost[]>([]);
   const [membersOnlyLoading, setMembersOnlyLoading] = useState(false);
   const [membersOnlyError, setMembersOnlyError] = useState<string | null>(null);
+  const [greeting] = useState(
+    () => HELLO_GREETINGS[Math.floor(Math.random() * HELLO_GREETINGS.length)]
+  );
 
+  const guide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
   const canSeeMembersOnlyPosts =
-    isCyclingMember(profile?.membership_plans) || isGuide(profile?.membership_plans);
+    isCyclingMember(profile?.membership_plans) || guide;
+
+  const cyclingMember = isCyclingMember(profile?.membership_plans);
+  const memberKindLabel =
+    cyclingMember ? 'Kandie Gang Cycling Member'
+    : guide ? 'Kandie Gang Guide'
+    : 'Member';
+  const secondMemberKindLabel = cyclingMember && guide ? 'Kandie Gang Guide' : null;
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -112,33 +134,27 @@ export const MembersAreaPage: React.FC = () => {
   return (
     <main className="bg-primary-breath min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
       <div className="max-w-7xl mx-auto px-6">
-        <header className="mb-16 md:mb-24 relative">
+        <motion.span
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="inline-block w-fit rounded-full bg-secondary-purple-rain px-2 py-1 text-xs font-light text-white"
+        >
+          Members
+        </motion.span>
+        <header className="mb-2 md:mb-6">
           <AnimatedHeadline
-            text="Members"
+            text={`${greeting}, ${profile?.display_name?.trim().split(/\s+/)[0] || 'Friend'}`}
             as="h1"
-            className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8 block"
+            className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-1 md:mb-2 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-4 block"
           />
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
-          >
-            Welcome back, {profile?.display_name || user.email || 'Kandie rider'}.
-          </motion.p>
         </header>
-
         <div className="max-w-3xl space-y-6">
 
         {!initialMembershipCheckDone ? (
           <p className="text-slate-600">Checking your membership…</p>
         ) : isMember ? (
           <section className="space-y-4">
-            <p className="text-slate-700 max-w-prose">
-              This is your home base for member-only rides, notes and future perks.
-              We&apos;re still moving things over from our old system, so expect this space
-              to grow over the next weeks.
-            </p>
             <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-700 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="font-semibold">Membership status</p>
@@ -150,31 +166,16 @@ export const MembersAreaPage: React.FC = () => {
                 </p>
               </div>
               <div className="flex gap-3">
-                <Link
-                  to="/community"
-                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-900 hover:border-slate-900"
-                >
-                  Community
-                </Link>
-                <Link
-                  to="/stories"
-                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-900 hover:border-slate-900"
-                >
-                  Ride reports
-                </Link>
+                <span className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-900">
+                  {memberKindLabel}
+                </span>
+                {secondMemberKindLabel ? (
+                  <span className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-900">
+                    {secondMemberKindLabel}
+                  </span>
+                ) : null}
               </div>
             </div>
-
-            <section className="mt-6 space-y-3">
-              <h2 className="text-sm font-semibold tracking-tight text-slate-900">
-                What&apos;s coming here soon
-              </h2>
-              <ul className="list-disc pl-5 text-sm text-slate-700 space-y-1">
-                <li>Private ride notes and member-only route drops.</li>
-                <li>Season planning, waitlist priorities and recap material.</li>
-                <li>Deeper integration with the shop and your orders.</li>
-              </ul>
-            </section>
           </section>
         ) : (
           <section className="space-y-4">
@@ -216,8 +217,8 @@ export const MembersAreaPage: React.FC = () => {
 
       {initialMembershipCheckDone && canSeeMembersOnlyPosts && (
         <div className="mx-auto max-w-7xl mt-10 pt-8 border-t border-slate-200">
-          <h2 className="text-lg font-semibold tracking-tight text-slate-900 mb-6 md:mb-8">
-            Members only posts
+          <h2 className="text-4xl font-light tracking-normal text-secondary-purple-rain mb-6 md:mb-8">
+            Members Photo Gallery
           </h2>
           {membersOnlyLoading ? (
             <div className="flex items-center gap-2 text-slate-500 text-sm">

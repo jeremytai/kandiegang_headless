@@ -232,6 +232,40 @@ The contact form on the **Contact** page (`/contact`) and in the **Contact modal
 
 The shared `ContactForm` component (`components/ContactForm.tsx`) is used on both the Contact page and inside `ContactModal`. If `VITE_FORMSPREE_CONTACT_FORM_ID` is not set, the form area shows instructions to set the env var. On submit errors, the form displays Formspree’s error message when available. For stronger spam protection after enabling AJAX, you can add reCAPTCHA v3 or Turnstile in your Formspree dashboard.
 
+## 👤 Members area & Supabase profiles
+
+The **Members area** (`/members`) and member login (StickyTop, offcanvas) use **Supabase Auth** and a **`profiles`** table. Profiles store membership status, plan names, and whether the user is a **Kandie Gang Guide**.
+
+### What the app uses
+
+- **Auth**: Email/password, magic link, or Discord OAuth. Session and user come from Supabase Auth.
+- **Profile** (table `public.profiles`): One row per user (`profiles.id = auth.users.id`). The app reads:
+  - `is_member`, `membership_source`, `membership_plans` (array, e.g. `["Kandie Gang Cycling Club Membership"]`), `member_since`, `membership_expiration`
+  - **`is_guide`**: Boolean; marks the user as a Kandie Gang Guide (can be set manually or synced from WordPress role).
+- **Display**: Users can be both **Kandie Gang Cycling Member** (from a plan name containing "cycling" + "member"/"membership") and **Kandie Gang Guide** (from `is_guide` or a plan name containing "guide"). The Members page and account panel show both when applicable.
+
+### Env vars
+
+In `.env` or your host's config, set:
+
+- `VITE_SUPABASE_URL`: Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Supabase anon (public) key
+
+Service role key is only for scripts (e.g. CSV sync), not the frontend.
+
+### Syncing membership
+
+- **WooCommerce Memberships CSV**: Run `node scripts/sync-membership-csv-to-profiles.js [path-to-memberships.csv]` to set `is_member`, `membership_plans`, `member_since`, `membership_expiration` from the export. The script aggregates multiple active plans per user (e.g. Cycling Club + Guide if both appear in the CSV). Requires `VITE_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+- **WordPress bridge**: On login/refresh, the app can update `is_member` and `membership_source` from WordPress; if the user's WP role slug contains "guide", `is_guide` is set to `true` in Supabase (see `context/AuthContext.tsx`). Set `membership_source` to `supabase` when Supabase is the source of truth so the app doesn't overwrite manual changes.
+
+### Manual profile updates
+
+To set someone as a member or Guide in Supabase (e.g. manual grant or no CSV): use the **Table Editor** or SQL in the Supabase Dashboard. Set `is_member`, `membership_plans`, and/or **`is_guide`** as needed; when you want Supabase to be the source of truth, set **`membership_source = 'supabase'`**. Full steps and field descriptions: **`supabase/MANUAL_PROFILE_UPDATES.md`**.
+
+### Migrations
+
+Schema changes live in `supabase/migrations/`. Apply with `supabase db push` (CLI) or run the SQL in the Supabase Dashboard → SQL Editor. The **`is_guide`** column was added in `20250206140000_add_is_guide_to_profiles.sql`.
+
 ## 🔐 Site password
 
 The site can be protected with a full-screen password gate. It appears **after** the preloader finishes and **before** the homepage (or any other page) is shown.
@@ -384,6 +418,8 @@ The app can be deployed to any static hosting service:
 
 Make sure to set environment variables in your hosting platform:
 - `VITE_WP_GRAPHQL_URL`: Your WordPress GraphQL endpoint
+- `VITE_SUPABASE_URL`: Your Supabase project URL (for Members area and auth)
+- `VITE_SUPABASE_ANON_KEY`: Supabase anon (public) key
 - `VITE_SUBSTACK_PUBLICATION`: (Optional) Substack publication base URL for newsletter signup embed
 - `VITE_FORMSPREE_CONTACT_FORM_ID`: (Optional) Formspree form ID for the contact form (Contact page and modal)
 

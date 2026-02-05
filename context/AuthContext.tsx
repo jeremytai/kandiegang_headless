@@ -38,6 +38,8 @@ export interface Profile {
   member_since: string | null;
   /** Latest active membership expiration (YYYY-MM-DD). */
   membership_expiration: string | null;
+  /** Whether the user is a Kandie Gang Guide (manual or synced from WP/CSV). */
+  is_guide: boolean;
   /** Discord user id (snowflake) from OAuth. */
   discord_id: string | null;
   /** Display name from Discord (or other provider). */
@@ -171,6 +173,7 @@ async function loadUserAndProfile(): Promise<{
     membership_plans: Array.isArray(raw.membership_plans) ? raw.membership_plans : [],
     member_since: raw.member_since ?? null,
     membership_expiration: raw.membership_expiration ?? null,
+    is_guide: Boolean(raw.is_guide),
     discord_id: raw.discord_id ?? null,
     username: raw.username ?? null,
     avatar_url: raw.avatar_url ?? null,
@@ -252,11 +255,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const membership = await fetchMembershipStatus(emailForLookup);
 
       if (membership && typeof membership.isMember === 'boolean') {
+        const wpIsGuide =
+          Array.isArray(membership.roles) &&
+          membership.roles.some((r) => String(r).toLowerCase().includes('guide'));
         const nextProfile: Profile | null = loadedProfile
           ? {
               ...loadedProfile,
               is_member: membership.isMember,
               membership_source: membership.membershipSource ?? 'wordpress',
+              is_guide: loadedProfile.is_guide || wpIsGuide,
             }
           : null;
 
@@ -266,6 +273,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .update({
               is_member: nextProfile.is_member,
               membership_source: nextProfile.membership_source,
+              is_guide: nextProfile.is_guide,
             })
             .eq('id', nextProfile.id);
 
