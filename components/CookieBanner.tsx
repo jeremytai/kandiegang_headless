@@ -30,8 +30,8 @@ export const CookieBanner: React.FC = () => {
       aria-label="Cookie consent"
     >
       <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:gap-6 md:px-6 md:py-5">
-        <p className="text-sm text-slate-600 md:flex-1 md:text-base">
-          We use cookies and similar technologies to run the site and, with your consent, to analyze use and support our marketing. You can accept all, reject non-essential, or customize. See our{' '}
+        <p className="text-[11px] text-slate-600 md:flex-1 md:text-sm">
+          We use cookies and similar technologies to run the site and, with your consent, to improve your user experience. See our{' '}
           <a href="/privacy-policy" className="text-secondary-purple-rain underline underline-offset-2 hover:text-secondary-current">
             Privacy Policy
           </a>
