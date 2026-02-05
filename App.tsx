@@ -105,9 +105,6 @@ const App: React.FC = () => {
   const opacity = useTransform(smoothProgress, [0, 0.9], [1, 0.95]);
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
-  // Full site everywhere: nav, scroll sections, newsletter, footer on /.
-  const isMinimalLanding = false;
-
   return (
     <CookieConsentProvider>
       <ContactModalProvider>
@@ -116,7 +113,7 @@ const App: React.FC = () => {
           {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
 
           <WeatherStatusBackground />
-          {(!isMinimalLanding || location.pathname !== '/') && <StickyTop />}
+          <StickyTop />
 
           {/* Main Content */}
           <motion.div
@@ -130,16 +127,12 @@ const App: React.FC = () => {
             <Routes>
               <Route element={<PageTransition />}>
                 <Route path="/" element={
-                  isMinimalLanding ? (
-                    <LandingPage minimal />
-                  ) : (
-                    <>
-                      <LandingPage />
-                      <HorizontalRevealSection />
-                      <CompanySection />
-                      <FAQSection />
-                    </>
-                  )
+                  <>
+                    <LandingPage />
+                    <HorizontalRevealSection />
+                    <CompanySection />
+                    <FAQSection />
+                  </>
                 } />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/community" element={<CommunityPage />} />
@@ -158,19 +151,14 @@ const App: React.FC = () => {
               </Route>
             </Routes>
 
-            {/* Newsletter and footer: show on all pages in dev; in prod hide on minimal landing (/) */}
-            {(!isMinimalLanding || location.pathname !== '/') && (
-              <>
-                <NewsletterSection />
-                <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
-                <Footer />
-              </>
-            )}
+            <NewsletterSection />
+            <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
+            <Footer />
           </motion.div>
 
           {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
           <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
-          {(isMinimalLanding ? ['/stories', '/about', '/kandiegangcyclingclub'] : ['/', '/stories', '/about', '/kandiegangcyclingclub']).includes(location.pathname) && <StickyBottom />}
+          {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && <StickyBottom />}
         </div>
       </ContactModalProvider>
       {isUnlocked && (
