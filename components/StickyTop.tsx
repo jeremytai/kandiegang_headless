@@ -9,25 +9,58 @@
  * - Centered brand mark in its compact state.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
-import { Zap, ArrowLeft, Menu, X } from 'lucide-react';
+import { ArrowLeft, Menu, X, User } from 'lucide-react';
+import { useMemberLoginOffcanvas } from '../context/MemberLoginOffcanvasContext';
+import { useAuth } from '../context/AuthContext';
 
 interface StickyTopProps {
   /** Layout offset variant: with announcement bar or tight to top. */
   offsetVariant?: 'withBar' | 'tight';
 }
 
+function isCyclingMember(plans: string[] | null | undefined): boolean {
+  if (!Array.isArray(plans)) return false;
+  const lower = plans.map((p) => p.toLowerCase());
+  return lower.some(
+    (p) =>
+      (p.includes('cycling') && (p.includes('member') || p.includes('membership'))) ||
+      p === 'kandie gang cycling club membership'
+  );
+}
+
+function isGuide(plans: string[] | null | undefined): boolean {
+  if (!Array.isArray(plans)) return false;
+  return plans.some((p) => p.toLowerCase().includes('guide'));
+}
+
 export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
-  
+  const [loginTooltip, setLoginTooltip] = useState<{ x: number; y: number } | null>(null);
+  const loginButtonRef = useRef<HTMLButtonElement>(null);
+
   const location = useLocation();
   const isContactPage = location.pathname === '/contact';
-  
+  const { user, profile } = useAuth();
+  const { openMemberLogin } = useMemberLoginOffcanvas();
   const { scrollY } = useScroll();
+  const isLoggedIn = Boolean(user);
+  const avatarUrl = profile?.avatar_url ?? null;
+  const showMemberAreaLink =
+    isLoggedIn && (isCyclingMember(profile?.membership_plans) || isGuide(profile?.membership_plans));
+
+  const showLoginTooltip = useCallback(() => {
+    const el = loginButtonRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setLoginTooltip({ x: rect.left + rect.width / 2, y: rect.top - 6 });
+  }, []);
+  const hideLoginTooltip = useCallback(() => setLoginTooltip(null), []);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
@@ -95,11 +128,60 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
         >
           <div className="grid grid-cols-3 items-center px-2.5 py-2.5">
             <div className="flex items-center pl-3">
-              {isContactPage && (
+              {isContactPage ? (
                 <Link to="/" className="flex items-center gap-2 font-bold text-slate-900 tracking-tighter text-xs">
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Home</span>
                 </Link>
+              ) : (
+                <>
+                  <button
+                    ref={loginButtonRef}
+                    type="button"
+                    onClick={openMemberLogin}
+                    onMouseEnter={!isLoggedIn ? showLoginTooltip : undefined}
+                    onMouseLeave={!isLoggedIn ? hideLoginTooltip : undefined}
+                    className={`bg-transparent w-9 h-9 rounded-full flex items-center justify-center overflow-hidden transition-all hover:scale-[1.05] active:scale-95 ${
+                      isLoggedIn
+                        ? 'text-secondary-purple-rain hover:bg-[var(--color-secondary-purple-rain)] hover:text-white'
+                        : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                    }`}
+                    aria-label="Members login"
+                  >
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt=""
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                  </button>
+                  {!isLoggedIn &&
+                    loginTooltip &&
+                    typeof document !== 'undefined' &&
+                    createPortal(
+                      <div
+                        className="fixed z-[100] pointer-events-none flex flex-col"
+                        style={{
+                          left: loginTooltip.x - 15,
+                          top: loginTooltip.y,
+                          transform: 'translateY(-100%)',
+                        }}
+                        role="tooltip"
+                      >
+                        <span className="relative block px-3 py-1.5 text-xs font-medium text-white bg-secondary-purple-rain rounded-[10px] shadow-lg">
+                          Login
+                          <span
+                            className="absolute left-3 bottom-0 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[var(--color-secondary-purple-rain)] translate-y-full -mt-px -ml-0.5"
+                            aria-hidden
+                          />
+                        </span>
+                      </div>,
+                      document.body
+                    )}
+                </>
               )}
             </div>
 
@@ -155,7 +237,11 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                      <nav className="flex flex-col gap-4">
                         <NavLink label="Community" to="/community" onClick={handleToggle} />
                         <NavLink label="Stories" to="/stories" onClick={handleToggle} />
-                        <NavLink label="Cycling Club" to="/kandiegangcyclingclub" onClick={handleToggle} />
+                        {showMemberAreaLink ? (
+                          <NavLink label="Member Area" to="/members" onClick={handleToggle} />
+                        ) : (
+                          <NavLink label="Cycling Club" to="/kandiegangcyclingclub" onClick={handleToggle} />
+                        )}
                         <NavLink label="Shop" to="/shop" onClick={handleToggle} />
                         <NavLink label="About" to="/about" onClick={handleToggle} />
                      </nav>

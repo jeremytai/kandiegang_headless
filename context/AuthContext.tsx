@@ -38,6 +38,12 @@ export interface Profile {
   member_since: string | null;
   /** Latest active membership expiration (YYYY-MM-DD). */
   membership_expiration: string | null;
+  /** Discord user id (snowflake) from OAuth. */
+  discord_id: string | null;
+  /** Display name from Discord (or other provider). */
+  username: string | null;
+  /** Avatar URL from Discord (or other provider). */
+  avatar_url: string | null;
 }
 
 type AuthContextValue = {
@@ -54,6 +60,11 @@ type AuthContextValue = {
    * Returns { error } on failure; on success, show "Check your email" (no session until they click the link).
    */
   signInWithMagicLink: (email: string) => Promise<{ error?: string }>;
+  /**
+   * Sign in (or link when already logged in) with Discord OAuth.
+   * Redirects away to Discord; on return, session is restored. Pass redirectTo to control where users land (default: /members).
+   */
+  signInWithDiscord: (options?: { redirectTo?: string }) => Promise<{ error?: string }>;
   /**
    * Email/password sign-up. Optional displayName is stored in user_metadata and synced to profiles by the DB trigger.
    * Returns { error } on failure; { needsEmailConfirmation: true } if Supabase is set to confirm email and no session was created.
@@ -73,6 +84,46 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+/** Discord identity_data shape from Supabase OAuth (partial). */
+function getDiscordProfileFromUser(user: User): {
+  discord_id: string | null;
+  username: string | null;
+  avatar_url: string | null;
+} {
+  const discord = user.identities?.find((i) => i.provider === 'discord');
+  const data = discord?.identity_data as Record<string, unknown> | undefined;
+  if (!data) {
+    return { discord_id: null, username: null, avatar_url: null };
+  }
+  const discordId = typeof data.id === 'string' ? data.id : null;
+  const username =
+    (typeof data.full_name === 'string' ? data.full_name : null) ??
+    (typeof data.name === 'string' ? data.name : null) ??
+    (typeof data.username === 'string' ? data.username : null) ??
+    null;
+  let avatarUrl =
+    typeof data.avatar_url === 'string' ? data.avatar_url : null;
+  if (!avatarUrl && typeof data.avatar === 'string' && discordId) {
+    avatarUrl = `https://cdn.discordapp.com/avatars/${discordId}/${data.avatar}.png`;
+  }
+  return { discord_id: discordId, username, avatar_url: avatarUrl };
+}
+
+/** Sync Discord identity from auth user to profiles row. No-op if no Discord identity. */
+async function syncDiscordToProfile(user: User): Promise<void> {
+  if (!supabase) return;
+  const { discord_id, username, avatar_url } = getDiscordProfileFromUser(user);
+  if (!discord_id && !username && !avatar_url) return;
+  await supabase
+    .from('profiles')
+    .update({
+      discord_id: discord_id ?? undefined,
+      username: username ?? undefined,
+      avatar_url: avatar_url ?? undefined,
+    })
+    .eq('id', user.id);
+}
+
 async function loadUserAndProfile(): Promise<{
   user: User | null;
   profile: Profile | null;
@@ -91,6 +142,9 @@ async function loadUserAndProfile(): Promise<{
   if (!user) {
     return { user: null, profile: null };
   }
+
+  // Sync Discord (and other OAuth) identity into profiles when present
+  await syncDiscordToProfile(user);
 
   const { data: raw, error: profileError } = await supabase
     .from('profiles')
@@ -117,6 +171,9 @@ async function loadUserAndProfile(): Promise<{
     membership_plans: Array.isArray(raw.membership_plans) ? raw.membership_plans : [],
     member_since: raw.member_since ?? null,
     membership_expiration: raw.membership_expiration ?? null,
+    discord_id: raw.discord_id ?? null,
+    username: raw.username ?? null,
+    avatar_url: raw.avatar_url ?? null,
   };
   return { user, profile };
 }
@@ -256,6 +313,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     []
   );
 
+  const signInWithDiscord = useCallback(
+    async (options?: { redirectTo?: string }): Promise<{ error?: string }> => {
+      if (!supabase) {
+        return { error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+      }
+      const redirectTo =
+        options?.redirectTo ??
+        (typeof window !== 'undefined' ? `${window.location.origin}/members` : undefined);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          scopes: 'identify email',
+          redirectTo,
+        },
+      });
+      if (error) {
+        return { error: error.message || 'Could not sign in with Discord. Please try again.' };
+      }
+      return {};
+    },
+    []
+  );
+
   const signUp = useCallback(
     async (
       email: string,
@@ -310,11 +390,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       profile,
       login,
       signInWithMagicLink,
+      signInWithDiscord,
       signUp,
       logout,
       refreshProfile,
     }),
-    [status, user, profile, login, signInWithMagicLink, signUp, logout, refreshProfile]
+    [status, user, profile, login, signInWithMagicLink, signInWithDiscord, signUp, logout, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

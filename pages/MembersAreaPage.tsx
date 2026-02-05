@@ -1,11 +1,40 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { getCategoryPosts, transformMediaUrl, type WPPost } from '../lib/wordpress';
+import { Loader2 } from 'lucide-react';
+
+/** WordPress category slug for members-only posts (Photo Gallery). */
+const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
+const MEMBERS_ONLY_POSTS_FIRST = 20;
+
+function isCyclingMember(plans: string[] | null | undefined): boolean {
+  if (!Array.isArray(plans)) return false;
+  const lower = plans.map((p) => p.toLowerCase());
+  return lower.some(
+    (p) =>
+      (p.includes('cycling') && (p.includes('member') || p.includes('membership'))) ||
+      p === 'kandie gang cycling club membership'
+  );
+}
+
+function isGuide(plans: string[] | null | undefined): boolean {
+  if (!Array.isArray(plans)) return false;
+  return plans.some((p) => p.toLowerCase().includes('guide'));
+}
 
 export const MembersAreaPage: React.FC = () => {
   const { status, user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [initialMembershipCheckDone, setInitialMembershipCheckDone] = useState(false);
+  const [membersOnlyPosts, setMembersOnlyPosts] = useState<WPPost[]>([]);
+  const [membersOnlyLoading, setMembersOnlyLoading] = useState(false);
+  const [membersOnlyError, setMembersOnlyError] = useState<string | null>(null);
+
+  const canSeeMembersOnlyPosts =
+    isCyclingMember(profile?.membership_plans) || isGuide(profile?.membership_plans);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -14,10 +43,47 @@ export const MembersAreaPage: React.FC = () => {
     }
   }, [status, user, navigate]);
 
-  // Refetch profile when landing on /members so manual DB updates (e.g. is_member) are reflected
+  // Run membership sync (WordPress bridge) on mount and wait before showing "no membership"
   useEffect(() => {
-    if (user) refreshProfile();
-  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- only refetch when user identity changes; refreshProfile is stable
+    if (!user?.id) return;
+    setInitialMembershipCheckDone(false);
+    let cancelled = false;
+    refreshProfile().finally(() => {
+      if (!cancelled) setInitialMembershipCheckDone(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, refreshProfile]);
+
+  // Fetch members-only posts when user is eligible (cycling member or guide)
+  useEffect(() => {
+    if (!canSeeMembersOnlyPosts) return;
+    let cancelled = false;
+    setMembersOnlyLoading(true);
+    setMembersOnlyError(null);
+    getCategoryPosts(MEMBERS_ONLY_CATEGORY_SLUG, MEMBERS_ONLY_POSTS_FIRST)
+      .then((result) => {
+        if (cancelled) return;
+        if (result) {
+          setMembersOnlyPosts(result.nodes);
+        } else {
+          setMembersOnlyPosts([]);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setMembersOnlyError(err?.message ?? 'Could not load members-only posts.');
+          setMembersOnlyPosts([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setMembersOnlyLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [canSeeMembersOnlyPosts]);
 
   const handleRefreshMembership = async () => {
     setIsRefreshing(true);
@@ -54,7 +120,9 @@ export const MembersAreaPage: React.FC = () => {
           </h1>
         </header>
 
-        {isMember ? (
+        {!initialMembershipCheckDone ? (
+          <p className="text-slate-600">Checking your membership…</p>
+        ) : isMember ? (
           <section className="space-y-4">
             <p className="text-slate-700 max-w-prose">
               This is your home base for member-only rides, notes and future perks.
@@ -103,13 +171,14 @@ export const MembersAreaPage: React.FC = () => {
             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
               <p className="font-semibold mb-1">You&apos;re almost there.</p>
               <p className="mb-1">
-                You&apos;re logged in, but we couldn&apos;t find an active membership connected
-                to this email yet.
+                We couldn&apos;t find an active membership for this account. We checked
+                our current system (and WordPress) for the email you signed in with.
               </p>
               <p>
-                If you&apos;re already a Kandie Gang member via our old system, reach out
-                so we can link your account. Otherwise, keep an eye on our channels for
-                the next membership window.
+                If you&apos;re already a Kandie Gang member from our previous setup,
+                <Link to="/contact" className="font-semibold underline ml-1">reach out</Link>
+                {' '}and we&apos;ll link your account. Otherwise, keep an eye on our channels
+                for the next membership window.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -134,6 +203,66 @@ export const MembersAreaPage: React.FC = () => {
           </section>
         )}
       </div>
+
+      {initialMembershipCheckDone && canSeeMembersOnlyPosts && (
+        <div className="mx-auto max-w-7xl mt-10 pt-8 border-t border-slate-200">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900 mb-6 md:mb-8">
+            Members only posts
+          </h2>
+          {membersOnlyLoading ? (
+            <div className="flex items-center gap-2 text-slate-500 text-sm">
+              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+              <span>Loading…</span>
+            </div>
+          ) : membersOnlyError ? (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              {membersOnlyError}
+            </p>
+          ) : membersOnlyPosts.length === 0 ? (
+            <p className="text-sm text-slate-500">
+              No members-only posts yet. Check back later—we pull from the Photo Gallery category in WordPress.
+            </p>
+          ) : (
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
+              {membersOnlyPosts.map((story, i) => {
+                const slug = story.uri?.replace(/^\/+|\/+$/g, '').split('/').pop() ?? '';
+                const storyHref = slug ? `/story/${slug}` : '/stories';
+                return (
+                  <Link key={story.id} to={storyHref} className="block">
+                    <motion.article
+                      initial={{ opacity: 0, y: 24 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(i * 0.05, 0.3) }}
+                      className="group cursor-pointer flex flex-col"
+                    >
+                      <div className="overflow-hidden rounded-xl aspect-[4/3] bg-slate-100 mb-4">
+                        <img
+                          src={
+                            story.featuredImage?.node?.sourceUrl
+                              ? transformMediaUrl(story.featuredImage.node.sourceUrl)
+                              : 'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?q=80&w=800'
+                          }
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          alt=""
+                          loading="lazy"
+                        />
+                      </div>
+                      <h3
+                        className="text-xl md:text-2xl font-light tracking-normal text-slate-900 leading-tight mb-2 line-clamp-2"
+                        dangerouslySetInnerHTML={{ __html: story.title }}
+                      />
+                      <div
+                        className="text-slate-500 font-light text-sm md:text-base leading-relaxed line-clamp-2"
+                        dangerouslySetInnerHTML={{ __html: story.excerpt }}
+                      />
+                    </motion.article>
+                  </Link>
+                );
+              })}
+            </section>
+          )}
+        </div>
+      )}
     </main>
   );
 };
