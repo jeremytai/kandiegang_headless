@@ -313,14 +313,15 @@ export const KandieGangCyclingClubPage: React.FC = () => {
         >
           <div className="flex w-full flex-col items-center justify-center gap-12 text-center px-6">
             {/* Headlines */}
-            <div>
+            <div className="flex flex-col items-center">
               <AnimatedHeadline
                 as="h1"
                 text="Join the Kandie Gang Cycling Club"
                 className="font-heading text-secondary-purple-rain text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-thin tracking-normal"
                 lineHeight={1.25}
+                fullWidth
               />
-              <span className="mt-3 inline-block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
+              <span className="mt-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
                 Ride with us
               </span>
             </div>
@@ -357,14 +358,15 @@ export const KandieGangCyclingClubPage: React.FC = () => {
         <div className="flex flex-col lg:hidden">
           <div className="m-auto flex w-full flex-col items-center justify-center gap-6 pt-[var(--header-height,5rem)] text-center lg:gap-12 lg:pt-0">
             {/* Headlines */}
-            <div className="px-4 max-lg:py-12 lg:px-6">
+            <div className="flex flex-col items-center px-4 max-lg:py-12 lg:px-6">
               <AnimatedHeadline
                 as="h1"
                 text="Join the Kandie Gang Cycling Club"
                 className="font-heading text-secondary-purple-rain  text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-normal tracking-tight"
                 lineHeight={1.25}
+                fullWidth
               />
-              <span className="mt-3 inline-block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
+              <span className="mt-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
                 Ride with us
               </span>
             </div>
