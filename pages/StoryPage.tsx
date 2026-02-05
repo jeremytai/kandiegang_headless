@@ -42,6 +42,13 @@ const DEMO_POST: WPPost = {
 };
 
 export const StoryPage: React.FC = () => {
+  // Temporary debug: env and mode
+  console.log('ENV CHECK:', {
+    MEDIA_CDN_URL: import.meta.env.VITE_MEDIA_CDN_URL,
+    isDev: import.meta.env.DEV,
+    mode: import.meta.env.MODE,
+  });
+
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<WPPost | null>(null);
   const [normalizedBlocks, setNormalizedBlocks] = useState<NormalizedBlock[] | null>(null);
