@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { getCategoryPosts, transformMediaUrl, type WPPost } from '../lib/wordpress';
 import { Loader2 } from 'lucide-react';
+import { AnimatedHeadline } from '../components/AnimatedHeadline';
 
 /** WordPress category slug for members-only posts (Photo Gallery). */
 const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
@@ -38,7 +39,7 @@ export const MembersAreaPage: React.FC = () => {
 
   useEffect(() => {
     if (status === 'loading') return;
-    if (!user) {
+    if (!user && typeof window !== 'undefined' && sessionStorage.getItem('logoutRedirecting') !== '1') {
       navigate('/login/member', { replace: true, state: { from: '/members' } });
     }
   }, [status, user, navigate]);
@@ -93,8 +94,8 @@ export const MembersAreaPage: React.FC = () => {
 
   if (status === 'loading') {
     return (
-      <main className="px-4 pb-16 pt-32 md:px-8 md:pb-24 md:pt-40">
-        <div className="mx-auto max-w-xl">
+      <main className="bg-primary-breath min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
+        <div className="max-w-7xl mx-auto px-6">
           <p className="text-slate-600">Checking your membership…</p>
         </div>
       </main>
@@ -109,16 +110,25 @@ export const MembersAreaPage: React.FC = () => {
   const isMember = Boolean(profile?.is_member);
 
   return (
-    <main className="px-4 pb-16 pt-32 md:px-8 md:pb-24 md:pt-40">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <header>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">
-            Members
-          </p>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+    <main className="bg-primary-breath min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
+      <div className="max-w-7xl mx-auto px-6">
+        <header className="mb-16 md:mb-24 relative">
+          <AnimatedHeadline
+            text="Members"
+            as="h1"
+            className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8 block"
+          />
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
+          >
             Welcome back, {profile?.display_name || user.email || 'Kandie rider'}.
-          </h1>
+          </motion.p>
         </header>
+
+        <div className="max-w-3xl space-y-6">
 
         {!initialMembershipCheckDone ? (
           <p className="text-slate-600">Checking your membership…</p>
@@ -263,6 +273,7 @@ export const MembersAreaPage: React.FC = () => {
           )}
         </div>
       )}
+      </div>
     </main>
   );
 };

@@ -47,10 +47,10 @@ import { ContactModalProvider } from './context/ContactModalContext';
 import { CookieConsentProvider, useCookieConsent } from './context/CookieConsentContext';
 import { AuthProvider } from './context/AuthContext';
 import { MemberLoginOffcanvasProvider } from './context/MemberLoginOffcanvasContext';
-import { MemberLoginPage } from './pages/MemberLoginPage';
-import { ShopLoginPage } from './pages/ShopLoginPage';
+import { MemberLoginPage } from './pages/MemberLoginPage.tsx';
+import { ShopLoginPage } from './pages/ShopLoginPage.tsx';
 import { SignUpPage } from './pages/SignUpPage';
-import { MembersAreaPage } from './pages/MembersAreaPage';
+import { MembersAreaPage } from './pages/MembersAreaPage.tsx';
 
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -86,6 +86,13 @@ const App: React.FC = () => {
       requestAnimationFrame(scrollToTop);
     });
     return () => cancelAnimationFrame(raf);
+  }, [location.pathname]);
+
+  // Clear logout redirect flag when landing on home (so /members doesn't redirect to login next time)
+  useEffect(() => {
+    if (location.pathname === '/') {
+      sessionStorage.removeItem('logoutRedirecting');
+    }
   }, [location.pathname]);
 
   // Google Analytics: send page_view on each SPA route change

@@ -91,9 +91,12 @@ function MemberOffcanvasAccountContent({
   const discordConnected = hasDiscordIdentity(user);
 
   const handleLogout = useCallback(async () => {
-    await logout();
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('logoutRedirecting', '1');
+    }
     onClose();
     onLogoutRedirect();
+    await logout();
   }, [logout, onClose, onLogoutRedirect]);
 
   const handleConnectDiscord = useCallback(async () => {
