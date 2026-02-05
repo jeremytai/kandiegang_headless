@@ -89,15 +89,16 @@ export const OffCanvas: React.FC<OffCanvasProps> = ({
         `}
       >
         {title != null && (
-          <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-            <h2 id="offcanvas-title" className="text-lg font-semibold text-primary-ink">
+          <header className="grid grid-cols-[1fr_auto_1fr] items-center px-6 py-4 border-b border-slate-200">
+            <div />
+            <h2 id="offcanvas-title" className="text-3xl font-light text-secondary-purple-rain text-center">
               {title}
             </h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close panel"
-              className="text-2xl leading-none text-slate-500 hover:text-primary-ink hover:opacity-60"
+              className="justify-self-end text-2xl leading-none text-slate-500 hover:text-primary-ink hover:opacity-60"
             >
               ×
             </button>

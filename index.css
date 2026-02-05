@@ -588,3 +588,8 @@ button, a {
 .gallery-grid-cols-6 {
   grid-template-columns: repeat(6, 1fr) !important;
 }
+
+/* StickyTop login tooltip: position and transform (left/top set via ref in component) */
+.sticky-top-login-tooltip {
+  transform: translateY(-100%);
+}

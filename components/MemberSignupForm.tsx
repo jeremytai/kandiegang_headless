@@ -1,20 +1,15 @@
 /**
- * MemberLoginForm.tsx
- * Reusable members login: password or magic link.
- * Used on the full MemberLoginPage and inside OffCanvas on the event page.
+ * MemberSignupForm.tsx
+ * Passwordless sign-up: Discord or email magic link. Used on SignUpPage and in the member login offcanvas.
  */
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export interface MemberLoginFormProps {
-  /** Called after successful login (e.g. close sidebar and navigate). */
+export interface MemberSignupFormProps {
   onSuccess?: () => void;
-  /** Tighter layout for sidebar/embed use. */
+  onShowLogin?: () => void;
   compact?: boolean;
-  /** When set, "Create one" switches to signup in-place (e.g. sidebar) instead of linking to /signup. */
-  onShowSignup?: () => void;
 }
 
 const inputClass =
@@ -22,8 +17,6 @@ const inputClass =
 const labelClass = 'block text-sm font-medium text-slate-800 mb-1';
 const btnPrimary =
   'inline-flex items-center justify-center rounded-full bg-black px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:bg-slate-400';
-const btnSecondary =
-  'inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-900 disabled:cursor-not-allowed disabled:opacity-50';
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -33,10 +26,10 @@ function DiscordIcon({ className }: { className?: string }) {
   );
 }
 
-export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
+export const MemberSignupForm: React.FC<MemberSignupFormProps> = ({
   onSuccess,
+  onShowLogin,
   compact = false,
-  onShowSignup,
 }) => {
   const { signInWithMagicLink, signInWithDiscord, status } = useAuth();
   const [email, setEmail] = useState('');
@@ -45,12 +38,13 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [discordLoading, setDiscordLoading] = useState(false);
 
-  const handleDiscordSignIn = async () => {
+  const handleDiscordSignUp = async () => {
     setError(null);
     setDiscordLoading(true);
     const { error: discordError } = await signInWithDiscord();
     setDiscordLoading(false);
     if (discordError) setError(discordError);
+    else onSuccess?.();
   };
 
   const handleMagicLink = async (event: React.FormEvent) => {
@@ -74,10 +68,10 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
     return (
       <div className={compact ? 'space-y-3' : 'space-y-4'}>
         <h2 className={compact ? 'text-xl font-bold text-primary-ink' : 'text-2xl font-bold text-primary-ink'}>
-          Check your email
+          <span className="font-gtplanar">Check your email</span>
         </h2>
         <p className="text-slate-600 text-sm">
-          We sent a login link to <strong>{email}</strong>. Click the link to sign in; you&apos;ll be taken straight to the members area. The link expires in about an hour.
+          We sent a signup link to <strong>{email}</strong>. Click the link to create your account and sign in. The link expires in about an hour.
         </p>
         <p className="text-xs text-slate-500">
           Didn&apos;t get it? Check spam, or{' '}
@@ -90,6 +84,15 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
           </button>
           .
         </p>
+        {onShowLogin && (
+          <button
+            type="button"
+            onClick={onShowLogin}
+            className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-900"
+          >
+            Back to log in
+          </button>
+        )}
       </div>
     );
   }
@@ -98,19 +101,17 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
     <div className={compact ? 'space-y-4' : 'space-y-6'}>
       {!compact && (
         <p className="text-slate-600 max-w-prose">
-          Welcome back to Kandie Gang. Log in with your password or get a passwordless link by email.
+          Sign up to get a Kandie Gang account. After signing in, we can link your membership if you&apos;re already a member.
         </p>
       )}
 
-      <p className="text-sm font-normal text-primary-ink">You are just a few clicks away from goodness.</p>
-
       <form onSubmit={handleMagicLink} className="space-y-4">
         <div>
-          <label htmlFor="member-login-email" className={labelClass}>
+          <label htmlFor="member-signup-email" className={labelClass}>
             Email address
           </label>
           <input
-            id="member-login-email"
+            id="member-signup-email"
             type="email"
             autoComplete="email"
             required
@@ -124,22 +125,21 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
           <p className="text-sm text-red-600">{error}</p>
         )}
 
-        <div className="flex flex-col gap-3">
-          <button
-            type="submit"
-            disabled={isSubmitting || status === 'loading' || !email.trim()}
-            className={btnPrimary}
-          >
-            {isSubmitting || status === 'loading' ? 'Sending…' : 'Email me a login link'}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={isSubmitting || status === 'loading' || !email.trim()}
+          className={`w-full ${btnPrimary}`}
+        >
+          {isSubmitting || status === 'loading' ? 'Sending…' : 'Email me a signup link'}
+        </button>
       </form>
 
-      <div className="flex flex-col gap-3">
       <p className="text-center text-sm text-slate-500">or</p>
+
+      <div className="flex flex-col gap-3">
         <button
           type="button"
-          onClick={handleDiscordSignIn}
+          onClick={handleDiscordSignUp}
           disabled={discordLoading || status === 'loading'}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-[#5865F2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4752C4] disabled:cursor-not-allowed disabled:opacity-70"
         >
@@ -148,31 +148,22 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
           ) : (
             <>
               <DiscordIcon className="h-5 w-5" />
-              Sign in with Discord
+              Sign up with Discord
             </>
           )}
         </button>
       </div>
 
-      <p className="text-sm text-slate-600">
-        Don&apos;t have an account?{' '}
-        {onShowSignup ? (
+      {onShowLogin && (
+        <p className="text-sm text-slate-600">
+          Already have an account?{' '}
           <button
             type="button"
-            onClick={onShowSignup}
+            onClick={onShowLogin}
             className="font-medium text-black underline hover:no-underline"
           >
-            Create one
+            Log in
           </button>
-        ) : (
-          <Link to="/signup" className="font-medium text-black underline hover:no-underline">
-            Create one
-          </Link>
-        )}
-      </p>
-      {!compact && (
-        <p className="text-xs text-slate-500">
-          Check your email for the login link or use the reset link from our emails.
         </p>
       )}
     </div>

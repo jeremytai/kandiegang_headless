@@ -43,6 +43,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
   const [isHidden, setIsHidden] = useState(false);
   const [loginTooltip, setLoginTooltip] = useState<{ x: number; y: number } | null>(null);
   const loginButtonRef = useRef<HTMLButtonElement>(null);
+  const loginTooltipRef = useRef<HTMLDivElement>(null);
 
   const location = useLocation();
   const isContactPage = location.pathname === '/contact';
@@ -61,6 +62,13 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
     setLoginTooltip({ x: rect.left + rect.width / 2, y: rect.top - 6 });
   }, []);
   const hideLoginTooltip = useCallback(() => setLoginTooltip(null), []);
+
+  React.useEffect(() => {
+    const el = loginTooltipRef.current;
+    if (!loginTooltip || !el) return;
+    el.style.left = `${loginTooltip.x - 15}px`;
+    el.style.top = `${loginTooltip.y}px`;
+  }, [loginTooltip]);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
@@ -163,12 +171,8 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                     typeof document !== 'undefined' &&
                     createPortal(
                       <div
-                        className="fixed z-[100] pointer-events-none flex flex-col"
-                        style={{
-                          left: loginTooltip.x - 15,
-                          top: loginTooltip.y,
-                          transform: 'translateY(-100%)',
-                        }}
+                        ref={loginTooltipRef}
+                        className="fixed z-[100] pointer-events-none flex flex-col sticky-top-login-tooltip"
                         role="tooltip"
                       >
                         <span className="relative block px-3 py-1.5 text-xs font-medium text-white bg-secondary-purple-rain rounded-[10px] shadow-lg">

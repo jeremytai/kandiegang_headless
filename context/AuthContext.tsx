@@ -197,6 +197,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(loadedUser);
       setProfile(loadedProfile);
       setStatus(loadedUser ? 'authenticated' : 'unauthenticated');
+      if (loadedUser && typeof window !== 'undefined' && window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
     })();
 
     const {
@@ -204,6 +207,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setStatus(session?.user ? 'authenticated' : 'unauthenticated');
+      // Strip hash from URL after OAuth/magic-link callback (Supabase puts tokens in hash)
+      if (session?.user && typeof window !== 'undefined' && window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
       // We intentionally do not eagerly reload profile here – callers
       // should use refreshProfile() when needed to keep things predictable.
     });
@@ -213,6 +220,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  // Strip hash from URL whenever we're authenticated (handles OAuth/magic-link return and trailing #)
+  useEffect(() => {
+    if (status !== 'authenticated' || typeof window === 'undefined') return;
+    if (window.location.hash) {
+      const clean = window.location.pathname + (window.location.search || '') || '/';
+      window.history.replaceState(null, '', clean);
+    }
+  }, [status]);
 
   const refreshProfile = useCallback(async () => {
     if (!supabase) return;
@@ -246,7 +262,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (nextProfile) {
           const { error: upsertError } = await supabase
-            .from<Profile>('profiles')
+            .from('profiles')
             .update({
               is_member: nextProfile.is_member,
               membership_source: nextProfile.membership_source,
@@ -298,9 +314,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
       }
       const redirectTo =
-        typeof window !== 'undefined'
-          ? `${window.location.origin}/members`
-          : undefined;
+        typeof window !== 'undefined' ? `${window.location.origin}/members` : undefined;
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: { emailRedirectTo: redirectTo },
