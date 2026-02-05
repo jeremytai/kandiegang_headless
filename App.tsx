@@ -38,6 +38,7 @@ import { KandieGangCyclingClubPage } from './pages/KandieGangCyclingClubPage';
 import { EventPage } from './pages/EventPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { Footer } from './components/Footer';
+import { AnnouncementBar } from './components/AnnouncementBar';
 import { CookieBanner } from './components/CookieBanner';
 import { CookiePreferencesModal } from './components/CookiePreferencesModal';
 import { PageTransition } from './components/PageTransition';
@@ -49,6 +50,7 @@ const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUnlocked, setIsUnlocked] = useState(getStoredUnlock);
+  const [announcementDismissed, setAnnouncementDismissed] = useState(false);
   const location = useLocation();
 
   const showGate = !isLoading && !isUnlocked;
@@ -113,7 +115,7 @@ const App: React.FC = () => {
           {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
 
           <WeatherStatusBackground />
-          <StickyTop />
+          <StickyTop offsetVariant={announcementDismissed ? 'tight' : 'withBar'} />
 
           {/* Main Content */}
           <motion.div
@@ -124,6 +126,10 @@ const App: React.FC = () => {
               'rounded-b-[24px] rounded-t-none',
             ].join(' ')}
           >
+            <AnnouncementBar
+              message="Please be patient as we go through some changes."
+              onDismiss={() => setAnnouncementDismissed(true)}
+            />
             <Routes>
               <Route element={<PageTransition />}>
                 <Route path="/" element={

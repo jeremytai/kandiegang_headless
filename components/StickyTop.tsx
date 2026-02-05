@@ -14,7 +14,12 @@ import { useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import { Zap, ArrowLeft, Menu, X } from 'lucide-react';
 
-export const StickyTop: React.FC = () => {
+interface StickyTopProps {
+  /** Layout offset variant: with announcement bar or tight to top. */
+  offsetVariant?: 'withBar' | 'tight';
+}
+
+export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
@@ -63,7 +68,7 @@ export const StickyTop: React.FC = () => {
       </AnimatePresence>
 
       <motion.div 
-        className="fixed inset-x-0 top-6 z-[80] pointer-events-none flex flex-col items-center px-6"
+        className={`fixed inset-x-0 ${offsetVariant === 'tight' ? 'top-6' : 'top-16'} z-[80] pointer-events-none flex flex-col items-center px-6`}
         initial={{ y: -100, opacity: 0 }}
         animate={{ 
           y: isHidden ? -120 : 0, 
