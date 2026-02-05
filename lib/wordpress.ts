@@ -24,12 +24,24 @@ const KANDIEGANG_ORIGIN = /^https?:\/\/(www\.)?kandiegang\.com/;
  * Already-CDN URLs are left unchanged. No path rewriting (e.g. 8-digit folder); if CDN returns 403, use the WordPress fallback (e.g. GalleryGrid onError).
  */
 export function transformMediaUrl(url: string, _referenceImageUrl?: string): string {
+  console.log('🔍 Input URL:', url);
+  console.log('🔍 Input URL type:', typeof url);
+  console.log('🔍 Input URL length:', url?.length);
+  console.log('🔍 MEDIA_CDN_BASE:', MEDIA_CDN_BASE);
+  console.log('🔍 Regex test:', KANDIEGANG_ORIGIN.test(url));
+  console.log('🔍 URL includes CDN?:', url.includes(MEDIA_CDN_BASE || ''));
+
   if (!url) return url;
   if (!MEDIA_CDN_BASE) return url;
   if (url.includes(MEDIA_CDN_BASE)) return url;
+
   if (KANDIEGANG_ORIGIN.test(url)) {
-    return url.replace(KANDIEGANG_ORIGIN, MEDIA_CDN_BASE);
+    const transformed = url.replace(KANDIEGANG_ORIGIN, MEDIA_CDN_BASE);
+    console.log('✅ Transformed:', transformed);
+    return transformed;
   }
+
+  console.log('❌ No transform applied');
   return url;
 }
 

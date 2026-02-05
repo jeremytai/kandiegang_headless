@@ -109,16 +109,23 @@ export function normalizeBlocks(
   editorBlocks: StoryEditorBlock[],
   mediaMap: Record<string, NormalizedImage> = {}
 ): NormalizedBlock[] {
+  console.log('📦 normalizeBlocks called');
+  console.log('📦 editorBlocks count:', editorBlocks.length);
+  console.log('📦 mediaMap keys:', Object.keys(mediaMap));
+
   const output: NormalizedBlock[] = [];
   let imageBuffer: NormalizedImage[] = [];
 
   const flushImages = (): void => {
     if (imageBuffer.length === 0) return;
+    console.log('🖼️ Flushing', imageBuffer.length, 'images to gallery');
     output.push({ type: 'gallery', images: imageBuffer, columns: 3 });
     imageBuffer = [];
   };
 
   for (const block of editorBlocks) {
+    console.log('🔍 Processing block:', block.name);
+
     if (block.name === 'core/paragraph') {
       flushImages();
       const content = block.attributes && 'content' in block.attributes
@@ -129,13 +136,18 @@ export function normalizeBlocks(
     }
 
     if (block.name === 'core/image' && block.attributes && 'id' in block.attributes) {
+      console.log('  → core/image with id:', block.attributes.id);
       const resolved = mediaMap[String(block.attributes.id)];
       if (resolved) {
+        console.log('  ✅ Found in mediaMap, URL:', resolved.url);
         imageBuffer.push(resolved);
       } else if ('url' in block.attributes && block.attributes.url) {
+        console.log('  ⚠️ NOT in mediaMap, calling transformMediaUrl with:', block.attributes.url);
+        const transformed = transformMediaUrl(block.attributes.url);
+        console.log('  → Transformed to:', transformed);
         imageBuffer.push({
           id: String(block.attributes.id),
-          url: transformMediaUrl(block.attributes.url),
+          url: transformed,
           sourceUrl: block.attributes.url,
           alt: block.attributes.alt ?? '',
           caption: block.attributes.caption ?? '',
@@ -160,6 +172,7 @@ export function normalizeBlocks(
   }
 
   flushImages();
+  console.log('📦 normalizeBlocks output:', output.length, 'blocks');
   return output;
 }
 
