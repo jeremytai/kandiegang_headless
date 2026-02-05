@@ -107,11 +107,12 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
             y: "-100%",
             transition: { duration: 0.55, ease: [0.85, 0, 0.15, 1] }
           }}
+          style={{ position: 'fixed' }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-secondary-purple-rain"
         >
           <div className="relative flex flex-col items-center">
-            {/* Animated Icon Container */}
-            <div className="w-32 h-32 md:w-48 md:h-48 flex items-center justify-center text-secondary-current">
+            {/* Animated Icon Container — relative so Framer Motion can calculate scroll/layout correctly */}
+            <div className="relative w-32 h-32 md:w-48 md:h-48 flex items-center justify-center text-secondary-current">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={iconIndex}
@@ -124,15 +125,15 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
                     damping: 25,
                     duration: 0.3
                   }}
-                  className="w-full h-full"
+                  className="relative w-full h-full"
                 >
                   {icons[iconIndex]}
                 </motion.div>
               </AnimatePresence>
             </div>
 
-            {/* Loading Status Text */}
-            <div className="mt-16 flex flex-col items-center gap-4">
+            {/* Loading Status Text — relative so Framer Motion can calculate scroll/layout */}
+            <div className="relative mt-16 flex flex-col items-center gap-4">
               <motion.p 
                 key={iconIndex} // Change text as icons change
                 initial={{ opacity: 0, y: 10 }}

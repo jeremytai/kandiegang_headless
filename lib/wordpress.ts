@@ -15,49 +15,22 @@ const WP_GRAPHQL_URL = import.meta.env.VITE_WP_GRAPHQL_URL || 'https://wp-origin
 // Only rewrite media URLs when a CDN base is explicitly set (e.g. public S3 or CloudFront).
 const MEDIA_CDN_BASE = (import.meta.env.VITE_MEDIA_CDN_URL as string | undefined)?.replace(/\/$/, '');
 
-const S3_BUCKET_BASE = 'https://leckerbisschen.s3.eu-central-1.amazonaws.com';
-
-/** Matches /wp-content/uploads/YYYY/MM/DDDDDDDD/ in a URL (8-digit upload folder used by S3/WordPress). */
-const UPLOADS_8DIGIT_FOLDER = /\/wp-content\/uploads\/\d{4}\/\d{2}\/(\d{8})\//;
-
-/**
- * If referenceUrl contains the 8-digit upload folder (e.g. .../2025/11/10165246/...), insert it into url
- * when url has .../uploads/YYYY/MM/filename (missing that folder). API often returns paths without the 8-digit segment; the featured image URL usually has it.
- */
-function ensureUploadsPathWith8DigitFolder(url: string, referenceUrl: string | undefined): string {
-  if (!referenceUrl) return url;
-  const match = referenceUrl.match(UPLOADS_8DIGIT_FOLDER);
-  if (!match) return url;
-  const eightDigits = match[1];
-  // Already has 8-digit folder after year/month?
-  if (UPLOADS_8DIGIT_FOLDER.test(url)) return url;
-  // Replace /uploads/YYYY/MM/ with /uploads/YYYY/MM/DDDDDDDD/
-  const inject = url.replace(
-    /(\/wp-content\/uploads\/\d{4}\/\d{2})\/(?!\d{8}\/)/,
-    `$1/${eightDigits}/`
-  );
-  return inject === url ? url : inject;
-}
+/** Matches kandiegang.com origin (http(s), optional www) for replacement with CDN. */
+const KANDIEGANG_ORIGIN = /^https?:\/\/(www\.)?kandiegang\.com/;
 
 /**
  * Normalizes media URLs so images load correctly.
- * - If VITE_MEDIA_CDN_URL is set: WordPress domains (and S3) are replaced with that CDN.
- * - referenceImageUrl: when set (e.g. post featured image URL), used to fix gallery paths that are missing the 8-digit upload folder (e.g. .../2025/11/10165246/) so they match the working path structure.
+ * When VITE_MEDIA_CDN_URL is set: any kandiegang.com URL is rewritten to the CDN base (e.g. S3).
+ * Already-CDN URLs are left unchanged. No path rewriting (e.g. 8-digit folder); if CDN returns 403, use the WordPress fallback (e.g. GalleryGrid onError).
  */
-export function transformMediaUrl(url: string, referenceImageUrl?: string): string {
+export function transformMediaUrl(url: string, _referenceImageUrl?: string): string {
   if (!url) return url;
-  let out = url;
-  // Fix path: inject 8-digit folder from reference if missing (so S3/WordPress path matches)
-  out = ensureUploadsPathWith8DigitFolder(out, referenceImageUrl);
-  if (MEDIA_CDN_BASE) {
-    out = out
-      .replace(/^https:\/\/www\.kandiegang\.com/, MEDIA_CDN_BASE)
-      .replace(/^https:\/\/kandiegang\.com/, MEDIA_CDN_BASE)
-      .replace(/^http:\/\/www\.kandiegang\.com/, MEDIA_CDN_BASE)
-      .replace(/^http:\/\/kandiegang\.com/, MEDIA_CDN_BASE)
-      .replace(new RegExp(`^${S3_BUCKET_BASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), MEDIA_CDN_BASE);
+  if (!MEDIA_CDN_BASE) return url;
+  if (url.includes(MEDIA_CDN_BASE)) return url;
+  if (KANDIEGANG_ORIGIN.test(url)) {
+    return url.replace(KANDIEGANG_ORIGIN, MEDIA_CDN_BASE);
   }
-  return out;
+  return url;
 }
 
 export interface WPPost {
@@ -262,8 +235,8 @@ export type GetPostsResponse = {
  * Supports cursor-based pagination via optional $after.
  */
 export const GET_CATEGORY_POSTS_QUERY = `
-  query GetCategoryPosts($categorySlug: String!, $first: Int!, $after: String) {
-    category(id: $categorySlug, idType: SLUG) {
+  query GetCategoryPosts($categoryId: ID!, $first: Int!, $after: String) {
+    category(id: $categoryId, idType: SLUG) {
       id
       name
       posts(first: $first, after: $after) {
@@ -320,7 +293,7 @@ export async function getCategoryPosts(
 ): Promise<{ nodes: WPPost[]; pageInfo: WPPostsPageInfo } | null> {
   const data = await wpQuery<CategoryPostsResponse>(
     GET_CATEGORY_POSTS_QUERY,
-    { categorySlug, first, after: after ?? null },
+    { categoryId: categorySlug, first, after: after ?? null },
     { useCache: true }
   );
   if (!data.category?.posts) return null;

@@ -18,12 +18,22 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        proxy: {
+          '/api/geolocation': {
+            target: 'https://ipapi.co',
+            changeOrigin: true,
+            rewrite: (path) => path.replace(/^\/api\/geolocation/, '/json/'),
+          },
+        },
       },
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'import.meta.env.VITE_WP_GRAPHQL_URL': JSON.stringify(env.VITE_WP_GRAPHQL_URL || 'https://demo.wp-graphql.org/graphql'),
+        // Only override if set; otherwise Vite exposes env and lib/wordpress.ts uses its fallback (e.g. wp-origin.kandiegang.com)
+        ...(env.VITE_WP_GRAPHQL_URL
+          ? { 'import.meta.env.VITE_WP_GRAPHQL_URL': JSON.stringify(env.VITE_WP_GRAPHQL_URL) }
+          : {}),
         'import.meta.env.VITE_LAST_GIT_DATE': JSON.stringify(lastGitDate),
       },
       resolve: {

@@ -4,7 +4,7 @@
  * - Cycling outfit suggestion based on current weather (Open-Meteo).
  * - Date (location timezone), location from IP (default Hamburg), temperature and condition.
  * - Kandie Gang logo. Used behind the main content; scroll reveals the white card.
- * Resolves location via IP (ip-api.com), then fetches weather from Open-Meteo when the page loads.
+ * Resolves location via IP (same-origin /api/geolocation proxy to avoid CORS), then fetches weather from Open-Meteo when the page loads.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -19,7 +19,31 @@ const DEFAULT_LOCATION = {
   timezone: 'Europe/Berlin',
 };
 
-const IP_API_URL = 'https://ip-api.com/json/?fields=lat,lon,city,countryName,timezone';
+/** Same-origin proxy (Vite dev proxy or Vercel serverless) to avoid CORS with ipapi.co. */
+const IP_API_URL = '/api/geolocation';
+
+const GEOLOCATION_CACHE_KEY = 'kg_geolocation';
+const GEOLOCATION_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour — avoid 429 from ipapi.co rate limits
+
+function getCachedGeolocation(): { lat: number; lon: number; label: string; timezone: string } | null {
+  try {
+    const raw = sessionStorage.getItem(GEOLOCATION_CACHE_KEY);
+    if (!raw) return null;
+    const { data, fetchedAt } = JSON.parse(raw) as { data: { lat: number; lon: number; label: string; timezone: string }; fetchedAt: number };
+    if (Date.now() - fetchedAt > GEOLOCATION_CACHE_TTL_MS) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedGeolocation(data: { lat: number; lon: number; label: string; timezone: string }) {
+  try {
+    sessionStorage.setItem(GEOLOCATION_CACHE_KEY, JSON.stringify({ data, fetchedAt: Date.now() }));
+  } catch {
+    // ignore
+  }
+}
 
 function openMeteoUrl(lat: number, lon: number): string {
   return `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`;
@@ -108,7 +132,7 @@ export const WeatherStatusBackground: React.FC = () => {
     condition: 'Loading...',
   });
 
-  // Resolve location from IP, then fetch weather
+  // Resolve location from IP (with session cache to avoid 429), then fetch weather
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -116,21 +140,35 @@ export const WeatherStatusBackground: React.FC = () => {
       let lon = DEFAULT_LOCATION.lon;
       let label = DEFAULT_LOCATION.label;
       let timezone = DEFAULT_LOCATION.timezone;
-      try {
-        const res = await fetch(IP_API_URL);
-        if (res.ok) {
-          const ip = await res.json();
-          if (typeof ip.lat === 'number' && typeof ip.lon === 'number') {
-            lat = ip.lat;
-            lon = ip.lon;
-            const parts = [ip.city, ip.countryName].filter(Boolean);
-            if (parts.length) label = parts.join(', ');
-            if (ip.timezone) timezone = ip.timezone;
+
+      const cached = getCachedGeolocation();
+      if (cached) {
+        lat = cached.lat;
+        lon = cached.lon;
+        label = cached.label;
+        timezone = cached.timezone;
+      } else {
+        try {
+          const res = await fetch(IP_API_URL);
+          if (res.ok) {
+            const ip = await res.json();
+            const ipLat = ip.latitude ?? ip.lat;
+            const ipLon = ip.longitude ?? ip.lon;
+            if (typeof ipLat === 'number' && typeof ipLon === 'number') {
+              lat = ipLat;
+              lon = ipLon;
+              const name = ip.country_name ?? ip.countryName;
+              const parts = [ip.city, name].filter(Boolean);
+              if (parts.length) label = parts.join(', ');
+              if (ip.timezone) timezone = ip.timezone;
+              setCachedGeolocation({ lat, lon, label, timezone });
+            }
           }
+        } catch {
+          // Keep Hamburg default
         }
-      } catch {
-        // Keep Hamburg default
       }
+
       if (cancelled) return;
       setLocation({ lat, lon, label, timezone });
       const result = await fetchWeatherByCoords(lat, lon);

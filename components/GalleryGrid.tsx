@@ -4,7 +4,7 @@
  * Used by StoryBlocksRenderer for story galleries (matches Stories/GalleryGrid pattern).
  */
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import type { NormalizedImage } from '../lib/storyGalleries';
@@ -17,6 +17,12 @@ export interface GalleryGridProps {
   className?: string;
 }
 
+/** Resolve display URL: use CDN url; if CDN failed for this image, use original WordPress URL. */
+function getDisplayUrl(img: NormalizedImage, fallbackIds: Set<string>): string {
+  if (fallbackIds.has(img.id) && img.sourceUrl) return img.sourceUrl;
+  return img.url;
+}
+
 export const GalleryGrid: React.FC<GalleryGridProps> = ({
   images,
   columns = DEFAULT_COLUMNS,
@@ -24,8 +30,17 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [cdnFailedIds, setCdnFailedIds] = useState<Set<string>>(new Set());
 
-  const slides = images.map((img) => ({ src: img.url, alt: img.alt }));
+  const handleImageError = useCallback((img: NormalizedImage) => {
+    if (!img.sourceUrl) return;
+    setCdnFailedIds((prev) => new Set(prev).add(img.id));
+  }, []);
+
+  const slides = images.map((img) => ({
+    src: getDisplayUrl(img, cdnFailedIds),
+    alt: img.alt,
+  }));
 
   if (images.length === 0) return null;
 
@@ -56,12 +71,13 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
             }}
           >
             <img
-              src={img.url}
+              src={getDisplayUrl(img, cdnFailedIds)}
               alt={img.alt || ''}
               width={img.width}
               height={img.height}
               loading="lazy"
               className="w-full h-auto block transition-[filter] duration-300 ease-out hover:blur-[10px]"
+              onError={() => handleImageError(img)}
             />
             {img.caption && (
               <p className="text-center mt-1.5 text-sm text-slate-500">{img.caption}</p>

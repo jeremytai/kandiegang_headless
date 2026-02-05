@@ -36,7 +36,10 @@ export type StoryEditorBlock =
 /** Normalized image shape used in gallery items. */
 export interface NormalizedImage {
   id: string;
+  /** CDN/transformed URL (e.g. S3). Use as primary src. */
   url: string;
+  /** Original WordPress URL. Used as fallback when CDN returns 403/404. */
+  sourceUrl?: string;
   alt: string;
   caption: string;
   width?: number;
@@ -85,6 +88,7 @@ export function buildMediaMap(
       {
         id: m.id,
         url: transformMediaUrl(m.sourceUrl, referenceImageUrl),
+        sourceUrl: m.sourceUrl,
         alt: m.altText ?? '',
         caption: m.caption ?? '',
         width: m.mediaDetails?.width,
@@ -132,6 +136,7 @@ export function normalizeBlocks(
         imageBuffer.push({
           id: String(block.attributes.id),
           url: transformMediaUrl(block.attributes.url),
+          sourceUrl: block.attributes.url,
           alt: block.attributes.alt ?? '',
           caption: block.attributes.caption ?? '',
           width: block.attributes.width,

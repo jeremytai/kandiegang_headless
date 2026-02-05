@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { getPostBySlug, getStoryBlocks, WPPost } from '../lib/wordpress';
+import { getPostBySlug, getStoryBlocks, transformMediaUrl, WPPost } from '../lib/wordpress';
 import { buildMediaMap, normalizeBlocks } from '../lib/storyGalleries';
 import type { NormalizedBlock } from '../lib/storyGalleries';
 import { ExpandingHero } from '../components/ExpandingHero';
@@ -114,7 +114,7 @@ export const StoryPage: React.FC = () => {
   usePageMeta(
     post ? `${stripHtml(post.title)} | Kandie Gang` : 'Story | Kandie Gang',
     post ? stripHtml(post.excerpt) : null,
-    post?.featuredImage?.node?.sourceUrl ?? null
+    post?.featuredImage?.node?.sourceUrl ? transformMediaUrl(post.featuredImage.node.sourceUrl) : null
   );
 
   if (!slug) {
@@ -193,7 +193,7 @@ export const StoryPage: React.FC = () => {
             </section>
 
             <ExpandingHero
-              imageUrl={post.featuredImage?.node?.sourceUrl}
+              imageUrl={post.featuredImage?.node?.sourceUrl ? transformMediaUrl(post.featuredImage.node.sourceUrl) : undefined}
               imageAlt={stripHtml(post.title)}
             />
 

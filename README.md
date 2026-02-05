@@ -7,7 +7,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **🎨 Premium UI/UX**: High-fidelity animations with Framer Motion and GSAP, scroll-driven effects, and glassmorphic design elements
 - **📝 Headless WordPress**: Type-safe GraphQL integration for dynamic content management
 - **🌐 Multi-Page Routing**: Landing, About, Community, Stories (Journal), Contact, and Fonts showcase pages
-- **🌤️ Real-Time Weather**: Location from IP (ip-api.com), current conditions from Open-Meteo, and cycling outfit suggestions based on temp and condition
+- **🌤️ Real-Time Weather**: Location from IP (ipapi.co, CORS-enabled), current conditions from Open-Meteo, and cycling outfit suggestions based on temp and condition
 - **📱 Fully Responsive**: Mobile-first design with Tailwind CSS
 - **📬 Newsletter (Substack)**: Signup modal embeds your Substack publication’s form; optional env var
 - **⚡ Performance Optimized**: Build-time WebP conversion and responsive image widths (Sharp), query caching, retry logic
@@ -25,7 +25,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **GSAP + SplitType**: Animated headline (character reveal, color fill: grey → signal yellow → headline color)
 - **Lucide React**: Clean, consistent iconography
 - **Sharp** (dev): Build-time image optimization — convert JPG/PNG to WebP and generate responsive widths (400, 800, 1200)
-- **Open-Meteo + ip-api**: Real-time weather and geolocation for the weather status bar (no API keys required)
+- **Open-Meteo + ipapi.co**: Real-time weather and geolocation for the weather status bar (no API keys; ipapi.co is CORS-enabled for browser use)
 - **WordPress GraphQL**: Headless CMS integration via WPGraphQL
 
 ## 📦 Installation
@@ -98,7 +98,7 @@ kandiegang_headless/
 │   ├── ScrollingHeadline.tsx
 │   ├── StickyBottom.tsx
 │   ├── StickyTop.tsx
-│   └── WeatherStatusBackground.tsx   # Weather bar: ip-api + Open-Meteo, outfit suggestions
+│   └── WeatherStatusBackground.tsx   # Weather bar: ipapi.co + Open-Meteo, outfit suggestions
 ├── pages/              # Page components
 │   ├── AboutPage.tsx
 │   ├── CommunityPage.tsx
@@ -145,7 +145,7 @@ kandiegang_headless/
 - **`PasswordGate.tsx`**: Full-screen password gate shown after the preloader and before the site. Correct password unlocks the site; the unlock is stored in `sessionStorage` for the current tab/session so reloads skip the gate. Password is configured in the component (see [Site password](#-site-password) below).
 - **`Footer.tsx`**: Site footer with navigation and links.
 - **`ImageMarquee.tsx`**: Infinite scrolling image gallery.
-- **`WeatherStatusBackground.tsx`**: Fixed yellow background on the landing page showing date (location timezone), location (from IP via ip-api.com), temperature and condition (Open-Meteo), and cycling outfit suggestion. Location defaults to Hamburg if IP lookup fails. No API keys required.
+- **`WeatherStatusBackground.tsx`**: Fixed yellow background on the landing page showing date (location timezone), location (from IP via ipapi.co), temperature and condition (Open-Meteo), and cycling outfit suggestion. Location defaults to Hamburg if IP lookup fails. No API keys required. Uses ipapi.co because it supports CORS; ip-api.com returns 403 for browser requests.
 
 ### Pages
 
@@ -188,9 +188,17 @@ const data = await wpQuery<{ posts: { nodes: WPPost[] } }>(
 ### WordPress Setup
 
 1. **Install WPGraphQL** on your WordPress site: [WPGraphQL plugin](https://www.wpgraphql.com/). Optionally add [WPGraphQL for ACF](https://www.wpgraphql.com/extensions/wpgraphql-for-acf/) if you use Advanced Custom Fields later.
-2. **Set the env var**: In `.env` (copy from `.env.example`), set `VITE_WP_GRAPHQL_URL` to your GraphQL endpoint (e.g. `https://your-wordpress-site.com/graphql`). If unset, the app uses the public demo endpoint.
-3. **CORS**: Your WordPress site must allow your frontend origin (e.g. `http://localhost:3000`, or your production domain) in CORS so the browser can call the GraphQL API. Use your host’s CORS settings or a plugin that allows the GraphQL endpoint for your origin.
+2. **Set the env var**: In `.env` (copy from `.env.example`), set `VITE_WP_GRAPHQL_URL` to your GraphQL endpoint (e.g. `https://your-wordpress-site.com/graphql`). If unset, the app uses the fallback in `lib/wordpress.ts` (e.g. `https://wp-origin.kandiegang.com/graphql`).
+3. **CORS**: Your WordPress site must allow your frontend origin (e.g. `http://localhost:3000`, or `https://www.kandiegang.com` in production) in CORS so the browser can call the GraphQL API. Use your host’s CORS settings or a plugin that allows the GraphQL endpoint for your origin.
 4. **Validate**: Run the app and open `/stories` and a `/story/:slug`; posts should load. If you see “Unable to connect to WordPress” or “Showing archived content”, check the URL and CORS.
+
+#### Stories not loading in production
+
+If `/stories` shows “Unable to connect to WordPress” or only archived/fallback content:
+
+1. **Set `VITE_WP_GRAPHQL_URL` in your hosting dashboard** (Vercel, Netlify, etc.). Vite bakes env vars at **build time**; add `VITE_WP_GRAPHQL_URL` with your real WordPress GraphQL URL (e.g. `https://wp-origin.kandiegang.com/graphql`), then **redeploy**.
+2. **CORS**: The WordPress server must send `Access-Control-Allow-Origin` including your production origin (e.g. `https://www.kandiegang.com`). Otherwise the browser blocks the GraphQL response.
+3. **Check the endpoint**: In a new tab, open your GraphQL URL; you should see a GraphQL playground or a “GraphQL” response. If the domain or path is wrong, fix `VITE_WP_GRAPHQL_URL` and redeploy.
 
 ## 📬 Newsletter (Substack)
 
@@ -335,9 +343,12 @@ Colors can be accessed via:
 
 ### Weather Integration
 
-The weather status bar uses **Open-Meteo** for current conditions and **ip-api.com** for location (no API keys required). Location defaults to Hamburg if IP lookup fails.
+The weather status bar uses **Open-Meteo** for current conditions and **ipapi.co** for location (no API keys required). Location defaults to Hamburg if IP lookup fails. To avoid CORS (ipapi.co and ip-api.com do not allow direct browser requests), the app calls a **same-origin proxy**:
 
-- **Location**: Resolved from the visitor’s IP (ip-api.com) for lat/lon, city, and timezone.
+- **Development**: Vite proxies `GET /api/geolocation` to `https://ipapi.co/json/` (see `vite.config.ts`).
+- **Production (Vercel)**: The serverless function `api/geolocation.ts` fetches ipapi.co and returns the JSON. Deploy with Vercel so `/api/geolocation` is available; on other hosts you may need to add a similar proxy or the bar will fall back to Hamburg.
+
+- **Location**: Resolved from the visitor’s IP via `/api/geolocation` (proxy to ipapi.co) for lat/lon, city, and timezone.
 - **Weather**: Fetched from Open-Meteo (`/v1/forecast`) for temperature and WMO weather code; codes are mapped to display labels and icons.
 - **Cycling outfit suggestion**: In-app logic based on temperature and condition (e.g. rain/snow) — not from an external AI.
 
@@ -374,6 +385,8 @@ Make sure to set environment variables in your hosting platform:
 - `VITE_WP_GRAPHQL_URL`: Your WordPress GraphQL endpoint
 - `VITE_SUBSTACK_PUBLICATION`: (Optional) Substack publication base URL for newsletter signup embed
 - `VITE_FORMSPREE_CONTACT_FORM_ID`: (Optional) Formspree form ID for the contact form (Contact page and modal)
+
+**Vercel warning: “VITE_ exposes this value to the browser”** — Vite inlines all `VITE_*` vars into the client bundle, so they are visible in the browser. The variables above are **safe to expose**: they are public URLs and public form IDs, not secrets. You can confirm and continue in Vercel when prompted.
 
 ## 📝 License
 

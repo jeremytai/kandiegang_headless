@@ -19,6 +19,7 @@ import {
   getCategories,
   WPCategory,
   clearWPCache,
+  transformMediaUrl,
 } from '../lib/wordpress';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { usePageMeta } from '../hooks/usePageMeta';
@@ -260,7 +261,11 @@ export const StoriesPage: React.FC = () => {
                       >
                         <div className="overflow-hidden rounded-xl aspect-[4/3] bg-slate-100 mb-4">
                           <img
-                            src={story.featuredImage?.node.sourceUrl || 'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?q=80&w=800'}
+                            src={
+                              story.featuredImage?.node?.sourceUrl
+                                ? transformMediaUrl(story.featuredImage.node.sourceUrl)
+                                : 'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?q=80&w=800'
+                            }
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             alt=""
                             loading="lazy"
