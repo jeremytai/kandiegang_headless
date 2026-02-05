@@ -24,7 +24,7 @@ export const FloatingClubMemberBar: React.FC = () => {
       className="fixed bottom-8 left-0 w-full z-40 flex justify-center px-6"
     >
       <Link
-        to="/"
+        to="/kandiegangcyclingclub"
         className="flex w-full max-w-[95vw] md:max-w-[400px] justify-between gap-1 rounded-full bg-[#f9f100] px-5 py-4 text-[13px] font-bold leading-4 backdrop-blur-xl shadow-2xl shadow-black/10 transition-transform active:scale-95 border border-black/5"
       >
         <p className="text-black uppercase tracking-tight">Become a Kandie Gang Member</p>

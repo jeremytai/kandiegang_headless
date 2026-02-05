@@ -72,7 +72,7 @@ export const OffCanvas: React.FC<OffCanvasProps> = ({
         onClick={onClose}
         aria-hidden
         className={`
-          fixed inset-0 z-40 bg-black/40 transition-opacity duration-300
+          fixed inset-0 z-[90] bg-black/40 transition-opacity duration-300
           ${open ? "opacity-100" : "opacity-0 pointer-events-none"}
         `}
       />
@@ -82,7 +82,7 @@ export const OffCanvas: React.FC<OffCanvasProps> = ({
         aria-modal="true"
         aria-labelledby={title ? "offcanvas-title" : undefined}
         className={`
-          fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] bg-white
+          fixed right-0 top-0 z-[100] h-full w-full sm:w-[420px] bg-white
           transform transition-transform duration-300 ease-[cubic-bezier(.4,0,.2,1)]
           ${open ? "translate-x-0" : "translate-x-full"}
           flex flex-col shadow-2xl

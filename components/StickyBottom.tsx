@@ -9,19 +9,29 @@
  */
 
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Zap } from 'lucide-react';
 import { useScrollThreshold } from '../hooks/useScrollThreshold';
+import { useAuth } from '../context/AuthContext';
+
+const MotionLink = motion(Link);
 
 export const StickyBottom: React.FC = () => {
+  const { user, profile } = useAuth();
+  const isMember = Boolean(user && profile?.is_member);
+
   const [isDismissed, setIsDismissed] = useState(() => {
     return localStorage.getItem('sunday_nav_dismissed') === 'true';
   });
-  
+
   const location = useLocation();
   const isPastThreshold = useScrollThreshold(0);
   const isContactPage = location.pathname === '/contact';
+
+  if (isMember) {
+    return null;
+  }
 
   const { scrollY } = useScroll();
   
@@ -62,8 +72,8 @@ export const StickyBottom: React.FC = () => {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="w-full max-w-md sm:max-w-lg md:max-w-xl pointer-events-auto"
           >
-            <motion.a
-              href="/#/kandiegangcyclingclub"
+            <MotionLink
+              to="/kandiegangcyclingclub"
               layout
               className="w-full bg-[#f9f100] border border-black/[0.03] rounded-full px-6 py-4 flex justify-between items-center shadow-2xl shadow-black/10 transition-transform active:scale-[0.98] cursor-pointer no-underline text-inherit"
             >
@@ -74,7 +84,7 @@ export const StickyBottom: React.FC = () => {
                   <span className="text-[11px] font-medium text-black/60">Support the movement</span>
                   <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
                </div>
-            </motion.a>
+            </MotionLink>
           </motion.div>
         )}
       </AnimatePresence>
