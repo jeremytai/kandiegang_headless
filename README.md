@@ -359,7 +359,7 @@ This runs `vite build` then `scripts/optimize-images.js`: images in `public/imag
 
 ### Deployment
 
-The app uses path-based routing (no hash in URLs). SPA fallback is configured so direct visits and refreshes to routes like `/story/foo` work: `vercel.json` (Vercel) and `public/_redirects` (Netlify, copied to `dist` on build) serve `index.html` for all paths.
+Production deploys from the **`main`** branch. The app uses path-based routing (no hash in URLs). SPA fallback is configured so direct visits and refreshes to routes like `/story/foo` work: `vercel.json` (Vercel) and `public/_redirects` (Netlify, copied to `dist` on build) serve `index.html` for all paths.
 
 The app can be deployed to any static hosting service:
 
