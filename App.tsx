@@ -46,6 +46,7 @@ import { PasswordGate, getStoredUnlock } from './components/PasswordGate';
 import { ContactModalProvider } from './context/ContactModalContext';
 import { CookieConsentProvider, useCookieConsent } from './context/CookieConsentContext';
 import { AuthProvider } from './context/AuthContext';
+import { MemberLoginOffcanvasProvider } from './context/MemberLoginOffcanvasContext';
 import { MemberLoginPage } from './pages/MemberLoginPage';
 import { ShopLoginPage } from './pages/ShopLoginPage';
 import { SignUpPage } from './pages/SignUpPage';
@@ -115,6 +116,7 @@ const App: React.FC = () => {
   return (
     <CookieConsentProvider>
       <AuthProvider>
+        <MemberLoginOffcanvasProvider>
         <ContactModalProvider>
           <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
             <Preloader onComplete={() => setIsLoading(false)} />
@@ -182,6 +184,7 @@ const App: React.FC = () => {
             )}
           </div>
         </ContactModalProvider>
+        </MemberLoginOffcanvasProvider>
         {isUnlocked && (
           <>
             <CookieBanner />

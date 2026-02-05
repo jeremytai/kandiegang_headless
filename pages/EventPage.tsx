@@ -3,17 +3,22 @@
  * Standalone event page (e.g. UX Connect 26). Renders title, description,
  * date/location, speakers, and partners from event data.
  * Route: /event/:slug (e.g. /event/ux-connect-26)
+ * CTA: logged-in users go to /members; others open a login sidebar.
  */
 
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Calendar, ExternalLink } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import { getEventBySlug } from "../lib/events";
 import { AnimatedHeadline } from "../components/AnimatedHeadline";
+import { useAuth } from "../context/AuthContext";
+import { useMemberLoginOffcanvas } from "../context/MemberLoginOffcanvasContext";
 
 export const EventPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { user, status } = useAuth();
+  const { openMemberLogin } = useMemberLoginOffcanvas();
   const event = slug ? getEventBySlug(slug) : undefined;
 
   if (!slug || !event) {
@@ -38,7 +43,6 @@ export const EventPage: React.FC = () => {
     dateRange,
     time,
     price,
-    ctaUrl,
     ctaLabel,
     speakers,
     partners,
@@ -92,25 +96,35 @@ export const EventPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Price & CTA */}
-        {(price != null || (ctaUrl != null && ctaLabel != null)) && (
+        {/* Price & CTA — logged in: link to /members; else: open login sidebar */}
+        {(price != null || ctaLabel != null) && (
           <section className="mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-2xl bg-primary-ecru border border-primary-ecru">
             {price != null && (
               <p className="text-sm md:text-base text-slate-700 font-medium m-0">
                 {price}
               </p>
             )}
-            {ctaUrl != null && ctaLabel != null && (
-              <a
-                href={ctaUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-secondary-purple-rain px-5 py-2.5 text-sm font-medium text-white hover:bg-secondary-current transition-colors shrink-0"
-              >
-                {ctaLabel}
-                <ExternalLink className="w-4 h-4" aria-hidden />
-              </a>
-            )}
+            {ctaLabel != null &&
+              (status === "loading" ? (
+                <span className="inline-flex items-center gap-2 rounded-full bg-secondary-purple-rain/70 px-5 py-2.5 text-sm font-medium text-white shrink-0">
+                  {ctaLabel}
+                </span>
+              ) : user ? (
+                <Link
+                  to="/members"
+                  className="inline-flex items-center gap-2 rounded-full bg-secondary-purple-rain px-5 py-2.5 text-sm font-medium text-white hover:bg-secondary-current transition-colors shrink-0"
+                >
+                  {ctaLabel}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={openMemberLogin}
+                  className="inline-flex items-center gap-2 rounded-full bg-secondary-purple-rain px-5 py-2.5 text-sm font-medium text-white hover:bg-secondary-current transition-colors shrink-0"
+                >
+                  {ctaLabel}
+                </button>
+              ))}
           </section>
         )}
 

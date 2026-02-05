@@ -12,11 +12,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useContactModal } from '../context/ContactModalContext';
 import { useCookieConsent } from '../context/CookieConsentContext';
+import { useMemberLoginOffcanvas } from '../context/MemberLoginOffcanvasContext';
+import { useAuth } from '../context/AuthContext';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { openContactModal } = useContactModal();
   const { openCookiePreferences } = useCookieConsent();
+  const { openMemberLogin } = useMemberLoginOffcanvas();
+  const { user } = useAuth();
 
   return (
     <footer className="relative bg-white border-t border-slate-50 font-medium text-[13px]">
@@ -33,7 +37,7 @@ export const Footer: React.FC = () => {
               <li><p className="text-secondary-current uppercase tracking-widest text-[10px] font-bold mb-1">Explore</p></li>
               <FooterLink to="/community" label="Community" />
               <FooterLink to="/stories" label="Stories" />
-              <FooterLink to="/members" label="Members" />
+              <FooterMemberLink openMemberLogin={openMemberLogin} isLoggedIn={Boolean(user)} />
               <FooterLink to="/shop" label="Shop" />
               <FooterContactLink onOpenContact={openContactModal} />
             </ul>
@@ -113,6 +117,30 @@ const FooterLink = ({ to, label }: { to: string; label: string }) => (
     <Link to={to} className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black block">
       {label}
     </Link>
+  </li>
+);
+
+const FooterMemberLink: React.FC<{ openMemberLogin: () => void; isLoggedIn: boolean }> = ({
+  openMemberLogin,
+  isLoggedIn,
+}) => (
+  <li>
+    {isLoggedIn ? (
+      <Link
+        to="/members"
+        className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black block"
+      >
+        Members
+      </Link>
+    ) : (
+      <button
+        type="button"
+        onClick={openMemberLogin}
+        className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black block text-left w-full"
+      >
+        Members
+      </button>
+    )}
   </li>
 );
 

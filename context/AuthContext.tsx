@@ -77,6 +77,10 @@ async function loadUserAndProfile(): Promise<{
   user: User | null;
   profile: Profile | null;
 }> {
+  if (!supabase) {
+    return { user: null, profile: null };
+  }
+
   const { data: sessionResult, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) {
     // eslint-disable-next-line no-console
@@ -124,6 +128,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initial session + profile load
   useEffect(() => {
+    if (!supabase) {
+      setStatus('unauthenticated');
+      return;
+    }
+
     let isMounted = true;
     (async () => {
       const { user: loadedUser, profile: loadedProfile } = await loadUserAndProfile();
@@ -149,6 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const refreshProfile = useCallback(async () => {
+    if (!supabase) return;
     const { user: loadedUser, profile: loadedProfile } = await loadUserAndProfile();
     setUser(loadedUser);
     setProfile(loadedProfile);
@@ -202,6 +212,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(
     async (email: string, password: string): Promise<{ error?: string }> => {
+      if (!supabase) {
+        return { error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+      }
       setStatus('loading');
       const { error, data } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -224,6 +237,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithMagicLink = useCallback(
     async (email: string): Promise<{ error?: string }> => {
+      if (!supabase) {
+        return { error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+      }
       const redirectTo =
         typeof window !== 'undefined'
           ? `${window.location.origin}/members`
@@ -246,6 +262,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password: string,
       options?: { displayName?: string }
     ): Promise<{ error?: string; needsEmailConfirmation?: boolean }> => {
+      if (!supabase) {
+        return { error: 'Sign-up is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+      }
       setStatus('loading');
       const { error, data } = await supabase.auth.signUp({
         email: email.trim(),
@@ -276,7 +295,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(async () => {
     setStatus('loading');
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
     setProfile(null);
     setStatus('unauthenticated');
