@@ -215,8 +215,8 @@ export const StoriesPage: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {/* Category filter */}
-              {categories.length > 0 && (
+              {/* Category filter - hidden for now */}
+              {false && categories.length > 0 && (
                 <nav className="mb-10 md:mb-14 flex flex-wrap items-center gap-2" aria-label="Filter by category">
                   <button
                     type="button"
