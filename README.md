@@ -191,6 +191,7 @@ const data = await wpQuery<{ posts: { nodes: WPPost[] } }>(
 2. **Set the env var**: In `.env` (copy from `.env.example`), set `VITE_WP_GRAPHQL_URL` to your GraphQL endpoint (e.g. `https://your-wordpress-site.com/graphql`). If unset, the app uses the fallback in `lib/wordpress.ts` (e.g. `https://wp-origin.kandiegang.com/graphql`).
 3. **CORS**: Your WordPress site must allow your frontend origin (e.g. `http://localhost:3000`, or `https://www.kandiegang.com` in production) in CORS so the browser can call the GraphQL API. Use your host’s CORS settings or a plugin that allows the GraphQL endpoint for your origin.
 4. **Validate**: Run the app and open `/stories` and a `/story/:slug`; posts should load. If you see “Unable to connect to WordPress” or “Showing archived content”, check the URL and CORS.
+5. **Media CDN (optional)**: If you set `VITE_MEDIA_CDN_URL` so story images are served from S3, make the AWS bucket public. Example public image URL: `https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/11/10172203/251031_halloween_gravelo_abbett-72-scaled.jpg`
 
 #### Stories not loading in production
 
