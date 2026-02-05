@@ -173,8 +173,12 @@ const App: React.FC = () => {
           {(isMinimalLanding ? ['/stories', '/about', '/kandiegangcyclingclub'] : ['/', '/stories', '/about', '/kandiegangcyclingclub']).includes(location.pathname) && <StickyBottom />}
         </div>
       </ContactModalProvider>
-      <CookieBanner />
-      <CookiePreferencesModalWrapper />
+      {isUnlocked && (
+        <>
+          <CookieBanner />
+          <CookiePreferencesModalWrapper />
+        </>
+      )}
     </CookieConsentProvider>
   );
 };
