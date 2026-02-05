@@ -1,0 +1,309 @@
+/**
+ * AuthContext.tsx
+ * Supabase-backed authentication context for Kandiegang headless frontend.
+ *
+ * Responsibilities:
+ * - Keep track of current Supabase auth session (user).
+ * - Load and expose the matching `profiles` row.
+ * - Bridge membership status from WordPress into Supabase profiles.
+ * - Provide `login`, `logout`, and `refreshProfile` helpers.
+ */
+
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabaseClient';
+import { fetchMembershipStatus } from '../lib/wordpress';
+
+type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+
+export type MembershipSource = 'wordpress' | 'supabase' | 'unknown' | null;
+
+export interface Profile {
+  id: string;
+  email: string | null;
+  display_name: string | null;
+  wp_user_id: number | null;
+  is_member: boolean;
+  membership_source: MembershipSource;
+  /** Active WooCommerce membership plan names (e.g. "Kandie Gang Cycling Club Membership"). */
+  membership_plans: string[];
+  /** Earliest active membership start (YYYY-MM-DD). */
+  member_since: string | null;
+  /** Latest active membership expiration (YYYY-MM-DD). */
+  membership_expiration: string | null;
+}
+
+type AuthContextValue = {
+  status: AuthStatus;
+  user: User | null;
+  profile: Profile | null;
+  /**
+   * Email/password login using Supabase auth.
+   * Returns an error message on failure so callers can show UX.
+   */
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  /**
+   * Passwordless: send a magic link to the email. User clicks the link to sign in.
+   * Returns { error } on failure; on success, show "Check your email" (no session until they click the link).
+   */
+  signInWithMagicLink: (email: string) => Promise<{ error?: string }>;
+  /**
+   * Email/password sign-up. Optional displayName is stored in user_metadata and synced to profiles by the DB trigger.
+   * Returns { error } on failure; { needsEmailConfirmation: true } if Supabase is set to confirm email and no session was created.
+   */
+  signUp: (
+    email: string,
+    password: string,
+    options?: { displayName?: string }
+  ) => Promise<{ error?: string; needsEmailConfirmation?: boolean }>;
+  logout: () => Promise<void>;
+  /**
+   * Reloads the Supabase profile and, if possible, reconciles membership
+   * status from WordPress into Supabase.
+   */
+  refreshProfile: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+async function loadUserAndProfile(): Promise<{
+  user: User | null;
+  profile: Profile | null;
+}> {
+  const { data: sessionResult, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) {
+    // eslint-disable-next-line no-console
+    console.warn('[AuthContext] Failed to read Supabase session', sessionError);
+  }
+
+  const user = sessionResult?.session?.user ?? null;
+  if (!user) {
+    return { user: null, profile: null };
+  }
+
+  const { data: raw, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError) {
+    // eslint-disable-next-line no-console
+    console.warn('[AuthContext] Failed to load profile for user', user.id, profileError);
+    return { user, profile: null };
+  }
+
+  if (!raw) return { user, profile: null };
+
+  // Normalize: PostgREST returns snake_case; ensure we have a consistent shape
+  const profile: Profile = {
+    id: raw.id,
+    email: raw.email ?? null,
+    display_name: raw.display_name ?? null,
+    wp_user_id: raw.wp_user_id ?? null,
+    is_member: Boolean(raw.is_member),
+    membership_source: raw.membership_source ?? null,
+    membership_plans: Array.isArray(raw.membership_plans) ? raw.membership_plans : [],
+    member_since: raw.member_since ?? null,
+    membership_expiration: raw.membership_expiration ?? null,
+  };
+  return { user, profile };
+}
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [status, setStatus] = useState<AuthStatus>('loading');
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  // Initial session + profile load
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      const { user: loadedUser, profile: loadedProfile } = await loadUserAndProfile();
+      if (!isMounted) return;
+      setUser(loadedUser);
+      setProfile(loadedProfile);
+      setStatus(loadedUser ? 'authenticated' : 'unauthenticated');
+    })();
+
+    const {
+      data: authListener,
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setStatus(session?.user ? 'authenticated' : 'unauthenticated');
+      // We intentionally do not eagerly reload profile here – callers
+      // should use refreshProfile() when needed to keep things predictable.
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    const { user: loadedUser, profile: loadedProfile } = await loadUserAndProfile();
+    setUser(loadedUser);
+    setProfile(loadedProfile);
+    setStatus(loadedUser ? 'authenticated' : 'unauthenticated');
+
+    // Bridge membership status from WordPress if we have an identity to look up.
+    if (!loadedUser) return;
+
+    const emailForLookup =
+      loadedProfile?.email ?? loadedUser.email ?? null;
+
+    if (!emailForLookup) return;
+
+    try {
+      // Don't overwrite membership when Supabase is the source of truth for this user (e.g. manual grant or migrated member).
+      if (loadedProfile?.membership_source === 'supabase') return;
+
+      const membership = await fetchMembershipStatus(emailForLookup);
+
+      if (membership && typeof membership.isMember === 'boolean') {
+        const nextProfile: Profile | null = loadedProfile
+          ? {
+              ...loadedProfile,
+              is_member: membership.isMember,
+              membership_source: membership.membershipSource ?? 'wordpress',
+            }
+          : null;
+
+        if (nextProfile) {
+          const { error: upsertError } = await supabase
+            .from<Profile>('profiles')
+            .update({
+              is_member: nextProfile.is_member,
+              membership_source: nextProfile.membership_source,
+            })
+            .eq('id', nextProfile.id);
+
+          if (upsertError) {
+            // eslint-disable-next-line no-console
+            console.warn('[AuthContext] Failed to update membership flags in Supabase', upsertError);
+          } else {
+            setProfile(nextProfile);
+          }
+        }
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn('[AuthContext] Failed to bridge membership status from WordPress', error);
+    }
+  }, []);
+
+  const login = useCallback(
+    async (email: string, password: string): Promise<{ error?: string }> => {
+      setStatus('loading');
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        setStatus('unauthenticated');
+        return { error: error.message || 'Unable to log in. Please try again.' };
+      }
+
+      const sessionUser = data.session?.user ?? null;
+      setUser(sessionUser);
+      setStatus(sessionUser ? 'authenticated' : 'unauthenticated');
+      await refreshProfile();
+      return {};
+    },
+    [refreshProfile]
+  );
+
+  const signInWithMagicLink = useCallback(
+    async (email: string): Promise<{ error?: string }> => {
+      const redirectTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/members`
+          : undefined;
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { emailRedirectTo: redirectTo },
+      });
+      if (error) {
+        return { error: error.message || 'Could not send the login link. Please try again.' };
+      }
+      return {};
+    },
+    []
+  );
+
+  const signUp = useCallback(
+    async (
+      email: string,
+      password: string,
+      options?: { displayName?: string }
+    ): Promise<{ error?: string; needsEmailConfirmation?: boolean }> => {
+      setStatus('loading');
+      const { error, data } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: options?.displayName
+            ? { display_name: options.displayName }
+            : undefined,
+        },
+      });
+
+      if (error) {
+        setStatus('unauthenticated');
+        return { error: error.message || 'Unable to create account. Please try again.' };
+      }
+
+      const sessionUser = data.session?.user ?? null;
+      setUser(sessionUser);
+      setStatus(sessionUser ? 'authenticated' : 'unauthenticated');
+      if (sessionUser) {
+        await refreshProfile();
+        return {};
+      }
+      return { needsEmailConfirmation: true };
+    },
+    [refreshProfile]
+  );
+
+  const logout = useCallback(async () => {
+    setStatus('loading');
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
+    setStatus('unauthenticated');
+  }, []);
+
+  const value: AuthContextValue = useMemo(
+    () => ({
+      status,
+      user,
+      profile,
+      login,
+      signInWithMagicLink,
+      signUp,
+      logout,
+      refreshProfile,
+    }),
+    [status, user, profile, login, signInWithMagicLink, signUp, logout, refreshProfile]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = (): AuthContextValue => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return ctx;
+};
+

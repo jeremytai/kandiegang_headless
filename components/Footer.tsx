@@ -33,6 +33,7 @@ export const Footer: React.FC = () => {
               <li><p className="text-secondary-current uppercase tracking-widest text-[10px] font-bold mb-1">Explore</p></li>
               <FooterLink to="/community" label="Community" />
               <FooterLink to="/stories" label="Stories" />
+              <FooterLink to="/members" label="Members" />
               <FooterLink to="/shop" label="Shop" />
               <FooterContactLink onOpenContact={openContactModal} />
             </ul>

@@ -478,3 +478,95 @@ export async function getCategories(first = 100): Promise<WPCategory[]> {
 export function clearWPCache(): void {
   queryCache.clear();
 }
+
+/**
+ * Lightweight membership status as seen from WordPress.
+ * This is intentionally minimal and defensive so the frontend degrades gracefully
+ * if the underlying schema changes.
+ */
+export type WordpressMembershipStatus = {
+  isMember: boolean;
+  membershipSource: 'wordpress' | 'supabase' | 'unknown';
+  roles?: string[];
+};
+
+const GET_MEMBERSHIP_STATUS_QUERY = `
+  query GetMembershipStatus($email: String!, $id: ID, $idType: UserNodeIdTypeEnum) {
+    user(id: $id, idType: $idType) @include(if: $id) {
+      id
+      email
+      roles {
+        nodes {
+          name
+          slug
+        }
+      }
+    }
+    userByEmail(email: $email) {
+      id
+      email
+      roles {
+        nodes {
+          name
+          slug
+        }
+      }
+    }
+  }
+`;
+
+type MembershipStatusResponse = {
+  user: {
+    roles?: { nodes?: Array<{ name: string; slug: string }> };
+  } | null;
+  userByEmail: {
+    roles?: { nodes?: Array<{ name: string; slug: string }> };
+  } | null;
+};
+
+/**
+ * Fetches membership status from WordPress given an email or WP user id.
+ * This is a best-effort helper: if anything fails, it returns "not a member"
+ * rather than throwing, so the frontend can still rely on Supabase flags.
+ */
+export async function fetchMembershipStatus(
+  emailOrWpId: string | number
+): Promise<WordpressMembershipStatus> {
+  const email =
+    typeof emailOrWpId === 'string' && emailOrWpId.includes('@') ? emailOrWpId : '';
+
+  try {
+    const data = await wpQuery<MembershipStatusResponse>(
+      GET_MEMBERSHIP_STATUS_QUERY,
+      {
+        email,
+        id: typeof emailOrWpId === 'number' ? String(emailOrWpId) : null,
+        idType: typeof emailOrWpId === 'number' ? 'DATABASE_ID' : null,
+      },
+      { useCache: false }
+    );
+
+    const roles =
+      data.user?.roles?.nodes ??
+      data.userByEmail?.roles?.nodes ??
+      [];
+
+    const roleSlugs = roles.map((role) => role.slug);
+
+    // Heuristic: treat specific roles as "member". Adjust as needed in WordPress.
+    const MEMBER_ROLE_SLUGS = ['kandiegang_member', 'member', 'subscriber'];
+    const isMember = roleSlugs.some((slug) => MEMBER_ROLE_SLUGS.includes(slug));
+
+    return {
+      isMember,
+      membershipSource: 'wordpress',
+      roles: roleSlugs,
+    };
+  } catch (error) {
+    console.warn('Failed to fetch membership status from WordPress:', error);
+    return {
+      isMember: false,
+      membershipSource: 'unknown',
+    };
+  }
+}

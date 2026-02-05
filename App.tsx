@@ -45,6 +45,11 @@ import { PageTransition } from './components/PageTransition';
 import { PasswordGate, getStoredUnlock } from './components/PasswordGate';
 import { ContactModalProvider } from './context/ContactModalContext';
 import { CookieConsentProvider, useCookieConsent } from './context/CookieConsentContext';
+import { AuthProvider } from './context/AuthContext';
+import { MemberLoginPage } from './pages/MemberLoginPage';
+import { ShopLoginPage } from './pages/ShopLoginPage';
+import { SignUpPage } from './pages/SignUpPage';
+import { MembersAreaPage } from './pages/MembersAreaPage';
 
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -109,70 +114,81 @@ const App: React.FC = () => {
 
   return (
     <CookieConsentProvider>
-      <ContactModalProvider>
-        <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
-          <Preloader onComplete={() => setIsLoading(false)} />
-          {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
+      <AuthProvider>
+        <ContactModalProvider>
+          <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
+            <Preloader onComplete={() => setIsLoading(false)} />
+            {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
 
-          <WeatherStatusBackground />
-          <StickyTop offsetVariant={announcementDismissed ? 'tight' : 'withBar'} />
+            <WeatherStatusBackground />
+            <StickyTop offsetVariant={announcementDismissed ? 'tight' : 'withBar'} />
 
-          {/* Main Content */}
-          <motion.div
-            style={{ scale, opacity, y, transformOrigin: 'bottom center' }}
-            className={[
-              "relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)]",
-              // Keep a flat edge at the top on all pages, while keeping the bottom corners rounded.
-              'rounded-b-[24px] rounded-t-none',
-            ].join(' ')}
-          >
-            <AnnouncementBar
-              message="Please be patient as we go through some changes."
-              onDismiss={() => setAnnouncementDismissed(true)}
-            />
-            <Routes>
-              <Route element={<PageTransition />}>
-                <Route path="/" element={
-                  <>
-                    <LandingPage />
-                    <HorizontalRevealSection />
-                    <CompanySection />
-                    <FAQSection />
-                  </>
-                } />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/community" element={<CommunityPage />} />
-                <Route path="/stories" element={<StoriesPage />} />
-                <Route path="/story/:slug" element={<StoryPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                <Route path="/imprint" element={<ImprintPage />} />
-                <Route path="/waiver" element={<WaiverPage />} />
-                <Route path="/kandiecode" element={<KandieCodePage />} />
-                <Route path="/ridelevels" element={<RideLevelsPage />} />
-                <Route path="/kandiegangcyclingclub" element={<KandieGangCyclingClubPage />} />
-                <Route path="/event/:slug" element={<EventPage />} />
-                <Route path="/fonts" element={<FontsPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Route>
-            </Routes>
+            {/* Main Content */}
+            <motion.div
+              style={{ scale, opacity, y, transformOrigin: 'bottom center' }}
+              className={[
+                "relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)]",
+                // Keep a flat edge at the top on all pages, while keeping the bottom corners rounded.
+                'rounded-b-[24px] rounded-t-none',
+              ].join(' ')}
+            >
+              <AnnouncementBar
+                message="Please be patient as we go through some changes."
+                onDismiss={() => setAnnouncementDismissed(true)}
+              />
+              <Routes>
+                <Route element={<PageTransition />}>
+                  <Route
+                    path="/"
+                    element={
+                      <>
+                        <LandingPage />
+                        <HorizontalRevealSection />
+                        <CompanySection />
+                        <FAQSection />
+                      </>
+                    }
+                  />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/community" element={<CommunityPage />} />
+                  <Route path="/stories" element={<StoriesPage />} />
+                  <Route path="/story/:slug" element={<StoryPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                  <Route path="/imprint" element={<ImprintPage />} />
+                  <Route path="/waiver" element={<WaiverPage />} />
+                  <Route path="/kandiecode" element={<KandieCodePage />} />
+                  <Route path="/ridelevels" element={<RideLevelsPage />} />
+                  <Route path="/kandiegangcyclingclub" element={<KandieGangCyclingClubPage />} />
+                  <Route path="/event/:slug" element={<EventPage />} />
+                  <Route path="/fonts" element={<FontsPage />} />
+                  <Route path="/login/member" element={<MemberLoginPage />} />
+                  <Route path="/login/shop" element={<ShopLoginPage />} />
+                  <Route path="/signup" element={<SignUpPage />} />
+                  <Route path="/members" element={<MembersAreaPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Route>
+              </Routes>
 
-            <NewsletterSection />
-            <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
-            <Footer />
-          </motion.div>
+              <NewsletterSection />
+              <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
+              <Footer />
+            </motion.div>
 
-          {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
-          <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
-          {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && <StickyBottom />}
-        </div>
-      </ContactModalProvider>
-      {isUnlocked && (
-        <>
-          <CookieBanner />
-          <CookiePreferencesModalWrapper />
-        </>
-      )}
+            {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
+            <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
+            {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && (
+              <StickyBottom />
+            )}
+          </div>
+        </ContactModalProvider>
+        {isUnlocked && (
+          <>
+            <CookieBanner />
+            <CookiePreferencesModalWrapper />
+          </>
+        )}
+      </AuthProvider>
     </CookieConsentProvider>
   );
 };
