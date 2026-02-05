@@ -28,13 +28,6 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
   columns = DEFAULT_COLUMNS,
   className = '',
 }) => {
-  // Debug logging
-  console.log('🖼️ Gallery images:', images.map((img) => ({
-    id: img.id,
-    url: img.url,
-    sourceUrl: img.sourceUrl,
-  })));
-
   const [isOpen, setIsOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [cdnFailedIds, setCdnFailedIds] = useState<Set<string>>(new Set());
