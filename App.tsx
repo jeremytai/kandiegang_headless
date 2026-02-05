@@ -41,16 +41,20 @@ import { Footer } from './components/Footer';
 import { CookieBanner } from './components/CookieBanner';
 import { CookiePreferencesModal } from './components/CookiePreferencesModal';
 import { PageTransition } from './components/PageTransition';
+import { PasswordGate, getStoredUnlock } from './components/PasswordGate';
 import { ContactModalProvider } from './context/ContactModalContext';
 import { CookieConsentProvider, useCookieConsent } from './context/CookieConsentContext';
 
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUnlocked, setIsUnlocked] = useState(getStoredUnlock);
   const location = useLocation();
 
+  const showGate = !isLoading && !isUnlocked;
+
   useEffect(() => {
-    if (isLoading) {
+    if (isLoading || showGate) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -58,7 +62,7 @@ const App: React.FC = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isLoading]);
+  }, [isLoading, showGate]);
 
   // Scroll to top on every route change (Athletics-style: new page loads from top)
   useEffect(() => {
@@ -109,6 +113,7 @@ const App: React.FC = () => {
       <ContactModalProvider>
         <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
           <Preloader onComplete={() => setIsLoading(false)} />
+          {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
 
           <WeatherStatusBackground />
           {(!isMinimalLanding || location.pathname !== '/') && <StickyTop />}

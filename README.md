@@ -12,6 +12,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **📬 Newsletter (Substack)**: Signup modal embeds your Substack publication’s form; optional env var
 - **⚡ Performance Optimized**: Build-time WebP conversion and responsive image widths (Sharp), query caching, retry logic
 - **🎭 Advanced Animations**: Animated headline (split-type char reveal + color fill), spring physics, scroll progress tracking
+- **🔐 Site password**: Optional full-screen gate after the preloader; unlock persists for the session (sessionStorage)
 
 ## 🚀 Tech Stack
 
@@ -93,6 +94,7 @@ kandiegang_headless/
 │   ├── HorizontalRevealSection.tsx
 │   ├── ImageMarquee.tsx
 │   ├── Preloader.tsx
+│   ├── PasswordGate.tsx      # Password gate after preloader (session unlock)
 │   ├── ScrollingHeadline.tsx
 │   ├── StickyBottom.tsx
 │   ├── StickyTop.tsx
@@ -140,6 +142,7 @@ kandiegang_headless/
 - **`StickyTop.tsx` / `StickyBottom.tsx`**: Glassmorphic floating containers that house primary navigation. They feature "scroll out" logic to disappear when the user moves deep into the page.
 - **`FloatingClubMemberBar.tsx`**: A call-to-action pill visible on page load that gracefully exits as the user scrolls past the hero.
 - **`Preloader.tsx`**: Loading animation that displays on initial page load.
+- **`PasswordGate.tsx`**: Full-screen password gate shown after the preloader and before the site. Correct password unlocks the site; the unlock is stored in `sessionStorage` for the current tab/session so reloads skip the gate. Password is configured in the component (see [Site password](#-site-password) below).
 - **`Footer.tsx`**: Site footer with navigation and links.
 - **`ImageMarquee.tsx`**: Infinite scrolling image gallery.
 - **`WeatherStatusBackground.tsx`**: Fixed yellow background on the landing page showing date (location timezone), location (from IP via ip-api.com), temperature and condition (Open-Meteo), and cycling outfit suggestion. Location defaults to Hamburg if IP lookup fails. No API keys required.
@@ -219,6 +222,24 @@ The contact form on the **Contact** page (`/contact`) and in the **Contact modal
 4. Restart the dev server so the new env var is picked up.
 
 The shared `ContactForm` component (`components/ContactForm.tsx`) is used on both the Contact page and inside `ContactModal`. If `VITE_FORMSPREE_CONTACT_FORM_ID` is not set, the form area shows instructions to set the env var. On submit errors, the form displays Formspree’s error message when available. For stronger spam protection after enabling AJAX, you can add reCAPTCHA v3 or Turnstile in your Formspree dashboard.
+
+## 🔐 Site password
+
+The site can be protected with a full-screen password gate. It appears **after** the preloader finishes and **before** the homepage (or any other page) is shown.
+
+### Flow
+
+1. **Preloader** runs (glyphs, progress, “Let’s GOOOO!”).
+2. Preloader exits → **password gate** appears (same purple background, “Enter password”).
+3. User enters the correct password and submits → gate fades out → site loads.
+4. Unlock is stored in **sessionStorage** for the current tab: reloads in the same tab skip the gate; a new tab or new session will see preloader then gate again.
+
+### Configuration
+
+- The password is set in `components/PasswordGate.tsx` (constant `SITE_PASSWORD`). The current value is **`letsgo!`**.
+- To change or remove the gate, edit `PasswordGate.tsx` (e.g. change the constant or remove the gate from `App.tsx`).
+
+This is a simple client-side lock suitable for soft launch or previews; it is not a substitute for server-side access control.
 
 ### Discord notifications
 
