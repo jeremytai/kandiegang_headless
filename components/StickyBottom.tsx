@@ -30,16 +30,16 @@ export const StickyBottom: React.FC = () => {
   const isContactPage = location.pathname === '/contact';
   const isCyclingClubPage = location.pathname === '/kandiegangcyclingclub';
 
-  if (isMember) {
-    return null;
-  }
-
+  // Call all hooks unconditionally to satisfy Rules of Hooks (avoids React #300 on auth change, e.g. Discord OAuth return).
   const { scrollY } = useScroll({
     layoutEffect: false,
   });
-  
   const bottomYOffset = useTransform(scrollY, [1200, 1800], [0, 150]);
   const bottomOpacity = useTransform(scrollY, [1200, 1800], [1, 0]);
+
+  if (isMember) {
+    return null;
+  }
 
   const handleResetDismiss = () => {
     setIsDismissed(false);
