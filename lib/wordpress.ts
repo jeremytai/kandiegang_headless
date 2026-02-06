@@ -26,8 +26,16 @@ const KANDIEGANG_ORIGIN = /^https?:\/\/(www\.)?kandiegang\.com/;
 export function transformMediaUrl(url: string, _referenceImageUrl?: string): string {
   if (!url) return url;
 
+  // Check if URL is already on S3 or another external CDN - don't modify these
+  // Matches: *.s3.*.amazonaws.com, *.cloudfront.net, *.cdn.*, etc.
+  // Extract domain part and check for CDN indicators
+  const domainMatch = url.match(/^https?:\/\/([^\/]+)/);
+  const domain = domainMatch ? domainMatch[1] : '';
+  const isExternalCDN = /\.(s3\.|cloudfront\.|cdn\.|amazonaws\.com)/i.test(domain);
+  
   // Strip WordPress image sizes (-1024x768, -300x200, etc.) to use original
-  const originalUrl = url.replace(/-(\d+x\d+)\.(jpg|jpeg|png|gif|webp)$/i, '.$2');
+  // Only do this for WordPress URLs, not external CDN URLs where the size suffix might be part of the actual filename
+  const originalUrl = isExternalCDN ? url : url.replace(/-(\d+x\d+)\.(jpg|jpeg|png|gif|webp)$/i, '.$2');
 
   if (!MEDIA_CDN_BASE) return originalUrl;
   if (originalUrl.includes(MEDIA_CDN_BASE)) return originalUrl;
@@ -477,6 +485,462 @@ export async function getCategories(first = 100): Promise<WPCategory[]> {
  */
 export function clearWPCache(): void {
   queryCache.clear();
+}
+
+/**
+ * Editor block types for products (similar to stories).
+ */
+export type ProductEditorBlock =
+  | { name: string; attributes?: { content?: string } } // CoreParagraph
+  | { name: string; attributes?: { id: string | number; url?: string; alt?: string; caption?: string; width?: number; height?: number } } // CoreImage
+  | { name: string; attributes?: { ids: (string | number)[]; columns?: number } }; // CoreGallery
+
+/**
+ * Product interface for shop products.
+ */
+export interface WPProduct {
+  id: string;
+  title: string;
+  slug?: string;
+  uri?: string;
+  content?: string;
+  excerpt?: string;
+  featuredImage?: {
+    node: {
+      sourceUrl: string;
+      altText?: string;
+    };
+  };
+  editorBlocks?: ProductEditorBlock[];
+  productFields?: {
+    parentProduct?: {
+      edges?: Array<{
+        node?: {
+          id: string;
+        };
+      }>;
+    };
+    variantLabel?: string;
+    pricePublic?: string;
+    priceMember?: string;
+    stripePriceIdPublic?: string;
+    stripePriceIdMember?: string;
+    membersOnly?: boolean;
+    sku?: string;
+    inventory?: number;
+    inStock?: boolean;
+  };
+}
+
+/**
+ * Response shape for GET_PRODUCTS_QUERY.
+ */
+export type GetProductsResponse = {
+  shopProducts: {
+    nodes: WPProduct[];
+  };
+};
+
+/**
+ * Query to fetch shop products.
+ */
+export const GET_PRODUCTS_QUERY = `
+  query GetProducts {
+    shopProducts {
+      nodes {
+        id
+        title
+        slug
+        uri
+        content
+        excerpt
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        productFields {
+          parentProduct {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+          variantLabel
+          pricePublic
+          priceMember
+          stripePriceIdPublic
+          stripePriceIdMember
+          membersOnly
+          sku
+          inventory
+          inStock
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Query to fetch a single product by slug.
+ * Uses ShopProductIdType (not ProductIdType) as per GraphQL schema.
+ * Includes editorBlocks for Gallery block support.
+ */
+export const GET_PRODUCT_QUERY = `
+  query GetProduct($id: ID!, $idType: ShopProductIdType!) {
+    shopProduct(id: $id, idType: $idType) {
+      id
+      title
+      slug
+      uri
+      content
+      excerpt
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+        }
+      }
+      editorBlocks {
+        name
+        ... on CoreParagraph {
+          attributes { content }
+        }
+        ... on CoreImage {
+          attributes {
+            id
+            url
+            alt
+            caption
+            width
+            height
+          }
+        }
+        ... on CoreGallery {
+          attributes { ids columns }
+        }
+      }
+      productFields {
+        parentProduct {
+          edges {
+            node {
+              id
+            }
+          }
+        }
+        variantLabel
+        pricePublic
+        priceMember
+        stripePriceIdPublic
+        stripePriceIdMember
+        membersOnly
+        sku
+        inventory
+        inStock
+      }
+    }
+    mediaItems(first: 200) {
+      nodes {
+        id
+        sourceUrl
+        altText
+        caption
+        mediaDetails { width height }
+      }
+    }
+  }
+`;
+
+/**
+ * Alternative query using shopProducts with where filter (fallback).
+ * Includes editorBlocks for Gallery block support.
+ */
+export const GET_PRODUCT_BY_SLUG_QUERY = `
+  query GetProductBySlug($slug: String!) {
+    shopProducts(where: { name: $slug }) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        content
+        excerpt
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        editorBlocks {
+          name
+          ... on CoreParagraph {
+            attributes { content }
+          }
+          ... on CoreImage {
+            attributes {
+              id
+              url
+              alt
+              caption
+              width
+              height
+            }
+          }
+          ... on CoreGallery {
+            attributes { ids columns }
+          }
+        }
+        productFields {
+          parentProduct {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+          variantLabel
+          pricePublic
+          priceMember
+          stripePriceIdPublic
+          stripePriceIdMember
+          membersOnly
+          sku
+          inventory
+          inStock
+        }
+      }
+    }
+    mediaItems(first: 200) {
+      nodes {
+        id
+        sourceUrl
+        altText
+        caption
+        mediaDetails { width height }
+      }
+    }
+  }
+`;
+
+/**
+ * Product variation interface.
+ */
+export interface WPProductVariation {
+  id: string;
+  name: string;
+  sku?: string;
+  stockQuantity?: number;
+  stockStatus?: string;
+  attributes?: {
+    nodes: Array<{
+      id: string;
+      name: string;
+      value: string;
+    }>;
+  };
+  price?: string;
+}
+
+/**
+ * Product attribute interface.
+ */
+export interface WPProductAttribute {
+  id: string;
+  name: string;
+  options: string[];
+  variation: boolean;
+}
+
+/**
+ * Extended product interface with full details.
+ * Note: galleryImages field removed as it doesn't exist on ShopProduct type.
+ * Use featuredImage or query media items separately if needed.
+ */
+export interface WPProductDetail extends WPProduct {
+}
+
+/**
+ * Media item node shape (from product queries).
+ */
+export interface ProductMediaItemNode {
+  id: string;
+  sourceUrl: string;
+  altText?: string;
+  caption?: string;
+  mediaDetails?: {
+    width?: number;
+    height?: number;
+  };
+}
+
+/**
+ * Response shape for GET_PRODUCT_QUERY.
+ */
+export type GetProductResponse = {
+  shopProduct: WPProductDetail | null;
+  mediaItems?: {
+    nodes: ProductMediaItemNode[];
+  };
+};
+
+/**
+ * Response shape for GET_PRODUCT_BY_SLUG_QUERY.
+ */
+export type GetProductBySlugResponse = {
+  shopProducts: {
+    nodes: WPProductDetail[];
+  };
+  mediaItems?: {
+    nodes: ProductMediaItemNode[];
+  };
+};
+
+/**
+ * Helper function to extract images from product editorBlocks (Gallery blocks and Image blocks).
+ * Similar to how stories handle galleries, but returns a flat array of images.
+ * @param editorBlocks - Array of editor blocks from the product
+ * @param mediaItems - Array of media items to resolve gallery IDs
+ * @param referenceImageUrl - Optional featured image URL for path resolution
+ * @returns Array of image objects with id, sourceUrl, and altText
+ */
+export function extractProductImagesFromBlocks(
+  editorBlocks?: ProductEditorBlock[],
+  mediaItems?: ProductMediaItemNode[],
+  referenceImageUrl?: string
+): Array<{ id: string; sourceUrl: string; altText?: string }> {
+  if (!editorBlocks || editorBlocks.length === 0) return [];
+
+  const images: Array<{ id: string; sourceUrl: string; altText?: string }> = [];
+  
+  // Build media map for resolving gallery IDs
+  const mediaMap = mediaItems
+    ? Object.fromEntries(
+        mediaItems.map((m) => [
+          m.id,
+          {
+            sourceUrl: transformMediaUrl(m.sourceUrl, referenceImageUrl),
+            altText: m.altText,
+          },
+        ])
+      )
+    : {};
+
+  for (const block of editorBlocks) {
+    // Handle Gallery blocks
+    if (block.name === 'core/gallery' && block.attributes && 'ids' in block.attributes) {
+      const ids = block.attributes.ids || [];
+      ids.forEach((id) => {
+        const media = mediaMap[String(id)];
+        if (media) {
+          images.push({
+            id: `gallery-${id}`,
+            sourceUrl: media.sourceUrl,
+            altText: media.altText,
+          });
+        }
+      });
+      continue;
+    }
+
+    // Handle individual Image blocks
+    if (block.name === 'core/image' && block.attributes && 'id' in block.attributes) {
+      const attrs = block.attributes;
+      // Try to resolve via mediaMap first
+      const media = mediaMap[String(attrs.id)];
+      if (media) {
+        images.push({
+          id: `image-${attrs.id}`,
+          sourceUrl: media.sourceUrl,
+          altText: media.altText || attrs.alt,
+        });
+      } else if (attrs.url) {
+        // Fallback to direct URL if not in mediaMap
+        images.push({
+          id: `image-${attrs.id}`,
+          sourceUrl: transformMediaUrl(attrs.url, referenceImageUrl),
+          altText: attrs.alt,
+        });
+      }
+      continue;
+    }
+  }
+
+  return images;
+}
+
+/**
+ * Helper function to fetch a product by slug.
+ * Uses shopProduct to match the shopProducts pattern.
+ * Note: If your GraphQL schema uses 'product' instead of 'shopProduct', 
+ * update GET_PRODUCT_QUERY to use 'product' instead.
+ * @param slug - The product slug
+ * @returns The product data with mediaItems or null if not found
+ */
+export async function getProductBySlug(slug: string): Promise<(WPProductDetail & { mediaItems?: ProductMediaItemNode[] }) | null> {
+  if (import.meta.env.DEV) {
+    console.log('[Product] Fetching product with slug:', slug);
+  }
+
+  // Try shopProduct query first
+  try {
+    const data = await wpQuery<GetProductResponse>(
+      GET_PRODUCT_QUERY,
+      { id: slug, idType: 'SLUG' },
+      { useCache: true }
+    );
+    if (data.shopProduct) {
+      if (import.meta.env.DEV) {
+        console.log('[Product] ✓ Found via shopProduct query:', slug);
+      }
+      return {
+        ...data.shopProduct,
+        mediaItems: data.mediaItems?.nodes,
+      };
+    } else {
+      if (import.meta.env.DEV) {
+        console.warn('[Product] shopProduct query returned null for slug:', slug);
+      }
+    }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    if (import.meta.env.DEV) {
+      console.warn('[Product] shopProduct query failed:', errorMsg);
+      console.warn('[Product] Full error:', error);
+    }
+  }
+
+  // Fallback: try shopProducts with where filter (using slug field)
+  try {
+    const fallbackData = await wpQuery<GetProductBySlugResponse>(
+      GET_PRODUCT_BY_SLUG_QUERY,
+      { slug },
+      { useCache: true }
+    );
+    if (fallbackData.shopProducts?.nodes?.length > 0) {
+      if (import.meta.env.DEV) {
+        console.log('[Product] ✓ Found via shopProducts filter query:', slug);
+      }
+      return {
+        ...fallbackData.shopProducts.nodes[0],
+        mediaItems: fallbackData.mediaItems?.nodes,
+      };
+    } else {
+      if (import.meta.env.DEV) {
+        console.warn('[Product] shopProducts filter query returned no results for slug:', slug);
+      }
+    }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    if (import.meta.env.DEV) {
+      console.warn('[Product] shopProducts filter query also failed:', errorMsg);
+      console.warn('[Product] Full error:', error);
+    }
+  }
+
+  console.error(`[Product] ✗ Failed to fetch product with slug "${slug}" - both query methods failed`);
+  return null;
 }
 
 /**

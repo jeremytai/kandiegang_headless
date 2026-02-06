@@ -49,17 +49,20 @@ import { AuthProvider } from './context/AuthContext';
 import { MemberLoginOffcanvasProvider } from './context/MemberLoginOffcanvasContext';
 import { MemberLoginPage } from './pages/MemberLoginPage.tsx';
 import { ShopLoginPage } from './pages/ShopLoginPage.tsx';
+import { ShopPage } from './pages/ShopPage';
+import { ProductPage } from './pages/ProductPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { MembersAreaPage } from './pages/MembersAreaPage.tsx';
 
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUnlocked, setIsUnlocked] = useState(getStoredUnlock);
+  // Password gate disabled - site is now publicly accessible
+  const [isUnlocked] = useState(true);
   const [announcementDismissed, setAnnouncementDismissed] = useState(false);
   const location = useLocation();
 
-  const showGate = !isLoading && !isUnlocked;
+  const showGate = false; // Password gate disabled
 
   useEffect(() => {
     if (isLoading || showGate) {
@@ -173,6 +176,8 @@ const App: React.FC = () => {
                   <Route path="/fonts" element={<FontsPage />} />
                   <Route path="/login/member" element={<MemberLoginPage />} />
                   <Route path="/login/shop" element={<ShopLoginPage />} />
+                  <Route path="/shop" element={<ShopPage />} />
+                  <Route path="/shop/:slug" element={<ProductPage />} />
                   <Route path="/signup" element={<SignUpPage />} />
                   <Route path="/members" element={<MembersAreaPage />} />
                   <Route path="*" element={<NotFoundPage />} />
