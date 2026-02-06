@@ -15,7 +15,9 @@ import {
   WPProduct,
   clearWPCache,
   transformMediaUrl,
+  normalizeProductFields,
 } from '../lib/wordpress';
+import { canPurchase, ShopProduct } from '../lib/products';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { useAuth } from '../context/AuthContext';
@@ -44,13 +46,24 @@ export const ShopPage: React.FC = () => {
       );
 
       if (import.meta.env.DEV && data) {
+        console.log('[Shop] Response data:', data);
         console.log('[Shop] Loaded products: %d items', data.shopProducts?.nodes?.length ?? 0);
+        if (data.shopProducts?.nodes?.length === 0) {
+          console.warn('[Shop] Query returned empty nodes array');
+        }
       }
 
-      if (data.shopProducts?.nodes) {
-        setProducts(data.shopProducts.nodes);
+      if (data.shopProducts?.nodes && data.shopProducts.nodes.length > 0) {
+        setProducts(
+          data.shopProducts.nodes.map((p) => ({
+            ...p,
+            productFields: normalizeProductFields(p.productFields) ?? p.productFields,
+          }))
+        );
       } else {
-        setError("No products found");
+        const errorMsg = data.shopProducts ? "No products found" : "Invalid response structure";
+        console.warn('[Shop]', errorMsg, data);
+        setError(errorMsg);
         setProducts([]);
       }
     } catch (err) {
@@ -141,9 +154,39 @@ export const ShopPage: React.FC = () => {
                     const displayPrice = isMember && product.productFields?.priceMember
                       ? product.productFields.priceMember
                       : product.productFields?.pricePublic;
-                    const isInStock = product.productFields?.inStock ?? true;
-                    const productSlug = product.slug || product.uri?.replace(/^\/+|\/+$/g, '').split('/').pop() || '';
-                    const productHref = productSlug ? `/shop/${productSlug}` : '/shop';
+                    
+                    // Convert to ShopProduct format for canPurchase
+                    const shopProduct: ShopProduct = {
+                      id: product.id,
+                      title: product.title,
+                      content: product.content || '',
+                      excerpt: product.excerpt || '',
+                      featuredImage: product.featuredImage,
+                      productFields: {
+                        hasVariants: product.productFields?.hasVariants ?? false,
+                        pricePublic: product.productFields?.pricePublic ? parseFloat(product.productFields.pricePublic) : undefined,
+                        priceMember: product.productFields?.priceMember ? parseFloat(product.productFields.priceMember) : undefined,
+                        stripePriceIdPublic: product.productFields?.stripePriceIdPublic,
+                        stripePriceIdMember: product.productFields?.stripePriceIdMember,
+                        inventory: product.productFields?.inventory,
+                        sku: product.productFields?.sku,
+                        variants: product.productFields?.variants?.map(v => ({
+                          label: v.label,
+                          pricePublic: v.pricePublic,
+                          priceMember: v.priceMember,
+                          stripePriceIdPublic: v.stripePriceIdPublic,
+                          stripePriceIdMember: v.stripePriceIdMember,
+                          sku: v.sku,
+                          inventory: v.inventory,
+                        })),
+                        membersOnly: isMembersOnly,
+                        inStock: product.productFields?.inStock ?? true,
+                      },
+                    };
+                    
+                    const isInStock = canPurchase(shopProduct, isMember);
+                    const productSlug = product.slug || '';
+                    const productHref = productSlug ? `/shop/${productSlug}` : '#';
                     
                     return (
                       <Link key={product.id} to={productHref} className="block">

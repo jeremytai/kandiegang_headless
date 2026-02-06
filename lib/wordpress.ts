@@ -156,8 +156,17 @@ export async function wpQuery<T>(
 
       if (json.errors) {
         const errorMessages = json.errors.map(e => e.message).join(', ');
-        console.error('GraphQL Errors:', json.errors);
+        console.error('[WordPress] GraphQL Errors:', json.errors);
+        console.error('[WordPress] Full error details:', JSON.stringify(json.errors, null, 2));
+        if (import.meta.env.DEV) {
+          console.error('[WordPress] Query that failed:', query);
+          console.error('[WordPress] Variables:', variables);
+        }
         throw new Error(`GraphQL Error: ${errorMessages}`);
+      }
+      
+      if (import.meta.env.DEV && json.data) {
+        console.log('[WordPress] Query successful');
       }
 
       if (!json.data) {
@@ -495,8 +504,65 @@ export type ProductEditorBlock =
   | { name: string; attributes?: { id: string | number; url?: string; alt?: string; caption?: string; width?: number; height?: number } } // CoreImage
   | { name: string; attributes?: { ids: (string | number)[]; columns?: number } }; // CoreGallery
 
+/** Variant shape used after normalization (built from flat ACF fields). */
+export interface WPProductVariantShape {
+  label: string;
+  pricePublic: number;
+  priceMember?: number;
+  stripePriceIdPublic: string;
+  stripePriceIdMember?: string;
+  sku?: string;
+  inventory: number;
+}
+
+/** Raw productFields from GraphQL (flat variant fields; no nested variants array). */
+export type FlatProductFields = Record<string, unknown>;
+
+/**
+ * Build variants array from flat ACF productFields (variant1Label, variant1PricePublic, ...).
+ * Only slots with a non-empty label are included.
+ */
+export function buildVariantsFromProductFields(pf: FlatProductFields | null | undefined): WPProductVariantShape[] {
+  if (!pf || typeof pf !== 'object') return [];
+  const variants: WPProductVariantShape[] = [];
+  for (let i = 1; i <= 10; i++) {
+    const label = pf[`variant${i}Label`];
+    if (label == null || String(label).trim() === '') continue;
+    const pricePublic = pf[`variant${i}PricePublic`];
+    const priceMember = pf[`variant${i}PriceMember`];
+    const stripePriceIdPublic = pf[`variant${i}StripePriceIdPublic`];
+    const stripePriceIdMember = pf[`variant${i}StripePriceIdMember`];
+    const sku = pf[`variant${i}Sku`];
+    const inventory = pf[`variant${i}Inventory`];
+    variants.push({
+      label: String(label),
+      pricePublic: typeof pricePublic === 'number' ? pricePublic : Number(pricePublic) || 0,
+      priceMember: priceMember != null && priceMember !== '' ? Number(priceMember) : undefined,
+      stripePriceIdPublic: stripePriceIdPublic != null ? String(stripePriceIdPublic) : '',
+      stripePriceIdMember: stripePriceIdMember != null && stripePriceIdMember !== '' ? String(stripePriceIdMember) : undefined,
+      sku: sku != null && sku !== '' ? String(sku) : undefined,
+      inventory: typeof inventory === 'number' ? inventory : Number(inventory) || 0,
+    });
+  }
+  return variants;
+}
+
+/**
+ * Normalize productFields from flat ACF variant fields to include a variants array.
+ * Use after fetching so the rest of the app can keep using productFields.variants.
+ */
+export function normalizeProductFields(pf: FlatProductFields | null | undefined): WPProduct['productFields'] {
+  if (!pf) return undefined;
+  const variants = buildVariantsFromProductFields(pf);
+  return {
+    ...pf,
+    variants: variants.length > 0 ? variants : undefined,
+  } as WPProduct['productFields'];
+}
+
 /**
  * Product interface for shop products.
+ * productFields.variants is populated by normalizeProductFields() from flat ACF fields after fetch.
  */
 export interface WPProduct {
   id: string;
@@ -521,6 +587,7 @@ export interface WPProduct {
       }>;
     };
     variantLabel?: string;
+    hasVariants?: boolean;
     pricePublic?: string;
     priceMember?: string;
     stripePriceIdPublic?: string;
@@ -529,6 +596,7 @@ export interface WPProduct {
     sku?: string;
     inventory?: number;
     inStock?: boolean;
+    variants?: WPProductVariantShape[];
   };
 }
 
@@ -543,17 +611,16 @@ export type GetProductsResponse = {
 
 /**
  * Query to fetch shop products.
+ * Uses flat ACF variant fields (variant1Label, variant1PricePublic, ...); variants array is built client-side via buildVariantsFromProductFields.
  */
 export const GET_PRODUCTS_QUERY = `
-  query GetProducts {
+  query GetShopProducts {
     shopProducts {
       nodes {
         id
         title
         slug
-        uri
         content
-        excerpt
         featuredImage {
           node {
             sourceUrl
@@ -561,22 +628,87 @@ export const GET_PRODUCTS_QUERY = `
           }
         }
         productFields {
-          parentProduct {
-            edges {
-              node {
-                id
-              }
-            }
-          }
-          variantLabel
+          hasVariants
           pricePublic
           priceMember
           stripePriceIdPublic
           stripePriceIdMember
-          membersOnly
           sku
           inventory
           inStock
+          membersOnly
+          ... on ProductFields {
+            variant1Label
+            variant1PricePublic
+            variant1PriceMember
+            variant1StripePriceIdPublic
+            variant1StripePriceIdMember
+            variant1Sku
+            variant1Inventory
+            variant2Label
+            variant2PricePublic
+            variant2PriceMember
+            variant2StripePriceIdPublic
+            variant2StripePriceIdMember
+            variant2Sku
+            variant2Inventory
+            variant3Label
+            variant3PricePublic
+            variant3PriceMember
+            variant3StripePriceIdPublic
+            variant3StripePriceIdMember
+            variant3Sku
+            variant3Inventory
+            variant4Label
+            variant4PricePublic
+            variant4PriceMember
+            variant4StripePriceIdPublic
+            variant4StripePriceIdMember
+            variant4Sku
+            variant4Inventory
+            variant5Label
+            variant5PricePublic
+            variant5PriceMember
+            variant5StripePriceIdPublic
+            variant5StripePriceIdMember
+            variant5Sku
+            variant5Inventory
+            variant6Label
+            variant6PricePublic
+            variant6PriceMember
+            variant6StripePriceIdPublic
+            variant6StripePriceIdMember
+            variant6Sku
+            variant6Inventory
+            variant7Label
+            variant7PricePublic
+            variant7PriceMember
+            variant7StripePriceIdPublic
+            variant7StripePriceIdMember
+            variant7Sku
+            variant7Inventory
+            variant8Label
+            variant8PricePublic
+            variant8PriceMember
+            variant8StripePriceIdPublic
+            variant8StripePriceIdMember
+            variant8Sku
+            variant8Inventory
+            variant9Label
+            variant9PricePublic
+            variant9PriceMember
+            variant9StripePriceIdPublic
+            variant9StripePriceIdMember
+            variant9Sku
+            variant9Inventory
+            variant10Label
+            variant10PricePublic
+            variant10PriceMember
+            variant10StripePriceIdPublic
+            variant10StripePriceIdMember
+            variant10Sku
+            variant10Inventory
+          }
         }
       }
     }
@@ -585,16 +717,16 @@ export const GET_PRODUCTS_QUERY = `
 
 /**
  * Query to fetch a single product by slug.
- * Uses ShopProductIdType (not ProductIdType) as per GraphQL schema.
- * Includes editorBlocks for Gallery block support.
+ * Uses SLUG as idType (matching the updated GraphQL schema).
+ * Includes editorBlocks for Gallery block support and mediaItems for image resolution.
  */
 export const GET_PRODUCT_QUERY = `
-  query GetProduct($id: ID!, $idType: ShopProductIdType!) {
-    shopProduct(id: $id, idType: $idType) {
+  query GetShopProduct($id: ID!) {
+    shopProduct(id: $id, idType: SLUG) {
       id
-      title
+      databaseId
       slug
-      uri
+      title
       content
       excerpt
       featuredImage {
@@ -623,22 +755,87 @@ export const GET_PRODUCT_QUERY = `
         }
       }
       productFields {
-        parentProduct {
-          edges {
-            node {
-              id
-            }
-          }
-        }
-        variantLabel
+        hasVariants
         pricePublic
         priceMember
         stripePriceIdPublic
         stripePriceIdMember
-        membersOnly
         sku
         inventory
         inStock
+        membersOnly
+        ... on ProductFields {
+          variant1Label
+          variant1PricePublic
+          variant1PriceMember
+          variant1StripePriceIdPublic
+          variant1StripePriceIdMember
+          variant1Sku
+          variant1Inventory
+          variant2Label
+          variant2PricePublic
+          variant2PriceMember
+          variant2StripePriceIdPublic
+          variant2StripePriceIdMember
+          variant2Sku
+          variant2Inventory
+          variant3Label
+          variant3PricePublic
+          variant3PriceMember
+          variant3StripePriceIdPublic
+          variant3StripePriceIdMember
+          variant3Sku
+          variant3Inventory
+          variant4Label
+          variant4PricePublic
+          variant4PriceMember
+          variant4StripePriceIdPublic
+          variant4StripePriceIdMember
+          variant4Sku
+          variant4Inventory
+          variant5Label
+          variant5PricePublic
+          variant5PriceMember
+          variant5StripePriceIdPublic
+          variant5StripePriceIdMember
+          variant5Sku
+          variant5Inventory
+          variant6Label
+          variant6PricePublic
+          variant6PriceMember
+          variant6StripePriceIdPublic
+          variant6StripePriceIdMember
+          variant6Sku
+          variant6Inventory
+          variant7Label
+          variant7PricePublic
+          variant7PriceMember
+          variant7StripePriceIdPublic
+          variant7StripePriceIdMember
+          variant7Sku
+          variant7Inventory
+          variant8Label
+          variant8PricePublic
+          variant8PriceMember
+          variant8StripePriceIdPublic
+          variant8StripePriceIdMember
+          variant8Sku
+          variant8Inventory
+          variant9Label
+          variant9PricePublic
+          variant9PriceMember
+          variant9StripePriceIdPublic
+          variant9StripePriceIdMember
+          variant9Sku
+          variant9Inventory
+          variant10Label
+          variant10PricePublic
+          variant10PriceMember
+          variant10StripePriceIdPublic
+          variant10StripePriceIdMember
+          variant10Sku
+          variant10Inventory
+        }
       }
     }
     mediaItems(first: 200) {
@@ -648,6 +845,78 @@ export const GET_PRODUCT_QUERY = `
         altText
         caption
         mediaDetails { width height }
+      }
+    }
+  }
+`;
+
+/**
+ * Query to fetch variant products (siblings) that share the same parent product.
+ * Used to display variant options like "Black", "Gradient", etc.
+ * Note: This queries by parentProduct ID - products that have this ID as their parent.
+ */
+export const GET_PRODUCT_VARIANTS_QUERY = `
+  query GetProductVariants($parentId: ID!) {
+    shopProducts(where: { parent: $parentId }) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        productFields {
+          variantLabel
+          pricePublic
+          priceMember
+          stripePriceIdPublic
+          stripePriceIdMember
+          inStock
+          sku
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Alternative: Query all products and filter client-side if the above doesn't work.
+ * This is a fallback if the parent filter doesn't work in your GraphQL schema.
+ */
+export const GET_ALL_PRODUCTS_FOR_VARIANTS_QUERY = `
+  query GetAllProductsForVariants {
+    shopProducts(first: 1000) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        productFields {
+          parentProduct {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+          variantLabel
+          pricePublic
+          priceMember
+          stripePriceIdPublic
+          stripePriceIdMember
+          inStock
+          sku
+        }
       }
     }
   }
@@ -701,6 +970,7 @@ export const GET_PRODUCT_BY_SLUG_QUERY = `
             }
           }
           variantLabel
+          hasVariants
           pricePublic
           priceMember
           stripePriceIdPublic
@@ -709,6 +979,78 @@ export const GET_PRODUCT_BY_SLUG_QUERY = `
           sku
           inventory
           inStock
+          ... on ProductFields {
+            variant1Label
+            variant1PricePublic
+            variant1PriceMember
+            variant1StripePriceIdPublic
+            variant1StripePriceIdMember
+            variant1Sku
+            variant1Inventory
+            variant2Label
+            variant2PricePublic
+            variant2PriceMember
+            variant2StripePriceIdPublic
+            variant2StripePriceIdMember
+            variant2Sku
+            variant2Inventory
+            variant3Label
+            variant3PricePublic
+            variant3PriceMember
+            variant3StripePriceIdPublic
+            variant3StripePriceIdMember
+            variant3Sku
+            variant3Inventory
+            variant4Label
+            variant4PricePublic
+            variant4PriceMember
+            variant4StripePriceIdPublic
+            variant4StripePriceIdMember
+            variant4Sku
+            variant4Inventory
+            variant5Label
+            variant5PricePublic
+            variant5PriceMember
+            variant5StripePriceIdPublic
+            variant5StripePriceIdMember
+            variant5Sku
+            variant5Inventory
+            variant6Label
+            variant6PricePublic
+            variant6PriceMember
+            variant6StripePriceIdPublic
+            variant6StripePriceIdMember
+            variant6Sku
+            variant6Inventory
+            variant7Label
+            variant7PricePublic
+            variant7PriceMember
+            variant7StripePriceIdPublic
+            variant7StripePriceIdMember
+            variant7Sku
+            variant7Inventory
+            variant8Label
+            variant8PricePublic
+            variant8PriceMember
+            variant8StripePriceIdPublic
+            variant8StripePriceIdMember
+            variant8Sku
+            variant8Inventory
+            variant9Label
+            variant9PricePublic
+            variant9PriceMember
+            variant9StripePriceIdPublic
+            variant9StripePriceIdMember
+            variant9Sku
+            variant9Inventory
+            variant10Label
+            variant10PricePublic
+            variant10PriceMember
+            variant10StripePriceIdPublic
+            variant10StripePriceIdMember
+            variant10Sku
+            variant10Inventory
+          }
         }
       }
     }
@@ -723,6 +1065,31 @@ export const GET_PRODUCT_BY_SLUG_QUERY = `
     }
   }
 `;
+
+/**
+ * Product variant interface (for sibling products).
+ */
+export interface WPProductVariant {
+  id: string;
+  title: string;
+  slug: string;
+  uri?: string;
+  featuredImage?: {
+    node: {
+      sourceUrl: string;
+      altText?: string;
+    };
+  };
+  productFields?: {
+    variantLabel?: string;
+    pricePublic?: string;
+    priceMember?: string;
+    stripePriceIdPublic?: string;
+    stripePriceIdMember?: string;
+    inStock?: boolean;
+    sku?: string;
+  };
+}
 
 /**
  * Product variation interface.
@@ -759,6 +1126,7 @@ export interface WPProductAttribute {
  * Use featuredImage or query media items separately if needed.
  */
 export interface WPProductDetail extends WPProduct {
+  databaseId?: number;
 }
 
 /**
@@ -896,6 +1264,7 @@ export async function getProductBySlug(slug: string): Promise<(WPProductDetail &
       }
       return {
         ...data.shopProduct,
+        productFields: normalizeProductFields(data.shopProduct.productFields as FlatProductFields) ?? data.shopProduct.productFields,
         mediaItems: data.mediaItems?.nodes,
       };
     } else {
@@ -919,11 +1288,13 @@ export async function getProductBySlug(slug: string): Promise<(WPProductDetail &
       { useCache: true }
     );
     if (fallbackData.shopProducts?.nodes?.length > 0) {
+      const node = fallbackData.shopProducts.nodes[0];
       if (import.meta.env.DEV) {
         console.log('[Product] ✓ Found via shopProducts filter query:', slug);
       }
       return {
-        ...fallbackData.shopProducts.nodes[0],
+        ...node,
+        productFields: normalizeProductFields(node.productFields as FlatProductFields) ?? node.productFields,
         mediaItems: fallbackData.mediaItems?.nodes,
       };
     } else {
@@ -939,8 +1310,76 @@ export async function getProductBySlug(slug: string): Promise<(WPProductDetail &
     }
   }
 
-  console.error(`[Product] ✗ Failed to fetch product with slug "${slug}" - both query methods failed`);
+  // Fallback 3: fetch all products and find by slug (same query as shop list)
+  try {
+    const listData = await wpQuery<GetProductsResponse>(GET_PRODUCTS_QUERY, {}, { useCache: true });
+    const nodes = listData.shopProducts?.nodes ?? [];
+    const slugLower = slug.toLowerCase();
+    const match = nodes.find(
+      (p) =>
+        (p.slug && p.slug.toLowerCase() === slugLower) ||
+        (p.uri && p.uri.replace(/^\/+|\/+$/g, '').toLowerCase().endsWith(slugLower))
+    );
+    if (match) {
+      if (import.meta.env.DEV) {
+        console.log('[Product] ✓ Found via products list fallback:', slug);
+      }
+      return {
+        ...match,
+        productFields: normalizeProductFields(match.productFields as FlatProductFields) ?? match.productFields,
+      } as WPProductDetail & { mediaItems?: ProductMediaItemNode[] };
+    }
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[Product] List fallback failed:', error);
+    }
+  }
+
+  console.error(`[Product] ✗ Failed to fetch product with slug "${slug}" - all methods failed`);
   return null;
+}
+
+/**
+ * Fetch variant products (siblings) for a given parent product ID.
+ * Variants are products that share the same parent product.
+ * @param parentId - The parent product ID
+ * @returns Array of variant products or empty array if none found
+ */
+export async function getProductVariants(parentId: string): Promise<WPProductVariant[]> {
+  try {
+    // Try the direct query first
+    try {
+      const data = await wpQuery<{ shopProducts: { nodes: WPProductVariant[] } }>(
+        GET_PRODUCT_VARIANTS_QUERY,
+        { parentId },
+        { useCache: true }
+      );
+      if (data.shopProducts?.nodes && data.shopProducts.nodes.length > 0) {
+        return data.shopProducts.nodes;
+      }
+    } catch (queryError) {
+      console.warn('Direct variant query failed, trying fallback:', queryError);
+    }
+
+    // Fallback: Fetch all products and filter client-side
+    type VariantNode = WPProductVariant & { productFields?: { parentProduct?: { edges?: Array<{ node?: { id: string } }> } } };
+    const allData = await wpQuery<{ shopProducts: { nodes: Array<VariantNode> } }>(
+      GET_ALL_PRODUCTS_FOR_VARIANTS_QUERY,
+      {},
+      { useCache: true }
+    );
+
+    // Filter products that have this parentId
+    const variants = (allData.shopProducts?.nodes || []).filter((product) => {
+      const productParentId = product.productFields?.parentProduct?.edges?.[0]?.node?.id;
+      return productParentId === parentId;
+    });
+
+    return variants.map(({ productFields, ...rest }) => rest as WPProductVariant);
+  } catch (error) {
+    console.error('Failed to fetch product variants:', error);
+    return [];
+  }
 }
 
 /**

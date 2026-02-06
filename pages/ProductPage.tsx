@@ -9,10 +9,12 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { getProductBySlug, transformMediaUrl, extractProductImagesFromBlocks } from '../lib/wordpress';
+import { getProductPrice, getStripePriceId, canPurchase, ProductVariant, ShopProduct } from '../lib/products';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { useAuth } from '../context/AuthContext';
 import { CheckoutButton } from '../components/CheckoutButton';
+import { ProductVariantSelector } from '../components/ProductVariantSelector';
 
 /**
  * Extract image URLs from HTML content.
@@ -73,6 +75,7 @@ export const ProductPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
   const [product, setProduct] = useState<Awaited<ReturnType<typeof getProductBySlug>>>(null);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -140,6 +143,8 @@ export const ProductPage: React.FC = () => {
         if (cancelled) return;
         if (productData) {
           setProduct(productData);
+          // Reset variant selection when product changes
+          setSelectedVariantIndex(0);
         } else {
           setError('Product not found');
         }
@@ -244,12 +249,60 @@ export const ProductPage: React.FC = () => {
   }
 
   const isMember = !!user;
-  const isMembersOnly = product.productFields?.membersOnly ?? false;
-  const displayPrice = isMember && product.productFields?.priceMember
-    ? product.productFields.priceMember
-    : product.productFields?.pricePublic;
-  const isInStock = product.productFields?.inStock ?? true;
-  const variantLabel = product.productFields?.variantLabel;
+  const hasVariants = product.productFields?.hasVariants ?? false;
+  const variants = product.productFields?.variants ?? [];
+  const variantIndex = hasVariants ? selectedVariantIndex : undefined;
+  
+  // Convert product to ShopProduct format for helper functions
+  const shopProduct: ShopProduct = {
+    id: product.id,
+    title: product.title,
+    content: product.content,
+    excerpt: product.excerpt,
+    featuredImage: product.featuredImage,
+    productFields: {
+      hasVariants,
+      pricePublic: product.productFields?.pricePublic ? parseFloat(product.productFields.pricePublic) : undefined,
+      priceMember: product.productFields?.priceMember ? parseFloat(product.productFields.priceMember) : undefined,
+      stripePriceIdPublic: product.productFields?.stripePriceIdPublic,
+      stripePriceIdMember: product.productFields?.stripePriceIdMember,
+      inventory: product.productFields?.inventory,
+      sku: product.productFields?.sku,
+      variants: variants.map(v => ({
+        label: v.label,
+        pricePublic: v.pricePublic,
+        priceMember: v.priceMember,
+        stripePriceIdPublic: v.stripePriceIdPublic,
+        stripePriceIdMember: v.stripePriceIdMember,
+        sku: v.sku,
+        inventory: v.inventory,
+      })),
+      membersOnly: product.productFields?.membersOnly ?? false,
+      inStock: product.productFields?.inStock ?? true,
+    },
+  };
+  
+  // Calculate pricing using helper functions
+  const displayPrice = getProductPrice(shopProduct, isMember, variantIndex);
+  const stripePriceId = getStripePriceId(shopProduct, isMember, variantIndex);
+  const canPurchaseProduct = canPurchase(shopProduct, isMember, variantIndex);
+  
+  // Calculate public price and discount status for display
+  let publicPrice = displayPrice;
+  let hasDiscount = false;
+  
+  if (hasVariants && variants[variantIndex ?? 0]) {
+    const variant = variants[variantIndex ?? 0];
+    publicPrice = variant.pricePublic;
+    hasDiscount = isMember && !!variant.priceMember;
+  } else {
+    publicPrice = shopProduct.productFields.pricePublic ?? 0;
+    hasDiscount = isMember && !!shopProduct.productFields.priceMember;
+  }
+  
+  const variantLabel = hasVariants && variants[selectedVariantIndex] 
+    ? variants[selectedVariantIndex].label 
+    : product.productFields?.variantLabel;
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
@@ -336,7 +389,7 @@ export const ProductPage: React.FC = () => {
             {/* Headlines */}
             <div className="flex flex-col items-center">
               <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
-                {isMembersOnly ? 'Members Only' : 'Shop'}
+                {shopProduct.productFields.membersOnly ? 'Members Only' : 'Shop'}
               </span>
               <AnimatedHeadline
                 as="h1"
@@ -352,21 +405,39 @@ export const ProductPage: React.FC = () => {
               )}
             </div>
 
+            {/* Variant Selector */}
+            {hasVariants && variants.length > 1 && (
+              <ProductVariantSelector
+                variants={variants}
+                selectedVariantIndex={selectedVariantIndex}
+                onVariantChange={setSelectedVariantIndex}
+              />
+            )}
+
             {/* Price */}
-            {displayPrice && (
+            {displayPrice > 0 && (
               <div className="text-secondary-purple-rain">
-                <p className="text-3xl md:text-4xl font-medium mb-2">
-                  {displayPrice}
-                  {isMember && product.productFields?.priceMember && product.productFields?.pricePublic && (
-                    <span className="text-xl font-normal ml-3 text-secondary-purple-rain/60 line-through">
-                      {product.productFields.pricePublic}
-                    </span>
-                  )}
-                </p>
-                {!isInStock && (
-                  <p className="text-sm font-medium text-red-600 uppercase tracking-widest">Out of Stock</p>
+                {hasDiscount ? (
+                  <div>
+                    <p className="text-3xl md:text-4xl font-medium mb-2">
+                      <span className="text-green-600">€{displayPrice.toFixed(2)}</span>
+                      <span className="text-xl font-normal ml-3 text-secondary-purple-rain/60 line-through">
+                        €{publicPrice.toFixed(2)}
+                      </span>
+                    </p>
+                    <p className="text-sm text-green-600 font-medium uppercase tracking-widest mb-2">
+                      Member Discount!
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-3xl md:text-4xl font-medium mb-2">
+                    €{displayPrice.toFixed(2)}
+                  </p>
                 )}
-                {isMembersOnly && !isMember && (
+                {!canPurchaseProduct && (
+                  <p className="text-sm font-medium text-red-600 uppercase tracking-widest mt-2">Out of Stock</p>
+                )}
+                {shopProduct.productFields.membersOnly && !isMember && (
                   <p className="text-sm font-medium text-secondary-purple-rain/70 uppercase tracking-widest mt-2">
                     Members Only Product
                   </p>
@@ -375,17 +446,13 @@ export const ProductPage: React.FC = () => {
             )}
 
             {/* Checkout Button */}
-            {isInStock && !(isMembersOnly && !isMember) && (
+            {canPurchaseProduct && stripePriceId && (
               <CheckoutButton
-                priceId={
-                  isMember && product.productFields?.stripePriceIdMember
-                    ? product.productFields.stripePriceIdMember
-                    : product.productFields?.stripePriceIdPublic || ''
-                }
+                priceId={stripePriceId}
                 productId={product.id}
                 productTitle={product.title}
                 productSlug={product.slug}
-                disabled={!product.productFields?.stripePriceIdPublic && !product.productFields?.stripePriceIdMember}
+                disabled={!stripePriceId}
               />
             )}
 
@@ -412,7 +479,7 @@ export const ProductPage: React.FC = () => {
             {/* Headlines */}
             <div className="flex flex-col items-center px-4 max-lg:py-12 lg:px-6">
               <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
-                {isMembersOnly ? 'Members Only' : 'Shop'}
+                {shopProduct.productFields.membersOnly ? 'Members Only' : 'Shop'}
               </span>
               <AnimatedHeadline
                 as="h1"
@@ -427,6 +494,17 @@ export const ProductPage: React.FC = () => {
                 </p>
               )}
             </div>
+
+            {/* Variant Selector (Mobile) */}
+            {hasVariants && variants.length > 1 && (
+              <div className="px-4 w-full">
+                <ProductVariantSelector
+                  variants={variants}
+                  selectedVariantIndex={selectedVariantIndex}
+                  onVariantChange={setSelectedVariantIndex}
+                />
+              </div>
+            )}
 
             {/* Mobile: horizontal image carousel */}
             {productImages.length > 0 && (
@@ -502,20 +580,29 @@ export const ProductPage: React.FC = () => {
             )}
 
             {/* Price */}
-            {displayPrice && (
+            {displayPrice > 0 && (
               <div className="text-secondary-purple-rain px-4">
-                <p className="text-3xl md:text-4xl font-medium mb-2">
-                  {displayPrice}
-                  {isMember && product.productFields?.priceMember && product.productFields?.pricePublic && (
-                    <span className="text-xl font-normal ml-3 text-secondary-purple-rain/60 line-through">
-                      {product.productFields.pricePublic}
-                    </span>
-                  )}
-                </p>
-                {!isInStock && (
-                  <p className="text-sm font-medium text-red-600 uppercase tracking-widest">Out of Stock</p>
+                {hasDiscount ? (
+                  <div>
+                    <p className="text-3xl md:text-4xl font-medium mb-2">
+                      <span className="text-green-600">€{displayPrice.toFixed(2)}</span>
+                      <span className="text-xl font-normal ml-3 text-secondary-purple-rain/60 line-through">
+                        €{publicPrice.toFixed(2)}
+                      </span>
+                    </p>
+                    <p className="text-sm text-green-600 font-medium uppercase tracking-widest mb-2">
+                      Member Discount!
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-3xl md:text-4xl font-medium mb-2">
+                    €{displayPrice.toFixed(2)}
+                  </p>
                 )}
-                {isMembersOnly && !isMember && (
+                {!canPurchaseProduct && (
+                  <p className="text-sm font-medium text-red-600 uppercase tracking-widest mt-2">Out of Stock</p>
+                )}
+                {shopProduct.productFields.membersOnly && !isMember && (
                   <p className="text-sm font-medium text-secondary-purple-rain/70 uppercase tracking-widest mt-2">
                     Members Only Product
                   </p>
@@ -524,18 +611,14 @@ export const ProductPage: React.FC = () => {
             )}
 
             {/* Checkout Button */}
-            {isInStock && !(isMembersOnly && !isMember) && (
+            {canPurchaseProduct && stripePriceId && (
               <div className="px-4 w-full">
                 <CheckoutButton
-                  priceId={
-                    isMember && product.productFields?.stripePriceIdMember
-                      ? product.productFields.stripePriceIdMember
-                      : product.productFields?.stripePriceIdPublic || ''
-                  }
+                  priceId={stripePriceId}
                   productId={product.id}
                   productTitle={product.title}
                   productSlug={product.slug}
-                  disabled={!product.productFields?.stripePriceIdPublic && !product.productFields?.stripePriceIdMember}
+                  disabled={!stripePriceId}
                   className="w-full"
                 />
               </div>
