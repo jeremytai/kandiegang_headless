@@ -28,6 +28,7 @@ export const StickyBottom: React.FC = () => {
   const location = useLocation();
   const isPastThreshold = useScrollThreshold(0);
   const isContactPage = location.pathname === '/contact';
+  const isCyclingClubPage = location.pathname === '/kandiegangcyclingclub';
 
   if (isMember) {
     return null;
@@ -75,7 +76,7 @@ export const StickyBottom: React.FC = () => {
             className="w-full max-w-md sm:max-w-lg md:max-w-xl pointer-events-auto"
           >
             <MotionLink
-              to="/kandiegangcyclingclub"
+              to={isCyclingClubPage ? '/shop/kandie-gang-cycling-club-membership' : '/kandiegangcyclingclub'}
               layout
               className="w-full bg-[#f9f100] border border-black/[0.03] rounded-full px-6 py-4 flex justify-between items-center shadow-2xl shadow-black/10 transition-transform active:scale-[0.98] cursor-pointer no-underline text-inherit"
             >
@@ -83,8 +84,14 @@ export const StickyBottom: React.FC = () => {
                  Become a Member
                </span>
                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-medium text-black/60">Support the movement</span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
+                  {isCyclingClubPage ? (
+                    <span className="text-[11px] font-medium text-black/60">€60.00/year</span>
+                  ) : (
+                    <>
+                      <span className="text-[11px] font-medium text-black/60">Support the movement</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
+                    </>
+                  )}
                </div>
             </MotionLink>
           </motion.div>

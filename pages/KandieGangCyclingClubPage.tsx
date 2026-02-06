@@ -11,7 +11,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ArrowRight, ArrowUpRight } from 'lucide-react';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { imageSrc } from '../lib/images';
-import { useContactModal } from '../context/ContactModalContext';
 
 /** Hero gallery image base paths (no extension). Resolved via imageSrc() for dev .jpg / prod .webp. */
 const HERO_IMAGE_BASES = [
@@ -155,7 +154,6 @@ export const KandieGangCyclingClubPage: React.FC = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [stickyOffset, setStickyOffset] = useState<number | null>(null); // null = fixed, number = absolute top offset
   const [benefitTooltip, setBenefitTooltip] = useState<{ x: number; y: number; sub: string } | null>(null);
-  const { openContactModal } = useContactModal();
   const mobileCarouselRef = useRef<HTMLDivElement>(null);
   const imageScrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const benefitTooltipRef = useRef<HTMLDivElement>(null);
@@ -568,9 +566,8 @@ export const KandieGangCyclingClubPage: React.FC = () => {
             <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
               Members only access, product discounts, and more.
             </p>
-            <button
-              type="button"
-              onClick={openContactModal}
+            <Link
+              to="/shop/kandie-gang-cycling-club-membership"
               className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-white bg-transparent px-6 py-4 text-sm font-medium text-secondary-blush transition-colors hover:border-secondary-blush hover:bg-secondary-blush hover:text-white active:scale-95 md:gap-2 md:text-base"
             >
               <span>Join us</span>
@@ -582,7 +579,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                   strokeLinejoin="round"
                 />
               </span>
-            </button>
+            </Link>
           </div>
         </section>
       </div>

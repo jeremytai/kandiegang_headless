@@ -13,8 +13,8 @@ export interface MemberLoginFormProps {
   onSuccess?: () => void;
   /** Tighter layout for sidebar/embed use. */
   compact?: boolean;
-  /** When set, "Create one" switches to signup in-place (e.g. sidebar) instead of linking to /signup. */
-  onShowSignup?: () => void;
+  /** When set, "Become a member" closes the sidebar/overlay before navigating (e.g. offcanvas). */
+  onClose?: () => void;
 }
 
 const inputClass =
@@ -36,7 +36,7 @@ function DiscordIcon({ className }: { className?: string }) {
 export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
   onSuccess,
   compact = false,
-  onShowSignup,
+  onClose,
 }) => {
   const { signInWithMagicLink, signInWithDiscord, status } = useAuth();
   const [email, setEmail] = useState('');
@@ -156,19 +156,13 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
 
       <p className="text-sm text-slate-600">
         Don&apos;t have an account?{' '}
-        {onShowSignup ? (
-          <button
-            type="button"
-            onClick={onShowSignup}
-            className="font-medium text-black underline hover:no-underline"
-          >
-            Become a member
-          </button>
-        ) : (
-          <Link to="/signup" className="font-medium text-black underline hover:no-underline">
-            Become a member
-          </Link>
-        )}
+        <Link
+          to="/kandiegangcyclingclub"
+          onClick={onClose}
+          className="font-medium text-black underline hover:no-underline"
+        >
+          Become a member
+        </Link>
       </p>
       {!compact && (
         <p className="text-xs text-slate-500">

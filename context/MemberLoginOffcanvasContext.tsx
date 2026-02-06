@@ -306,7 +306,7 @@ function MemberOffcanvasAuthContent({
     <MemberLoginForm
       compact
       onSuccess={onClose}
-      onShowSignup={() => setPanelView('signup')}
+      onClose={onClose}
     />
   );
 }
