@@ -50,7 +50,8 @@ export function getProductPrice(
   variantIndex?: number
 ): number {
   if (product.productFields.hasVariants && product.productFields.variants?.length) {
-    const variant = product.productFields.variants[variantIndex ?? 0];
+    const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : -1;
+    const variant = idx >= 0 ? product.productFields.variants?.[idx] : undefined;
     if (variant) {
       if (isMember && variant.priceMember != null) {
         return variant.priceMember;
@@ -74,7 +75,8 @@ export function getStripePriceId(
   variantIndex?: number
 ): string {
   if (product.productFields.hasVariants && product.productFields.variants?.length) {
-    const variant = product.productFields.variants[variantIndex ?? 0];
+    const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : -1;
+    const variant = idx >= 0 ? product.productFields.variants?.[idx] : undefined;
     if (variant) {
       if (isMember && variant.stripePriceIdMember) {
         return variant.stripePriceIdMember;
@@ -105,9 +107,10 @@ export function canPurchase(
   
   // For products with variants, check variant inventory directly
   if (product.productFields.hasVariants && product.productFields.variants?.length) {
-    const variant = product.productFields.variants[variantIndex ?? 0];
+    const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : -1;
+    const variant = idx >= 0 ? product.productFields.variants?.[idx] : undefined;
     if (!variant) {
-      return false; // Variant doesn't exist
+      return false; // No variant selected or variant doesn't exist
     }
     // Check variant inventory directly
     return variant.inventory > 0;

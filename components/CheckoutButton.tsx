@@ -15,7 +15,14 @@ interface CheckoutButtonProps {
   productSlug: string;
   disabled?: boolean;
   className?: string;
+  /** 'default' | 'sm' - smaller padding and text when 'sm' */
+  size?: 'default' | 'sm';
 }
+
+const sizeClasses = {
+  default: 'px-8 py-4 text-base',
+  sm: 'px-5 py-2.5 text-sm',
+};
 
 export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
   priceId,
@@ -24,6 +31,7 @@ export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
   productSlug,
   disabled = false,
   className = '',
+  size = 'default',
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -100,16 +108,16 @@ export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
         type="button"
         onClick={handleCheckout}
         disabled={disabled || isLoading || !priceId}
-        className={`inline-flex items-center justify-center gap-2 rounded-full bg-secondary-purple-rain px-8 py-4 text-base font-medium text-white transition-all hover:bg-secondary-current disabled:cursor-not-allowed disabled:bg-slate-400 disabled:opacity-60 ${className}`}
+        className={`inline-flex items-center justify-center gap-2 rounded-full bg-secondary-purple-rain font-medium text-white transition-all hover:bg-secondary-purple-rain/90 disabled:cursor-not-allowed disabled:bg-secondary-purple-rain/60 disabled:opacity-90 ${sizeClasses[size]} ${className}`}
       >
         {isLoading ? (
           <>
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className={`${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} animate-spin`} />
             <span>Processing...</span>
           </>
         ) : (
           <>
-            <ShoppingBag className="w-5 h-5" />
+            <ShoppingBag className={size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} />
             <span>Add to Cart</span>
           </>
         )}

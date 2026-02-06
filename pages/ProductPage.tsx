@@ -45,6 +45,15 @@ function extractImagesFromContent(content?: string): Array<{ id: string; sourceU
   return images;
 }
 
+/** Extract the first paragraph from HTML content for display under the headline. */
+function getFirstParagraph(content?: string): string {
+  if (!content) return '';
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, 'text/html');
+  const firstP = doc.body.querySelector('p');
+  return firstP ? firstP.outerHTML : '';
+}
+
 /**
  * Remove images from HTML content so they don't display in the product description.
  * Images should only appear in the left gallery/thumbnails.
@@ -75,7 +84,7 @@ export const ProductPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
   const [product, setProduct] = useState<Awaited<ReturnType<typeof getProductBySlug>>>(null);
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(-1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -137,6 +146,7 @@ export const ProductPage: React.FC = () => {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setSelectedVariantIndex(-1);
 
     async function load() {
       try {
@@ -144,8 +154,8 @@ export const ProductPage: React.FC = () => {
         if (cancelled) return;
         if (productData) {
           setProduct(productData);
-          // Reset variant selection when product changes
-          setSelectedVariantIndex(0);
+          // Start with no variant selected (user must choose a size)
+          setSelectedVariantIndex(-1);
         } else {
           setError('Product not found');
         }
@@ -292,8 +302,8 @@ export const ProductPage: React.FC = () => {
   let publicPrice = displayPrice;
   let hasDiscount = false;
   
-  if (hasVariants && variants[variantIndex ?? 0]) {
-    const variant = variants[variantIndex ?? 0];
+  if (hasVariants && selectedVariantIndex >= 0 && variants[selectedVariantIndex]) {
+    const variant = variants[selectedVariantIndex];
     publicPrice = variant.pricePublic;
     hasDiscount = isMember && !!variant.priceMember;
   } else {
@@ -301,9 +311,18 @@ export const ProductPage: React.FC = () => {
     hasDiscount = isMember && !!shopProduct.productFields.priceMember;
   }
   
-  const variantLabel = hasVariants && variants[selectedVariantIndex] 
-    ? variants[selectedVariantIndex].label 
+  const variantLabel = hasVariants && selectedVariantIndex >= 0 && variants[selectedVariantIndex]
+    ? variants[selectedVariantIndex].label
     : product.productFields?.variantLabel;
+
+  const rawTitle = (product.title ?? '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)));
+  const productSlug = (product.slug ?? '').toLowerCase();
+  const hideTitleAndSizeLabel =
+    /Cycling Socks/i.test(rawTitle) ||
+    (/Love Story/i.test(rawTitle) && /Socks?/i.test(rawTitle)) ||
+    /love-story.*socks|cycling-socks|socks.*love-story/i.test(productSlug);
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
@@ -382,92 +401,95 @@ export const ProductPage: React.FC = () => {
         {/* Fixed/Absolute right column content (desktop only) */}
         <div
           ref={heroRightColRef}
-          className={`hidden lg:flex items-center justify-center h-screen w-1/2 z-10 ${
+          className={`hidden lg:flex items-start justify-center h-screen w-1/2 z-10 pt-[var(--header-height,5rem)] ${
             stickyOffset === null ? 'fixed top-0 right-0' : 'absolute right-0'
           }`}
         >
-          <div className="flex w-full flex-col items-center justify-center gap-12 text-center px-6">
-            {/* Headlines */}
-            <div className="flex flex-col items-center">
-              <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
-                {shopProduct.productFields.membersOnly ? 'Members Only' : 'Shop'}
-              </span>
+          <div className="flex w-full max-h-[calc(100vh-var(--header-height,5rem))] flex-col items-center justify-center gap-20 text-center px-6 overflow-y-auto">
+            {/* Headlines — left-aligned to match first paragraph */}
+            <div className="flex w-full max-w-[44ch] flex-col items-start self-start pt-[240px] text-left">
+              {shopProduct.productFields.membersOnly && (
+                <span className="mb-4 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
+                  Members Only
+                </span>
+              )}
               <AnimatedHeadline
                 as="h1"
                 text={product.title}
-                className="font-heading text-secondary-purple-rain text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-thin tracking-normal"
+                className="font-heading text-secondary-purple-rain text-2xl lg:text-3xl xl:text-4xl font-thin tracking-normal w-full !text-left"
                 lineHeight={1.25}
                 fullWidth
               />
-              {variantLabel && (
-                <p className="mt-2 text-secondary-purple-rain/70 text-sm font-medium">
-                  {variantLabel}
-                </p>
+              {/* Price — under headline, before first paragraph */}
+              {displayPrice > 0 && (
+                <div className="py-2 text-secondary-purple-rain">
+                  {hasDiscount ? (
+                    <div>
+                      <p className="text-xl md:text-2xl font-medium mb-1.5">
+                        <span className="text-green-600">€{displayPrice.toFixed(2)}</span>
+                        <span className="text-base font-normal ml-2 text-secondary-purple-rain/60 line-through">
+                          €{publicPrice.toFixed(2)}
+                        </span>
+                      </p>
+                      <p className="text-xs text-green-600 font-medium uppercase tracking-widest mb-1.5">
+                        Member Discount!
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xl md:text-2xl font-medium mb-1.5">
+                      €{displayPrice.toFixed(2)}
+                    </p>
+                  )}
+                  {!canPurchaseProduct && (hasVariants ? selectedVariantIndex >= 0 : true) && (
+                    <p className="text-xs font-medium text-red-600 uppercase tracking-widest mt-1.5">Out of Stock</p>
+                  )}
+                  {shopProduct.productFields.membersOnly && !isMember && (
+                    <p className="text-xs font-medium text-secondary-purple-rain/70 uppercase tracking-widest mt-1.5">
+                      Members Only Product
+                    </p>
+                  )}
+                </div>
+              )}
+              {product.content && getFirstParagraph(product.content) && (
+                <div
+                  className="max-w-[44ch] mt-4 text-left text-secondary-purple-rain text-xs md:text-sm prose prose-sm prose-purple prose-p:my-0"
+                  dangerouslySetInnerHTML={{ __html: removeImagesFromContent(getFirstParagraph(product.content)) }}
+                />
               )}
             </div>
 
-            {/* Variant Selector */}
-            {hasVariants && variants.length > 1 && (
-              <ProductVariantSelector
-                variants={variants}
-                selectedVariantIndex={selectedVariantIndex}
-                onVariantChange={setSelectedVariantIndex}
-              />
-            )}
-
-            {/* Price */}
-            {displayPrice > 0 && (
-              <div className="text-secondary-purple-rain">
-                {hasDiscount ? (
-                  <div>
-                    <p className="text-3xl md:text-4xl font-medium mb-2">
-                      <span className="text-green-600">€{displayPrice.toFixed(2)}</span>
-                      <span className="text-xl font-normal ml-3 text-secondary-purple-rain/60 line-through">
-                        €{publicPrice.toFixed(2)}
-                      </span>
-                    </p>
-                    <p className="text-sm text-green-600 font-medium uppercase tracking-widest mb-2">
-                      Member Discount!
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-3xl md:text-4xl font-medium mb-2">
-                    €{displayPrice.toFixed(2)}
-                  </p>
-                )}
-                {!canPurchaseProduct && (
-                  <p className="text-sm font-medium text-red-600 uppercase tracking-widest mt-2">Out of Stock</p>
-                )}
-                {shopProduct.productFields.membersOnly && !isMember && (
-                  <p className="text-sm font-medium text-secondary-purple-rain/70 uppercase tracking-widest mt-2">
-                    Members Only Product
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Checkout Button */}
-            {canPurchaseProduct && stripePriceId && (
+            {/* Variant Selector + Add to Cart — left-aligned */}
+            <div className="flex flex-col items-start self-start gap-4">
+              {hasVariants && variants.length > 1 && (
+                <ProductVariantSelector
+                  variants={variants}
+                  selectedVariantIndex={selectedVariantIndex}
+                  onVariantChange={setSelectedVariantIndex}
+                  hideLabel={false}
+                />
+              )}
               <CheckoutButton
-                priceId={stripePriceId}
+                size="sm"
+                priceId={stripePriceId ?? ''}
                 productId={product.id}
                 productTitle={product.title}
                 productSlug={product.slug ?? ''}
-                disabled={!stripePriceId}
+                disabled={!stripePriceId || !canPurchaseProduct}
+                className="self-start"
               />
-            )}
+            </div>
 
             {/* Body text */}
             {product.content && (
               <div
-                className="max-w-[44ch] text-secondary-purple-rain text-base md:text-lg lg:text-xl prose prose-lg prose-purple"
+                className="max-w-[44ch] text-secondary-purple-rain text-xs md:text-sm prose prose-sm prose-purple pt-2"
                 dangerouslySetInnerHTML={{ __html: removeImagesFromContent(product.content) }}
               />
             )}
 
             {/* SKU */}
             {product.productFields?.sku && (
-              <div className="text-secondary-purple-rain/60 text-sm">
+              <div className="text-secondary-purple-rain/60 text-sm pt-4">
                 SKU: {product.productFields.sku}
               </div>
             )}
@@ -476,36 +498,80 @@ export const ProductPage: React.FC = () => {
 
         {/* Mobile layout */}
         <div className="flex flex-col lg:hidden">
-          <div className="m-auto flex w-full flex-col items-center justify-center gap-6 pt-[var(--header-height,5rem)] text-center lg:gap-12 lg:pt-0">
-            {/* Headlines */}
-            <div className="flex flex-col items-center px-4 max-lg:py-12 lg:px-6">
-              <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
-                {shopProduct.productFields.membersOnly ? 'Members Only' : 'Shop'}
-              </span>
+          <div className="m-auto flex flex-col items-center justify-center gap-6 pt-[var(--header-height,5rem)] text-center lg:gap-12 lg:pt-0">
+            {/* Headlines — left-aligned to match first paragraph */}
+            <div className="flex w-full max-w-[44ch] flex-col items-start self-start px-4 py-12 text-left lg:px-6">
+              {shopProduct.productFields.membersOnly && (
+                <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
+                  Members Only
+                </span>
+              )}
               <AnimatedHeadline
                 as="h1"
                 text={product.title}
-                className="font-heading text-secondary-purple-rain text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-normal tracking-tight"
+                className="font-heading text-secondary-purple-rain text-4xl md:text-3xl lg:text-4xl xl:text-5xl font-normal tracking-tight !text-left"
                 lineHeight={1.25}
                 fullWidth
               />
-              {variantLabel && (
-                <p className="mt-2 text-secondary-purple-rain/70 text-sm font-medium">
-                  {variantLabel}
-                </p>
+              {product.content && getFirstParagraph(product.content) && (
+                <div
+                  className="max-w-[44ch] mt-4 px-4 text-left text-secondary-current text-xs md:text-sm prose prose-sm prose-p:my-0"
+                  dangerouslySetInnerHTML={{ __html: removeImagesFromContent(getFirstParagraph(product.content)) }}
+                />
               )}
             </div>
 
-            {/* Variant Selector (Mobile) */}
-            {hasVariants && variants.length > 1 && (
-              <div className="px-4 w-full">
+            {/* Price — under headline */}
+            {displayPrice > 0 && (
+              <div className="px-4 mb-4 text-secondary-purple-rain">
+                {hasDiscount ? (
+                  <div>
+                    <p className="text-xl md:text-2xl font-medium mb-1.5">
+                      <span className="text-green-600">€{displayPrice.toFixed(2)}</span>
+                      <span className="text-base font-normal ml-2 text-secondary-purple-rain/60 line-through">
+                        €{publicPrice.toFixed(2)}
+                      </span>
+                    </p>
+                    <p className="text-xs text-green-600 font-medium uppercase tracking-widest mb-1.5">
+                      Member Discount!
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xl md:text-2xl font-medium mb-1.5">
+                    €{displayPrice.toFixed(2)}
+                  </p>
+                )}
+                {!canPurchaseProduct && (hasVariants ? selectedVariantIndex >= 0 : true) && (
+                  <p className="text-xs font-medium text-red-600 uppercase tracking-widest mt-1.5">Out of Stock</p>
+                )}
+                {shopProduct.productFields.membersOnly && !isMember && (
+                  <p className="text-xs font-medium text-secondary-purple-rain/70 uppercase tracking-widest mt-1.5">
+                    Members Only Product
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Variant Selector + Add to Cart (Mobile) — left-aligned */}
+            <div className="flex w-full flex-col items-start gap-4 px-4">
+              {hasVariants && variants.length > 1 && (
                 <ProductVariantSelector
                   variants={variants}
                   selectedVariantIndex={selectedVariantIndex}
                   onVariantChange={setSelectedVariantIndex}
+                  hideLabel={false}
                 />
-              </div>
-            )}
+              )}
+              <CheckoutButton
+                size="sm"
+                priceId={stripePriceId ?? ''}
+                productId={product.id}
+                productTitle={product.title}
+                productSlug={product.slug ?? ''}
+                disabled={!stripePriceId || !canPurchaseProduct}
+                className="w-full self-start"
+              />
+            </div>
 
             {/* Mobile: horizontal image carousel */}
             {productImages.length > 0 && (
@@ -580,55 +646,10 @@ export const ProductPage: React.FC = () => {
               </>
             )}
 
-            {/* Price */}
-            {displayPrice > 0 && (
-              <div className="text-secondary-purple-rain px-4">
-                {hasDiscount ? (
-                  <div>
-                    <p className="text-3xl md:text-4xl font-medium mb-2">
-                      <span className="text-green-600">€{displayPrice.toFixed(2)}</span>
-                      <span className="text-xl font-normal ml-3 text-secondary-purple-rain/60 line-through">
-                        €{publicPrice.toFixed(2)}
-                      </span>
-                    </p>
-                    <p className="text-sm text-green-600 font-medium uppercase tracking-widest mb-2">
-                      Member Discount!
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-3xl md:text-4xl font-medium mb-2">
-                    €{displayPrice.toFixed(2)}
-                  </p>
-                )}
-                {!canPurchaseProduct && (
-                  <p className="text-sm font-medium text-red-600 uppercase tracking-widest mt-2">Out of Stock</p>
-                )}
-                {shopProduct.productFields.membersOnly && !isMember && (
-                  <p className="text-sm font-medium text-secondary-purple-rain/70 uppercase tracking-widest mt-2">
-                    Members Only Product
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Checkout Button */}
-            {canPurchaseProduct && stripePriceId && (
-              <div className="px-4 w-full">
-                <CheckoutButton
-                  priceId={stripePriceId}
-                  productId={product.id}
-                  productTitle={product.title}
-                  productSlug={product.slug ?? ''}
-                  disabled={!stripePriceId}
-                  className="w-full"
-                />
-              </div>
-            )}
-
             {/* Body text */}
             {product.content && (
               <div
-                className="max-w-[44ch] px-4 text-secondary-current text-base md:text-lg lg:px-8 lg:text-xl prose prose-lg"
+                className="max-w-[44ch] px-4 text-secondary-current text-xs md:text-sm lg:px-8 prose prose-sm"
                 dangerouslySetInnerHTML={{ __html: removeImagesFromContent(product.content) }}
               />
             )}

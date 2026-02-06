@@ -19,6 +19,8 @@ interface ProductVariantSelectorProps {
   onVariantChange: (variantIndex: number) => void;
   /** 'buttons' = pills (default); 'dropdown' = select. */
   variant?: 'dropdown' | 'buttons';
+  /** When true, hide the "Size" label above the variant buttons. */
+  hideLabel?: boolean;
 }
 
 export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
@@ -26,6 +28,7 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
   selectedVariantIndex,
   onVariantChange,
   variant = 'buttons',
+  hideLabel = false,
 }) => {
   if (!variants || variants.length <= 1) {
     return null;
@@ -59,11 +62,13 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-sm font-medium text-secondary-purple-rain/70 uppercase tracking-widest">
-        Size
-      </p>
-      <div className="flex flex-wrap justify-center gap-3">
+    <div className="flex flex-col items-start gap-4 self-start">
+      {!hideLabel && (
+        <p className="text-sm font-medium text-secondary-purple-rain/70 uppercase tracking-widest">
+          Size
+        </p>
+      )}
+      <div className="flex flex-nowrap justify-start items-center gap-2">
         {variants.map((v, index) => {
           const isSelected = index === selectedVariantIndex;
           const isInStock = v.inventory > 0;
@@ -74,10 +79,10 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
               onClick={() => onVariantChange(index)}
               disabled={!isInStock}
               className={`
-                relative px-6 py-3 rounded-full text-sm font-medium transition-all
-                ${isSelected ? 'bg-secondary-purple-rain text-white' : 'bg-white border-2 border-secondary-purple-rain/30 text-secondary-purple-rain hover:border-secondary-purple-rain'}
+                relative px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap
+                ${isSelected ? 'bg-secondary-purple-rain text-white border border-secondary-purple-rain' : 'bg-white border border-slate-300 text-slate-800 hover:border-slate-400'}
                 ${!isInStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                focus:outline-none focus:ring-2 focus:ring-secondary-purple-rain focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-secondary-purple-rain focus:ring-offset-1
               `}
             >
               {formatVariantLabel(v.label)}
