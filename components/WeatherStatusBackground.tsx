@@ -157,8 +157,9 @@ export const WeatherStatusBackground: React.FC = () => {
             if (typeof ipLat === 'number' && typeof ipLon === 'number') {
               lat = ipLat;
               lon = ipLon;
-              const name = ip.country_name ?? ip.countryName;
-              const parts = [ip.city, name].filter(Boolean);
+              const name = (ip.country_name ?? ip.countryName ?? '') as string;
+              const normalizedCountry = name === 'United State' ? 'United States' : name;
+              const parts = [ip.city, normalizedCountry].filter(Boolean);
               if (parts.length) label = parts.join(', ');
               if (ip.timezone) timezone = ip.timezone;
               setCachedGeolocation({ lat, lon, label, timezone });
