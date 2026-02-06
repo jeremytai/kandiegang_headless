@@ -242,6 +242,8 @@ The **Members area** (`/members`) and member login (StickyTop, offcanvas) use **
 - **Profile** (table `public.profiles`): One row per user (`profiles.id = auth.users.id`). The app reads:
   - `is_member`, `membership_source`, `membership_plans` (array, e.g. `["Kandie Gang Cycling Club Membership"]`), `member_since`, `membership_expiration`
   - **`is_guide`**: Boolean; marks the user as a Kandie Gang Guide (can be set manually or synced from WordPress role).
+  - **`is_substack_subscriber`**: Boolean; set by syncing from a Substack or Mailchimp CSV export (see below).
+  - **`newsletter_opted_in_at`**: Date (YYYY-MM-DD) when the user opted in to the newsletter, when the CSV includes an opt-in date column.
 - **Display**: Users can be both **Kandie Gang Cycling Member** (from a plan name containing "cycling" + "member"/"membership") and **Kandie Gang Guide** (from `is_guide` or a plan name containing "guide"). The Members page and account panel show both when applicable.
 
 ### Env vars
@@ -257,6 +259,7 @@ Service role key is only for scripts (e.g. CSV sync), not the frontend.
 
 - **WooCommerce Memberships CSV**: Run `node scripts/sync-membership-csv-to-profiles.js [path-to-memberships.csv]` to set `is_member`, `membership_plans`, `member_since`, `membership_expiration` from the export. The script aggregates multiple active plans per user (e.g. Cycling Club + Guide if both appear in the CSV). Requires `VITE_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 - **WordPress bridge**: On login/refresh, the app can update `is_member` and `membership_source` from WordPress; if the user's WP role slug contains "guide", `is_guide` is set to `true` in Supabase (see `context/AuthContext.tsx`). Set `membership_source` to `supabase` when Supabase is the source of truth so the app doesn't overwrite manual changes.
+- **Substack or Mailchimp subscribers CSV**: Run `node scripts/sync-substack-subscribers-to-profiles.js [path-to-export.csv]` to set `is_substack_subscriber` and `newsletter_opted_in_at` by matching profile email to the export. **Substack**: Dashboard > Subscribers > Export. **Mailchimp**: Audience > Export audience. The script looks for an email column (e.g. "Email", "Email Address") and an optional opt-in date column (e.g. "OPTIN_TIME", "Timestamp", "Signup Date"). Re-run periodically to reflect current subscribers.
 
 ### Manual profile updates
 
@@ -264,7 +267,7 @@ To set someone as a member or Guide in Supabase (e.g. manual grant or no CSV): u
 
 ### Migrations
 
-Schema changes live in `supabase/migrations/`. Apply with `supabase db push` (CLI) or run the SQL in the Supabase Dashboard → SQL Editor. The **`is_guide`** column was added in `20250206140000_add_is_guide_to_profiles.sql`.
+Schema changes live in `supabase/migrations/`. Apply with `supabase db push` (CLI) or run the SQL in the Supabase Dashboard → SQL Editor. The **`is_guide`** column was added in `20250206140000_add_is_guide_to_profiles.sql`. The **`is_substack_subscriber`** column was added in `20250206150000_add_is_substack_subscriber_to_profiles.sql`. The **`newsletter_opted_in_at`** column was added in `20250206160000_add_newsletter_opted_in_at_to_profiles.sql`.
 
 ## 🔐 Site password
 

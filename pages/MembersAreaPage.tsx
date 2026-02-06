@@ -36,6 +36,17 @@ function isGuideFromPlans(plans: string[] | null | undefined): boolean {
   return plans.some((p) => p.toLowerCase().includes('guide'));
 }
 
+function getDaysLeft(expirationStr: string | null | undefined): number | null {
+  if (!expirationStr) return null;
+  const exp = new Date(expirationStr + 'T23:59:59');
+  if (Number.isNaN(exp.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  exp.setHours(0, 0, 0, 0);
+  const diffMs = exp.getTime() - today.getTime();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
 export const MembersAreaPage: React.FC = () => {
   const { status, user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -58,6 +69,7 @@ export const MembersAreaPage: React.FC = () => {
     : guide ? 'Kandie Gang Guide'
     : 'Member';
   const secondMemberKindLabel = cyclingMember && guide ? 'Kandie Gang Guide' : null;
+  const daysLeft = getDaysLeft(profile?.membership_expiration ?? null);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -116,7 +128,7 @@ export const MembersAreaPage: React.FC = () => {
 
   if (status === 'loading') {
     return (
-      <main className="bg-primary-breath min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
+      <main className="bg-white min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
         <div className="max-w-7xl mx-auto px-6">
           <p className="text-slate-600">Checking your membership…</p>
         </div>
@@ -134,91 +146,37 @@ export const MembersAreaPage: React.FC = () => {
   return (
     <main className="bg-primary-breath min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
       <div className="max-w-7xl mx-auto px-6">
-        <motion.span
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="inline-block w-fit rounded-full bg-secondary-purple-rain px-2 py-1 text-xs font-light text-white"
-        >
-          Members
-        </motion.span>
-        <header className="mb-2 md:mb-6">
+        <header className="mb-2 md:mb-6 text-center">
+          {(cyclingMember || guide) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex flex-wrap gap-2 mb-2 justify-center"
+            >
+              {guide && (
+                <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                  Kandie Gang Guide
+                </span>
+              )}
+              {cyclingMember && (
+                <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                  Kandie Gang Cycling Member
+                </span>
+              )}
+            </motion.div>
+          )}
           <AnimatedHeadline
             text={`${greeting}, ${profile?.display_name?.trim().split(/\s+/)[0] || 'Friend'}`}
             as="h1"
             className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-1 md:mb-2 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-4 block"
           />
         </header>
-        <div className="max-w-3xl space-y-6">
-
-        {!initialMembershipCheckDone ? (
-          <p className="text-slate-600">Checking your membership…</p>
-        ) : isMember ? (
-          <section className="space-y-4">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-700 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="font-semibold">Membership status</p>
-                <p>
-                  Active ·{' '}
-                  <span className="text-slate-500">
-                    synced from {profile?.membership_source || 'WordPress'}.
-                  </span>
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <span className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-900">
-                  {memberKindLabel}
-                </span>
-                {secondMemberKindLabel ? (
-                  <span className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-900">
-                    {secondMemberKindLabel}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          </section>
-        ) : (
-          <section className="space-y-4">
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-              <p className="font-semibold mb-1">You&apos;re almost there.</p>
-              <p className="mb-1">
-                We couldn&apos;t find an active membership for this account. We checked
-                our current system (and WordPress) for the email you signed in with.
-              </p>
-              <p>
-                If you&apos;re already a Kandie Gang member from our previous setup,
-                <Link to="/contact" className="font-semibold underline ml-1">reach out</Link>
-                {' '}and we&apos;ll link your account. Otherwise, keep an eye on our channels
-                for the next membership window.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={handleRefreshMembership}
-                disabled={isRefreshing}
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-900 disabled:opacity-50"
-              >
-                {isRefreshing ? 'Refreshing…' : 'Refresh membership status'}
-              </button>
-              <Link
-                to="/contact"
-                className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900"
-              >
-                Contact us about membership
-              </Link>
-            </div>
-            <p className="mt-2 text-xs text-slate-500">
-              If you just set yourself as a member in Supabase, click Refresh to load the latest status.
-            </p>
-          </section>
-        )}
-      </div>
 
       {initialMembershipCheckDone && canSeeMembersOnlyPosts && (
         <div className="mx-auto max-w-7xl mt-10 pt-8 border-t border-slate-200">
           <h2 className="text-4xl font-light tracking-normal text-secondary-purple-rain mb-6 md:mb-8">
-            Members Photo Gallery
+            Members Only Photo Gallery
           </h2>
           {membersOnlyLoading ? (
             <div className="flex items-center gap-2 text-slate-500 text-sm">
@@ -251,7 +209,7 @@ export const MembersAreaPage: React.FC = () => {
                           src={
                             story.featuredImage?.node?.sourceUrl
                               ? transformMediaUrl(story.featuredImage.node.sourceUrl)
-                              : 'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?q=80&w=800'
+                              : '/images/231112_stevenscup_neuduvenstedt-10.jpg?q=80&w=800'
                           }
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           alt=""

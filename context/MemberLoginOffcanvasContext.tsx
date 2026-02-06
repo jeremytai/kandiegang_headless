@@ -86,17 +86,18 @@ function MemberOffcanvasAccountContent({
   onClose: () => void;
   onLogoutRedirect: () => void;
 }) {
-  const { user, profile, logout, signInWithDiscord } = useAuth();
+  const { user, profile, logout, signInWithDiscord, refreshProfile } = useAuth();
   const [discordConnecting, setDiscordConnecting] = useState(false);
   const discordConnected = hasDiscordIdentity(user);
+  const [isRefreshingMembership, setIsRefreshingMembership] = useState(false);
 
   const handleLogout = useCallback(async () => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('logoutRedirecting', '1');
     }
     onClose();
-    onLogoutRedirect();
     await logout();
+    onLogoutRedirect();
   }, [logout, onClose, onLogoutRedirect]);
 
   const handleConnectDiscord = useCallback(async () => {
@@ -109,11 +110,18 @@ function MemberOffcanvasAccountContent({
     setDiscordConnecting(false);
   }, [signInWithDiscord]);
 
+  const handleRefreshMembership = useCallback(async () => {
+    setIsRefreshingMembership(true);
+    await refreshProfile();
+    setIsRefreshingMembership(false);
+  }, [refreshProfile]);
+
   const memberSinceFormatted = formatMemberSince(profile?.member_since ?? null);
   const daysLeft = getDaysLeft(profile?.membership_expiration ?? null);
   const showCyclingMember = isCyclingMember(profile?.membership_plans);
   const showGuide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
   const hasRolePills = showCyclingMember || showGuide;
+  const isMember = Boolean(profile?.is_member);
 
   if (!user) return null;
 
@@ -145,7 +153,7 @@ function MemberOffcanvasAccountContent({
           {memberSinceFormatted ?? '—'}
         </p>
         <p>
-          <span className="font-semibold">
+          <span className="font-light">
             {daysLeft != null
               ? daysLeft > 0
                 ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left on membership`
@@ -154,7 +162,83 @@ function MemberOffcanvasAccountContent({
                   : 'Membership expired'
               : '—'}
           </span>
+          {profile?.membership_source && (
+            <span className="font-light">
+              {' '}
+              · synced from {profile.membership_source}
+            </span>
+          )}
         </p>
+        {profile?.is_substack_subscriber && (
+          <p>
+            <span className="font-semibold">Newsletter</span>{' '}
+            Subscriber
+            {profile.newsletter_opted_in_at && (
+              <>
+                {' '}
+                since {formatMemberSince(profile.newsletter_opted_in_at)}
+              </>
+            )}
+          </p>
+        )}
+      </div>
+
+      {!isMember && (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+            <p className="font-semibold mb-1">You&apos;re almost there.</p>
+            <p className="mb-1">
+              We couldn&apos;t find an active membership for this account. We checked our current system (and WordPress) for the email you signed in with.
+            </p>
+            <p>
+              If you&apos;re already a Kandie Gang member from our previous setup,{' '}
+              <Link to="/contact" onClick={onClose} className="font-semibold underline">
+                reach out
+              </Link>
+              {' '}and we&apos;ll link your account. Otherwise, keep an eye on our channels for the next membership window.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleRefreshMembership}
+              disabled={isRefreshingMembership}
+              className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-900 disabled:opacity-50"
+            >
+              {isRefreshingMembership ? 'Refreshing…' : 'Refresh membership status'}
+            </button>
+            <Link
+              to="/contact"
+              onClick={onClose}
+              className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900"
+            >
+              Contact us about membership
+            </Link>
+          </div>
+          <p className="text-xs text-slate-500">
+            If you just set yourself as a member in Supabase, click Refresh to load the latest status.
+          </p>
+        </div>
+      )}
+
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <p className="text-xs font-semibold text-slate-700 mb-2">Newsletter</p>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-slate-600">Substack</span>
+          {profile?.is_substack_subscriber ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 border border-emerald-200">
+              <span aria-hidden>✓</span>
+              Subscribed
+            </span>
+          ) : (
+            <span className="text-xs text-slate-500">Not subscribed</span>
+          )}
+        </div>
+        {profile?.is_substack_subscriber && profile?.newsletter_opted_in_at && (
+          <p className="text-xs text-slate-500 mt-1.5">
+            Opted in {formatMemberSince(profile.newsletter_opted_in_at)}
+          </p>
+        )}
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">

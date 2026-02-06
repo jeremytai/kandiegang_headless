@@ -40,6 +40,10 @@ export interface Profile {
   membership_expiration: string | null;
   /** Whether the user is a Kandie Gang Guide (manual or synced from WP/CSV). */
   is_guide: boolean;
+  /** True when email matches a Substack/Mailchimp subscriber export (synced via script). */
+  is_substack_subscriber: boolean;
+  /** Newsletter opt-in date (YYYY-MM-DD) from CSV sync, when available. */
+  newsletter_opted_in_at: string | null;
   /** Discord user id (snowflake) from OAuth. */
   discord_id: string | null;
   /** Display name from Discord (or other provider). */
@@ -174,6 +178,8 @@ async function loadUserAndProfile(): Promise<{
     member_since: raw.member_since ?? null,
     membership_expiration: raw.membership_expiration ?? null,
     is_guide: Boolean(raw.is_guide),
+    is_substack_subscriber: Boolean(raw.is_substack_subscriber),
+    newsletter_opted_in_at: raw.newsletter_opted_in_at ?? null,
     discord_id: raw.discord_id ?? null,
     username: raw.username ?? null,
     avatar_url: raw.avatar_url ?? null,
@@ -396,7 +402,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const logout = useCallback(async () => {
-    setStatus('loading');
     if (supabase) {
       await supabase.auth.signOut();
     }

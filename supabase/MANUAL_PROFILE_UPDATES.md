@@ -34,6 +34,8 @@ The app loads the row in **`profiles`** where `profiles.id = user.id` and expose
 | `membership_source` | enum | `wordpress` \| `supabase` \| `unknown`; shown on members page. |
 | `membership_plans` | text[] | Plan names; e.g. Cycling Club + Guide plan. Drives “Kandie Gang Cycling Member” / “Kandie Gang Guide” pills. |
 | `is_guide` | boolean | Kandie Gang Guide flag (manual or synced from WordPress role). Combined with plan names for display. |
+| `is_substack_subscriber` | boolean | Set by sync script from Substack/Mailchimp CSV; shown as “Newsletter · Subscriber” on members page and account panel. |
+| `newsletter_opted_in_at` | date | Opt-in date from CSV (when available); shown as “since [date]” in profile. |
 | `member_since` | date | Available for future UI. |
 | `membership_expiration` | date | Available for future UI. |
 
