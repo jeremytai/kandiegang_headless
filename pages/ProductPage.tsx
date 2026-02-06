@@ -133,13 +133,14 @@ export const ProductPage: React.FC = () => {
       return;
     }
 
+    const slugToFetch = slug;
     let cancelled = false;
     setLoading(true);
     setError(null);
 
     async function load() {
       try {
-        const productData = await getProductBySlug(slug);
+        const productData = await getProductBySlug(slugToFetch);
         if (cancelled) return;
         if (productData) {
           setProduct(productData);
@@ -257,8 +258,8 @@ export const ProductPage: React.FC = () => {
   const shopProduct: ShopProduct = {
     id: product.id,
     title: product.title,
-    content: product.content,
-    excerpt: product.excerpt,
+    content: product.content ?? '',
+    excerpt: product.excerpt ?? '',
     featuredImage: product.featuredImage,
     productFields: {
       hasVariants,
@@ -451,7 +452,7 @@ export const ProductPage: React.FC = () => {
                 priceId={stripePriceId}
                 productId={product.id}
                 productTitle={product.title}
-                productSlug={product.slug}
+                productSlug={product.slug ?? ''}
                 disabled={!stripePriceId}
               />
             )}
@@ -617,7 +618,7 @@ export const ProductPage: React.FC = () => {
                   priceId={stripePriceId}
                   productId={product.id}
                   productTitle={product.title}
-                  productSlug={product.slug}
+                  productSlug={product.slug ?? ''}
                   disabled={!stripePriceId}
                   className="w-full"
                 />

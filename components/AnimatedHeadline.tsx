@@ -52,7 +52,12 @@ export function AnimatedHeadline({
     }
 
     split.lines?.forEach((line) => {
-      (line as HTMLElement).style.overflow = 'hidden';
+      const lineEl = line as HTMLElement;
+      lineEl.style.overflow = 'hidden';
+      // Ensure descenders (e.g. "p", "g", "y") aren't clipped when parent uses tight leading
+      lineEl.style.lineHeight = '1.35';
+      lineEl.style.paddingBottom = '0.08em';
+      lineEl.style.boxSizing = 'content-box';
     });
 
     gsap.set(split.chars, {
@@ -133,7 +138,7 @@ export function AnimatedHeadline({
       className={className}
       style={{
         lineHeight,
-        overflow: 'hidden',
+        overflow: 'visible',
         display: fullWidth ? 'block' : 'inline-block',
         width: fullWidth ? '100%' : undefined,
       }}

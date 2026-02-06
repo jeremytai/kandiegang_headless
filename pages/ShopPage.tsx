@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Loader2, RefreshCw, AlertCircle, ArrowRight } from 'lucide-react';
 import {
   wpQuery,
   GET_PRODUCTS_QUERY,
@@ -90,13 +90,13 @@ export const ShopPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-primary-breath min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
+    <div className="bg-white min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
       <div className="max-w-7xl mx-auto px-6">
         <header className="mb-16 md:mb-24 relative">
           <AnimatedHeadline
             text="Shop"
             as="h1"
-            className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8 block"
+            className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8"
           />
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <motion.p 
@@ -105,7 +105,7 @@ export const ShopPage: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
             >
-              Exclusive Kandie Gang products including limited edition apparel and accessories because we believe in the power of collectivism and standing out from the crowd.
+              Exclusive Kandie Gang product drops.
             </motion.p>
             
             {error && (
@@ -145,8 +145,8 @@ export const ShopPage: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {/* 4-column product grid - same layout as stories */}
-              <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
+              {/* 3-column product grid: 1 col mobile, 2 col sm, 3 col lg+ */}
+              <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
                 {products.length > 0 ? (
                   products.map((product, i) => {
                     const isMember = !!user;
@@ -196,7 +196,7 @@ export const ShopPage: React.FC = () => {
                           transition={{ delay: Math.min(i * 0.05, 0.3) }}
                           className="group cursor-pointer flex flex-col"
                         >
-                        <div className="overflow-hidden rounded-xl aspect-[4/3] bg-slate-100 mb-4 relative">
+                        <div className="overflow-hidden rounded-xl aspect-[3/4] bg-slate-100 mb-4 relative">
                           <img
                             src={
                               product.featuredImage?.node?.sourceUrl
@@ -217,7 +217,7 @@ export const ShopPage: React.FC = () => {
                         </div>
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <h2 
-                            className="text-xl md:text-2xl font-light tracking-normal text-slate-900 leading-tight line-clamp-2 flex-1"
+                            className="text-lg md:text-xl font-gtplanar font-bold tracking-normal text-secondary-purple-rain leading-tight line-clamp-2 flex-1"
                             dangerouslySetInnerHTML={{ __html: product.title }}
                           />
                           {isMembersOnly && (
@@ -227,8 +227,8 @@ export const ShopPage: React.FC = () => {
                           )}
                         </div>
                         {displayPrice && (
-                          <p className="text-slate-900 font-medium text-base md:text-lg mb-2">
-                            {displayPrice}
+                          <p className="text-secondary-purple-rain font-gtplanar font-medium text-base md:text-lg mt-4 mb-8">
+                            € {displayPrice} 
                             {isMember && product.productFields?.priceMember && product.productFields?.pricePublic && (
                               <span className="text-slate-500 text-sm font-normal ml-2 line-through">
                                 {product.productFields.pricePublic}
@@ -236,6 +236,10 @@ export const ShopPage: React.FC = () => {
                             )}
                           </p>
                         )}
+                        <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-secondary-purple-rain text-white group-hover:border-slate-600 group-hover:bg-slate-200 transition-colors mb-10">
+                          <span className="font-medium text-white text-sm tracking-normal">Buy</span>
+                          <ArrowRight className="w-4 h-4 text-white shrink-0" />
+                        </div>
                         </motion.article>
                       </Link>
                     );

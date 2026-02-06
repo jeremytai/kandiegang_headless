@@ -4,7 +4,7 @@
  * Community page: hero, upcoming events, and required reading (Kandie Code, Ride Levels, Waiver).
  */
 
-import React from 'react';
+import * as React from 'react';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { EventsLayout, EventsLayoutEvent } from '../components/EventsLayout';
 import { ThreeThingsToDo } from '../components/ThreeThingsToDo';
@@ -51,7 +51,7 @@ export const CommunityPage: React.FC = () => (
               as="h1"
               lineHeight={1.5}
               fullWidth
-              className="text-4xl md:text-6xl lg:text-[6.5vw] font-heading-light tracking-normal text-secondary-purple-rain mb-2 md:mb-4 text-balance mb-8 w-full"
+              className="text-4xl md:text-6xl lg:text-[6.5vw] font-heading-light tracking-normal text-secondary-purple-rain mb-2 md:mb-4 text-balance w-full"
             />
           </div>
         </div>

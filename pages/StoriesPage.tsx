@@ -166,7 +166,7 @@ export const StoriesPage: React.FC = () => {
           <AnimatedHeadline
             text="Stories"
             as="h1"
-            className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8 block"
+            className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8"
           />
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <motion.p 

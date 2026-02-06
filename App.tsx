@@ -58,7 +58,8 @@ import { CheckoutCancelPage } from './pages/CheckoutCancelPage';
 
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Skip preloader in dev so the site is visible immediately (set VITE_SKIP_PRELOADER=1)
+  const [isLoading, setIsLoading] = useState(() => !(import.meta.env.DEV && import.meta.env.VITE_SKIP_PRELOADER === '1'));
   // Password gate disabled - site is now publicly accessible
   const [isUnlocked] = useState(true);
   const [announcementDismissed, setAnnouncementDismissed] = useState(false);
@@ -131,7 +132,7 @@ const App: React.FC = () => {
         <MemberLoginOffcanvasProvider>
         <ContactModalProvider>
           <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
-            <Preloader onComplete={() => setIsLoading(false)} />
+            {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
             {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
 
             <WeatherStatusBackground />
