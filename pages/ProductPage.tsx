@@ -12,6 +12,7 @@ import { getProductBySlug, transformMediaUrl, extractProductImagesFromBlocks } f
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { useAuth } from '../context/AuthContext';
+import { CheckoutButton } from '../components/CheckoutButton';
 
 /**
  * Extract image URLs from HTML content.
@@ -373,6 +374,21 @@ export const ProductPage: React.FC = () => {
               </div>
             )}
 
+            {/* Checkout Button */}
+            {isInStock && !(isMembersOnly && !isMember) && (
+              <CheckoutButton
+                priceId={
+                  isMember && product.productFields?.stripePriceIdMember
+                    ? product.productFields.stripePriceIdMember
+                    : product.productFields?.stripePriceIdPublic || ''
+                }
+                productId={product.id}
+                productTitle={product.title}
+                productSlug={product.slug}
+                disabled={!product.productFields?.stripePriceIdPublic && !product.productFields?.stripePriceIdMember}
+              />
+            )}
+
             {/* Body text */}
             {product.content && (
               <div
@@ -504,6 +520,24 @@ export const ProductPage: React.FC = () => {
                     Members Only Product
                   </p>
                 )}
+              </div>
+            )}
+
+            {/* Checkout Button */}
+            {isInStock && !(isMembersOnly && !isMember) && (
+              <div className="px-4 w-full">
+                <CheckoutButton
+                  priceId={
+                    isMember && product.productFields?.stripePriceIdMember
+                      ? product.productFields.stripePriceIdMember
+                      : product.productFields?.stripePriceIdPublic || ''
+                  }
+                  productId={product.id}
+                  productTitle={product.title}
+                  productSlug={product.slug}
+                  disabled={!product.productFields?.stripePriceIdPublic && !product.productFields?.stripePriceIdMember}
+                  className="w-full"
+                />
               </div>
             )}
 

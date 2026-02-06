@@ -163,9 +163,13 @@ export const WeatherStatusBackground: React.FC = () => {
               if (ip.timezone) timezone = ip.timezone;
               setCachedGeolocation({ lat, lon, label, timezone });
             }
+          } else {
+            // API returned error (e.g., 502), fall back to Hamburg
+            // Don't log error - silently use default location
           }
         } catch {
-          // Keep Hamburg default
+          // Network error or other failure - fall back to Hamburg
+          // Don't log error - silently use default location
         }
       }
 

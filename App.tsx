@@ -53,6 +53,8 @@ import { ShopPage } from './pages/ShopPage';
 import { ProductPage } from './pages/ProductPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { MembersAreaPage } from './pages/MembersAreaPage.tsx';
+import { CheckoutSuccessPage } from './pages/CheckoutSuccessPage';
+import { CheckoutCancelPage } from './pages/CheckoutCancelPage';
 
 const App: React.FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -178,6 +180,8 @@ const App: React.FC = () => {
                   <Route path="/login/shop" element={<ShopLoginPage />} />
                   <Route path="/shop" element={<ShopPage />} />
                   <Route path="/shop/:slug" element={<ProductPage />} />
+                  <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+                  <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
                   <Route path="/signup" element={<SignUpPage />} />
                   <Route path="/members" element={<MembersAreaPage />} />
                   <Route path="*" element={<NotFoundPage />} />
@@ -190,7 +194,7 @@ const App: React.FC = () => {
             </motion.div>
 
             {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
-            <div ref={sentinelRef} className="h-[50vh] md:h-[70vh] w-full pointer-events-none" />
+            <div ref={sentinelRef} className="relative h-[50vh] md:h-[70vh] w-full pointer-events-none" />
             {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && (
               <StickyBottom />
             )}

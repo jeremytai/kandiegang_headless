@@ -50,7 +50,9 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
   const isContactPage = location.pathname === '/contact';
   const { user, profile } = useAuth();
   const { openMemberLogin } = useMemberLoginOffcanvas();
-  const { scrollY } = useScroll();
+  const { scrollY } = useScroll({
+    layoutEffect: false,
+  });
   const isLoggedIn = Boolean(user);
   const avatarUrl = profile?.avatar_url ?? null;
   const isGuide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);

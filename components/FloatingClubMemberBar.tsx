@@ -12,7 +12,9 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
 export const FloatingClubMemberBar: React.FC = () => {
-  const { scrollY } = useScroll();
+  const { scrollY } = useScroll({
+    layoutEffect: false,
+  });
 
   const opacity = useTransform(scrollY, [0, 200], [1, 0]);
   const y = useTransform(scrollY, [0, 200], [0, 50]);

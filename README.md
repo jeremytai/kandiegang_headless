@@ -64,6 +64,11 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
    
    # Formspree contact form ID (optional – for /contact and Contact modal)
    VITE_FORMSPREE_CONTACT_FORM_ID=your_formspree_form_id
+   
+   # Stripe Secret Key (required for checkout - NEVER commit this!)
+   # Get from https://dashboard.stripe.com/apikeys
+   # Use sk_test_... for development, sk_live_... for production
+   STRIPE_SECRET_KEY=sk_test_...
    ```
 
 4. **Start the development server**
@@ -232,6 +237,48 @@ The contact form on the **Contact** page (`/contact`) and in the **Contact modal
 
 The shared `ContactForm` component (`components/ContactForm.tsx`) is used on both the Contact page and inside `ContactModal`. If `VITE_FORMSPREE_CONTACT_FORM_ID` is not set, the form area shows instructions to set the env var. On submit errors, the form displays Formspree’s error message when available. For stronger spam protection after enabling AJAX, you can add reCAPTCHA v3 or Turnstile in your Formspree dashboard.
 
+## 💳 Stripe Checkout
+
+The shop product pages (`/shop/:slug`) include Stripe Checkout integration for secure payment processing. Products support both public and member pricing, with automatic price selection based on user authentication status.
+
+### Stripe setup
+
+1. **Create a Stripe account** at [stripe.com](https://stripe.com) and get your API keys from the [Stripe Dashboard](https://dashboard.stripe.com/apikeys).
+
+2. **Configure environment variables**:
+   - For **local development**: Add to `.env` (never commit this file):
+     ```env
+     STRIPE_SECRET_KEY=sk_test_... (your test secret key)
+     ```
+   - For **Vercel production**: Add `STRIPE_SECRET_KEY` in **Project → Settings → Environment Variables**. Use `sk_live_...` for production.
+
+3. **Set up Stripe Products and Prices**:
+   - In your WordPress admin, ensure products have `stripePriceIdPublic` and optionally `stripePriceIdMember` set in the product fields.
+   - Create corresponding Price objects in Stripe Dashboard and copy the Price IDs (e.g. `price_...`) to your WordPress product fields.
+
+4. **Test the checkout flow**:
+   - **Local development**: Run `npm run dev:vercel` (not `npm run dev`) to enable API routes
+   - Use Stripe test cards (e.g. `4242 4242 4242 4242`) for testing
+   - After successful checkout, users are redirected to `/checkout/success`
+   - If checkout is cancelled, users return to the product page
+   - **Note**: The API endpoint `/api/create-checkout-session` only works with `vercel dev` or when deployed to Vercel
+
+### How it works
+
+- The `CheckoutButton` component (`components/CheckoutButton.tsx`) calls `/api/create-checkout-session` to create a Stripe Checkout session
+- The Vercel serverless function (`api/create-checkout-session.ts`) handles session creation securely on the server
+- Users are redirected to Stripe's hosted checkout page
+- After payment, Stripe redirects back to `/checkout/success` or `/checkout/cancel`
+- Product metadata (productId, productTitle, userId) is stored in the Stripe session for order tracking
+
+### Product requirements
+
+Products must have:
+- `stripePriceIdPublic`: Required - Stripe Price ID for public/non-member pricing
+- `stripePriceIdMember`: Optional - Stripe Price ID for member pricing (used if user is authenticated)
+- `inStock`: Boolean flag to enable/disable checkout button
+- `membersOnly`: Boolean flag to restrict checkout to authenticated members
+
 ## 👤 Members area & Supabase profiles
 
 The **Members area** (`/members`) and member login (StickyTop, offcanvas) use **Supabase Auth** and a **`profiles`** table. Profiles store membership status, plan names, and whether the user is a **Kandie Gang Guide**.
@@ -305,9 +352,12 @@ Submissions will appear as messages in that channel. The contact form already se
 
 ### Available Scripts
 
-- `npm run dev`: Start the development server (port 3000)
+- `npm run dev`: Start the development server (port 3000) - Note: API routes won't work with this command
+- `npm run dev:vercel`: Start development server with Vercel CLI (enables API routes like `/api/create-checkout-session`)
 - `npm run build`: Build for production
 - `npm run preview`: Preview the production build locally
+
+**Important for Stripe Checkout**: To test checkout locally, use `npm run dev:vercel` instead of `npm run dev`. This runs Vercel's development server which enables serverless functions. Make sure you have `STRIPE_SECRET_KEY` set in your `.env` file.
 
 ### Best Practices & Implementation
 

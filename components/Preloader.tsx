@@ -107,8 +107,9 @@ export const Preloader: React.FC<PreloaderProps> = ({ onComplete }) => {
             y: "-100%",
             transition: { duration: 0.55, ease: [0.85, 0, 0.15, 1] }
           }}
-          style={{ position: 'fixed' }}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-secondary-purple-rain"
+          layout={false}
         >
           <div className="relative flex flex-col items-center">
             {/* Animated Icon Container — relative so Framer Motion can calculate scroll/layout correctly */}

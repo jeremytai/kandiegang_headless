@@ -15,7 +15,7 @@ import { Zap } from 'lucide-react';
 import { useScrollThreshold } from '../hooks/useScrollThreshold';
 import { useAuth } from '../context/AuthContext';
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 export const StickyBottom: React.FC = () => {
   const { user, profile } = useAuth();
@@ -33,7 +33,9 @@ export const StickyBottom: React.FC = () => {
     return null;
   }
 
-  const { scrollY } = useScroll();
+  const { scrollY } = useScroll({
+    layoutEffect: false,
+  });
   
   const bottomYOffset = useTransform(scrollY, [1200, 1800], [0, 150]);
   const bottomOpacity = useTransform(scrollY, [1200, 1800], [1, 0]);
