@@ -79,7 +79,7 @@ export const EventCard: React.FC<EventCardProps> = ({
         {/* Content: row 2 full width on mobile, row 1 col 2 on desktop */}
         <div className="col-start-1 col-span-2 row-start-2 md:col-span-1 md:col-start-2 md:row-start-1 flex flex-col justify-center gap-3 md:gap-4 md:pl-1">
           <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 md:gap-3">
-            <h3 className="text-2xl md:text-3xl lg:text-4xl font-heading-thin tracking-tight text-secondary-purple-rain">
+            <h3 className="text-2xl md:text-3xl lg:text-4xl font-heading-light tracking-tight text-secondary-purple-rain">
               {title}
             </h3>
             {tag && (
