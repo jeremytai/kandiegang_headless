@@ -190,14 +190,16 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
               )}
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex justify-center items-center">
               {!isContactPage && (
-                <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                  <img 
-                    src="/logos/kandiegang_logo.svg" 
-                    alt="Kandie Gang" 
-                    className="h-7 w-auto"
-                  />
+                <Link to="/" className="flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity">
+                  <motion.span layout={false} className="inline-flex shrink-0">
+                    <img 
+                      src="/logos/kandiegang_logo.svg" 
+                      alt="Kandie Gang" 
+                      className="h-7 w-auto max-w-[180px] object-contain block"
+                    />
+                  </motion.span>
                 </Link>
               )}
             </div>
@@ -239,7 +241,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
               >
                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
                    <div className="space-y-6">
-                     <nav className="flex flex-col gap-4">
+                     <nav className="flex flex-col gap-2">
                         <NavLink label="Community" to="/community" onClick={handleToggle} />
                         <NavLink label="Stories" to="/stories" onClick={handleToggle} />
                         {showMemberAreaLink ? (
@@ -258,6 +260,9 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                       <span className="text-[10px] font-bold uppercase tracking-wider text-black"></span>
                    </div>
                 </div>
+                <p className="w-full px-8 pb-6 pt-0 -mt-2 text-center text-xs font-body text-slate-600 leading-relaxed">
+                  We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).
+                </p>
               </motion.div>
             )}
           </AnimatePresence>

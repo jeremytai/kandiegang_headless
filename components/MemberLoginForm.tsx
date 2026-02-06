@@ -162,11 +162,11 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
             onClick={onShowSignup}
             className="font-medium text-black underline hover:no-underline"
           >
-            Create one
+            Become a member
           </button>
         ) : (
           <Link to="/signup" className="font-medium text-black underline hover:no-underline">
-            Create one
+            Become a member
           </Link>
         )}
       </p>

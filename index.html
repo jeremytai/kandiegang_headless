@@ -6,7 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="/logos/kandiegang_purplerain_logo.png">
     <title>Kandie Gang Cycling Club</title>
-    <!-- Preloads removed: image preload used .webp but dev uses .jpg (imageSrc); font/hero content paint after preloader so "not used within a few seconds" warnings. -->
+    <!-- Preload critical fonts (heading + body) for faster first paint -->
+    <link rel="preload" href="/fonts/ivy-ora/IvyOraDispRegular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/ivy-ora/IvyOraDispLight.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/gt-planar/GTPlanarThin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/gt-planar/GTPlanarRegular.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="index.css">
 <script type="importmap">
 {

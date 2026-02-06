@@ -191,7 +191,7 @@ export const AboutPage: React.FC = () => {
           <div className="relative z-10 flex flex-col items-center">
             <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">Want to  partner with us?</h2>
             <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
-              We're a collective of cyclists, creatives, and dreamers based in Hamburg, Germany.
+              We're a collective of diverse cyclists, makers, and doers based in Hamburg, Germany.
             </p>
             <button
               type="button"

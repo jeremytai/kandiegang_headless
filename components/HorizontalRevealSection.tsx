@@ -13,6 +13,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring, MotionValue } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
+import { getCategoryPosts, transformMediaUrl } from '../lib/wordpress';
 
 const SegmentedNav: React.FC<{
   activeIndex: number;
@@ -68,7 +69,15 @@ const SegmentedNav: React.FC<{
   );
 };
 
-const HorizontalCard: React.FC<{ title: string; desc: string; img: string; to?: string }> = ({ title, desc, img, to }) => {
+const STORIES_IMAGE_FALLBACK = "https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/11/10165246/251031_halloween_gravelo_abbett-89.jpg";
+
+const HorizontalCard: React.FC<{
+  title: string;
+  desc: string;
+  img: string;
+  imgFallback?: string;
+  to?: string;
+}> = ({ title, desc, img, imgFallback, to }) => {
   const content = (
     <>
       <h3 className="text-3xl md:text-5xl font-light tracking-tight mb-2 md:mb-3 group-hover:scale-105 transition-transform duration-700 origin-left text-balance">{title}</h3>
@@ -87,13 +96,14 @@ const HorizontalCard: React.FC<{ title: string; desc: string; img: string; to?: 
         )}
       </div>
       <div className="absolute inset-0 z-0">
-        <img 
-          src={img} 
+        <img
+          src={img}
           width={1200}
           height={800}
-          className="w-full h-full object-cover" 
-          alt={title} 
+          className="w-full h-full object-cover"
+          alt={title}
           loading="lazy"
+          onError={imgFallback ? (e) => { e.currentTarget.onerror = null; e.currentTarget.src = imgFallback; } : undefined}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
       </div>
@@ -103,12 +113,27 @@ const HorizontalCard: React.FC<{ title: string; desc: string; img: string; to?: 
 
 const MOBILE_BREAKPOINT = 768;
 
+const STORIES_CATEGORY_SLUG = 'social-rides';
+
 export const HorizontalRevealSection: React.FC = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const cardsRowRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1024));
   const [gapPx, setGapPx] = useState(24);
+  const [newestStoryImage, setNewestStoryImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCategoryPosts(STORIES_CATEGORY_SLUG, 1)
+      .then((result) => {
+        if (cancelled || !result?.nodes?.length) return;
+        const url = result.nodes[0]?.featuredImage?.node?.sourceUrl;
+        if (url) setNewestStoryImage(transformMediaUrl(url));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const updateMeasurements = () => {
@@ -250,7 +275,8 @@ export const HorizontalRevealSection: React.FC = () => {
           <HorizontalCard 
             title="Stories"
             desc="We believe actions speak louder than words. Because belonging emerges when people show up, ride, and co-create together."
-            img="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/11/10165246/251031_halloween_gravelo_abbett-89.jpg"
+            img={newestStoryImage ?? STORIES_IMAGE_FALLBACK}
+            imgFallback={STORIES_IMAGE_FALLBACK}
             to="/stories"
           />
           <HorizontalCard 

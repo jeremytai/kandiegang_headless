@@ -8,9 +8,10 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ArrowUpRight } from 'lucide-react';
+import { ChevronDown, ArrowRight, ArrowUpRight } from 'lucide-react';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { imageSrc } from '../lib/images';
+import { useContactModal } from '../context/ContactModalContext';
 
 /** Hero gallery image base paths (no extension). Resolved via imageSrc() for dev .jpg / prod .webp. */
 const HERO_IMAGE_BASES = [
@@ -85,7 +86,7 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     answer: (
       <>
         We have four groups so you can find the right pace. Details and guidelines can be found{' '}
-        <a href="/ridelevels" className="text-secondary-drift hover:underline">here</a> and in the FAQs on Discord.
+        <Link to="/ridelevels" className="text-secondary-drift hover:underline">here</Link> and in the FAQs on Discord.
       </>
     ),
   },
@@ -94,7 +95,7 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     answer: (
       <>
         The Kandie Code is our shared set of guidelines for how we ride and treat each other. We ask everyone to read and follow it. You can find it {' '}
-        <a href="/kandiecode" className="text-secondary-drift hover:underline">here</a>.
+        <Link to="/kandiecode" className="text-secondary-drift hover:underline">here</Link>.
       </>
     ),
   },
@@ -105,15 +106,17 @@ function ClubFAQItem({
   children,
   isOpen,
   onClick,
+  isLast,
 }: {
   question: string;
   children: React.ReactNode;
   isOpen: boolean;
   onClick: () => void;
   key?: React.Key;
+  isLast?: boolean;
 }) {
   return (
-    <div className="overflow-hidden border-t border-secondary-purple-rain/50 py-6 md:py-8">
+    <div className={`overflow-hidden border-t border-secondary-purple-rain/50 py-6 md:py-8 ${isLast ? 'border-b border-secondary-purple-rain/50' : ''}`}>
       <button
         onClick={onClick}
         className="flex w-full cursor-pointer items-start justify-between text-left group"
@@ -152,6 +155,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [stickyOffset, setStickyOffset] = useState<number | null>(null); // null = fixed, number = absolute top offset
   const [benefitTooltip, setBenefitTooltip] = useState<{ x: number; y: number; sub: string } | null>(null);
+  const { openContactModal } = useContactModal();
   const mobileCarouselRef = useRef<HTMLDivElement>(null);
   const imageScrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const benefitTooltipRef = useRef<HTMLDivElement>(null);
@@ -314,6 +318,9 @@ export const KandieGangCyclingClubPage: React.FC = () => {
           <div className="flex w-full flex-col items-center justify-center gap-12 text-center px-6">
             {/* Headlines */}
             <div className="flex flex-col items-center">
+              <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
+                Ride with us
+              </span>
               <AnimatedHeadline
                 as="h1"
                 text="Join the Kandie Gang Cycling Club"
@@ -321,9 +328,6 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                 lineHeight={1.25}
                 fullWidth
               />
-              <span className="mt-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
-                Ride with us
-              </span>
             </div>
 
             {/* Body text */}
@@ -359,6 +363,9 @@ export const KandieGangCyclingClubPage: React.FC = () => {
           <div className="m-auto flex w-full flex-col items-center justify-center gap-6 pt-[var(--header-height,5rem)] text-center lg:gap-12 lg:pt-0">
             {/* Headlines */}
             <div className="flex flex-col items-center px-4 max-lg:py-12 lg:px-6">
+              <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
+                Ride with us
+              </span>
               <AnimatedHeadline
                 as="h1"
                 text="Join the Kandie Gang Cycling Club"
@@ -366,9 +373,6 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                 lineHeight={1.25}
                 fullWidth
               />
-              <span className="mt-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
-                Ride with us
-              </span>
             </div>
 
             {/* Mobile: horizontal image carousel */}
@@ -537,6 +541,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                   question={item.question}
                   isOpen={faqOpenIndex === index}
                   onClick={() => setFaqOpenIndex(faqOpenIndex === index ? null : index)}
+                  isLast={index === CLUB_FAQS.length - 1}
                 >
                   {item.answer}
                 </ClubFAQItem>
@@ -545,6 +550,42 @@ export const KandieGangCyclingClubPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Partner CTA (sits above global newsletter section) */}
+      <div className="w-full px-4 md:px-6">
+        <section className="relative rounded-xl p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
+          <img
+            src={imageSrc('/images/251031_halloween_gravelo_abbett-86')}
+            alt=""
+            width={1920}
+            height={1080}
+            className="absolute inset-0 w-full h-full object-cover"
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-slate-900/50" aria-hidden />
+          <div className="relative z-10 flex flex-col items-center">
+            <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">Become a Kandie Gang Member</h2>
+            <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
+              Members only access, product discounts, and more.
+            </p>
+            <button
+              type="button"
+              onClick={openContactModal}
+              className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-white bg-transparent px-6 py-4 text-sm font-medium text-secondary-blush transition-colors hover:border-secondary-blush hover:bg-secondary-blush hover:text-white active:scale-95 md:gap-2 md:text-base"
+            >
+              <span>Join us</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-blush/20 p-1 transition-colors group-hover:bg-white">
+                <ArrowRight
+                  className="h-3 w-3 text-secondary-blush transition-colors"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </span>
+            </button>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };
