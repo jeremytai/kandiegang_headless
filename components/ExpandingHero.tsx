@@ -36,7 +36,7 @@ export const ExpandingHero: React.FC<ExpandingHeroProps> = ({ imageUrl, imageAlt
     offset: ['start start', 'end end'],
   });
 
-  const entryProgress = useTransform(scrollYProgress, [0, 0.6], [0, 1]);
+  const entryProgress = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   const clipPath = useTransform(entryProgress, (v) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -49,7 +49,7 @@ export const ExpandingHero: React.FC<ExpandingHeroProps> = ({ imageUrl, imageAlt
   const srcSet = imageUrl ? undefined : imageSrcSet(defaultPath);
 
   return (
-    <section ref={containerRef} className="relative h-[150vh] md:h-[180vh] bg-primary-breath">
+    <section ref={containerRef} className="relative h-[108vh] md:h-[112vh] bg-primary-breath">
       <div className="h-screen w-full flex flex-col items-center overflow-hidden">
         <motion.div
           style={{
