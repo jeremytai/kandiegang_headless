@@ -11,7 +11,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform, useSpring, MotionValue } from 'framer-motion';
+import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import { getCategoryPosts, transformMediaUrl } from '../lib/wordpress';
 
@@ -57,7 +57,7 @@ const SegmentedNav: React.FC<{
                 <motion.div
                   layoutId="active-nav-pill"
                   className="absolute inset-0 bg-white rounded-full -z-10 shadow-sm"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  transition={{ type: 'tween', duration: 0.25 }}
                 />
               )}
               {segment}
@@ -197,19 +197,7 @@ export const HorizontalRevealSection: React.FC = () => {
       mobileXValues[3]
     ]
   );
-  const xDesktop = useSpring(xTargetDesktop, { stiffness: 320, damping: 24 });
-  // Spring only on first and last card; middle cards (Stories, Membership) use direct transform (no bounce)
-  const xMobileSpring = useSpring(xTargetMobile, { stiffness: 320, damping: 24 });
-  const springWeight = useTransform(
-    scrollYProgress,
-    [0, 0.2, 0.3, 0.5, 0.7, 0.8, 1],
-    [1, 1, 0, 0, 0, 1, 1]
-  );
-  const xMobile = useTransform(
-    [xMobileSpring, xTargetMobile, springWeight],
-    ([spring, direct, w]) => (w as number) * (spring as number) + (1 - (w as number)) * (direct as number)
-  );
-  const x = isMobile ? xMobile : xDesktop;
+  const x = isMobile ? xTargetMobile : xTargetDesktop;
   
   useEffect(() => {
     return scrollYProgress.on("change", (v) => {

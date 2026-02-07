@@ -98,17 +98,17 @@ export const ThreeThingsToDo: React.FC = () => {
       {/* Left column: main heading + Specifications label */}
       <div className="col-span-full lg:col-span-6 lg:col-start-1">
         <h2 id="specifications-heading" className="font-heading font-gtplanar text-h4 text-secondary-current text-balance">
-          Three Things To Do
+        Drei Dinge, die du erledigen musst
         </h2>
         <h3 className="mt-0.5 font-heading text-h4 font-gtplanar text-secondary-drift">
-          Required Reading to Ride
+        Pflichtlektüre vor der Fahrt
         </h3>
       </div>
 
       {/* Right column: intro paragraph */}
       <div className="col-span-full lg:col-span-6 lg:col-start-7">
         <p className="[&+p]:mt-[1em] font-body text-large text-secondary-current leading-relaxed">
-          To ensure a safe and enjoyable experience for everyone, we require that you read the following three things including signing the waiver.
+          Damit alle eine sichere und entspannte Zeit haben, bitten wir dich, die folgenden drei Punkte durchzulesen – einschließlich der unterschriebenen Verzichtserklärung..
         </p>
       </div>
 
