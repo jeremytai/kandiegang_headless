@@ -105,15 +105,16 @@ export function canPurchase(
     return false;
   }
   
-  // For products with variants, check variant inventory directly
+  // For products with variants, check variant inventory
   if (product.productFields.hasVariants && product.productFields.variants?.length) {
     const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : -1;
     const variant = idx >= 0 ? product.productFields.variants?.[idx] : undefined;
-    if (!variant) {
-      return false; // No variant selected or variant doesn't exist
+    if (variant) {
+      // Specific variant selected: check its inventory
+      return variant.inventory > 0;
     }
-    // Check variant inventory directly
-    return variant.inventory > 0;
+    // No variant selected (e.g. shop listing): in stock if any variant has inventory
+    return product.productFields.variants.some((v) => (v.inventory ?? 0) > 0);
   }
   
   // For simple products without variants, check product-level inventory directly

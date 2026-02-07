@@ -105,7 +105,7 @@ export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
   const isShopStyle = size === 'sm';
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className={`flex flex-col gap-2 ${isShopStyle ? 'w-full' : 'items-center'}`}>
       <button
         type="button"
         onClick={handleCheckout}
