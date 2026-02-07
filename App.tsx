@@ -129,8 +129,8 @@ const App: React.FC = () => {
   return (
     <CookieConsentProvider>
       <AuthProvider>
-        <MemberLoginOffcanvasProvider>
         <ContactModalProvider>
+        <MemberLoginOffcanvasProvider>
           <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
             {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
             {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
@@ -200,8 +200,8 @@ const App: React.FC = () => {
               <StickyBottom />
             )}
           </div>
-        </ContactModalProvider>
         </MemberLoginOffcanvasProvider>
+        </ContactModalProvider>
         {isUnlocked && (
           <>
             <CookieBanner />

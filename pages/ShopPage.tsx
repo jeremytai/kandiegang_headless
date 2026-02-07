@@ -89,6 +89,10 @@ export const ShopPage: React.FC = () => {
     fetchProducts();
   }, []);
 
+  const shopProducts = products.filter(
+    (p) => !(p.productFields?.membersOnly ?? false)
+  );
+
   return (
     <div className="bg-white min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
       <div className="max-w-7xl mx-auto px-6">
@@ -145,12 +149,11 @@ export const ShopPage: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {/* 3-column product grid: 1 col mobile, 2 col sm, 3 col lg+ */}
+              {/* 3-column product grid: 1 col mobile, 2 col sm, 3 col lg+ — only non–member-only products */}
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
-                {products.length > 0 ? (
-                  products.map((product, i) => {
+                {shopProducts.length > 0 ? (
+                  shopProducts.map((product, i) => {
                     const isMember = !!user;
-                    const isMembersOnly = product.productFields?.membersOnly ?? false;
                     const displayPrice = isMember && product.productFields?.priceMember
                       ? product.productFields.priceMember
                       : product.productFields?.pricePublic;
@@ -179,7 +182,7 @@ export const ShopPage: React.FC = () => {
                           sku: v.sku,
                           inventory: v.inventory,
                         })),
-                        membersOnly: isMembersOnly,
+                        membersOnly: false,
                         inStock: product.productFields?.inStock ?? true,
                       },
                     };
@@ -220,11 +223,6 @@ export const ShopPage: React.FC = () => {
                             className="text-lg md:text-xl font-gtplanar font-bold tracking-normal text-secondary-purple-rain leading-tight line-clamp-2 flex-1"
                             dangerouslySetInnerHTML={{ __html: product.title }}
                           />
-                          {isMembersOnly && (
-                            <span className="text-xs font-bold uppercase tracking-widest text-secondary-purple-rain bg-secondary-purple-rain/10 px-2 py-1 rounded shrink-0">
-                              Members
-                            </span>
-                          )}
                         </div>
                         {displayPrice && (
                           <p className="text-secondary-purple-rain font-gtplanar font-medium text-base md:text-lg mt-4 mb-8">
