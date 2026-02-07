@@ -28,16 +28,15 @@ export const EventCard: React.FC<EventCardProps> = ({
   location,
 }) => {
   const imageUrl = imageSrc(imageBase, 800);
+  const isExternal = /^https?:\/\//i.test(href);
+  const linkClassName =
+    'group relative grid grid-cols-[160px_1fr] md:grid-cols-[180px_minmax(0,1fr)_auto] gap-x-4 gap-y-4 md:gap-6 items-stretch border-b border-primary-ink/[0.06] pl-0 pr-4 pt-6 pb-10 md:pr-8 md:pt-8 md:pb-12 text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-drift focus-visible:ring-offset-2 focus-visible:ring-offset-primary-breath';
 
-  return (
-    <article className="w-full">
-      <Link
-        to={href}
-        className="group relative grid grid-cols-[160px_1fr] md:grid-cols-[180px_minmax(0,1fr)_auto] gap-x-4 gap-y-4 md:gap-6 items-stretch border-b border-primary-ink/[0.06] pl-0 pr-4 pt-6 pb-10 md:pr-8 md:pt-8 md:pb-12 text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-drift focus-visible:ring-offset-2 focus-visible:ring-offset-primary-breath"
-      >
-        {/* Image: row 1 col 1 on mobile and desktop; 160px on mobile, 180px on desktop */}
-        <div className="col-start-1 row-start-1">
-          <div className="overflow-hidden rounded-2xl bg-primary-breath w-[160px] h-[160px] md:w-[180px] md:h-[180px]">
+  const linkContent = (
+    <>
+      {/* Image: row 1 col 1 on mobile and desktop; 160px on mobile, 180px on desktop */}
+      <div className="col-start-1 row-start-1">
+        <div className="overflow-hidden rounded-2xl bg-primary-breath w-[160px] h-[160px] md:w-[180px] md:h-[180px]">
             <img
               src={imageUrl}
               alt={title}
@@ -100,7 +99,25 @@ export const EventCard: React.FC<EventCardProps> = ({
             </button>
           </div>
         </div>
-      </Link>
+    </>
+  );
+
+  return (
+    <article className="w-full">
+      {isExternal ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClassName}
+        >
+          {linkContent}
+        </a>
+      ) : (
+        <Link to={href} className={linkClassName}>
+          {linkContent}
+        </Link>
+      )}
     </article>
   );
 };
