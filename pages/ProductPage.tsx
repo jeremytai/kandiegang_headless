@@ -30,7 +30,8 @@ function ProductDetailsAccordion({
   const hasContent = !!bodyHtml || !!sku;
   if (!hasContent) return null;
 
-  const paddingClass = variant === 'mobile' ? 'px-4 lg:px-8' : '';
+  // Mobile padding is applied by the parent wrapper in ProductPage so Details aligns with the button
+  const paddingClass = variant === 'mobile' ? '' : '';
   const textColorClass = variant === 'desktop' ? 'text-secondary-purple-rain' : 'text-secondary-current';
 
   return (
@@ -559,11 +560,84 @@ export const ProductPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile layout */}
+        {/* Mobile layout — order: images, thumbnails, headline, price, first paragraph, variant, add to cart, details */}
         <div className="flex flex-col lg:hidden">
           <div className="m-auto flex flex-col items-center justify-center gap-6 pt-[var(--header-height,5rem)] text-center lg:gap-12 lg:pt-0">
-            {/* Headlines — left-aligned to match first paragraph */}
-            <div className="flex w-full max-w-[44ch] flex-col items-start self-start px-4 py-12 text-left lg:px-6">
+            {/* 1. Mobile: images carousel */}
+            {productImages.length > 0 && (
+              <div className="w-screen overflow-hidden lg:hidden">
+                <div
+                  ref={mobileCarouselRef}
+                  className="no-scrollbar flex snap-x snap-mandatory scroll-p-4 flex-row gap-2 overflow-x-auto px-4"
+                  onScroll={() => {
+                    const el = mobileCarouselRef.current;
+                    if (!el) return;
+                    const slideWidth = el.children[0]?.clientWidth || 0;
+                    const gap = 8;
+                    const index = Math.round(el.scrollLeft / (slideWidth + gap));
+                    setActiveImageIndex(Math.min(Math.max(0, index), productImages.length - 1));
+                  }}
+                >
+                  {productImages.map((img, i) => (
+                    <div
+                      key={img.id}
+                      className="aspect-[3/4] flex-none snap-center overflow-hidden rounded-lg max-lg:w-[calc(100vw-(var(--spacing,1rem)*8))]"
+                    >
+                      <img
+                        alt={img.altText || product.title}
+                        draggable="false"
+                        loading={i === 0 ? undefined : 'lazy'}
+                        width={1920}
+                        height={2400}
+                        src={transformMediaUrl(img.sourceUrl)}
+                        className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 2. Mobile: thumbnails */}
+            {productImages.length > 0 && (
+              <div className="w-fit py-4 lg:hidden">
+                <div className="flex h-full justify-center gap-3">
+                  {productImages.map((img, i) => (
+                    <button
+                      key={img.id}
+                      type="button"
+                      aria-label={`Go to image ${i + 1}`}
+                      aria-current={activeImageIndex === i}
+                      onClick={() => {
+                        setActiveImageIndex(i);
+                        const el = mobileCarouselRef.current;
+                        if (el && el.children[i]) {
+                          el.children[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        }
+                      }}
+                      className={`aspect-[3/4] w-7 cursor-pointer overflow-hidden rounded-md outline-2 outline-offset-3 transition-[outline,ring] ${
+                        activeImageIndex === i
+                          ? 'outline-secondary-current'
+                          : 'ring-1 ring-secondary-current/20 outline-transparent'
+                      } focus-visible:ring-2 focus-visible:ring-secondary-current/80`}
+                    >
+                      <img
+                        alt={img.altText || product.title}
+                        draggable="false"
+                        loading="lazy"
+                        width={1920}
+                        height={2400}
+                        src={transformMediaUrl(img.sourceUrl)}
+                        className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3. Headline */}
+            <div className="flex w-full max-w-[44ch] flex-col items-start self-start px-4 py-4 text-left lg:px-6">
               {shopProduct.productFields.membersOnly && (
                 <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
                   Members Only
@@ -576,17 +650,11 @@ export const ProductPage: React.FC = () => {
                 lineHeight={1.25}
                 fullWidth
               />
-              {product.content && getFirstParagraph(product.content) && (
-                <div
-                  className="max-w-[44ch] mt-4 px-4 text-left text-secondary-current text-xs md:text-sm prose prose-sm prose-p:my-0"
-                  dangerouslySetInnerHTML={{ __html: removeImagesFromContent(getFirstParagraph(product.content)) }}
-                />
-              )}
             </div>
 
-            {/* Price — under headline */}
+            {/* 4. Price */}
             {displayPrice > 0 && (
-              <div className="px-4 mb-4 text-secondary-purple-rain">
+              <div className="w-full px-4 mb-2 text-secondary-purple-rain text-left self-start">
                 {hasDiscount ? (
                   <div>
                     <p className="text-base md:text-lg font-medium mb-1.5">
@@ -615,7 +683,15 @@ export const ProductPage: React.FC = () => {
               </div>
             )}
 
-            {/* Variant Selector + Add to Cart (Mobile) — left-aligned */}
+            {/* 5. First paragraph */}
+            {product.content && getFirstParagraph(product.content) && (
+              <div
+                className="max-w-[44ch] w-full px-4 text-left text-secondary-current text-xs md:text-sm prose prose-sm prose-p:my-0 self-start"
+                dangerouslySetInnerHTML={{ __html: removeImagesFromContent(getFirstParagraph(product.content)) }}
+              />
+            )}
+
+            {/* 6. Variant overview (Size label) + 7. Variant pills + 8. Add to cart */}
             <div className="flex w-full flex-col items-start gap-4 px-4">
               {hasVariants && variants.length > 1 && (
                 <ProductVariantSelector
@@ -636,85 +712,14 @@ export const ProductPage: React.FC = () => {
               />
             </div>
 
-            {/* Mobile: horizontal image carousel */}
-            {productImages.length > 0 && (
-              <>
-                <div className="w-screen overflow-hidden lg:hidden">
-                  <div
-                    ref={mobileCarouselRef}
-                    className="no-scrollbar flex snap-x snap-mandatory scroll-p-4 flex-row gap-2 overflow-x-auto px-4"
-                    onScroll={() => {
-                      const el = mobileCarouselRef.current;
-                      if (!el) return;
-                      const slideWidth = el.children[0]?.clientWidth || 0;
-                      const gap = 8;
-                      const index = Math.round(el.scrollLeft / (slideWidth + gap));
-                      setActiveImageIndex(Math.min(Math.max(0, index), productImages.length - 1));
-                    }}
-                  >
-                    {productImages.map((img, i) => (
-                      <div
-                        key={img.id}
-                        className="aspect-[3/4] flex-none snap-center overflow-hidden rounded-lg max-lg:w-[calc(100vw-(var(--spacing,1rem)*8))]"
-                      >
-                        <img
-                          alt={img.altText || product.title}
-                          draggable="false"
-                          loading={i === 0 ? undefined : 'lazy'}
-                          width={1920}
-                          height={2400}
-                          src={transformMediaUrl(img.sourceUrl)}
-                          className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Mobile: thumbnail indicators */}
-                <div className="w-fit py-4 lg:hidden">
-                  <div className="flex h-full justify-center gap-3">
-                    {productImages.map((img, i) => (
-                      <button
-                        key={img.id}
-                        type="button"
-                        aria-label={`Go to image ${i + 1}`}
-                        aria-current={activeImageIndex === i}
-                        onClick={() => {
-                          setActiveImageIndex(i);
-                          const el = mobileCarouselRef.current;
-                          if (el && el.children[i]) {
-                            el.children[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                          }
-                        }}
-                        className={`aspect-[3/4] w-7 cursor-pointer overflow-hidden rounded-md outline-2 outline-offset-3 transition-[outline,ring] ${
-                          activeImageIndex === i
-                            ? 'outline-secondary-current'
-                            : 'ring-1 ring-secondary-current/20 outline-transparent'
-                        } focus-visible:ring-2 focus-visible:ring-secondary-current/80`}
-                      >
-                        <img
-                          alt={img.altText || product.title}
-                          draggable="false"
-                          loading="lazy"
-                          width={1920}
-                          height={2400}
-                          src={transformMediaUrl(img.sourceUrl)}
-                          className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Details toggle (Mobile, FAQ-style) */}
-            <ProductDetailsAccordion
-              bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
-              sku={product.productFields?.sku}
-              variant="mobile"
-            />
+            {/* 9. Product details accordion — same horizontal margins as button (px-4) */}
+            <div className="w-full px-4">
+              <ProductDetailsAccordion
+                bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
+                sku={product.productFields?.sku}
+                variant="mobile"
+              />
+            </div>
           </div>
         </div>
       </section>
