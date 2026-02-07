@@ -44,17 +44,17 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
   const [showContent, setShowContent] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [loginTooltip, setLoginTooltip] = useState<{ x: number; y: number } | null>(null);
+  const [isInitialLoginTooltip, setIsInitialLoginTooltip] = useState(false);
   const loginButtonRef = useRef<HTMLButtonElement>(null);
   const loginTooltipRef = useRef<HTMLDivElement>(null);
+  const initialTooltipShownRef = useRef(false);
 
   const location = useLocation();
   const isContactPage = location.pathname === '/contact';
   const { user, profile } = useAuth();
   const { openMemberLogin } = useMemberLoginOffcanvas();
   const { openCart, itemCount } = useCart();
-  const { scrollY } = useScroll({
-    layoutEffect: false,
-  });
+  const { scrollY } = useScroll();
   const isLoggedIn = Boolean(user);
   const avatarUrl = profile?.avatar_url ?? null;
   const isGuide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
@@ -66,8 +66,20 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
     if (!el) return;
     const rect = el.getBoundingClientRect();
     setLoginTooltip({ x: rect.left + rect.width / 2, y: rect.top - 6 });
+    setIsInitialLoginTooltip(false);
   }, []);
-  const hideLoginTooltip = useCallback(() => setLoginTooltip(null), []);
+  const hideLoginTooltip = useCallback(() => {
+    setLoginTooltip(null);
+    setIsInitialLoginTooltip(false);
+  }, []);
+  const showInitialLoginTooltip = useCallback(() => {
+    const el = loginButtonRef.current;
+    if (!el || initialTooltipShownRef.current) return;
+    initialTooltipShownRef.current = true;
+    const rect = el.getBoundingClientRect();
+    setLoginTooltip({ x: rect.left + rect.width / 2, y: rect.top - 6 });
+    setIsInitialLoginTooltip(true);
+  }, []);
 
   React.useEffect(() => {
     const el = loginTooltipRef.current;
@@ -76,14 +88,26 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
     el.style.top = `${loginTooltip.y}px`;
   }, [loginTooltip]);
 
+  // Show Login tooltip once on first visit (when not logged in), then hide on scroll
+  React.useEffect(() => {
+    if (isLoggedIn || initialTooltipShownRef.current) return;
+    const t = setTimeout(showInitialLoginTooltip, 700);
+    return () => clearTimeout(t);
+  }, [isLoggedIn, showInitialLoginTooltip]);
+
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
+    if (latest > 20) {
+      if (isInitialLoginTooltip) {
+        setLoginTooltip(null);
+        setIsInitialLoginTooltip(false);
+      }
+    }
     if (latest > previous && latest > 150) {
       setIsHidden(true);
       setShowContent(false);
       setTimeout(() => setIsExpanded(false), 300);
-    } 
-    else if (latest < previous) {
+    } else if (latest < previous) {
       setIsHidden(false);
     }
   });
@@ -197,13 +221,30 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                         className="fixed z-[100] pointer-events-none flex flex-col sticky-top-login-tooltip"
                         role="tooltip"
                       >
-                        <span className="relative block px-3 py-1.5 text-xs font-medium text-white bg-secondary-purple-rain rounded-[10px] shadow-lg">
+                        <motion.span
+                          className="relative block px-3 py-1.5 text-xs font-medium text-white bg-secondary-purple-rain rounded-[10px] shadow-lg origin-bottom"
+                          initial={isInitialLoginTooltip ? { scaleY: 0, opacity: 0 } : false}
+                          animate={{ scaleY: 1, opacity: 1 }}
+                          transition={
+                            isInitialLoginTooltip
+                              ? {
+                                  type: 'spring',
+                                  stiffness: 400,
+                                  damping: 18,
+                                  mass: 0.6,
+                                }
+                              : { duration: 0.15 }
+                          }
+                          style={{
+                            transformOrigin: '50% 100%',
+                          }}
+                        >
                           Login
                           <span
                             className="absolute left-3 bottom-0 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[var(--color-secondary-purple-rain)] translate-y-full -mt-px -ml-0.5"
                             aria-hidden
                           />
-                        </span>
+                        </motion.span>
                       </div>,
                       document.body
                     )}
