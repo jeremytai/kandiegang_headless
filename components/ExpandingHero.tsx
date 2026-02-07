@@ -50,7 +50,7 @@ export const ExpandingHero: React.FC<ExpandingHeroProps> = ({ imageUrl, imageAlt
 
   return (
     <section ref={containerRef} className="relative h-[150vh] md:h-[180vh] bg-primary-breath">
-      <div className="sticky top-0 h-screen w-full flex flex-col items-center overflow-hidden">
+      <div className="h-screen w-full flex flex-col items-center overflow-hidden">
         <motion.div
           style={{
             clipPath,

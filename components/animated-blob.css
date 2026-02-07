@@ -11,6 +11,12 @@
   background: var(--color-primary-breath);
 }
 
+@media (max-width: 767px) {
+  .animated-blob-wrapper {
+    display: none;
+  }
+}
+
 .animated-blob-wrapper.animated-blob-contained {
   position: absolute;
   z-index: 0;
