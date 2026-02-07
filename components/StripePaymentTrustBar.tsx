@@ -1,7 +1,4 @@
 import React, { useMemo } from 'react';
-import { useStripePaymentMethods } from '../hooks/useStripePaymentMethods';
-import { getPaymentMethodConfig } from '../utils/paymentMethodMapping';
-import { getPaymentIcon } from './PaymentIcons';
 
 export interface StripePaymentTrustBarProps {
   clientSecret?: string;
@@ -14,64 +11,54 @@ export interface StripePaymentTrustBarProps {
 }
 
 const DEFAULT_MICROCOPY =
-  'Secure checkout. Pay with major credit cards and express wallets.';
+  'Secure checkout. Free shipping on orders over €99 within the EU.';
+
+const PAYMENT_ICONS = [
+  { src: '/images/payment/applePay-title.svg', alt: 'Apple Pay' },
+  { src: '/images/payment/mastercard-title.svg', alt: 'Mastercard' },
+  { src: '/images/payment/paypal-title.svg', alt: 'PayPal' },
+] as const;
 
 export const StripePaymentTrustBar: React.FC<StripePaymentTrustBarProps> = ({
-  clientSecret,
-  paymentMethodTypes,
-  region = 'EU',
   className = '',
   showText = false,
   iconSize = 24,
-  stripePublishableKey,
 }) => {
-  const { paymentMethods } = useStripePaymentMethods({
-    paymentMethodTypes,
-    clientSecret,
-    region,
-    stripePublishableKey,
-  });
-
-  const displayMethods = useMemo(
-    () =>
-      paymentMethods.map((id) => ({
-        id,
-        config: getPaymentMethodConfig(id),
-        Icon: getPaymentIcon(id),
-      })),
-    [paymentMethods]
-  );
-
   const content = useMemo(
     () => (
       <div
-        className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${className}`}
+        className={`flex flex-nowrap sm:flex-wrap items-center justify-start gap-x-4 gap-y-2 ${className}`}
         role="img"
         aria-label="Accepted payment methods"
       >
-        {displayMethods.map(({ id, config, Icon }) => (
+        {PAYMENT_ICONS.map(({ src, alt }) => (
           <span
-            key={id}
-            className={`inline-flex items-center justify-center shrink-0 text-slate-600 ${iconSize <= 20 ? 'h-5' : iconSize <= 24 ? 'h-6' : 'h-8'}`}
-            aria-label={config.label}
+            key={src}
+            className="inline-flex items-center justify-center shrink-0"
+            aria-label={alt}
           >
-            <Icon size={iconSize} className="block" />
+            <img
+              src={src}
+              alt={alt}
+              className="block w-auto"
+              width={iconSize * (40 / 24)}
+              height={iconSize}
+              loading="lazy"
+            />
           </span>
         ))}
         {showText && (
-          <span className="text-xs text-slate-500 max-w-[240px]">
+          <span className="text-left text-xs text-slate-500 shrink-0 max-w-[240px]">
             {DEFAULT_MICROCOPY}
           </span>
         )}
       </div>
     ),
-    [displayMethods, showText, iconSize, className]
+    [showText, iconSize, className]
   );
 
-  if (displayMethods.length === 0) return null;
-
   return (
-    <div className="flex items-center justify-center min-h-[24px]">
+    <div className="flex items-center justify-start min-h-[24px]">
       {content}
     </div>
   );

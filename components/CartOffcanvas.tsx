@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import { OffCanvas } from './OffCanvas';
 import { useCart, CartLineItem } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { Loader2, ShoppingBag, Trash2, Minus, Plus } from 'lucide-react';
+import { Loader2, ShoppingBag, Trash2, Minus, Plus, CircleAlert, CircleCheck } from 'lucide-react';
 
 const FREE_SHIPPING_THRESHOLD = 99;
 const SHIPPING_DE = 5.9;
@@ -182,7 +182,21 @@ export const CartOffcanvas: React.FC = () => {
                     <span>Subtotal</span>
                     <span>€{subtotal.toFixed(2)}</span>
                   </p>
-                  <p className="text-xs text-slate-500">Within the EU: Free shipping on orders over €99</p>
+                  <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                    {subtotal >= FREE_SHIPPING_THRESHOLD ? (
+                        <>
+                          <CircleCheck className="w-3.5 h-3.5 shrink-0 text-green-600" aria-hidden />
+                          You have qualified for free shipping
+                        </>
+                      ) : subtotal > 50 ? (
+                        <>
+                          <CircleAlert className="w-3.5 h-3.5 shrink-0 text-slate-500" aria-hidden />
+                          {`Add another €${(FREE_SHIPPING_THRESHOLD - subtotal).toFixed(2)} to qualify for free shipping`}
+                        </>
+                      ) : (
+                        'Free shipping on orders over €99 within the EU.'
+                      )}
+                  </p>
                   <fieldset className="space-y-2" aria-label="Shipping option">
                     <legend className="sr-only">Shipping option</legend>
                     {(

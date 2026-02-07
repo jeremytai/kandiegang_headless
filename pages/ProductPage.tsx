@@ -574,7 +574,7 @@ export const ProductPage: React.FC = () => {
                   }}
                 />
               </div>
-              <div className="mt-4 w-full">
+              <div className="mt-2 w-full">
                 <StripePaymentTrustBar
                   region="EU"
                   iconSize={24}
@@ -582,7 +582,7 @@ export const ProductPage: React.FC = () => {
                   showText
                 />
               </div>
-              <div className="mt-6 w-full">
+              <div className="mt-2 w-full">
                 <ProductDetailsAccordion
                   bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
                   sku={product.productFields?.sku}
@@ -757,7 +757,7 @@ export const ProductPage: React.FC = () => {
                   return true;
                 }}
               />
-              <div className="mt-4 w-full">
+              <div className="mt-2 w-full">
                 <StripePaymentTrustBar
                   region="EU"
                   iconSize={24}
@@ -767,8 +767,8 @@ export const ProductPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 9. Product details accordion — same horizontal margins as button (px-4) */}
-            <div className="mt-6 w-full px-4">
+            {/* 9. Product details accordion — tight under payment bar */}
+            <div className="mt-2 w-full px-4">
               <ProductDetailsAccordion
                 bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
                 sku={product.productFields?.sku}
