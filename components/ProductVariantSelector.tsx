@@ -119,6 +119,16 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
             </button>
           );
         })}
+        {selectedVariantIndex >= 0 && (
+          <button
+            type="button"
+            onClick={() => onVariantChange(-1)}
+            className="text-[11px] font-medium text-slate-500 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-secondary-purple-rain focus:ring-offset-1 rounded"
+            aria-label="Clear variant selection"
+          >
+            cancel
+          </button>
+        )}
       </div>
     </div>
   );

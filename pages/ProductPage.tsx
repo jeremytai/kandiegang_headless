@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, ArrowLeft, ChevronDown } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { getProductBySlug, transformMediaUrl, extractProductImagesFromBlocks } from '../lib/wordpress';
 import { getProductPrice, getStripePriceId, canPurchase, ProductVariant, ShopProduct } from '../lib/products';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
@@ -35,19 +35,20 @@ function ProductDetailsAccordion({
   const textColorClass = variant === 'desktop' ? 'text-secondary-purple-rain' : 'text-secondary-current';
 
   return (
-    <div className={`flex w-full flex-col items-start self-start text-left border-t border-b border-slate-200 pt-2 pb-2 mt-[56px] ${paddingClass}`}>
+    <div className={`flex w-full flex-col items-start self-start text-left border-t border-b border-slate-200 pt-2 pb-2 mt-4 pl-4 ${paddingClass}`}>
       <button
         type="button"
         onClick={() => setIsOpen((o) => !o)}
         className="flex w-full cursor-pointer items-center justify-between text-left group"
       >
-        <span className={`text-sm font-medium uppercase tracking-widest ${textColorClass} group-hover:opacity-80`}>
+        <span className={`text-sm font-medium tracking-wide ${textColorClass} group-hover:opacity-80`}>
           Details
         </span>
         <span
-          className={`inline-flex shrink-0 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
+          className={`inline-flex h-5 w-5 items-center justify-center text-lg font-light tabular-nums ${variant === 'desktop' ? 'text-secondary-purple-rain' : 'text-secondary-current'}`}
+          aria-hidden
         >
-          <ChevronDown className={`h-5 w-5 opacity-60 ${variant === 'desktop' ? 'text-secondary-purple-rain' : 'text-secondary-current'}`} />
+          {isOpen ? '−' : '+'}
         </span>
       </button>
       <AnimatePresence initial={false}>
