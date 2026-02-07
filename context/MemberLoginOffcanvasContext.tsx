@@ -155,7 +155,13 @@ function MemberOffcanvasAccountContent({
           {memberSinceFormatted ?? '—'}
         </p>
         <p>
-          <span className="font-light">
+          <span
+            className={
+              daysLeft != null && daysLeft > 0 && daysLeft < 30
+                ? 'font-bold text-red-600'
+                : 'font-light'
+            }
+          >
             {daysLeft != null
               ? daysLeft > 0
                 ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left on membership`
@@ -171,18 +177,6 @@ function MemberOffcanvasAccountContent({
             </span>
           )}
         </p>
-        {profile?.is_substack_subscriber && (
-          <p>
-            <span className="font-semibold">Newsletter</span>{' '}
-            Subscriber
-            {profile.newsletter_opted_in_at && (
-              <>
-                {' '}
-                since {formatMemberSince(profile.newsletter_opted_in_at)}
-              </>
-            )}
-          </p>
-        )}
       </div>
 
       {!isMember && (
@@ -227,25 +221,20 @@ function MemberOffcanvasAccountContent({
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-        <p className="text-xs font-semibold text-slate-700 mb-2">Newsletter</p>
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-slate-600">Substack</span>
-          {profile?.is_substack_subscriber ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 border border-emerald-200">
-              <span aria-hidden>✓</span>
-              Subscribed
-            </span>
-          ) : (
-            <span className="text-xs text-slate-500">Not subscribed</span>
-          )}
-        </div>
-        {profile?.is_substack_subscriber && profile?.newsletter_opted_in_at && (
-          <p className="text-xs text-slate-500 mt-1.5">
-            Opted in {formatMemberSince(profile.newsletter_opted_in_at)}
+      {daysLeft != null && daysLeft < 30 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+          <p className="font-medium mb-2">
+            Renew your membership today to extend your Kandie Gang benefits and continued support of the club.
           </p>
-        )}
-      </div>
+          <Link
+            to="/shop/kandie-gang-cycling-club-membership"
+            onClick={onClose}
+            className="font-semibold text-amber-800 hover:underline"
+          >
+            Kandie Gang Membership
+          </Link>
+        </div>
+      )}
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
         <p className="text-xs font-semibold text-slate-700 mb-2">Connected accounts</p>

@@ -15,6 +15,7 @@ import {
 import { canPurchase, type ShopProduct } from '../lib/products';
 import { Loader2, ArrowRight, Moon, Sun } from 'lucide-react';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
+import { MembersConfetti } from '../components/MembersConfetti';
 
 /** WordPress category slug for members-only posts (Photo Gallery). */
 const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
@@ -85,6 +86,7 @@ export const MembersAreaPage: React.FC = () => {
       return false;
     }
   });
+  const pillRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -245,6 +247,7 @@ export const MembersAreaPage: React.FC = () => {
           </button>
           {(cyclingMember || guide) && (
             <motion.div
+              ref={pillRef}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -268,6 +271,10 @@ export const MembersAreaPage: React.FC = () => {
             className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain dark:text-slate-100 mb-1 md:mb-2 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em]"
           />
         </header>
+
+        {(cyclingMember || guide) && (
+          <MembersConfetti originRef={pillRef} enabled={initialMembershipCheckDone} />
+        )}
 
       {initialMembershipCheckDone && canSeeMembersOnlyPosts && (
         <>

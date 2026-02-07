@@ -13,6 +13,7 @@
     "@google/genai": "latest",
     "@stripe/stripe-js": "^8.7.0",
     "@supabase/supabase-js": "^2.94.1",
+    "@tsparticles/confetti": "^3.9.1",
     "framer-motion": "^12.23.26",
     "gsap": "^3.14.2",
     "lucide-react": "^0.562.0",
