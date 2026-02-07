@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowLeft, ChevronDown } from 'lucide-react';
 import { getProductBySlug, transformMediaUrl, extractProductImagesFromBlocks } from '../lib/wordpress';
@@ -155,6 +155,10 @@ function removeImagesFromContent(content?: string): string {
 
 export const ProductPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const fromMembers = location.state?.from === '/members';
+  const backToShopUrl = fromMembers ? '/members' : '/shop';
+  const backToShopLabel = fromMembers ? 'Back to Members' : 'Back to Shop';
   const { user } = useAuth();
   const [product, setProduct] = useState<Awaited<ReturnType<typeof getProductBySlug>>>(null);
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(-1);
@@ -323,10 +327,10 @@ export const ProductPage: React.FC = () => {
       <div className="min-h-screen pt-32 md:pt-40 pb-40 flex flex-col items-center justify-center bg-primary-breath">
         <p className="text-slate-500 mb-6">{error || 'Product not found'}</p>
         <Link
-          to="/shop"
+          to={backToShopUrl}
           className="inline-flex items-center gap-2 text-secondary-purple-rain font-bold hover:underline"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Shop
+          <ArrowLeft className="w-4 h-4" /> {backToShopLabel}
         </Link>
       </div>
     );
@@ -727,19 +731,19 @@ export const ProductPage: React.FC = () => {
       {/* Back to shop link */}
       <div className="sticky top-0 z-10 -mx-6 px-6 pt-6 pb-2 bg-white/90 backdrop-blur-sm lg:hidden">
         <Link
-          to="/shop"
+          to={backToShopUrl}
           className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Shop
+          <ArrowLeft className="w-4 h-4" /> {backToShopLabel}
         </Link>
       </div>
       {/* Desktop back to shop link */}
       <div className="hidden lg:block fixed top-0 left-0 z-50 p-6">
         <Link
-          to="/shop"
+          to={backToShopUrl}
           className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Shop
+          <ArrowLeft className="w-4 h-4" /> {backToShopLabel}
         </Link>
       </div>
     </div>
