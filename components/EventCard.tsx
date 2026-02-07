@@ -61,7 +61,7 @@ export const EventCard: React.FC<EventCardProps> = ({
             </time>
 
             <div
-              className="w-px h-24 md:h-28 bg-slate-300 shrink-0"
+              className="w-px h-24 md:h-28 bg-slate-200 shrink-0"
               aria-hidden="true"
             />
 
@@ -78,7 +78,7 @@ export const EventCard: React.FC<EventCardProps> = ({
               {title}
             </h3>
             {tag && (
-              <span className="text-[0.85rem] font-light text-secondary-purple-rain/80 tracking-wide">
+              <span className="text-[0.85rem] font-light text-secondary-blush/80 tracking-wide">
                 {tag}
               </span>
             )}
@@ -91,7 +91,7 @@ export const EventCard: React.FC<EventCardProps> = ({
           <div className="flex justify-start">
             <button
               type="button"
-              className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-secondary-purple-rain bg-transparent px-3 py-1.5 text-[0.7rem] md:text-xs font-medium text-secondary-purple-rain transition-colors hover:border-secondary-purple-rain hover:bg-secondary-purple-rain hover:text-white active:scale-95"
+              className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-secondary-purple-rain bg-transparent px-3 py-1.5 text-[0.7rem] md:text-xs font-medium text-secondary-purple-rain transition-colors hover:border-secondary-blush hover:bg-secondary-purple-rain hover:text-white active:scale-95"
             >
               <span>Go to event</span>
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-purple-rain/10 p-1 transition-colors group-hover:bg-white">
