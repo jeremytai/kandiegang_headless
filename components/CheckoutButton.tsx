@@ -17,6 +17,8 @@ interface CheckoutButtonProps {
   className?: string;
   /** 'default' | 'sm' - smaller padding and text when 'sm' */
   size?: 'default' | 'sm';
+  /** If provided and returns false, checkout is not started (e.g. to show validation message). */
+  onBeforeCheckout?: () => boolean;
 }
 
 const sizeClasses = {
@@ -32,6 +34,7 @@ export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
   disabled = false,
   className = '',
   size = 'default',
+  onBeforeCheckout,
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -39,6 +42,7 @@ export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const handleCheckout = async () => {
+    if (onBeforeCheckout?.() === false) return;
     if (!priceId || disabled) return;
 
     setIsLoading(true);

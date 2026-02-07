@@ -162,6 +162,7 @@ export const ProductPage: React.FC = () => {
   const { user } = useAuth();
   const [product, setProduct] = useState<Awaited<ReturnType<typeof getProductBySlug>>>(null);
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(-1);
+  const [showVariantRequiredMessage, setShowVariantRequiredMessage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -224,6 +225,7 @@ export const ProductPage: React.FC = () => {
     setLoading(true);
     setError(null);
     setSelectedVariantIndex(-1);
+    setShowVariantRequiredMessage(false);
 
     async function load() {
       try {
@@ -233,6 +235,7 @@ export const ProductPage: React.FC = () => {
           setProduct(productData);
           // Start with no variant selected (user must choose a size)
           setSelectedVariantIndex(-1);
+          setShowVariantRequiredMessage(false);
         } else {
           setError('Product not found');
         }
@@ -542,8 +545,13 @@ export const ProductPage: React.FC = () => {
                   <ProductVariantSelector
                     variants={variants}
                     selectedVariantIndex={selectedVariantIndex}
-                    onVariantChange={setSelectedVariantIndex}
+                    onVariantChange={(idx) => {
+                      setSelectedVariantIndex(idx);
+                      setShowVariantRequiredMessage(false);
+                    }}
                     hideLabel={false}
+                    variantLabel={product.productFields?.variantLabel ?? 'Size'}
+                    showVariantRequiredMessage={showVariantRequiredMessage}
                   />
                 )}
                 <CheckoutButton
@@ -552,7 +560,14 @@ export const ProductPage: React.FC = () => {
                   productId={product.id}
                   productTitle={product.title}
                   productSlug={product.slug ?? ''}
-                  disabled={!stripePriceId || !canPurchaseProduct}
+                  disabled={hasVariants && selectedVariantIndex < 0 ? false : (!stripePriceId || !canPurchaseProduct)}
+                  onBeforeCheckout={() => {
+                    if (hasVariants && selectedVariantIndex < 0) {
+                      setShowVariantRequiredMessage(true);
+                      return false;
+                    }
+                    return true;
+                  }}
                 />
               </div>
               <ProductDetailsAccordion
@@ -701,8 +716,13 @@ export const ProductPage: React.FC = () => {
                 <ProductVariantSelector
                   variants={variants}
                   selectedVariantIndex={selectedVariantIndex}
-                  onVariantChange={setSelectedVariantIndex}
+                  onVariantChange={(idx) => {
+                    setSelectedVariantIndex(idx);
+                    setShowVariantRequiredMessage(false);
+                  }}
                   hideLabel={false}
+                  variantLabel={product.productFields?.variantLabel ?? 'Size'}
+                  showVariantRequiredMessage={showVariantRequiredMessage}
                 />
               )}
               <CheckoutButton
@@ -711,8 +731,15 @@ export const ProductPage: React.FC = () => {
                 productId={product.id}
                 productTitle={product.title}
                 productSlug={product.slug ?? ''}
-                disabled={!stripePriceId || !canPurchaseProduct}
+                disabled={hasVariants && selectedVariantIndex < 0 ? false : (!stripePriceId || !canPurchaseProduct)}
                 className="w-full self-start"
+                onBeforeCheckout={() => {
+                  if (hasVariants && selectedVariantIndex < 0) {
+                    setShowVariantRequiredMessage(true);
+                    return false;
+                  }
+                  return true;
+                }}
               />
             </div>
 

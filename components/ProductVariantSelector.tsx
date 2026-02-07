@@ -21,6 +21,16 @@ interface ProductVariantSelectorProps {
   variant?: 'dropdown' | 'buttons';
   /** When true, hide the "Size" label above the variant buttons. */
   hideLabel?: boolean;
+  /** Label for the variant type (e.g. "Size", "Color"). Used for the contextual required message. */
+  variantLabel?: string;
+  /** When true, replace the variant label with "Please choose a {variantLabel}" (shown after add-to-cart without selection). */
+  showVariantRequiredMessage?: boolean;
+}
+
+/** Lowercase first letter for use in sentence (e.g. "Size" -> "size"). */
+function variantLabelInSentence(label: string): string {
+  if (!label) return 'variant';
+  return label.charAt(0).toLowerCase() + label.slice(1);
 }
 
 export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
@@ -29,17 +39,29 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
   onVariantChange,
   variant = 'buttons',
   hideLabel = false,
+  variantLabel: variantLabelProp = 'Size',
+  showVariantRequiredMessage = false,
 }) => {
   if (!variants || variants.length <= 1) {
     return null;
   }
 
+  const contextualMessage = `Please choose a ${variantLabelInSentence(variantLabelProp)}`;
+
   if (variant === 'dropdown') {
     return (
       <div className="flex flex-col gap-2 w-full max-w-xs">
-        <label htmlFor="product-variant" className="text-sm font-medium text-secondary-purple-rain/70 uppercase tracking-widest">
-          Variant
-        </label>
+        <div className="flex flex-col gap-0.5">
+          {showVariantRequiredMessage ? (
+            <p className="text-[11px] font-medium text-amber-600" role="status">
+              {contextualMessage}
+            </p>
+          ) : (
+            <label htmlFor="product-variant" className="text-sm font-medium text-secondary-purple-rain/70 uppercase tracking-widest">
+              {variantLabelProp}
+            </label>
+          )}
+        </div>
         <select
           id="product-variant"
           value={selectedVariantIndex}
@@ -64,9 +86,17 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
   return (
     <div className="flex flex-col items-start gap-2 self-start">
       {!hideLabel && (
-        <p className="text-[11px] font-medium text-secondary-purple-rain/70 uppercase tracking-widest">
-          Size
-        </p>
+        <div className="flex flex-col gap-0.5">
+          {showVariantRequiredMessage ? (
+            <p className="text-[11px] font-medium text-amber-600" role="status">
+              {contextualMessage}
+            </p>
+          ) : (
+            <p className="text-[11px] font-medium text-secondary-purple-rain/70 uppercase tracking-widest">
+              {variantLabelProp}
+            </p>
+          )}
+        </div>
       )}
       <div className="flex flex-nowrap justify-start items-center gap-1.5">
         {variants.map((v, index) => {
