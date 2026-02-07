@@ -42,6 +42,7 @@ const GUIDE_IMAGES = [
   'rilana_s',
   'ruth_p',
   'saskia_s',
+  'sebastian_w',
   'silvi_b_',
   'tanja_d',
   'wiepke_h',

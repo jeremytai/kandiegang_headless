@@ -22,6 +22,7 @@ const HEADLINE_IMAGE_BASES = [
   '/images/guides/rilana_s',
   '/images/guides/ruth_p',
   '/images/guides/saskia_s',
+  '/images/guides/sebastian_w',
   '/images/guides/silvi_b_',
   '/images/guides/tanja_d',
 ];

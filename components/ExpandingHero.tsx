@@ -7,12 +7,18 @@
  * - Optional imageUrl/imageAlt for story pages; otherwise uses default asset.
  */
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { imageSrc, imageSrcSet } from '../lib/images';
 
 const DEFAULT_ALT =
   'We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).';
+
+const HERO_IMAGES = [
+  '/images/250701_photosafari-12',
+  '/images/250701_photosafari-40',
+  '/images/250401_hamburg-10',
+] as const;
 
 export interface ExpandingHeroProps {
   /** When set (e.g. story featured image), this URL is used instead of the default asset. */
@@ -22,6 +28,9 @@ export interface ExpandingHeroProps {
 
 export const ExpandingHero: React.FC<ExpandingHeroProps> = ({ imageUrl, imageAlt = DEFAULT_ALT }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [defaultPath] = useState(() =>
+    HERO_IMAGES[Math.floor(Math.random() * HERO_IMAGES.length)]
+  );
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
@@ -36,8 +45,8 @@ export const ExpandingHero: React.FC<ExpandingHeroProps> = ({ imageUrl, imageAlt
     return `inset(0px calc(${padding} * (1 - ${v})) round calc(${radius} * (1 - ${v})))`;
   });
 
-  const src = imageUrl ?? imageSrc('/images/250701_photosafari-12');
-  const srcSet = imageUrl ? undefined : imageSrcSet('/images/250701_photosafari-12');
+  const src = imageUrl ?? imageSrc(defaultPath);
+  const srcSet = imageUrl ? undefined : imageSrcSet(defaultPath);
 
   return (
     <section ref={containerRef} className="relative h-[150vh] md:h-[180vh] bg-primary-breath">
