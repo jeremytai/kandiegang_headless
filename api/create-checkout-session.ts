@@ -145,12 +145,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/shop`;
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: lineItems.map(({ priceId, quantity }) => ({
+    const FREE_SHIPPING_THRESHOLD = 99;
+    const SHIPPING_DE_CENTS = 590;
+    const SHIPPING_EU_CENTS = 990;
+
+    const shippingOption = (body.shippingOption as string) || 'de';
+    const subtotal = typeof body.subtotal === 'number' ? body.subtotal : undefined;
+
+    let shippingAmountCents = 0;
+    if (subtotal != null && subtotal > 0) {
+      if (shippingOption === 'pickup' || subtotal >= FREE_SHIPPING_THRESHOLD) {
+        shippingAmountCents = 0;
+      } else if (shippingOption === 'eu') {
+        shippingAmountCents = SHIPPING_EU_CENTS;
+      } else {
+        shippingAmountCents = SHIPPING_DE_CENTS;
+      }
+    }
+
+    const shippingLabels: Record<string, string> = {
+      de: 'Shipping (Standard – Germany)',
+      eu: 'Shipping (Standard – EU)',
+      pickup: 'Shipping (Local pickup)',
+    };
+    const shippingLabel = shippingLabels[shippingOption] || shippingLabels.de;
+
+    const lineItemsForSession: Stripe.Checkout.SessionCreateParams.LineItem[] = lineItems.map(
+      ({ priceId, quantity }) => ({
         price: priceId,
         quantity,
-      })),
+      })
+    );
+
+    if (subtotal != null) {
+      lineItemsForSession.push({
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: shippingAmountCents === 0 ? `${shippingLabel} – Free` : shippingLabel,
+          },
+          unit_amount: shippingAmountCents,
+        },
+        quantity: 1,
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItemsForSession,
       mode,
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -159,6 +201,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         productTitles: lineItems.map((i) => i.productTitle).join('|'),
         productSlugs: lineItems.map((i) => i.productSlug).join(','),
         userId: (userId as string) || 'guest',
+        ...(shippingOption && { shippingOption: String(shippingOption) }),
       },
       customer_email: (userEmail as string) || undefined,
       allow_promotion_codes: true,

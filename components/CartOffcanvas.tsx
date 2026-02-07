@@ -1,6 +1,6 @@
 /**
  * CartOffcanvas.tsx
- * Cart side panel: list of items, remove, Proceed to Checkout.
+ * Cart side panel: list of items, shipping option, remove, Proceed to Checkout.
  * Uses OffCanvas (same pattern as members panel) and CartContext.
  */
 
@@ -10,6 +10,19 @@ import { OffCanvas } from './OffCanvas';
 import { useCart, CartLineItem } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Loader2, ShoppingBag, Trash2, Minus, Plus } from 'lucide-react';
+
+const FREE_SHIPPING_THRESHOLD = 99;
+const SHIPPING_DE = 5.9;
+const SHIPPING_EU = 9.9;
+const SHIPPING_PICKUP = 0;
+
+export type ShippingOption = 'de' | 'eu' | 'pickup';
+
+function getShippingAmount(option: ShippingOption, subtotal: number): number {
+  if (option === 'pickup') return SHIPPING_PICKUP;
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+  return option === 'de' ? SHIPPING_DE : SHIPPING_EU;
+}
 
 function CartLineRow({
   item,
@@ -77,6 +90,12 @@ export const CartOffcanvas: React.FC = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shippingOption, setShippingOption] = useState<ShippingOption>('de');
+
+  const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.quantity, 0);
+  const hasAnyPrice = items.some((i) => i.price != null && i.price > 0);
+  const shippingAmount = getShippingAmount(shippingOption, subtotal);
+  const total = subtotal + shippingAmount;
 
   const handleProceedToCheckout = async () => {
     if (items.length === 0) return;
@@ -95,6 +114,8 @@ export const CartOffcanvas: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lineItems,
+          subtotal,
+          shippingOption,
           userId: user?.id ?? null,
           userEmail: user?.email ?? null,
         }),
@@ -155,19 +176,69 @@ export const CartOffcanvas: React.FC = () => {
               ))}
             </div>
             <div className="mt-6 pt-4 border-t border-slate-200 space-y-3">
-              {(() => {
-                const subtotal = items.reduce(
-                  (sum, i) => sum + (i.price ?? 0) * i.quantity,
-                  0
-                );
-                const hasAnyPrice = items.some((i) => i.price != null && i.price > 0);
-                return hasAnyPrice ? (
+              {hasAnyPrice && (
+                <>
                   <p className="text-sm font-medium text-slate-700 flex justify-between">
                     <span>Subtotal</span>
                     <span>€{subtotal.toFixed(2)}</span>
                   </p>
-                ) : null;
-              })()}
+                  <p className="text-xs text-slate-500">Within the EU: Free shipping on orders over €99</p>
+                  <fieldset className="space-y-2" aria-label="Shipping option">
+                    <legend className="sr-only">Shipping option</legend>
+                    {(
+                      [
+                        {
+                          value: 'de' as const,
+                          label: 'Delivery to Germany',
+                          priceLabel:
+                            subtotal >= FREE_SHIPPING_THRESHOLD
+                              ? 'Free'
+                              : `€${SHIPPING_DE.toFixed(2)}`,
+                        },
+                        {
+                          value: 'eu' as const,
+                          label: 'Delivery to EU',
+                          priceLabel:
+                            subtotal >= FREE_SHIPPING_THRESHOLD
+                              ? 'Free'
+                              : `€${SHIPPING_EU.toFixed(2)}`,
+                        },
+                        {
+                          value: 'pickup' as const,
+                          label: 'Local pickup',
+                          priceLabel: 'Free',
+                        },
+                      ] as const
+                    ).map(({ value, label, priceLabel }) => (
+                      <label
+                        key={value}
+                        className="flex items-center justify-between gap-2 cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="shipping"
+                            value={value}
+                            checked={shippingOption === value}
+                            onChange={() => setShippingOption(value)}
+                            className="text-secondary-purple-rain border-slate-300 focus:ring-secondary-purple-rain"
+                          />
+                          <span className="text-sm text-slate-700">{label}</span>
+                        </span>
+                        <span className="text-sm font-medium text-slate-700">{priceLabel}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+                  <p className="text-sm font-medium text-slate-700 flex justify-between">
+                    <span>Shipping</span>
+                    <span>{shippingAmount === 0 ? 'Free' : `€${shippingAmount.toFixed(2)}`}</span>
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900 flex justify-between pt-1">
+                    <span>Total</span>
+                    <span>€{total.toFixed(2)}</span>
+                  </p>
+                </>
+              )}
               {error && (
                 <p className="text-sm text-red-600">{error}</p>
               )}

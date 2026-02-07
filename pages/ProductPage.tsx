@@ -15,6 +15,7 @@ import { usePageMeta } from '../hooks/usePageMeta';
 import { useAuth } from '../context/AuthContext';
 import { AddToCartButton } from '../components/AddToCartButton';
 import { ProductVariantSelector } from '../components/ProductVariantSelector';
+import { StripePaymentTrustBar } from '../components/StripePaymentTrustBar';
 
 /** FAQ-style accordion for product details (body + SKU). */
 function ProductDetailsAccordion({
@@ -573,11 +574,16 @@ export const ProductPage: React.FC = () => {
                   }}
                 />
               </div>
-              <ProductDetailsAccordion
-                bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
-                sku={product.productFields?.sku}
-                variant="desktop"
-              />
+              <div className="mt-4 w-full">
+                <StripePaymentTrustBar region="EU" iconSize={24} />
+              </div>
+              <div className="mt-6 w-full">
+                <ProductDetailsAccordion
+                  bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
+                  sku={product.productFields?.sku}
+                  variant="desktop"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -746,10 +752,13 @@ export const ProductPage: React.FC = () => {
                   return true;
                 }}
               />
+              <div className="mt-4 w-full">
+                <StripePaymentTrustBar region="EU" iconSize={24} />
+              </div>
             </div>
 
             {/* 9. Product details accordion — same horizontal margins as button (px-4) */}
-            <div className="w-full px-4">
+            <div className="mt-6 w-full px-4">
               <ProductDetailsAccordion
                 bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
                 sku={product.productFields?.sku}
