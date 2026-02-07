@@ -229,7 +229,7 @@ export const HorizontalRevealSection: React.FC = () => {
         <div className="absolute top-12 md:top-20 left-0 w-full px-8 md:px-16 pb-12 md:pb-16 flex justify-between items-start z-20">
           <h2 className="text-5xl md:text-7xl font-light tracking-tight text-secondary-current text-balance">Community is Our Catalyst</h2>
           <div className="hidden md:flex items-center gap-2 text-slate-400 font-medium text-xs md:text-sm pt-4">
-            <span className="tracking-tight uppercase tracking-widest text-secondary-current text-[10px]">Scroll down to explore</span>
+            <span className="uppercase tracking-widest text-secondary-current text-[10px]">Scroll down to explore</span>
             <ChevronRight className="w-4 h-4 text-secondary-current" />
           </div>
         </div>

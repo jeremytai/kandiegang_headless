@@ -274,12 +274,17 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                         <NavLink label="About" to="/about" onClick={handleToggle} />
                      </nav>
                    </div>
-                   <div 
-                     className="rounded-xl p-6 flex flex-col justify-center border border-black/[0.03] bg-cover bg-center bg-no-repeat aspect-[4/3]"
-                     style={{ backgroundImage: `url(${imageSrc('/images/250621_hamburg-14')})` }}
-                   >
-                      <div className="h-px bg-black/10 w-12 mb-4" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-black"></span>
+                   <div className="rounded-xl p-6 flex flex-col justify-center border border-black/[0.03] aspect-[4/3] relative overflow-hidden">
+                     <img
+                       src={imageSrc('/images/250621_hamburg-14')}
+                       alt=""
+                       className="absolute inset-0 w-full h-full object-cover object-center"
+                       aria-hidden
+                     />
+                     <div className="relative z-10">
+                       <div className="h-px bg-black/10 w-12 mb-4" />
+                       <span className="text-[10px] font-bold uppercase tracking-wider text-black"></span>
+                     </div>
                    </div>
                 </div>
                 <p className="w-full px-8 pb-6 pt-0 -mt-2 text-center text-xs font-body text-slate-600 leading-relaxed">

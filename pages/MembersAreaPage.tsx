@@ -247,7 +247,7 @@ export const MembersAreaPage: React.FC = () => {
           <AnimatedHeadline
             text={`${greeting}, ${profile?.display_name?.trim().split(/\s+/)[0] || 'Friend'}`}
             as="h1"
-            className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain dark:text-slate-100 mb-1 md:mb-2 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-4 block"
+            className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain dark:text-slate-100 mb-1 md:mb-2 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em]"
           />
         </header>
 
@@ -353,7 +353,7 @@ export const MembersAreaPage: React.FC = () => {
                             € {displayPrice}
                           </p>
                         )}
-                        <div className="hidden flex items-center justify-between w-full py-3 px-4 rounded-lg bg-secondary-purple-rain text-white group-hover:bg-slate-600 dark:group-hover:bg-slate-500 transition-colors">
+                        <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-secondary-purple-rain text-white group-hover:bg-slate-600 dark:group-hover:bg-slate-500 transition-colors">
                           <span className="font-medium text-white text-sm tracking-normal">Buy</span>
                           <ArrowRight className="w-4 h-4 text-white shrink-0" />
                         </div>

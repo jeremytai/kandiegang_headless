@@ -52,8 +52,7 @@ export const StripePaymentTrustBar: React.FC<StripePaymentTrustBarProps> = ({
         {displayMethods.map(({ id, config, Icon }) => (
           <span
             key={id}
-            className="inline-flex items-center justify-center shrink-0 text-slate-600"
-            style={{ height: iconSize }}
+            className={`inline-flex items-center justify-center shrink-0 text-slate-600 ${iconSize <= 20 ? 'h-5' : iconSize <= 24 ? 'h-6' : 'h-8'}`}
             aria-label={config.label}
           >
             <Icon size={iconSize} className="block" />
