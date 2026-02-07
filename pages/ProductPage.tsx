@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, ChevronDown } from 'lucide-react';
 import { getProductBySlug, transformMediaUrl, extractProductImagesFromBlocks } from '../lib/wordpress';
 import { getProductPrice, getStripePriceId, canPurchase, ProductVariant, ShopProduct } from '../lib/products';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
@@ -15,6 +15,68 @@ import { usePageMeta } from '../hooks/usePageMeta';
 import { useAuth } from '../context/AuthContext';
 import { CheckoutButton } from '../components/CheckoutButton';
 import { ProductVariantSelector } from '../components/ProductVariantSelector';
+
+/** FAQ-style accordion for product details (body + SKU). */
+function ProductDetailsAccordion({
+  bodyHtml,
+  sku,
+  variant,
+}: {
+  bodyHtml: string;
+  sku?: string | null;
+  variant: 'desktop' | 'mobile';
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const hasContent = !!bodyHtml || !!sku;
+  if (!hasContent) return null;
+
+  const paddingClass = variant === 'mobile' ? 'px-4 lg:px-8' : '';
+  const textColorClass = variant === 'desktop' ? 'text-secondary-purple-rain' : 'text-secondary-current';
+
+  return (
+    <div className={`flex w-full flex-col items-start self-start text-left border-t border-b border-slate-200 pt-2 pb-2 mt-[56px] ${paddingClass}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((o) => !o)}
+        className="flex w-full cursor-pointer items-center justify-between text-left group"
+      >
+        <span className={`text-sm font-medium uppercase tracking-widest ${textColorClass} group-hover:opacity-80`}>
+          Details
+        </span>
+        <span
+          className={`inline-flex shrink-0 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
+        >
+          <ChevronDown className={`h-5 w-5 opacity-60 ${variant === 'desktop' ? 'text-secondary-purple-rain' : 'text-secondary-current'}`} />
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+            className="overflow-hidden"
+          >
+            <div className={`pt-4 pb-2 ${textColorClass} text-xs md:text-sm prose prose-sm max-w-[44ch]`}>
+              {bodyHtml && (
+                <div
+                  className={variant === 'desktop' ? 'prose-purple' : ''}
+                  dangerouslySetInnerHTML={{ __html: bodyHtml }}
+                />
+              )}
+              {sku && (
+                <div className="text-secondary-purple-rain/60 text-sm pt-4">
+                  SKU: {sku}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 /**
  * Extract image URLs from HTML content.
@@ -52,6 +114,16 @@ function getFirstParagraph(content?: string): string {
   const doc = parser.parseFromString(content, 'text/html');
   const firstP = doc.body.querySelector('p');
   return firstP ? firstP.outerHTML : '';
+}
+
+/** Return HTML content with the first paragraph removed (so we don't duplicate it under the headline). */
+function getContentWithoutFirstParagraph(content?: string): string {
+  if (!content) return '';
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, 'text/html');
+  const firstP = doc.body.querySelector('p');
+  if (firstP) firstP.remove();
+  return doc.body.innerHTML.trim();
 }
 
 /**
@@ -332,7 +404,7 @@ export const ProductPage: React.FC = () => {
         {productImages.length > 0 && (
           <div className="hidden lg:flex">
             {/* Left column — scrolling images */}
-            <div className="w-1/2 p-3">
+            <div className="min-w-0 flex-1 p-3">
               <div className="flex flex-col gap-3">
                 {productImages.map((img, i) => (
                   <div
@@ -357,7 +429,7 @@ export const ProductPage: React.FC = () => {
             </div>
 
             {/* Right column — placeholder to maintain layout */}
-            <div className="w-1/2" />
+            <div className="w-[492px] shrink-0" />
           </div>
         )}
 
@@ -401,13 +473,13 @@ export const ProductPage: React.FC = () => {
         {/* Fixed/Absolute right column content (desktop only) */}
         <div
           ref={heroRightColRef}
-          className={`hidden lg:flex items-start justify-center h-screen w-1/2 z-10 pt-[var(--header-height,5rem)] ${
+          className={`hidden lg:flex items-start justify-center h-screen w-[492px] shrink-0 z-10 pt-[var(--header-height,5rem)] ${
             stickyOffset === null ? 'fixed top-0 right-0' : 'absolute right-0'
           }`}
         >
-          <div className="flex w-full max-h-[calc(100vh-var(--header-height,5rem))] flex-col items-center justify-center gap-20 text-center px-6 overflow-y-auto">
+          <div className="flex w-full max-h-[calc(100vh-var(--header-height,5rem))] flex-col items-center justify-center gap-8 text-center px-6 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:hidden">
             {/* Headlines — left-aligned to match first paragraph */}
-            <div className="flex w-full max-w-[44ch] flex-col items-start self-start pt-[240px] text-left">
+            <div className="flex w-full max-w-[44ch] flex-col items-start self-start pt-[100px] text-left">
               {shopProduct.productFields.membersOnly && (
                 <span className="mb-4 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
                   Members Only
@@ -425,9 +497,9 @@ export const ProductPage: React.FC = () => {
                 <div className="py-2 text-secondary-purple-rain">
                   {hasDiscount ? (
                     <div>
-                      <p className="text-xl md:text-2xl font-medium mb-1.5">
+                      <p className="text-base md:text-lg font-medium mb-1.5">
                         <span className="text-green-600">€{displayPrice.toFixed(2)}</span>
-                        <span className="text-base font-normal ml-2 text-secondary-purple-rain/60 line-through">
+                        <span className="text-sm font-normal ml-2 text-secondary-purple-rain/60 line-through">
                           €{publicPrice.toFixed(2)}
                         </span>
                       </p>
@@ -436,7 +508,7 @@ export const ProductPage: React.FC = () => {
                       </p>
                     </div>
                   ) : (
-                    <p className="text-xl md:text-2xl font-medium mb-1.5">
+                    <p className="text-base md:text-lg font-medium mb-1.5">
                       €{displayPrice.toFixed(2)}
                     </p>
                   )}
@@ -458,41 +530,32 @@ export const ProductPage: React.FC = () => {
               )}
             </div>
 
-            {/* Variant Selector + Add to Cart — left-aligned */}
-            <div className="flex flex-col items-start self-start gap-4">
-              {hasVariants && variants.length > 1 && (
-                <ProductVariantSelector
-                  variants={variants}
-                  selectedVariantIndex={selectedVariantIndex}
-                  onVariantChange={setSelectedVariantIndex}
-                  hideLabel={false}
+            {/* Variant Selector + Add to Cart + Details — tight gap to accordion */}
+            <div className="flex w-full flex-col items-start self-start gap-1">
+              <div className="flex w-full flex-col items-start self-start gap-4">
+                {hasVariants && variants.length > 1 && (
+                  <ProductVariantSelector
+                    variants={variants}
+                    selectedVariantIndex={selectedVariantIndex}
+                    onVariantChange={setSelectedVariantIndex}
+                    hideLabel={false}
+                  />
+                )}
+                <CheckoutButton
+                  size="sm"
+                  priceId={stripePriceId ?? ''}
+                  productId={product.id}
+                  productTitle={product.title}
+                  productSlug={product.slug ?? ''}
+                  disabled={!stripePriceId || !canPurchaseProduct}
                 />
-              )}
-              <CheckoutButton
-                size="sm"
-                priceId={stripePriceId ?? ''}
-                productId={product.id}
-                productTitle={product.title}
-                productSlug={product.slug ?? ''}
-                disabled={!stripePriceId || !canPurchaseProduct}
-                className="self-start"
+              </div>
+              <ProductDetailsAccordion
+                bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
+                sku={product.productFields?.sku}
+                variant="desktop"
               />
             </div>
-
-            {/* Body text */}
-            {product.content && (
-              <div
-                className="max-w-[44ch] text-secondary-purple-rain text-xs md:text-sm prose prose-sm prose-purple pt-2"
-                dangerouslySetInnerHTML={{ __html: removeImagesFromContent(product.content) }}
-              />
-            )}
-
-            {/* SKU */}
-            {product.productFields?.sku && (
-              <div className="text-secondary-purple-rain/60 text-sm pt-4">
-                SKU: {product.productFields.sku}
-              </div>
-            )}
           </div>
         </div>
 
@@ -526,9 +589,9 @@ export const ProductPage: React.FC = () => {
               <div className="px-4 mb-4 text-secondary-purple-rain">
                 {hasDiscount ? (
                   <div>
-                    <p className="text-xl md:text-2xl font-medium mb-1.5">
+                    <p className="text-base md:text-lg font-medium mb-1.5">
                       <span className="text-green-600">€{displayPrice.toFixed(2)}</span>
-                      <span className="text-base font-normal ml-2 text-secondary-purple-rain/60 line-through">
+                      <span className="text-sm font-normal ml-2 text-secondary-purple-rain/60 line-through">
                         €{publicPrice.toFixed(2)}
                       </span>
                     </p>
@@ -537,7 +600,7 @@ export const ProductPage: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <p className="text-xl md:text-2xl font-medium mb-1.5">
+                  <p className="text-base md:text-lg font-medium mb-1.5">
                     €{displayPrice.toFixed(2)}
                   </p>
                 )}
@@ -646,20 +709,12 @@ export const ProductPage: React.FC = () => {
               </>
             )}
 
-            {/* Body text */}
-            {product.content && (
-              <div
-                className="max-w-[44ch] px-4 text-secondary-current text-xs md:text-sm lg:px-8 prose prose-sm"
-                dangerouslySetInnerHTML={{ __html: removeImagesFromContent(product.content) }}
-              />
-            )}
-
-            {/* SKU */}
-            {product.productFields?.sku && (
-              <div className="text-secondary-purple-rain/60 text-sm px-4">
-                SKU: {product.productFields.sku}
-              </div>
-            )}
+            {/* Details toggle (Mobile, FAQ-style) */}
+            <ProductDetailsAccordion
+              bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
+              sku={product.productFields?.sku}
+              variant="mobile"
+            />
           </div>
         </div>
       </section>

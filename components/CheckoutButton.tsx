@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ShoppingBag } from 'lucide-react';
+import { Loader2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface CheckoutButtonProps {
@@ -20,8 +20,8 @@ interface CheckoutButtonProps {
 }
 
 const sizeClasses = {
-  default: 'px-8 py-4 text-base',
-  sm: 'px-5 py-2.5 text-sm',
+  default: 'px-8 py-4 text-base rounded-full inline-flex items-center justify-center gap-2',
+  sm: 'w-full py-3 px-4 rounded-lg text-sm font-medium flex items-center justify-between',
 };
 
 export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
@@ -102,22 +102,29 @@ export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
     }
   };
 
+  const isShopStyle = size === 'sm';
+
   return (
     <div className="flex flex-col items-center gap-2">
       <button
         type="button"
         onClick={handleCheckout}
         disabled={disabled || isLoading || !priceId}
-        className={`inline-flex items-center justify-center gap-2 rounded-full bg-secondary-purple-rain font-medium text-white transition-all hover:bg-secondary-purple-rain/90 disabled:cursor-not-allowed disabled:bg-secondary-purple-rain/60 disabled:opacity-90 ${sizeClasses[size]} ${className}`}
+        className={`bg-secondary-purple-rain text-white transition-all hover:bg-secondary-purple-rain/90 disabled:cursor-not-allowed disabled:bg-secondary-purple-rain/60 disabled:opacity-90 ${sizeClasses[size]} ${className}`}
       >
         {isLoading ? (
           <>
             <Loader2 className={`${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} animate-spin`} />
             <span>Processing...</span>
           </>
+        ) : isShopStyle ? (
+          <>
+            <span className="tracking-normal">Add to Cart</span>
+            <ArrowRight className="w-4 h-4 shrink-0" />
+          </>
         ) : (
           <>
-            <ShoppingBag className={size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} />
+            <ShoppingBag className="w-5 h-5" />
             <span>Add to Cart</span>
           </>
         )}

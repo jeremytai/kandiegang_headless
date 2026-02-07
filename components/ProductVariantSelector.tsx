@@ -62,13 +62,13 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
   }
 
   return (
-    <div className="flex flex-col items-start gap-4 self-start">
+    <div className="flex flex-col items-start gap-2 self-start">
       {!hideLabel && (
-        <p className="text-sm font-medium text-secondary-purple-rain/70 uppercase tracking-widest">
+        <p className="text-[11px] font-medium text-secondary-purple-rain/70 uppercase tracking-widest">
           Size
         </p>
       )}
-      <div className="flex flex-nowrap justify-start items-center gap-2">
+      <div className="flex flex-nowrap justify-start items-center gap-1.5">
         {variants.map((v, index) => {
           const isSelected = index === selectedVariantIndex;
           const isInStock = v.inventory > 0;
@@ -79,7 +79,7 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
               onClick={() => onVariantChange(index)}
               disabled={!isInStock}
               className={`
-                relative px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap
+                relative px-2 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap
                 ${isSelected ? 'bg-secondary-purple-rain text-white border border-secondary-purple-rain' : 'bg-white border border-slate-300 text-slate-800 hover:border-slate-400'}
                 ${!isInStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 focus:outline-none focus:ring-2 focus:ring-secondary-purple-rain focus:ring-offset-1
