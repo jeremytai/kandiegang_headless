@@ -54,6 +54,7 @@ export const StoryPage: React.FC = () => {
       setError('Missing story slug');
       return;
     }
+    const slugValue = slug;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -61,7 +62,7 @@ export const StoryPage: React.FC = () => {
 
     async function load() {
       try {
-        const blocksData = await getStoryBlocks(slug);
+        const blocksData = await getStoryBlocks(slugValue);
         if (cancelled) return;
         if (blocksData?.post && blocksData.post.editorBlocks?.length) {
           const referenceImageUrl = blocksData.post.featuredImage?.node?.sourceUrl;
@@ -72,20 +73,20 @@ export const StoryPage: React.FC = () => {
           const normalized = normalizeBlocks(blocksData.post.editorBlocks, mediaMap);
           setNormalizedBlocks(normalized);
           setPost({
-            id: `blocks-${slug}`,
+            id: `blocks-${slugValue}`,
             title: blocksData.post.title,
             excerpt: blocksData.post.excerpt ?? '',
             date: blocksData.post.date ?? '',
-            uri: blocksData.post.uri ?? `/story/${slug}`,
+            uri: blocksData.post.uri ?? `/story/${slugValue}`,
             featuredImage: blocksData.post.featuredImage,
           });
           return;
         }
-        const fallbackPost = await getPostBySlug(slug);
+        const fallbackPost = await getPostBySlug(slugValue);
         if (cancelled) return;
         if (fallbackPost) {
           setPost(fallbackPost);
-        } else if (slug === DEMO_POST_SLUG) {
+        } else if (slugValue === DEMO_POST_SLUG) {
           setPost(DEMO_POST);
         } else {
           setPost(null);
@@ -94,10 +95,10 @@ export const StoryPage: React.FC = () => {
       } catch (err) {
         if (!cancelled) {
           console.error('Failed to fetch story:', err);
-          const fallbackPost = await getPostBySlug(slug).catch(() => null);
+          const fallbackPost = await getPostBySlug(slugValue).catch(() => null);
           if (!cancelled) {
             if (fallbackPost) setPost(fallbackPost);
-            else if (slug === DEMO_POST_SLUG) setPost(DEMO_POST);
+            else if (slugValue === DEMO_POST_SLUG) setPost(DEMO_POST);
             else setError('Failed to load story');
           }
         }
@@ -197,16 +198,16 @@ export const StoryPage: React.FC = () => {
               imageAlt={stripHtml(post.title)}
             />
 
-            <div className="max-w-4xl mx-auto px-6 pb-40">
-              <div className="sticky top-0 z-10 -mx-6 px-6 pt-6 pb-2 bg-primary-breath/90 backdrop-blur-sm">
-                <Link
-                  to="/stories"
-                  className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" /> Back to Stories
-                </Link>
-              </div>
+            <div className="sticky top-0 z-10 max-w-4xl mx-auto px-6 pt-5 pb-6 bg-primary-breath/90 backdrop-blur-sm">
+              <Link
+                to="/stories"
+                className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to Stories
+              </Link>
+            </div>
 
+            <div className="max-w-4xl mx-auto px-6 pb-40">
               {normalizedBlocks && normalizedBlocks.length > 0 ? (
                 <StoryBlocksRenderer
                   blocks={normalizedBlocks}
