@@ -151,7 +151,7 @@ export const StoryPage: React.FC = () => {
             <p className="text-slate-500 mb-6">{error ?? 'Story not found.'}</p>
             <Link
               to="/stories"
-              className="inline-flex items-center gap-2 text-secondary-purple-rain font-bold hover:underline"
+              className="inline-flex items-center gap-2 text-secondary-purple-rain font-bold hover:underline mb-20"
             >
               <ArrowLeft className="w-4 h-4" /> Back to Stories
             </Link>
