@@ -353,9 +353,9 @@ export const MembersAreaPage: React.FC = () => {
                             € {displayPrice}
                           </p>
                         )}
-                        <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-secondary-purple-rain text-white group-hover:bg-slate-600 dark:group-hover:bg-slate-500 transition-colors">
-                          <span className="font-medium text-white text-sm tracking-normal">Buy</span>
-                          <ArrowRight className="w-4 h-4 text-white shrink-0" />
+                        <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg border-2 border-secondary-purple-rain/60 bg-transparent text-secondary-purple-rain group-hover:bg-secondary-purple-rain group-hover:text-black transition-colors">
+                          <span className="font-medium text-sm tracking-normal">Get it</span>
+                          <ArrowRight className="w-4 h-4 shrink-0" />
                         </div>
                       </motion.article>
                     </Link>
