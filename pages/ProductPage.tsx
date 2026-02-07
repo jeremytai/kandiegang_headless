@@ -575,7 +575,12 @@ export const ProductPage: React.FC = () => {
                 />
               </div>
               <div className="mt-4 w-full">
-                <StripePaymentTrustBar region="EU" iconSize={24} />
+                <StripePaymentTrustBar
+                  region="EU"
+                  iconSize={24}
+                  paymentMethodTypes={['card', 'link', 'klarna']}
+                  showText
+                />
               </div>
               <div className="mt-6 w-full">
                 <ProductDetailsAccordion
@@ -753,7 +758,12 @@ export const ProductPage: React.FC = () => {
                 }}
               />
               <div className="mt-4 w-full">
-                <StripePaymentTrustBar region="EU" iconSize={24} />
+                <StripePaymentTrustBar
+                  region="EU"
+                  iconSize={24}
+                  paymentMethodTypes={['card', 'link', 'klarna']}
+                  showText
+                />
               </div>
             </div>
 
