@@ -13,8 +13,9 @@ import React, { useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
-import { ArrowLeft, Menu, X, User } from 'lucide-react';
+import { ArrowLeft, Menu, X, User, ShoppingBag } from 'lucide-react';
 import { useMemberLoginOffcanvas } from '../context/MemberLoginOffcanvasContext';
+import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { imageSrc } from '../lib/images';
 
@@ -50,6 +51,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
   const isContactPage = location.pathname === '/contact';
   const { user, profile } = useAuth();
   const { openMemberLogin } = useMemberLoginOffcanvas();
+  const { openCart, itemCount } = useCart();
   const { scrollY } = useScroll({
     layoutEffect: false,
   });
@@ -139,7 +141,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
           }`}
         >
           <div className="grid grid-cols-3 items-center px-2.5 py-2.5">
-            <div className="flex items-center pl-3">
+            <div className="flex items-center gap-1 pl-3">
               {isContactPage ? (
                 <Link to="/" className="flex items-center gap-2 font-bold text-slate-900 tracking-tighter text-xs">
                   <ArrowLeft className="w-3.5 h-3.5" />
@@ -170,6 +172,22 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                       <User className="w-4 h-4" />
                     )}
                   </button>
+                  {itemCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={openCart}
+                      className="relative bg-transparent w-9 h-9 rounded-full flex items-center justify-center text-secondary-purple-rain hover:bg-[var(--color-secondary-purple-rain)] hover:text-white transition-all hover:scale-[1.05] active:scale-95"
+                      aria-label={`Basket (${itemCount} items)`}
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      <span
+                        className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-secondary-purple-rain text-white text-[10px] font-bold px-1"
+                        aria-hidden
+                      >
+                        {itemCount > 99 ? '99+' : itemCount}
+                      </span>
+                    </button>
+                  )}
                   {!isLoggedIn &&
                     loginTooltip &&
                     typeof document !== 'undefined' &&

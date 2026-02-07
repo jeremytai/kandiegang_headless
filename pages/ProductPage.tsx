@@ -13,7 +13,7 @@ import { getProductPrice, getStripePriceId, canPurchase, ProductVariant, ShopPro
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { useAuth } from '../context/AuthContext';
-import { CheckoutButton } from '../components/CheckoutButton';
+import { AddToCartButton } from '../components/AddToCartButton';
 import { ProductVariantSelector } from '../components/ProductVariantSelector';
 
 /** FAQ-style accordion for product details (body + SKU). */
@@ -555,14 +555,16 @@ export const ProductPage: React.FC = () => {
                     showVariantRequiredMessage={showVariantRequiredMessage}
                   />
                 )}
-                <CheckoutButton
+                <AddToCartButton
                   size="sm"
                   priceId={stripePriceId ?? ''}
                   productId={product.id}
                   productTitle={product.title}
                   productSlug={product.slug ?? ''}
+                  variantLabel={hasVariants && selectedVariantIndex >= 0 ? variants[selectedVariantIndex].label : undefined}
+                  price={displayPrice > 0 ? displayPrice : undefined}
                   disabled={hasVariants && selectedVariantIndex < 0 ? false : (!stripePriceId || !canPurchaseProduct)}
-                  onBeforeCheckout={() => {
+                  onBeforeAdd={() => {
                     if (hasVariants && selectedVariantIndex < 0) {
                       setShowVariantRequiredMessage(true);
                       return false;
@@ -726,15 +728,17 @@ export const ProductPage: React.FC = () => {
                   showVariantRequiredMessage={showVariantRequiredMessage}
                 />
               )}
-              <CheckoutButton
+              <AddToCartButton
                 size="sm"
                 priceId={stripePriceId ?? ''}
                 productId={product.id}
                 productTitle={product.title}
                 productSlug={product.slug ?? ''}
+                variantLabel={hasVariants && selectedVariantIndex >= 0 ? variants[selectedVariantIndex].label : undefined}
+                price={displayPrice > 0 ? displayPrice : undefined}
                 disabled={hasVariants && selectedVariantIndex < 0 ? false : (!stripePriceId || !canPurchaseProduct)}
                 className="w-full self-start"
-                onBeforeCheckout={() => {
+                onBeforeAdd={() => {
                   if (hasVariants && selectedVariantIndex < 0) {
                     setShowVariantRequiredMessage(true);
                     return false;

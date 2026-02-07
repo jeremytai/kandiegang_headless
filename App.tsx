@@ -47,6 +47,8 @@ import { ContactModalProvider } from './context/ContactModalContext';
 import { CookieConsentProvider, useCookieConsent } from './context/CookieConsentContext';
 import { AuthProvider } from './context/AuthContext';
 import { MemberLoginOffcanvasProvider } from './context/MemberLoginOffcanvasContext';
+import { CartProvider } from './context/CartContext';
+import { CartOffcanvas } from './components/CartOffcanvas';
 import { MemberLoginPage } from './pages/MemberLoginPage.tsx';
 import { ShopLoginPage } from './pages/ShopLoginPage.tsx';
 import { ShopPage } from './pages/ShopPage';
@@ -131,6 +133,7 @@ const App: React.FC = () => {
       <AuthProvider>
         <ContactModalProvider>
         <MemberLoginOffcanvasProvider>
+          <CartProvider>
           <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
             {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
             {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
@@ -200,6 +203,8 @@ const App: React.FC = () => {
               <StickyBottom />
             )}
           </div>
+          <CartOffcanvas />
+          </CartProvider>
         </MemberLoginOffcanvasProvider>
         </ContactModalProvider>
         {isUnlocked && (
