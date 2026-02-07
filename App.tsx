@@ -80,6 +80,13 @@ const App: React.FC = () => {
     };
   }, [isLoading, showGate]);
 
+  // Prevent browser from restoring scroll so our scroll-to-top always wins
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+  }, []);
+
   // Scroll to top on every route change (Athletics-style: new page loads from top)
   useEffect(() => {
     const scrollToTop = () => {

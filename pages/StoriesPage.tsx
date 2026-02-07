@@ -27,6 +27,12 @@ import { usePageMeta } from '../hooks/usePageMeta';
 const STORIES_CATEGORY_SLUG = 'social-rides';
 const POSTS_FIRST = 24;
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 export const StoriesPage: React.FC = () => {
   const [posts, setPosts] = useState<WPPost[]>([]);
   const [pageInfo, setPageInfo] = useState<WPPostsPageInfo | null>(null);
@@ -35,6 +41,18 @@ export const StoriesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadMoreLoading, setLoadMoreLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    scrollToTop();
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(scrollToTop);
+    });
+    const t = window.setTimeout(scrollToTop, 120);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t);
+    };
+  }, []);
 
   const fetchStories = async (append = false, invalidateCache = false) => {
     if (invalidateCache) clearWPCache();
@@ -215,7 +233,7 @@ export const StoriesPage: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {/* Category filter - hidden for now */}
+              {/* Category filter */}
               {false && categories.length > 0 && (
                 <nav className="mb-10 md:mb-14 flex flex-wrap items-center gap-2" aria-label="Filter by category">
                   <button

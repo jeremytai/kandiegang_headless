@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { getPostBySlug, getStoryBlocks, transformMediaUrl, WPPost } from '../lib/wordpress';
@@ -43,6 +43,10 @@ const DEMO_POST: WPPost = {
 
 export const StoryPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const fromMembers = location.state?.from === '/members';
+  const backToHref = fromMembers ? '/members' : '/stories';
+  const backToLabel = fromMembers ? 'Back to Members area' : 'Back to Stories';
   const [post, setPost] = useState<WPPost | null>(null);
   const [normalizedBlocks, setNormalizedBlocks] = useState<NormalizedBlock[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -151,10 +155,11 @@ export const StoryPage: React.FC = () => {
           >
             <p className="text-slate-500 mb-6">{error ?? 'Story not found.'}</p>
             <Link
-              to="/stories"
+              to={backToHref}
+              onClick={() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }}
               className="inline-flex items-center gap-2 text-secondary-purple-rain font-bold hover:underline mb-20"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to Stories
+              <ArrowLeft className="w-4 h-4" /> {backToLabel}
             </Link>
           </motion.div>
         ) : (
@@ -200,10 +205,11 @@ export const StoryPage: React.FC = () => {
 
             <div className="sticky top-0 z-10 max-w-4xl mx-auto px-6 pt-5 pb-6 bg-primary-breath/90 backdrop-blur-sm">
               <Link
-                to="/stories"
+                to={backToHref}
+                onClick={() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }}
                 className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
               >
-                <ArrowLeft className="w-4 h-4" /> Back to Stories
+                <ArrowLeft className="w-4 h-4" /> {backToLabel}
               </Link>
             </div>
 

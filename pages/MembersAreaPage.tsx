@@ -57,6 +57,12 @@ function getDaysLeft(expirationStr: string | null | undefined): number | null {
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 export const MembersAreaPage: React.FC = () => {
   const { status, user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -85,6 +91,18 @@ export const MembersAreaPage: React.FC = () => {
       localStorage.setItem('membersAreaDarkMode', darkMode ? '1' : '0');
     } catch {}
   }, [darkMode]);
+
+  useEffect(() => {
+    scrollToTop();
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(scrollToTop);
+    });
+    const t = window.setTimeout(scrollToTop, 120);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t);
+    };
+  }, []);
 
   const guide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
   const canSeeMembersOnlyPosts =
@@ -388,7 +406,7 @@ export const MembersAreaPage: React.FC = () => {
                 const slug = story.uri?.replace(/^\/+|\/+$/g, '').split('/').pop() ?? '';
                 const storyHref = slug ? `/story/${slug}` : '/stories';
                 return (
-                  <Link key={story.id} to={storyHref} className="block">
+                  <Link key={story.id} to={storyHref} state={{ from: '/members' }} className="block">
                     <motion.article
                       initial={{ opacity: 0, y: 24 }}
                       animate={{ opacity: 1, y: 0 }}
