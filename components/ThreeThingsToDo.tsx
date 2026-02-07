@@ -92,7 +92,7 @@ export const ThreeThingsToDo: React.FC = () => {
 
   return (
     <section
-      className="grid grid-cols-12 gap-x-4 gap-y-5 px-4 pt-6 pb-16 text-primary-ink transition-colors duration-300 lg:gap-x-6 lg:px-6 lg:pt-10 lg:pb-24 bg-white rounded-xl"
+      className="grid grid-cols-12 gap-x-4 gap-y-5 px-4 pt-6 pb-16 text-primary-ink transition-colors duration-300 lg:gap-x-6 lg:px-6 lg:pt-10 lg:pb-24 bg-white/75 backdrop-blur-md rounded-xl"
       aria-labelledby="specifications-heading"
     >
       {/* Left column: main heading + Specifications label */}

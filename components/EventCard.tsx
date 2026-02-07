@@ -49,28 +49,23 @@ export const EventCard: React.FC<EventCardProps> = ({
           </div>
         </div>
 
-        {/* Date & location: row 1 col 2 on mobile, col 3 on desktop; beside image on mobile */}
-        <div className="col-start-2 row-start-1 md:col-start-3 flex items-center md:items-stretch justify-start md:justify-end text-secondary-purple-rain">
-          <div className="flex items-stretch gap-3 md:gap-6 w-full md:w-auto justify-start md:justify-end">
-            <time className="flex flex-col items-stretch font-light leading-tight text-center">
-              <span className="mb-0.5 md:mb-1 w-full text-center text-[0.8rem] md:text-sm opacity-70">
-                {year}
-              </span>
-              <span className="text-2xl md:text-3xl lg:text-[2.8rem] leading-none tracking-tight mt-1 mb-3 md:mt-6 md:mb-8">
+        {/* Date & location: date stack, vertical divider, rotated location matching screenshot */}
+        <div className="col-start-2 row-start-1 md:col-start-3 flex items-center justify-end text-secondary-purple-rain">
+          <div className="flex items-center gap-4 md:gap-5">
+            <time className="flex flex-col font-light leading-tight text-center">
+              <span className="text-[0.75rem] md:text-sm opacity-70 mb-1">{year}</span>
+              <span className="text-3xl md:text-4xl lg:text-5xl leading-none tracking-tight font-light mt-2 mb-8">
                 {days}
               </span>
-              <span className="mt-1 md:mt-2 w-full text-center text-[0.85rem] md:text-sm">
-                {month.length > 3 ? month.slice(0, 3) : month}
-              </span>
+              <span className="text-[0.85rem] md:text-sm">{month}</span>
             </time>
 
-            {/* Vertical divider: full height of date stack, between date and city */}
             <div
-              className="flex w-px min-h-[4rem] md:min-h-[5rem] self-stretch shrink-0 bg-slate-300"
-              aria-hidden
+              className="w-px h-24 md:h-28 bg-slate-300 shrink-0"
+              aria-hidden="true"
             />
 
-            <span className="flex items-center text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase origin-center rotate-90 translate-y-1 shrink-0">
+            <span className="event-card-location-vertical text-sm md:text-base tracking-widest uppercase font-light">
               {location}
             </span>
           </div>
@@ -79,7 +74,7 @@ export const EventCard: React.FC<EventCardProps> = ({
         {/* Content: row 2 full width on mobile, row 1 col 2 on desktop */}
         <div className="col-start-1 col-span-2 row-start-2 md:col-span-1 md:col-start-2 md:row-start-1 flex flex-col justify-center gap-3 md:gap-4 md:pl-1">
           <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 md:gap-3">
-            <h3 className="text-2xl md:text-3xl lg:text-4xl font-heading-light tracking-tight text-secondary-purple-rain">
+            <h3 className="text-2xl md:text-3xl lg:text-4xl font-gt-planar font-light tracking-tight text-secondary-purple-rain">
               {title}
             </h3>
             {tag && (

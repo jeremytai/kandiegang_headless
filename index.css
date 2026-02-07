@@ -143,6 +143,12 @@ body {
   scroll-padding-right: 1.5rem;
 }
 
+/* Event card: vertical location label */
+.event-card-location-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
 /* Smooth Scrolling for the whole document */
 html {
   scroll-behavior: smooth;

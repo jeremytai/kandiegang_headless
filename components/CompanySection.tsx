@@ -42,7 +42,7 @@ const GUIDE_IMAGES = [
   'rilana_s',
   'ruth_p',
   'saskia_s',
-  'silvia_b_',
+  'silvi_b_',
   'tanja_d',
   'wiepke_h',
 ] as const;

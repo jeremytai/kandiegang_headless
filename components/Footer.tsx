@@ -48,7 +48,6 @@ export const Footer: React.FC = () => {
               <FooterLink to="/kandiecode" label="Kandie Code" />
               <FooterLink to="/ridelevels" label="Ride Levels" />
               <FooterLink to="/waiver" label="Ride Waiver" />
-              <FooterLink to="/privacy-policy" label="Privacy Policy" />
             </ul>
 
             <ul className="col-span-3 flex flex-col gap-2 pb-4 md:col-span-2 md:gap-3">
@@ -72,7 +71,7 @@ export const Footer: React.FC = () => {
 
             <ul className="col-span-3 flex flex-col gap-2 pb-4 md:hidden">
               <li><p className="text-slate-900 uppercase tracking-widest text-[10px] font-bold mb-1">Legal</p></li>
-              <FooterLink to="/" label="Terms of Service" />
+              <FooterLink to="/privacy-policy" label="Privacy Policy" />
               <FooterCookieLink onOpenCookiePreferences={openCookiePreferences} />
             </ul>
           </div>
@@ -86,12 +85,12 @@ export const Footer: React.FC = () => {
           </div>
           
           <ul className="col-span-6 flex flex-row flex-wrap gap-4 justify-end md:gap-8 lg:col-span-4">
-            <li className="flex flex-col items-start self-end">
+            <li className="hidden flex-col items-start self-end md:flex">
               <Link to="/privacy-policy" className="cursor-pointer text-slate-400 transition-all hover:pl-2 hover:text-black whitespace-nowrap">
                 Privacy Policy
               </Link>
             </li>
-            <li className="flex flex-col items-start self-end">
+            <li className="hidden flex-col items-start self-end md:flex">
               <button
                 type="button"
                 onClick={openCookiePreferences}

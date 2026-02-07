@@ -5,6 +5,7 @@
  */
 
 import * as React from 'react';
+import { AnimatedBlob } from '../components/AnimatedBlob';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { EventsLayout, EventsLayoutEvent } from '../components/EventsLayout';
 import { ThreeThingsToDo } from '../components/ThreeThingsToDo';
@@ -41,11 +42,15 @@ const communityEvents: EventsLayoutEvent[] = [
 ];
 
 export const CommunityPage: React.FC = () => (
-    <div className="bg-white selection:bg-[#f9f100] selection:text-black overflow-x-hidden">
-      {/* Header: match StoriesPage header styling */}
-      <section className="bg-white pt-32 md:pt-40 pb-8 md:pb-10">
+    <div className="relative selection:bg-[#f9f100] selection:text-black overflow-x-hidden">
+      {/* Blob behind hero + events (no section bg so blob shows through) */}
+      <div className="absolute inset-0 min-h-full pointer-events-none" aria-hidden>
+        <AnimatedBlob contained />
+      </div>
+
+      <section className="relative z-10 min-h-[28rem] pt-32 md:pt-40 pb-8 md:pb-10">
         <div className="section-side-margin mx-auto grid max-w-[88rem] grid-cols-12 gap-x-4 lg:gap-x-6">
-          <div className="col-span-10">
+          <div className="col-span-12">
             <AnimatedHeadline
               text="Community is the heart of Kandie Gang"
               as="h1"
@@ -57,7 +62,7 @@ export const CommunityPage: React.FC = () => (
         </div>
       </section>
 
-      <section className="bg-white pt-4 md:pt-6 pb-16 md:pb-12">
+      <section className="relative z-10 pt-4 md:pt-6 pb-16 md:pb-12">
         <div className="section-side-margin max-w-7xl mx-auto space-y-8">
           <EventsLayout events={[communityEvents[0]]} />
           <ThreeThingsToDo />
