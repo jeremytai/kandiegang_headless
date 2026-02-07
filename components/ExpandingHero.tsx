@@ -17,7 +17,7 @@ const DEFAULT_ALT =
 const HERO_IMAGES = [
   '/images/250701_photosafari-12',
   '/images/240707_humanrides-75',
-  '/images/250401_hamburg-37',
+  '/images/231112_stevenscup_neuduvenstedt-10',
 ] as const;
 
 export interface ExpandingHeroProps {
