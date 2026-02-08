@@ -10,6 +10,7 @@ import { OffCanvas } from './OffCanvas';
 import { useCart, CartLineItem } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
+import { isClubMembershipOnly } from '../lib/shipping';
 import { Loader2, ShoppingBag, Trash2, Minus, Plus, CircleAlert, CircleCheck } from 'lucide-react';
 
 const FREE_SHIPPING_THRESHOLD = 99;
@@ -19,7 +20,12 @@ const SHIPPING_PICKUP = 0;
 
 export type ShippingOption = 'de' | 'eu' | 'pickup';
 
-function getShippingAmount(option: ShippingOption, subtotal: number): number {
+function getShippingAmount(
+  option: ShippingOption,
+  subtotal: number,
+  cartIsMembershipOnly: boolean
+): number {
+  if (cartIsMembershipOnly) return 0;
   if (option === 'pickup') return SHIPPING_PICKUP;
   if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
   return option === 'de' ? SHIPPING_DE : SHIPPING_EU;
@@ -95,7 +101,8 @@ export const CartOffcanvas: React.FC = () => {
 
   const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.quantity, 0);
   const hasAnyPrice = items.some((i) => i.price != null && i.price > 0);
-  const shippingAmount = getShippingAmount(shippingOption, subtotal);
+  const cartIsMembershipOnly = isClubMembershipOnly(items);
+  const shippingAmount = getShippingAmount(shippingOption, subtotal, cartIsMembershipOnly);
   const total = subtotal + shippingAmount;
 
   const handleProceedToCheckout = async () => {

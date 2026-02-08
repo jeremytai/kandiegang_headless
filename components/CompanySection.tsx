@@ -63,7 +63,7 @@ const GUIDE_LINKS: Partial<Record<(typeof GUIDE_IMAGES)[number], string>> = {
   bjoern_h: 'https://www.instagram.com/kandie_gang/',
   christian_m: 'https://www.strava.com/athletes/25770175',
   katrin_h: 'https://www.strava.com/athletes/41164599',
-  michael_m: 'https://www.strava.com/athletes/41164599',
+  michael_m: 'https://www.strava.com/athletes/18695419',
   ruth_p: 'https://www.instagram.com/kandie_gang/',
   saskia_s: 'https://www.instagram.com/kandie_gang/',
   kathi_s: 'https://www.strava.com/athletes/5526439',

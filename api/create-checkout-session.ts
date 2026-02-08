@@ -6,6 +6,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
+import { isClubMembershipOnly } from '../lib/shipping';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecretKey) {
@@ -151,9 +152,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const shippingOption = (body.shippingOption as string) || 'de';
     const subtotal = typeof body.subtotal === 'number' ? body.subtotal : undefined;
+    const cartIsMembershipOnly = isClubMembershipOnly(lineItems);
 
     let shippingAmountCents = 0;
-    if (subtotal != null && subtotal > 0) {
+    if (subtotal != null && subtotal > 0 && !cartIsMembershipOnly) {
       if (shippingOption === 'pickup' || subtotal >= FREE_SHIPPING_THRESHOLD) {
         shippingAmountCents = 0;
       } else if (shippingOption === 'eu') {
