@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:vercel": "vercel dev",
+    "dev:vercel": "npm run build && vercel dev -A vercel.dev.json",
     "build": "vite build && node scripts/optimize-images.js",
     "preview": "vite preview"
   },

@@ -1,0 +1,11 @@
+{
+  "devCommand": "vite preview --port $PORT --strictPort",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    {
+      "source": "/((?!assets|fonts|images|logos|robots\\.txt|_redirects).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+
