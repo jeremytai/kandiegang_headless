@@ -32,9 +32,14 @@ interface WelcomeEmailParams {
   membershipExpiration: string;
 }
 
+/** Design system colors (match index.css) — keep email in sync with site. */
+const COLOR_PRIMARY_INK = '#1F2223';
+const COLOR_SECONDARY_PURPLE_RAIN = '#46519C';
+const COLOR_MUTED = '#5f6264';
+
 function buildWelcomeHtml(params: WelcomeEmailParams): string {
   const membersUrl = `${SITE_BASE_URL}/members`;
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1e293b; max-width: 560px; margin: 0 auto; padding: 24px;"><h1 style="font-size: 1.5rem; color: #4c1d95;">Welcome to the Kandie Gang Cycling Club</h1><p>Thank you for becoming a member. You're in.</p><p>Your membership is active for one year:</p><ul style="margin: 16px 0;"><li><strong>Start:</strong> ${params.memberSince}</li><li><strong>Expires:</strong> ${params.membershipExpiration}</li></ul><p><a href="${membersUrl}" style="display: inline-block; background: #4c1d95; color: white; text-decoration: none; padding: 12px 24px; border-radius: 9999px; font-weight: 600;">Go to Members Area</a></p><p style="margin-top: 32px; font-size: 0.875rem; color: #64748b;">Kandie Gang Cycling Club</p></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: ${COLOR_PRIMARY_INK}; max-width: 560px; margin: 0 auto; padding: 24px;"><h1 style="font-size: 1.5rem; color: ${COLOR_SECONDARY_PURPLE_RAIN}; font-weight: 600;">Welcome to the Kandie Gang Cycling Club</h1><p>Thank you for becoming a member. You're in.</p><p>Your membership is active for one year:</p><ul style="margin: 16px 0;"><li><strong>Start:</strong> ${params.memberSince}</li><li><strong>Expires:</strong> ${params.membershipExpiration}</li></ul><p><a href="${membersUrl}" style="display: inline-block; background: ${COLOR_SECONDARY_PURPLE_RAIN}; color: white; text-decoration: none; padding: 12px 24px; border-radius: 9999px; font-weight: 600;">Go to Members Area</a></p><p style="margin-top: 32px; font-size: 0.875rem; color: ${COLOR_MUTED};">Kandie Gang Cycling Club</p></body></html>`;
 }
 
 function buildWelcomeText(params: WelcomeEmailParams): string {
