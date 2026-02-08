@@ -10,8 +10,70 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { CLUB_MEMBERSHIP_SLUG } from '../lib/shipping';
-import { sendMemberWelcomeEmail, CLUB_PLAN_NAME } from '../lib/memberWelcomeEmail';
+import { Resend } from 'resend';
+
+/**
+ * Inlined from lib/shipping.ts and lib/memberWelcomeEmail.ts.
+ * Vercel serverless functions in /api cannot import from outside the api/ directory.
+ */
+
+const CLUB_MEMBERSHIP_SLUG = 'kandie-gang-cycling-club-membership';
+const CLUB_PLAN_NAME = 'Kandie Gang Cycling Club Membership';
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'Kandie Gang <onboarding@resend.dev>';
+const SITE_BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://kandiegang.com');
+
+interface WelcomeEmailParams {
+  to: string;
+  memberSince: string;
+  membershipExpiration: string;
+}
+
+function buildWelcomeHtml(params: WelcomeEmailParams): string {
+  const membersUrl = `${SITE_BASE_URL}/members`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1e293b; max-width: 560px; margin: 0 auto; padding: 24px;"><h1 style="font-size: 1.5rem; color: #4c1d95;">Welcome to the Kandie Gang Cycling Club</h1><p>Thank you for becoming a member. You're in.</p><p>Your membership is active for one year:</p><ul style="margin: 16px 0;"><li><strong>Start:</strong> ${params.memberSince}</li><li><strong>Expires:</strong> ${params.membershipExpiration}</li></ul><p><a href="${membersUrl}" style="display: inline-block; background: #4c1d95; color: white; text-decoration: none; padding: 12px 24px; border-radius: 9999px; font-weight: 600;">Go to Members Area</a></p><p style="margin-top: 32px; font-size: 0.875rem; color: #64748b;">Kandie Gang Cycling Club</p></body></html>`;
+}
+
+function buildWelcomeText(params: WelcomeEmailParams): string {
+  const membersUrl = `${SITE_BASE_URL}/members`;
+  return [
+    'Welcome to the Kandie Gang Cycling Club', '',
+    "Thank you for becoming a member. You're in.", '',
+    'Your membership is active for one year:',
+    `Start: ${params.memberSince}`,
+    `Expires: ${params.membershipExpiration}`, '',
+    `Go to Members Area: ${membersUrl}`, '',
+    'Kandie Gang Cycling Club',
+  ].join('\n');
+}
+
+async function sendMemberWelcomeEmail(
+  params: WelcomeEmailParams
+): Promise<{ success: boolean; error?: string }> {
+  if (!RESEND_API_KEY) return { success: false, error: 'RESEND_API_KEY is not set' };
+  const resend = new Resend(RESEND_API_KEY);
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: params.to,
+      subject: 'Welcome to the Kandie Gang Cycling Club',
+      html: buildWelcomeHtml(params),
+      text: buildWelcomeText(params),
+    });
+    if (error) {
+      console.error('[memberWelcomeEmail] Resend error:', error);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[memberWelcomeEmail] Send failed:', message);
+    return { success: false, error: message };
+  }
+}
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
