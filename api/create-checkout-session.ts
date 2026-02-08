@@ -6,7 +6,12 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
-import { isClubMembershipOnly } from '../lib/shipping';
+
+/** Inlined from lib/shipping.ts — Vercel serverless cannot import from outside api/ */
+const CLUB_MEMBERSHIP_SLUG = 'kandie-gang-cycling-club-membership';
+function isClubMembershipOnly<T extends { productSlug: string }>(items: T[]): boolean {
+  return items.length > 0 && items.every((i) => i.productSlug === CLUB_MEMBERSHIP_SLUG);
+}
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecretKey) {
