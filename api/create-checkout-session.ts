@@ -62,9 +62,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   try {
+    const stripeConfigured = !!stripe;
     console.log('Checkout session request received:', {
       method: req.method,
       hasBody: !!req.body,
+      stripeConfigured,
     });
 
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -228,12 +230,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Stripe checkout session creation error:', err);
     const message = stripeErrorMessage(err);
     const details = err instanceof Error ? err.stack : String(err);
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error details:', details);
+    console.error('Error details:', details);
+    // Always send JSON so the client can show data.error
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: `Checkout failed: ${message}`,
+        ...(process.env.NODE_ENV === 'development' && { details }),
+      });
     }
-    return sendResponse(500, {
-      error: `Checkout failed: ${message}`,
-      ...(process.env.NODE_ENV === 'development' && { details }),
-    });
   }
 }

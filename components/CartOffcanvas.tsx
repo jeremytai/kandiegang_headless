@@ -142,11 +142,12 @@ export const CartOffcanvas: React.FC = () => {
         throw new Error(
           response.ok
             ? `Invalid response from server.`
-            : `Server error (${response.status}). Use \`vercel dev\` for checkout and set STRIPE_SECRET_KEY in .env.`
+            : `Server error (${response.status}). Check the terminal running \`vercel dev\` for the actual error. Ensure STRIPE_SECRET_KEY is in .env.local.`
         );
       }
       if (!response.ok) {
-        throw new Error(data.error ?? `Server error: ${response.status}`);
+        const serverMessage = typeof data.error === 'string' ? data.error : null;
+        throw new Error(serverMessage ?? `Server error: ${response.status}`);
       }
       if (!data.url) {
         throw new Error('No checkout URL returned');
