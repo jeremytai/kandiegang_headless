@@ -19,7 +19,7 @@ const SPECIFICATIONS = [
   { term: 'Ride Waiver', value: 'Haftungsausschluss für gemeinsame sportliche Aktivitäten der Kandie Gang', href: 'ride-waiver' as SpecHref },
 ] as const;
 
-const CARD_CLASS = 'rounded-xl bg-secondary-drift p-4 w-full cursor-pointer text-left border-none';
+const CARD_CLASS = 'rounded-xl bg-secondary-blush p-4 w-full cursor-pointer text-left border-none';
 
 const COOKIE_NAME = 'three_things_done';
 const COOKIE_MAX_AGE_DAYS = 365;
@@ -100,7 +100,7 @@ export const ThreeThingsToDo: React.FC = () => {
         <h2 id="specifications-heading" className="font-heading font-gtplanar text-h4 text-secondary-current text-balance">
         Drei Dinge, die du erledigen musst
         </h2>
-        <h3 className="mt-0.5 font-heading text-h4 font-gtplanar text-secondary-drift">
+        <h3 className="mt-0.5 font-heading text-h4 font-gtplanar text-secondary-blush">
         Pflichtlektüre vor der Fahrt
         </h3>
       </div>
@@ -127,7 +127,7 @@ export const ThreeThingsToDo: React.FC = () => {
                 <span className="text-normal font-bold text-secondary-current flex items-center justify-between gap-2">
                   {term}
                   <span
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${isDone ? 'bg-secondary-drift text-secondary-current' : 'bg-white text-gray-200'}`}
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${isDone ? 'bg-secondary-blush text-secondary-current' : 'bg-white text-gray-200'}`}
                     aria-hidden
                   >
                     <Check className="h-3 w-3" strokeWidth={2.5} />
