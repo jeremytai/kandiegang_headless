@@ -1,7 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "devCommand": "vite preview --port $PORT",
   "rewrites": [
     { "source": "/((?!assets|fonts|images|logos|robots.txt|_redirects).*)", "destination": "/index.html" }
   ]
