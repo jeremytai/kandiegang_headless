@@ -6,6 +6,7 @@
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
 
 const CART_STORAGE_KEY = 'kandiegang_cart';
 
@@ -115,6 +116,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         price: input.price,
       };
       return [...prev, newItem];
+    });
+    posthog.capture(FUNNEL_EVENTS.ADDED_TO_CART, {
+      product_slug: input.productSlug,
+      product_title: input.productTitle,
+      quantity,
+      variant_label: input.variantLabel,
     });
   }, []);
 

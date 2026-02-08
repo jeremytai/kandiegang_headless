@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
 
 const FORMSPREE_FORM_ID = (
   import.meta as unknown as { env: { VITE_FORMSPREE_CONTACT_FORM_ID?: string } }
@@ -53,6 +54,7 @@ export const ContactForm: React.FC<{ variant?: Variant }> = ({ variant = 'page' 
       if (res.ok) {
         setStatus('success');
         form.reset();
+        posthog.capture(FUNNEL_EVENTS.CONTACT_FORM_SUBMITTED);
         return;
       }
       const data = await res.json().catch(() => ({}));

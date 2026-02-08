@@ -20,6 +20,7 @@ import React, {
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { fetchMembershipStatus } from '../lib/wordpress';
+import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -336,6 +337,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         return { error: error.message || 'Could not send the login link. Please try again.' };
       }
+      posthog.capture(FUNNEL_EVENTS.LOGIN_REQUESTED, { method: 'magic_link' });
       return {};
     },
     []
@@ -359,6 +361,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         return { error: error.message || 'Could not sign in with Discord. Please try again.' };
       }
+      posthog.capture(FUNNEL_EVENTS.LOGIN_REQUESTED, { method: 'discord' });
       return {};
     },
     []
@@ -394,8 +397,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setStatus(sessionUser ? 'authenticated' : 'unauthenticated');
       if (sessionUser) {
         await refreshProfile();
+        posthog.capture(FUNNEL_EVENTS.SIGNUP_REQUESTED, { method: 'password', immediate_session: true });
         return {};
       }
+      posthog.capture(FUNNEL_EVENTS.SIGNUP_REQUESTED, { method: 'password', immediate_session: false });
       return { needsEmailConfirmation: true };
     },
     [refreshProfile]

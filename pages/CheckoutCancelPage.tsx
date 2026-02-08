@@ -3,13 +3,18 @@
  * Page shown when user cancels Stripe checkout.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { XCircle, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
 
 export const CheckoutCancelPage: React.FC = () => {
   usePageMeta('Checkout Cancelled | Kandie Gang', 'Your checkout was cancelled');
+
+  useEffect(() => {
+    posthog.capture(FUNNEL_EVENTS.CHECKOUT_CANCELLED);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white pt-32 md:pt-40 pb-40">

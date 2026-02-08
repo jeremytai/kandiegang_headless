@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, Loader2, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
 
 export const CheckoutSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -21,6 +22,7 @@ export const CheckoutSuccessPage: React.FC = () => {
     // For now, we'll just check if session_id exists
     if (sessionId) {
       setIsValid(true);
+      posthog.capture(FUNNEL_EVENTS.ORDER_COMPLETED, { session_id: sessionId });
     }
     setIsVerifying(false);
   }, [sessionId]);

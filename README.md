@@ -13,6 +13,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **⚡ Performance Optimized**: Build-time WebP conversion and responsive image widths (Sharp), query caching, retry logic
 - **🎭 Advanced Animations**: Animated headline (split-type char reveal + color fill), spring physics, scroll progress tracking
 - **🔐 Site password**: Optional full-screen gate after the preloader; unlock persists for the session (sessionStorage)
+- **📊 Analytics (PostHog)**: Consent-gated product analytics (page views, funnels); loads only after user accepts analytics in the cookie banner; supports opt-out on consent revocation
 
 ## 🚀 Tech Stack
 
@@ -27,6 +28,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **Sharp** (dev): Build-time image optimization — convert JPG/PNG to WebP and generate responsive widths (400, 800, 1200)
 - **Open-Meteo + ipapi.co**: Real-time weather and geolocation for the weather status bar (no API keys; ipapi.co is CORS-enabled for browser use)
 - **WordPress GraphQL**: Headless CMS integration via WPGraphQL
+- **PostHog**: Product analytics (consent-gated, GDPR-aligned); funnel events for cart, checkout, signup, and members area
 
 ## 📦 Installation
 
@@ -69,6 +71,10 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
    # Get from https://dashboard.stripe.com/apikeys
    # Use sk_test_... for development, sk_live_... for production
    STRIPE_SECRET_KEY=sk_test_...
+
+   # PostHog (optional – analytics only load after user accepts analytics cookies)
+   # VITE_POSTHOG_KEY=phc_...
+   # VITE_POSTHOG_HOST=https://eu.i.posthog.com   # optional; default is US
    ```
 
 4. **Start the development server**
@@ -236,6 +242,32 @@ The contact form on the **Contact** page (`/contact`) and in the **Contact modal
 4. Restart the dev server so the new env var is picked up.
 
 The shared `ContactForm` component (`components/ContactForm.tsx`) is used on both the Contact page and inside `ContactModal`. If `VITE_FORMSPREE_CONTACT_FORM_ID` is not set, the form area shows instructions to set the env var. On submit errors, the form displays Formspree’s error message when available. For stronger spam protection after enabling AJAX, you can add reCAPTCHA v3 or Turnstile in your Formspree dashboard.
+
+## 📊 Analytics (PostHog)
+
+Analytics are provided by [PostHog](https://posthog.com) and are **consent-gated**: the PostHog script only loads after the user accepts **analytics** in the cookie banner. If the user later revokes analytics in cookie preferences, PostHog stops sending data (`opt_out_capturing`).
+
+### Setup
+
+1. Create a project at [posthog.com](https://posthog.com) and copy your **Project API Key** (e.g. `phc_...`).
+2. In `.env` or your host's environment variables:
+   ```env
+   VITE_POSTHOG_KEY=phc_your_project_key
+   ```
+   Optional (for EU data residency):
+   ```env
+   VITE_POSTHOG_HOST=https://eu.i.posthog.com
+   ```
+3. Restart the dev server or redeploy so the env vars are picked up.
+
+If `VITE_POSTHOG_KEY` is not set, PostHog is never initialized and no analytics are sent.
+
+### What is tracked
+
+- **Autocapture**: Page views and default PostHog events (when consent is given).
+- **Funnel events**: `added_to_cart`, `checkout_started`, `order_completed`, `checkout_cancelled`, `contact_form_submitted`, `members_area_viewed`, `signup_requested`, `login_requested`. Use these in PostHog **Insights → Funnels** to analyze conversion.
+
+Event names are defined in `lib/posthog.ts` (`FUNNEL_EVENTS`). Init and consent logic live in `context/CookieConsentContext.tsx`; revocation calls `optOutPostHog()` from `lib/posthog.ts`.
 
 ## 💳 Stripe Checkout
 
@@ -475,6 +507,7 @@ Make sure to set environment variables in your hosting platform:
 - `VITE_SUPABASE_ANON_KEY`: Supabase anon (public) key
 - `VITE_SUBSTACK_PUBLICATION`: (Optional) Substack publication base URL for newsletter signup embed
 - `VITE_FORMSPREE_CONTACT_FORM_ID`: (Optional) Formspree form ID for the contact form (Contact page and modal)
+- `VITE_POSTHOG_KEY`: (Optional) PostHog project API key for consent-gated analytics; `VITE_POSTHOG_HOST` (e.g. `https://eu.i.posthog.com`) is optional for EU hosting
 
 **Vercel warning: “VITE_ exposes this value to the browser”** — Vite inlines all `VITE_*` vars into the client bundle, so they are visible in the browser. The variables above are **safe to expose**: they are public URLs and public form IDs, not secrets. You can confirm and continue in Vercel when prompted.
 

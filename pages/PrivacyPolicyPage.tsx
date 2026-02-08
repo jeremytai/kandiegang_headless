@@ -120,12 +120,15 @@ export const PrivacyPolicyPage: React.FC = () => {
         <h3 className={SUBHEADING_CLASS}>Designation of a data protection officer</h3>
         <p className={PARAGRAPH_CLASS}>
           We have appointed a data protection officer for our company.<br />
-          Kandie Kollketiv UG (haftungsbeschränkt), Postfach 13 03 90, 20103 Hamburg, Germany. E-mail: datenschutz@kandiegang.com
+          Kandie Kollketiv UG (haftungsbeschränkt), Postfach 13 03 90, 20103 Hamburg, Germany. E-mail: hallo@kandiegang.com
         </p>
 
         <h3 className={SUBHEADING_CLASS}>Information on data transfer to the USA and other non-EU countries</h3>
         <p className={PARAGRAPH_CLASS}>
           Among other things, we use tools of companies domiciled in the United States or other from a data protection perspective non-secure non-EU countries. If these tools are active, your personal data may potentially be transferred to these non-EU countries and may be processed there. We must point out that in these countries, a data protection level that is comparable to that in the EU cannot be guaranteed. For instance, U.S. enterprises are under a mandate to release personal data to the security agencies and you as the data subject do not have any litigation options to defend yourself in court. Hence, it cannot be ruled out that U.S. agencies (e.g., the Secret Service) may process, analyze, and permanently archive your personal data for surveillance purposes. We have no control over these processing activities.
+        </p>
+        <p className={PARAGRAPH_CLASS}>
+          Where technically and contractually available, we use EU hosting or EU-based options for our service providers (e.g. EU regions for analytics and data storage) in order to keep data processing within the European Economic Area and to reduce transfers to non-EU countries.
         </p>
 
         <h3 className={SUBHEADING_CLASS}>Revocation of your consent to the processing of data</h3>
@@ -225,67 +228,13 @@ export const PrivacyPolicyPage: React.FC = () => {
 
       <section id="analysis" className={SECTION_SPACING}>
         <h2 className={HEADING_CLASS}>6. Analysis tools and advertising</h2>
-        <h3 className={SUBHEADING_CLASS}>Google Tag Manager</h3>
+        <h3 className={SUBHEADING_CLASS}>Website analytics (PostHog)</h3>
         <p className={PARAGRAPH_CLASS}>
-          We use the Google Tag Manager. The provider is Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland. The Google Tag Manager is a tool that allows us to integrate tracking or statistical tools and other technologies on our website. The Google Tag Manager itself does not create any user profiles, does not store cookies, and does not carry out any independent analyses. It only manages and runs the tools integrated via it. However, the Google Tag Manager does collect your IP address, which may also be transferred to Google&apos;s parent company in the United States. The Google Tag Manager is used on the basis of Art. 6(1)(f) GDPR. The website operator has a legitimate interest in the quick and uncomplicated integration and administration of various tools on his website.
-        </p>
-        <h3 className={SUBHEADING_CLASS}>Google Analytics</h3>
-        <p className={PARAGRAPH_CLASS}>
-          This website uses functions of the web analysis service Google Analytics. The provider of this service is Google Ireland Limited (&quot;Google&quot;), Gordon House, Barrow Street, Dublin 4, Ireland. Google Analytics enables the website operator to analyze the behavior patterns of website visitors. To that end, the website operator receives a variety of user data, such as pages accessed, time spent on the page, the utilized operating system and the user&apos;s origin. This data is summarized in a user-ID and assigned to the respective end device of the website visitor. Furthermore, Google Analytics allows us to record your mouse and scroll movements and clicks, among other things. Google Analytics uses various modeling approaches to augment the collected data sets and uses machine learning technologies in data analysis. Google Analytics uses technologies that make the recognition of the user for the purpose of analyzing the user behavior patterns (e.g., cookies or device fingerprinting). The website use information recorded by Google is, as a rule transferred to a Google server in the United States, where it is stored. The use of these services occurs on the basis of your consent pursuant to Art. 6(1)(a) GDPR and § 25(1) TTDSG. You may revoke your consent at any time. Data transmission to the US is based on the Standard Contractual Clauses (SCC) of the European Commission. Details can be found here:{' '}
-          <a href="https://business.safety.google/adscontrollerterms/sccs/" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-            business.safety.google/adscontrollerterms/sccs/
+          We use PostHog for website analytics when you have given your consent to analytics cookies. PostHog helps us understand how visitors use the site (e.g. page views and key actions) in order to improve the website. Analytics only run after you accept analytics in our cookie banner. You can change your choice at any time via the cookie preferences. For more information, see PostHog&apos;s privacy policy at{' '}
+          <a href="https://posthog.com/privacy" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
+            posthog.com/privacy
           </a>
-        </p>
-        <p className={PARAGRAPH_CLASS}>
-          You can prevent the recording and processing of your data by Google by downloading and installing the browser plugin available under the following link:{' '}
-          <a href="https://tools.google.com/dlpage/gaoptout?hl=en" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-            tools.google.com/dlpage/gaoptout
-          </a>
-          . For more information about the handling of user data by Google Analytics, please consult Google&apos;s Data Privacy Declaration at:{' '}
-          <a href="https://support.google.com/analytics/answer/6004245?hl=en" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-            support.google.com/analytics/answer/6004245
-          </a>
-          .
-        </p>
-        <h3 className={SUBHEADING_CLASS}>Demographic parameters provided by Google Analytics</h3>
-        <p className={PARAGRAPH_CLASS}>
-          This website uses the &quot;demographic characteristics&quot; function of Google Analytics, to be able to display to the website visitor compatible ads within the Google advertising network. This allows reports to be created that contain information about the age, gender, and interests of the website visitors. The sources of this information are interest-related advertising by Google as well as visitor data obtained from third-party providers. This data cannot be allocated to a specific individual. You have the option to deactivate this function at any time by making pertinent settings changes for advertising in your Google account or you can generally prohibit the recording of your data by Google Analytics as explained in section &quot;Objection to the recording of data&quot;.
-        </p>
-        <h3 className={SUBHEADING_CLASS}>Contract data processing</h3>
-        <p className={PARAGRAPH_CLASS}>
-          We have executed a contract data processing agreement with Google and are implementing the stringent provisions of the German data protection agencies to the fullest when using Google Analytics.
-        </p>
-        <h3 className={SUBHEADING_CLASS}>Google Signals</h3>
-        <p className={PARAGRAPH_CLASS}>
-          We use Google Signals. Whenever you visit our website, Google Analytics records, among other things, your location, the progression of your search and YouTube progression as well as demographic data (site visitor data). This data may be used for customized advertising with the assistance of Google Signal. If you have a Google account, your site visitor information will be linked to your Google account by Google Signal and used to send you customized promotional messages. The data is also used to compile anonymized statistics of our users&apos; online patterns.
-        </p>
-        <h3 className={SUBHEADING_CLASS}>Google Ads</h3>
-        <p className={PARAGRAPH_CLASS}>
-          The website operator uses Google Ads. Google Ads is an online promotional program of Google Ireland Limited (&quot;Google&quot;), Gordon House, Barrow Street, Dublin 4, Ireland. Google Ads enables us to display ads in the Google search engine or on third-party websites, if the user enters certain search terms into Google (keyword targeting). It is also possible to place targeted ads based on the user data Google has in its possession (e.g., location data and interests; target group targeting). As the website operator, we can analyze these data quantitatively, for instance by analyzing which search terms resulted in the display of our ads and how many ads led to respective clicks. The use of these services occurs on the basis of your consent pursuant to Art. 6(1)(a) GDPR and § 25(1) TTDSG. You may revoke your consent at any time. Data transmission to the US is based on the Standard Contractual Clauses (SCC) of the European Commission. Details can be found here:{' '}
-          <a href="https://policies.google.com/privacy/frameworks" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-            policies.google.com/privacy/frameworks
-          </a>
-          {' '}and{' '}
-          <a href="https://business.safety.google/adscontrollerterms/sccs/" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-            business.safety.google/adscontrollerterms/sccs/
-          </a>
-          .
-        </p>
-        <h3 className={SUBHEADING_CLASS}>Google Remarketing</h3>
-        <p className={PARAGRAPH_CLASS}>
-          This website uses the functions of Google Analytics Remarketing. The provider of these solutions is Google Ireland Limited (&quot;Google&quot;), Gordon House, Barrow Street, Dublin 4, Ireland. Google Remarketing analyzes your user patterns on our website (e.g., clicks on specific products), to allocate a certain advertising target groups to you and to subsequently display matching online offers to you when you visit other online offers (remarketing or retargeting). Moreover, it is possible to link the advertising target groups generated with Google Remarketing to device encompassing functions of Google. This makes it possible to display interest-based customized advertising messages, depending on your prior usage and browsing patterns on a device (e.g., cell phone) in a manner tailored to you as well as on any of your devices (e.g., tablet or PC). If you have a Google account, you have the option to object to personalized advertising under the following link:{' '}
-          <a href="https://adssettings.google.com/anonymous?hl=de" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-            adssettings.google.com/anonymous
-          </a>
-          . The use of these services occurs on the basis of your consent pursuant to Art. 6(1)(a) GDPR and § 25(1) TTDSG. You may revoke your consent at any time. For further information and the pertinent data protection regulations, please consult the Data Privacy Policies of Google at: policies.google.com/technologies/ads.
-        </p>
-        <h3 className={SUBHEADING_CLASS}>Google Conversion-Tracking</h3>
-        <p className={PARAGRAPH_CLASS}>
-          This website uses Google Conversion Tracking. The provider of this service is Google Ireland Limited (&quot;Google&quot;), Gordon House, Barrow Street, Dublin 4, Ireland. With the assistance of Google Conversion Tracking, we are in a position to recognize whether the user has completed certain actions. For instance, we can analyze the how frequently which buttons on our website have been clicked and which products are reviewed or purchased with particular frequency. The purpose of this information is to compile conversion statistics. We learn how many users have clicked on our ads and which actions they have completed. We do not receive any information that would allow us to personally identify the users. Google as such uses cookies or comparable recognition technologies for identification purposes. The use of these services occurs on the basis of your consent pursuant to Art. 6(1)(a) GDPR and § 25(1) TTDSG. You may revoke your consent at any time. For more information about Google Conversion Tracking, please review Google&apos;s data protection policy at:{' '}
-          <a href="https://policies.google.com/privacy?hl=en" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-            policies.google.com/privacy
-          </a>
-          .
+          . The use of this service is based on your consent pursuant to Art. 6(1)(a) GDPR and § 25(1) TTDSG.
         </p>
       </section>
 
@@ -293,7 +242,7 @@ export const PrivacyPolicyPage: React.FC = () => {
         <h2 className={HEADING_CLASS}>7. Newsletter</h2>
         <h3 className={SUBHEADING_CLASS}>Newsletter data</h3>
         <p className={PARAGRAPH_CLASS}>
-          It is possible to subscribe to our free newsletters on our website, a jobs newsletter with vacancies in Germany for qualified personnel and/or a general website newsletter. When you subscribe to the newsletter, the data from the input mask are sent to us. You must enter your email address to subscribe for the newsletter. Furthermore, the following data are collected during the subscription process:
+          It is possible to subscribe to our free newsletter on our website, a general website newsletter. When you subscribe to the newsletter, the data from the input mask are sent to us. You must enter your email address to subscribe for the newsletter. Furthermore, the following data are collected during the subscription process:
         </p>
         <h3 className={SUBHEADING_CLASS}>Double opt-in procedure</h3>
         <p className={PARAGRAPH_CLASS}>
@@ -321,22 +270,7 @@ export const PrivacyPolicyPage: React.FC = () => {
         <p className={PARAGRAPH_CLASS}>
           We are using the mapping service provided by OpenStreetMap (OSM). We host OpenStreetMap on the server of the following provider: Mapbox, Inc, 740 15th Street NW, 5th Floor, Washington DC 20005, privacy@mapbox.com. We use OpenStreetMap with the objective of ensuring the attractive presentation of our online offers and to make it easy for visitors to find the locations we specify on our website. This establishes legitimate grounds as defined in Art. 6(1)(f) GDPR.
         </p>
-        <h3 className={SUBHEADING_CLASS}>Google reCAPTCHA</h3>
-        <p className={PARAGRAPH_CLASS}>
-          We use &quot;Google reCAPTCHA&quot; (hereinafter referred to as &quot;reCAPTCHA&quot;) on this website. The provider is Google Ireland Limited (&quot;Google&quot;), Gordon House, Barrow Street, Dublin 4, Ireland. The purpose of reCAPTCHA is to determine whether data entered on this website (e.g., information entered into a contact form) is being provided by a human user or by an automated program. To determine this, reCAPTCHA analyzes the behavior of the website visitors based on a variety of parameters. This analysis is triggered automatically as soon as the website visitor enters the site. For this analysis, reCAPTCHA evaluates a variety of data (e.g., IP address, time the website visitor spent on the site or cursor movements initiated by the user). The data tracked during such analyses are forwarded to Google. reCAPTCHA analyses run entirely in the background. Website visitors are not alerted that an analysis is underway. Data are stored and analyzed on the basis of Art. 6(1)(f) GDPR. The website operator has a legitimate interest in the protection of the operator&apos;s websites against abusive automated spying and against SPAM. For more information about Google reCAPTCHA please refer to the Google Data Privacy Declaration and Terms Of Use under the following links:{' '}
-          <a href="https://policies.google.com/privacy?hl=en" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-            policies.google.com/privacy
-          </a>
-          {' '}and{' '}
-          <a href="https://policies.google.com/terms?hl=en" target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
-            policies.google.com/terms
-          </a>
-          .
-        </p>
-        <h3 className={SUBHEADING_CLASS}>Google Translate</h3>
-        <p className={PARAGRAPH_CLASS}>
-          This website uses functions of the translation service Google Translate. The provider is Google Ireland Limited (&quot;Google&quot;), Gordon House, Barrow Street, Dublin 4, Ireland. Google Translate enables you to automatically translate an entire page from our job board. The information collected by Google about the use of this website is generally transferred to a Google server in the USA and stored there. This processing takes place on the basis of your consent in accordance with Art. 6(1)(a) GDPR; the consent can be revoked at any time.
-        </p>
+      
       </section>
     </main>
   </div>

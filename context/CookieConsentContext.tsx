@@ -1,10 +1,11 @@
 /**
  * CookieConsentContext.tsx
  * EU cookie consent: persist choice (cookie + localStorage), expose preferences modal,
- * load GTM/GA only after analytics consent. GDPR / TTDSG aligned.
+ * load PostHog only after analytics consent. GDPR / TTDSG aligned.
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { initPostHog, optOutPostHog } from '../lib/posthog';
 
 const COOKIE_NAME = 'cookie_consent';
 const STORAGE_KEY = 'cookie_consent';
@@ -84,17 +85,9 @@ export const useCookieConsent = (): CookieConsentContextValue => {
   return ctx;
 };
 
-function loadGTMIfConsented(analytics: boolean) {
+function loadPostHogIfConsented(analytics: boolean) {
   if (!analytics) return;
-  const gtmId = (import.meta as unknown as { env: { VITE_GTM_ID?: string } }).env.VITE_GTM_ID?.trim();
-  if (!gtmId || typeof document === 'undefined') return;
-  if (document.getElementById('gtm-script')) return;
-  const script = document.createElement('script');
-  script.id = 'gtm-script';
-  script.async = true;
-  script.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtmId.replace(/'/g, "\\'")}');`;
-  document.head.appendChild(script);
+  initPostHog();
 }
 
 export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -118,14 +111,18 @@ export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({
       // ignore
     }
     setConsentState(prefs);
-    loadGTMIfConsented(prefs.analytics);
+    if (prefs.analytics) {
+      loadPostHogIfConsented(true);
+    } else {
+      optOutPostHog();
+    }
   }, []);
 
   const openCookiePreferences = useCallback(() => setIsPreferencesOpen(true), []);
   const closeCookiePreferences = useCallback(() => setIsPreferencesOpen(false), []);
 
   useEffect(() => {
-    if (consent?.analytics) loadGTMIfConsented(true);
+    if (consent?.analytics) loadPostHogIfConsented(true);
   }, [consent?.analytics]);
 
   const value: CookieConsentContextValue = {

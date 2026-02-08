@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { OffCanvas } from './OffCanvas';
 import { useCart, CartLineItem } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
 import { Loader2, ShoppingBag, Trash2, Minus, Plus, CircleAlert, CircleCheck } from 'lucide-react';
 
 const FREE_SHIPPING_THRESHOLD = 99;
@@ -139,6 +140,11 @@ export const CartOffcanvas: React.FC = () => {
       if (!data.url) {
         throw new Error('No checkout URL returned');
       }
+      posthog.capture(FUNNEL_EVENTS.CHECKOUT_STARTED, {
+        item_count: items.length,
+        subtotal,
+        shipping_option: shippingOption,
+      });
       window.location.href = data.url;
     } catch (err) {
       const msg =

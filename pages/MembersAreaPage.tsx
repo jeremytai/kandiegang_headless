@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
 import {
   getCategoryPosts,
   wpQuery,
@@ -122,6 +123,10 @@ export const MembersAreaPage: React.FC = () => {
     if (status === 'loading') return;
     if (!user && typeof window !== 'undefined' && sessionStorage.getItem('logoutRedirecting') !== '1') {
       navigate('/login/member', { replace: true, state: { from: '/members' } });
+      return;
+    }
+    if (status === 'authenticated' && user) {
+      posthog.capture(FUNNEL_EVENTS.MEMBERS_AREA_VIEWED);
     }
   }, [status, user, navigate]);
 

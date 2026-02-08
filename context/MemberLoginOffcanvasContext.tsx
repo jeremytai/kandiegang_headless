@@ -5,12 +5,18 @@
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 import { OffCanvas } from '../components/OffCanvas';
 import { useContactModal } from './ContactModalContext';
 import { MemberLoginForm } from '../components/MemberLoginForm';
 import { MemberSignupForm } from '../components/MemberSignupForm';
 import { useAuth } from './AuthContext';
+import { supabase } from '../lib/supabaseClient';
+
+const DELETE_ACCOUNT_CONFIRM_PHRASE = 'Yes, delete account';
 
 function hasDiscordIdentity(user: { identities?: Array<{ provider: string }> } | null): boolean {
   return Boolean(user?.identities?.some((i) => i.provider === 'discord'));
@@ -92,6 +98,7 @@ function MemberOffcanvasAccountContent({
   const [discordConnecting, setDiscordConnecting] = useState(false);
   const discordConnected = hasDiscordIdentity(user);
   const [isRefreshingMembership, setIsRefreshingMembership] = useState(false);
+  const [deleteAccountModalOpen, setDeleteAccountModalOpen] = useState(false);
 
   const handleLogout = useCallback(async () => {
     if (typeof window !== 'undefined') {
@@ -273,9 +280,199 @@ function MemberOffcanvasAccountContent({
         >
           Log out
         </button>
+        <button
+          type="button"
+          onClick={() => setDeleteAccountModalOpen(true)}
+          className="mt-2 text-sm text-red-600 hover:underline bg-transparent border-none p-0 cursor-pointer font-normal"
+        >
+          Delete account
+        </button>
       </div>
+      <DeleteAccountModal
+        isOpen={deleteAccountModalOpen}
+        onClose={() => setDeleteAccountModalOpen(false)}
+        onRequestDelete={async () => {
+          if (!supabase) return false;
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) return false;
+          const res = await fetch('/api/delete-account', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          return res.ok;
+        }}
+        onDeleted={() => {
+          setDeleteAccountModalOpen(false);
+          onClose();
+          logout();
+          onLogoutRedirect();
+        }}
+      />
     </div>
   );
+}
+
+/** Delete account confirmation modal: type "Yes, delete account" to enable delete. On success shows goodbye message, then closes and calls onDeleted. */
+function DeleteAccountModal({
+  isOpen,
+  onClose,
+  onRequestDelete,
+  onDeleted,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onRequestDelete: () => Promise<boolean>;
+  onDeleted: () => void;
+}) {
+  const [confirmText, setConfirmText] = useState('');
+  const [deleted, setDeleted] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const canDelete = confirmText.trim() === DELETE_ACCOUNT_CONFIRM_PHRASE;
+
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setDeleted(false);
+      setDeleting(false);
+      setError(null);
+      setConfirmText('');
+    }
+  }, [isOpen]);
+
+  const handleConfirm = useCallback(async () => {
+    if (!canDelete || deleting) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const success = await onRequestDelete();
+      if (success) {
+        setDeleted(true);
+        setTimeout(() => {
+          onClose();
+          onDeleted();
+        }, 2500);
+      } else {
+        setError('Something went wrong. Please try again or contact support.');
+      }
+    } catch {
+      setError('Something went wrong. Please try again or contact support.');
+    } finally {
+      setDeleting(false);
+    }
+  }, [canDelete, deleting, onRequestDelete, onClose, onDeleted]);
+
+  const handleClose = useCallback(() => {
+    if (deleting) return;
+    onClose();
+    setConfirmText('');
+    setError(null);
+  }, [onClose, deleting]);
+
+  const modalContent = (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            key="delete-account-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm"
+            onClick={deleted ? undefined : handleClose}
+            aria-hidden
+          />
+          <motion.div
+            key="delete-account-dialog"
+            initial={{ opacity: 0, scale: 0.96, x: '-50%', y: '-50%' }}
+            animate={{ opacity: 1, scale: 1, x: '-50%', y: '-50%' }}
+            exit={{ opacity: 0, scale: 0.96, x: '-50%', y: '-50%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            style={{
+              position: 'fixed',
+              left: '50%',
+              top: '50%',
+              zIndex: 111,
+            }}
+            className="pointer-events-auto flex max-h-[calc(100vh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl bg-primary-breath shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-modal-title"
+          >
+            {deleted ? (
+              <div className="flex flex-1 flex-col overflow-y-auto px-6 pt-12 pb-8 text-center">
+                <p id="delete-account-modal-title" className="font-heading text-xl font-normal text-primary-ink">
+                  Goodbyes are always difficult; your account has been deleted.
+                </p>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  disabled={deleting}
+                  className="absolute top-3 right-3 z-10 rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
+                  aria-label="Close"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+                <div className="flex flex-1 flex-col overflow-y-auto px-6 pt-12 pb-8">
+                  <h2 id="delete-account-modal-title" className="font-heading text-xl font-normal text-primary-ink mb-2">
+                    Oh, you&apos;re about to delete your account.
+                  </h2>
+                  <p className="text-slate-600 text-sm mb-6">
+                    To delete your account, type below: <strong>Yes, delete account</strong>
+                  </p>
+                  <input
+                    type="text"
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    placeholder={DELETE_ACCOUNT_CONFIRM_PHRASE}
+                    disabled={deleting}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 mb-6 disabled:opacity-60"
+                    aria-label="Confirmation phrase"
+                  />
+                  {error && (
+                    <p className="text-red-600 text-sm mb-4" role="alert">
+                      {error}
+                    </p>
+                  )}
+                  <div className="flex flex-col gap-3">
+                    <button
+                      type="button"
+                      onClick={handleConfirm}
+                      disabled={!canDelete || deleting}
+                      className="w-full rounded-full py-2.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-600 transition"
+                    >
+                      {deleting ? 'Deleting…' : 'Delete account'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      disabled={deleting}
+                      className="w-full rounded-full border border-slate-300 bg-white py-2.5 text-sm font-semibold text-slate-900 hover:border-slate-900 transition disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+
+  return createPortal(modalContent, document.body);
 }
 
 /** Login or signup form view. Own component so hook count is independent. */
