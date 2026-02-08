@@ -132,14 +132,18 @@ export const CartOffcanvas: React.FC = () => {
       const text = await response.text();
       if (!text) {
         throw new Error(
-          'Empty response from server. Use `vercel dev` for API routes or deploy to Vercel.'
+          'Empty response from server. Use `vercel dev` for API routes (not `npm run dev`) or deploy to Vercel. Ensure STRIPE_SECRET_KEY is set in .env.'
         );
       }
       let data: { url?: string; error?: string };
       try {
         data = contentType?.includes('application/json') ? JSON.parse(text) : {};
       } catch {
-        throw new Error(`Invalid response: ${text.substring(0, 100)}`);
+        throw new Error(
+          response.ok
+            ? `Invalid response from server.`
+            : `Server error (${response.status}). Use \`vercel dev\` for checkout and set STRIPE_SECRET_KEY in .env.`
+        );
       }
       if (!response.ok) {
         throw new Error(data.error ?? `Server error: ${response.status}`);

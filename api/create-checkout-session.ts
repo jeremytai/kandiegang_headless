@@ -40,6 +40,20 @@ function isLineItemInput(x: unknown): x is LineItemInput {
   );
 }
 
+function stripeErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object' && 'type' in err) {
+    const stripeErr = err as { type?: string; code?: string; message?: string };
+    if (stripeErr.type === 'StripeInvalidRequestError') {
+      return stripeErr.message ?? 'Invalid request to payment provider (e.g. invalid price or product).';
+    }
+    if (stripeErr.type === 'StripeAuthenticationError') {
+      return 'Payment provider configuration error. Check STRIPE_SECRET_KEY (use sk_test_... or sk_live_...).';
+    }
+    if (stripeErr.message) return stripeErr.message;
+  }
+  return err instanceof Error ? err.message : 'Unknown error';
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const sendResponse = (status: number, data: Record<string, unknown>) => {
     if (!res.headersSent) {
@@ -70,9 +84,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!stripe) {
       return sendResponse(500, {
         error:
-          'Stripe is not configured. Please set STRIPE_SECRET_KEY in your Vercel environment variables or .env file.',
+          'Stripe is not configured. Set STRIPE_SECRET_KEY in .env (or Vercel env). Use `vercel dev` for local checkout.',
         hint:
-          'When using vercel dev, make sure STRIPE_SECRET_KEY is set in your .env file or Vercel project settings.',
+          'When using vercel dev, ensure STRIPE_SECRET_KEY is in your .env file.',
       });
     }
 
@@ -212,12 +226,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return sendResponse(200, { sessionId: session.id, url: session.url });
   } catch (err) {
     console.error('Stripe checkout session creation error:', err);
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    const errorDetails = err instanceof Error ? err.stack : String(err);
-    console.error('Error details:', errorDetails);
+    const message = stripeErrorMessage(err);
+    const details = err instanceof Error ? err.stack : String(err);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error details:', details);
+    }
     return sendResponse(500, {
-      error: `Failed to create checkout session: ${errorMessage}`,
-      ...(process.env.NODE_ENV === 'development' && { details: errorDetails }),
+      error: `Checkout failed: ${message}`,
+      ...(process.env.NODE_ENV === 'development' && { details }),
     });
   }
 }

@@ -395,24 +395,36 @@ Submissions will appear as messages in that channel. The contact form already se
 
 ## 🛠️ Development
 
+
 ### Available Scripts
 
-- `npm run dev`: Start the development server (port 3000) - Note: API routes won't work with this command
-- `npm run dev:vercel`: Start development server with Vercel CLI (enables API routes like `/api/create-checkout-session`)
+- `npm run dev`: Start Vite dev server (port 3000) - **Use this for all front-end development**
 - `npm run build`: Build for production
+- `npm run dev:vercel`: Serve built app + API routes - **Use this to test checkout**
 - `npm run preview`: Preview the production build locally
 
-**Important for Stripe Checkout**: To test checkout locally, use `npm run dev:vercel` instead of `npm run dev`. This runs Vercel's development server which enables serverless functions. Make sure you have `STRIPE_SECRET_KEY` set in your `.env` file.
+### Development Workflow
 
-### Best Practices & Implementation
+**For normal development (recommended):**
+```bash
+npm run dev
+```
+- ✅ Fast HMR (Hot Module Replacement)
+- ✅ All front-end features work perfectly
+- ✅ No console errors or 404s
+- ❌ API routes (e.g. `/api/create-checkout-session`) won't work
 
-1. **Scroll Progress**: Most animations use `scrollYProgress` from Framer Motion's `useScroll` hook. For best performance, use `useTransform` to map scroll values to style properties.
+**To test checkout or API routes:**
+```bash
+npm run build
+npm run dev:vercel
+```
+- ✅ API routes work (Stripe checkout, webhooks, etc.)
+- ✅ Serves the production build from `dist/`
+- ⚠️ No HMR - you must rebuild after code changes
+- 💡 Make sure `STRIPE_SECRET_KEY` is set in `.env.local`
 
-2. **Spring Physics**: Use `useSpring` to wrap raw scroll progress or mouse coordinates. This eliminates jitter and adds a characteristic "Kandie Gang" smoothness.
-
-3. **Clip Path**: The `ExpandingHero` uses a dynamic `clip-path` with `inset()`. This is more performant than animating `width`/`height` and allows for complex masking.
-
-4. **Pointer Events**: Ensure floating elements use `pointer-events-none` on the wrapper and `pointer-events-auto` on the children to avoid blocking interactions with the content beneath.
+**Why two modes?** Vercel's dev proxy interferes with Vite's dev server, causing 404s for `/@vite/client` and `@react-refresh`. So we use pure Vite for development, and only use `vercel dev` with a production build when testing API routes.
 
 5. **WordPress Queries**: Always use the caching mechanism for WordPress queries unless you need fresh data. The cache automatically expires after 5 minutes.
 
