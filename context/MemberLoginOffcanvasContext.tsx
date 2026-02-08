@@ -222,9 +222,6 @@ function MemberOffcanvasAccountContent({
               Contact us about membership
             </button>
           </div>
-          <p className="text-xs text-slate-500">
-            If you just set yourself as a member in Supabase, click Refresh to load the latest status.
-          </p>
         </div>
       )}
 
