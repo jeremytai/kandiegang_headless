@@ -2,6 +2,9 @@
  * Stripe webhook handler. On checkout.session.completed for Kandie Gang
  * Club Membership: updates the customer's Supabase profile (1-year member)
  * and sends a welcome email via Resend.
+ *
+ * Supports both Web Request API (request.text() for raw body) and Node (req, res)
+ * so raw body is available for signature verification without bodyParser config.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -17,18 +20,8 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const stripe =
   stripeSecretKey && webhookSecret
-    ? new Stripe(stripeSecretKey, { apiVersion: '2024-12-18.acacia' })
+    ? new Stripe(stripeSecretKey, { apiVersion: '2026-01-28.clover' })
     : null;
-
-/** Read raw body from request stream (required for Stripe signature verification). */
-function getRawBody(req: VercelRequest): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on('data', (chunk: Buffer) => chunks.push(chunk));
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
-  });
-}
 
 function isClubMembershipPurchase(productSlugs: string | null | undefined): boolean {
   if (!productSlugs || typeof productSlugs !== 'string') return false;
@@ -39,28 +32,66 @@ function toDateString(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed' });
+/** Get raw body and signature; works with Web Request or Node (req). */
+async function getRawBodyAndSignature(
+  req: Request | VercelRequest
+): Promise<{ rawBody: string; signature: string | null }> {
+  const isWebRequest = typeof (req as Request).text === 'function';
+  if (isWebRequest) {
+    const request = req as Request;
+    const rawBody = await request.text();
+    const signature = request.headers.get('stripe-signature');
+    return { rawBody, signature };
+  }
+  const nodeReq = req as VercelRequest;
+  const signature = Array.isArray(nodeReq.headers['stripe-signature'])
+    ? nodeReq.headers['stripe-signature'][0]
+    : nodeReq.headers['stripe-signature'];
+  const rawBody = await new Promise<string>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    nodeReq.on('data', (chunk: Buffer) => chunks.push(chunk));
+    nodeReq.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    nodeReq.on('error', reject);
+  });
+  return { rawBody, signature: signature ?? null };
+}
+
+async function handleWebhook(req: Request | VercelRequest): Promise<Response | void> {
+  const method = (req as Request).method ?? (req as VercelRequest).method;
+  if (method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json', Allow: 'POST' },
+    });
   }
 
   if (!stripe || !webhookSecret) {
     console.error('[stripe-webhook] STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET not set');
-    return res.status(500).json({ error: 'Webhook not configured' });
+    return new Response(JSON.stringify({ error: 'Webhook not configured' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
-  const signature = req.headers['stripe-signature'];
-  if (!signature || typeof signature !== 'string') {
-    return res.status(400).json({ error: 'Missing Stripe-Signature header' });
-  }
-
-  let rawBody: Buffer;
+  let rawBody: string;
+  let signature: string | null;
   try {
-    rawBody = await getRawBody(req);
+    const result = await getRawBodyAndSignature(req);
+    rawBody = result.rawBody;
+    signature = result.signature;
   } catch (err) {
-    console.error('[stripe-webhook] Failed to read raw body:', err);
-    return res.status(400).json({ error: 'Invalid body' });
+    console.error('[stripe-webhook] Failed to read body:', err);
+    return new Response(JSON.stringify({ error: 'Invalid body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (!signature) {
+    return new Response(JSON.stringify({ error: 'Missing Stripe-Signature header' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   let event: Stripe.Event;
@@ -69,18 +100,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[stripe-webhook] Signature verification failed:', message);
-    return res.status(400).json({ error: `Webhook signature verification failed: ${message}` });
+    return new Response(JSON.stringify({ error: `Webhook signature verification failed: ${message}` }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   if (event.type !== 'checkout.session.completed') {
-    return res.status(200).json({ received: true });
+    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
   const sessionId = session.id;
 
   if (!isClubMembershipPurchase(session.metadata?.productSlugs)) {
-    return res.status(200).json({ received: true });
+    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 
   const customerEmail =
@@ -90,7 +124,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('[stripe-webhook] Supabase not configured');
-    return res.status(500).json({ error: 'Server configuration error' });
+    return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -124,7 +161,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!profileId) {
     console.warn('[stripe-webhook] No profile found for session', sessionId, 'userId=', metadataUserId, 'email=', customerEmail);
-    return res.status(200).json({ received: true });
+    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 
   if (!emailForWelcome) {
@@ -161,7 +198,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (updateError) {
     console.error('[stripe-webhook] Supabase profile update failed:', updateError);
-    return res.status(500).json({ error: 'Failed to update membership' });
+    return new Response(JSON.stringify({ error: 'Failed to update membership' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   if (emailForWelcome) {
@@ -175,5 +215,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  return res.status(200).json({ received: true });
+  return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+}
+
+/** Vercel handler: supports Node (req, res) and Web Request. */
+export default async function handler(
+  req: VercelRequest | Request,
+  res?: VercelResponse
+): Promise<Response | void> {
+  const result = (await handleWebhook(req)) as Response;
+  if (res) {
+    const body = await result.json().catch(() => ({}));
+    res.status(result.status).json(body);
+  } else {
+    return result;
+  }
 }
