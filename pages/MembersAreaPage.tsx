@@ -238,18 +238,26 @@ export const MembersAreaPage: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-6">
         <header className="mb-2 md:mb-6 text-center relative">
-          <button
-            type="button"
-            onClick={() => setDarkMode((d) => !d)}
-            className="absolute right-0 top-0 p-2 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
-            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {darkMode ? (
-              <Sun className="w-5 h-5" />
-            ) : (
-              <Moon className="w-5 h-5" />
-            )}
-          </button>
+          <div className="absolute right-0 top-0 flex items-center gap-1">
+            <Link
+              to="/members/settings"
+              className="p-2 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors text-sm font-medium"
+            >
+              Account & security
+            </Link>
+            <button
+              type="button"
+              onClick={() => setDarkMode((d) => !d)}
+              className="p-2 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {darkMode ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </button>
+          </div>
           {(cyclingMember || guide) && (
             <motion.div
               ref={pillRef}

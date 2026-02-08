@@ -55,6 +55,7 @@ import { ShopPage } from './pages/ShopPage';
 import { ProductPage } from './pages/ProductPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { MembersAreaPage } from './pages/MembersAreaPage.tsx';
+import { MembersSettingsPage } from './pages/MembersSettingsPage';
 import { CheckoutSuccessPage } from './pages/CheckoutSuccessPage';
 import { CheckoutCancelPage } from './pages/CheckoutCancelPage';
 
@@ -187,6 +188,7 @@ const App: React.FC = () => {
                   <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
                   <Route path="/signup" element={<SignUpPage />} />
                   <Route path="/members" element={<MembersAreaPage />} />
+                  <Route path="/members/settings" element={<MembersSettingsPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>

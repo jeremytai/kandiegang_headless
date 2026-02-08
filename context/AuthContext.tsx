@@ -19,6 +19,7 @@ import React, {
 } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { syncAuthProvidersForUser } from '../lib/authProviders';
 import { fetchMembershipStatus } from '../lib/wordpress';
 import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
 
@@ -87,6 +88,16 @@ type AuthContextValue = {
    * status from WordPress into Supabase.
    */
   refreshProfile: () => Promise<void>;
+  /**
+   * Link Discord to the current user (redirects to Discord). Only when already logged in.
+   * Enable manual linking in Supabase Dashboard → Auth → Providers.
+   */
+  linkDiscord: (options?: { redirectTo?: string }) => Promise<{ error?: string }>;
+  /**
+   * Unlink an identity from the current user. Fails if only one identity remains.
+   * Pass the identity object from user.identities (e.g. { id, provider }).
+   */
+  unlinkIdentity: (identity: { id: string; provider: string }) => Promise<{ error?: string }>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -152,6 +163,9 @@ async function loadUserAndProfile(): Promise<{
 
   // Sync Discord (and other OAuth) identity into profiles when present
   await syncDiscordToProfile(user);
+
+  // Keep auth_providers in sync so settings can show connected accounts
+  await syncAuthProvidersForUser(user);
 
   const { data: raw, error: profileError } = await supabase
     .from('profiles')
@@ -415,6 +429,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setStatus('unauthenticated');
   }, []);
 
+  const linkDiscord = useCallback(
+    async (options?: { redirectTo?: string }): Promise<{ error?: string }> => {
+      if (!supabase) {
+        return { error: 'Sign-in is not configured.' };
+      }
+      if (!user) {
+        return { error: 'You must be logged in to link Discord.' };
+      }
+      const redirectTo =
+        options?.redirectTo ??
+        (typeof window !== 'undefined' ? `${window.location.origin}/members/settings` : undefined);
+      const { error } = await supabase.auth.linkIdentity({
+        provider: 'discord',
+        options: { redirectTo },
+      });
+      if (error) {
+        return { error: error.message || 'Could not link Discord. It may already be connected to another account.' };
+      }
+      return {};
+    },
+    [user]
+  );
+
+  const unlinkIdentity = useCallback(
+    async (identity: { id: string; provider: string }): Promise<{ error?: string }> => {
+      if (!supabase || !user) {
+        return { error: 'Not authenticated.' };
+      }
+      const identities = user.identities ?? [];
+      if (identities.length <= 1) {
+        return { error: 'You must keep at least one login method.' };
+      }
+      const { error } = await supabase.auth.unlinkIdentity(identity);
+      if (error) {
+        return { error: error.message || 'Could not unlink this account.' };
+      }
+      await refreshProfile();
+      return {};
+    },
+    [user, refreshProfile]
+  );
+
   const value: AuthContextValue = useMemo(
     () => ({
       status,
@@ -426,8 +482,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signUp,
       logout,
       refreshProfile,
+      linkDiscord,
+      unlinkIdentity,
     }),
-    [status, user, profile, login, signInWithMagicLink, signInWithDiscord, signUp, logout, refreshProfile]
+    [status, user, profile, login, signInWithMagicLink, signInWithDiscord, signUp, logout, refreshProfile, linkDiscord, unlinkIdentity]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
