@@ -140,7 +140,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Ensure all prices exist and share the same mode (payment vs subscription)
     let mode: 'payment' | 'subscription' = 'payment';
-    const priceIds = [...new Set(lineItems.map((i) => i.priceId))];
+    const priceIds = Array.from(new Set(lineItems.map((i) => i.priceId)));
     for (let i = 0; i < priceIds.length; i++) {
       const price = await stripe.prices.retrieve(priceIds[i]);
       const isRecurring = price.type === 'recurring';
