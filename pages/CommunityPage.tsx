@@ -30,14 +30,14 @@ const communityEvents: EventsLayoutEvent[] = [
     href: 'https://discord.com/channels/1059075420798079036/1458942794545631467',
     imageBase: '/images/250621_hamburg-14',
     title: 'Tour de Energie',
-    tag: 'road event',
+    tag: 'Road Event',
     description: 'If last year is any indication, this will be a fun, challenging ride with thirty other Kandies in Göttingen.',
     startDate: '2026-06-21T09:00:00.000Z',
     endDate: '2026-06-21T14:00:00.000Z',
     year: '2026',
     days: 'Apr 26',
     month: 'Sunday',
-    location: 'Hamburg',
+    location: 'Göttingen',
   },
 ];
 
