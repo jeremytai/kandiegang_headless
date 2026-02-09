@@ -50,6 +50,7 @@ const KandieCodePage = lazy(() => import('./pages/KandieCodePage').then((m) => (
 const RideLevelsPage = lazy(() => import('./pages/RideLevelsPage').then((m) => ({ default: m.RideLevelsPage })));
 const KandieGangCyclingClubPage = lazy(() => import('./pages/KandieGangCyclingClubPage').then((m) => ({ default: m.KandieGangCyclingClubPage })));
 const EventPage = lazy(() => import('./pages/EventPage').then((m) => ({ default: m.EventPage })));
+const KandieEventPage = lazy(() => import('./pages/KandieEventPage').then((m) => ({ default: m.KandieEventPage })));
 const MemberLoginPage = lazy(() => import('./pages/MemberLoginPage').then((m) => ({ default: m.MemberLoginPage })));
 const ShopLoginPage = lazy(() => import('./pages/ShopLoginPage').then((m) => ({ default: m.ShopLoginPage })));
 const ShopPage = lazy(() => import('./pages/ShopPage').then((m) => ({ default: m.ShopPage })));
@@ -183,7 +184,7 @@ const App: React.FC = () => {
                   <Route path="/kandiecode" element={<KandieCodePage />} />
                   <Route path="/ridelevels" element={<RideLevelsPage />} />
                   <Route path="/kandiegangcyclingclub" element={<KandieGangCyclingClubPage />} />
-                  <Route path="/event/:slug" element={<EventPage />} />
+                  <Route path="/event/:slug" element={<KandieEventPage />} />
                   <Route path="/fonts" element={<FontsPage />} />
                   <Route path="/login/member" element={<MemberLoginPage />} />
                   <Route path="/login/shop" element={<ShopLoginPage />} />

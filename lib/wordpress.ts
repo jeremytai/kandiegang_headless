@@ -1473,3 +1473,119 @@ export async function fetchMembershipStatus(
     };
   }
 }
+
+/**
+ * Types for KandieEvents (rides and workshops)
+ */
+
+export interface RideGuide {
+  title: string;
+  featuredImage?: {
+    node: {
+      sourceUrl: string;
+    };
+  };
+}
+
+export interface RideLevel {
+  routeUrl?: string;
+  gpxFile?: {
+    node: {
+      mediaItemUrl: string;
+    };
+  };
+  guides?: {
+    nodes: RideGuide[];
+  };
+}
+
+export interface EventDetailsMetadata {
+  primaryType: string; // 'Workshop', 'Social Ride', 'Road Event', etc.
+  eventDate: string; // ISO date string
+  description: string;
+  workshopCapacity?: number;
+  workshopStartTime?: string;
+  rideCategory?: string;
+  level1?: RideLevel;
+  level2?: RideLevel;
+  level2plus?: RideLevel;
+  level3?: RideLevel;
+  isFlintaOnly?: boolean;
+  publicReleaseDate?: string;
+  meetingPoint?: {
+    name?: string;
+    street?: string;
+    city?: string;
+  };
+}
+
+export interface WPRideEvent {
+  databaseId: string;
+  title: string;
+  featuredImage?: {
+    node: {
+      sourceUrl: string;
+    };
+  };
+  eventDetails?: EventDetailsMetadata;
+}
+
+export interface GetKandieEventsResponse {
+  rideEvents: {
+    nodes: WPRideEvent[];
+  };
+}
+
+/**
+ * Helper function to fetch events from WordPress.
+ * @param first - Number of events to fetch (default 20)
+ * @returns Array of ride events or null if query fails
+ */
+export async function getKandieEvents(first: number = 20): Promise<WPRideEvent[] | null> {
+  try {
+    const { GET_KANDIE_EVENTS_QUERY } = await import('./graphql/communityEvents');
+    const data = await wpQuery<GetKandieEventsResponse>(
+      GET_KANDIE_EVENTS_QUERY,
+      { first },
+      { useCache: true }
+    );
+    
+    if (import.meta.env.DEV) {
+      console.log('[Community] Raw WordPress response:', data);
+      if (data.rideEvents?.nodes?.[0]) {
+        console.log('[Community] First event data:', data.rideEvents.nodes[0]);
+        console.log('[Community] First event featuredImage:', data.rideEvents.nodes[0].featuredImage);
+      }
+    }
+    
+    return data.rideEvents?.nodes ?? null;
+  } catch (error) {
+    console.error('[Community] Failed to fetch events from WordPress:', error);
+    return null;
+  }
+}
+
+/**
+ * Helper function to fetch a single event by slug.
+ * @param slug - The event slug (e.g., 'kandie-gang-bike-repair-workshop')
+ * @returns The event data or null if not found
+ */
+export async function getKandieEventBySlug(slug: string): Promise<WPRideEvent | null> {
+  try {
+    const { GET_KANDIE_EVENT_QUERY } = await import('./graphql/communityEvents');
+    const data = await wpQuery<{ rideEvent: WPRideEvent | null }>(
+      GET_KANDIE_EVENT_QUERY,
+      { slug },
+      { useCache: true }
+    );
+    
+    if (import.meta.env.DEV) {
+      console.log('[Event] Fetched event:', data.rideEvent);
+    }
+    
+    return data.rideEvent ?? null;
+  } catch (error) {
+    console.error(`[Event] Failed to fetch event with slug "${slug}":`, error);
+    return null;
+  }
+}

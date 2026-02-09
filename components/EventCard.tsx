@@ -6,7 +6,9 @@ import { imageSrc } from '../lib/images';
 export interface EventCardProps {
   href: string;
   /** Base path without extension, e.g. "/images/250701_photosafari-12" */
-  imageBase: string;
+  imageBase?: string;
+  /** Full image URL (overrides imageBase if provided). Used for external WordPress images */
+  imageUrl?: string;
   title: string;
   tag?: string;
   description: string;
@@ -19,6 +21,7 @@ export interface EventCardProps {
 export const EventCard: React.FC<EventCardProps> = ({
   href,
   imageBase,
+  imageUrl: externalImageUrl,
   title,
   tag,
   description,
@@ -27,7 +30,7 @@ export const EventCard: React.FC<EventCardProps> = ({
   month,
   location,
 }) => {
-  const imageUrl = imageSrc(imageBase, 800);
+  const imageUrl = externalImageUrl || (imageBase ? imageSrc(imageBase, 800) : '/images/fallback-event.jpg');
   const isExternal = /^https?:\/\//i.test(href);
   const linkClassName =
     'group relative grid grid-cols-[160px_1fr] md:grid-cols-[180px_minmax(0,1fr)_auto] gap-x-4 gap-y-4 md:gap-6 items-stretch border-b border-primary-ink/[0.06] pl-0 pr-4 pt-6 pb-10 md:pr-8 md:pt-8 md:pb-12 text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-drift focus-visible:ring-offset-2 focus-visible:ring-offset-primary-breath';
