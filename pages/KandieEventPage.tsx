@@ -194,7 +194,7 @@ export const KandieEventPage: React.FC = () => {
                     <p className="text-base font-medium text-slate-900">
                       {primaryType?.toLowerCase() === 'workshop'
                         ? `${workshopCapacity || 0} Spots`
-                        : rideCategory?.replace(/_/g, ' ') || '—'}
+                        : typeof rideCategory === 'string' ? rideCategory.replace(/_/g, ' ') : '—'}
                     </p>
                   </div>
                 </div>
