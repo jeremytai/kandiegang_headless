@@ -16,7 +16,7 @@ const communityEvents: EventsLayoutEvent[] = [
     href: 'https://discord.com/channels/1059075420798079036/1469975629146493175',
     imageBase: '/images/250701_photosafari-40',
     title: 'Kandie Gang Bike Repair Workshop',
-    tag: 'Social Ride',
+    tag: 'Workshop',
     description: 'Wer seine Tool Skills erweitern möchte, ist hier genau richtig. Robert L. wird uns zeigen, was die wichtigsten Tipps & Tricks sind beim Reparieren',
     startDate: '2026-04-22T18:00:00.000Z',
     endDate: '2026-04-22T21:00:00.000Z',
