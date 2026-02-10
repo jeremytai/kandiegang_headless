@@ -38,6 +38,7 @@ const GUIDE_IMAGES = [
   'jeremy',
   'kathi_s',
   'katrin_h',
+  'kucki',
   'michael_m',
   'rilana_s',
   'ruth_p',
@@ -67,6 +68,7 @@ const GUIDE_LINKS: Partial<Record<(typeof GUIDE_IMAGES)[number], string>> = {
   ruth_p: 'https://www.instagram.com/kandie_gang/',
   saskia_s: 'https://www.instagram.com/kandie_gang/',
   kathi_s: 'https://www.strava.com/athletes/5526439',
+  kucki: 'https://www.strava.com/athletes/41399643',
 };
 
 /** Secondary pill styles: background + text. White text on dark/secondary; Signal (yellow) uses current or purple-rain text. */
