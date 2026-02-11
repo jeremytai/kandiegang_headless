@@ -6,11 +6,11 @@
  * CTA: logged-in users go to /members; others open a login sidebar.
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
-import { getEventBySlug } from "../lib/events";
+import { getKandieEventBySlug } from "../lib/wordpress";
 import { AnimatedHeadline } from "../components/AnimatedHeadline";
 import { useAuth } from "../context/AuthContext";
 import { useMemberLoginOffcanvas } from "../context/MemberLoginOffcanvasContext";
@@ -19,7 +19,23 @@ export const EventPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user, status } = useAuth();
   const { openMemberLogin } = useMemberLoginOffcanvas();
-  const event = slug ? getEventBySlug(slug) : undefined;
+  const [event, setEvent] = useState<any | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchEvent = async () => {
+      if (!slug) return;
+      try {
+        const e = await getKandieEventBySlug(slug);
+        if (mounted) setEvent(e);
+      } catch (err) {
+        console.error('Failed to load event', err);
+      }
+    };
+
+    fetchEvent();
+    return () => { mounted = false; };
+  }, [slug]);
 
   if (!slug || !event) {
     return (
