@@ -147,10 +147,10 @@ const App: React.FC = () => {
             <StickyTop offsetVariant={announcementDismissed ? 'tight' : 'withBar'} />
 
             {/* Main Content */}
-            <motion.div
+              <motion.div
               style={{ scale, opacity, y, transformOrigin: 'bottom center' }}
               className={[
-                "relative z-10 bg-white overflow-clip min-h-screen shadow-[0_64px_256px_rgba(0,0,0,0.1)]",
+                "relative z-10 bg-white overflow-clip min-h-screen",
                 // Keep a flat edge at the top on all pages, while keeping the bottom corners rounded.
                 'rounded-b-[24px] rounded-t-none',
               ].join(' ')}

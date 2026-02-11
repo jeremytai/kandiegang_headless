@@ -2,11 +2,14 @@
  * Event types for Kandie Gang rides and workshops
  */
 
-export interface RideGuide {
+export interface Guide {
+  id: string;
   title: string;
+  role?: string; // e.g., "Ride Guide", "Instructor"
+  excerpt?: string;
   featuredImage?: {
-    node: {
-      sourceUrl: string;
+    node?: {
+      sourceUrl?: string;
     };
   };
 }
@@ -19,7 +22,7 @@ export interface RideLevel {
     };
   };
   guides?: {
-    nodes: RideGuide[];
+    nodes: Guide[];
   };
 }
 
@@ -45,13 +48,15 @@ export interface EventDetails {
   meetingPoint?: MeetingPoint;
 }
 
+export interface FeaturedImage {
+  node?: {
+    sourceUrl?: string;
+  };
+}
+
 export interface KandieEventData {
   databaseId: string;
   title: string;
-  featuredImage?: {
-    node: {
-      sourceUrl: string;
-    };
-  };
+  featuredImage?: FeaturedImage;
   eventDetails?: EventDetails;
 }
