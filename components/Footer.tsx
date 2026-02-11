@@ -23,7 +23,7 @@ export const Footer: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <footer className="relative bg-white border-t border-slate-50 font-medium text-[13px]">
+    <footer className="relative bg-white border-t border-slate-50 font-medium text-[13px] rounded-b-[24px] overflow-hidden">
       <div className="flex min-h-[40vh] flex-col justify-between">
         <div className="grid grid-cols-12 gap-6 p-6 pb-12 md:pb-40">
           <div className="col-span-12 flex flex-col items-center py-16 md:col-span-6 md:items-start md:py-0">

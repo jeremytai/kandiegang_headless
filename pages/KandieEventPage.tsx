@@ -72,6 +72,7 @@ export const KandieEventPage: React.FC = () => {
 
   const { title, featuredImage, eventDetails, excerpt } = eventData;
   const description = eventDetails?.description || '';
+  const rawExcerpt = excerpt || eventDetails?.excerpt || '';
   // Normalize newlines and common bullet characters so soft line-break lists
   // (or lists using en/em dashes or bullets from WP) become proper markdown lists
   const normalizedDescription = description
@@ -93,7 +94,7 @@ export const KandieEventPage: React.FC = () => {
     // Collapse excessive blank lines
     .replace(/\n{3,}/g, '\n\n');
   // Debug logs removed for production
-  const intro = excerpt || description.split('\n')[0];
+  const intro = rawExcerpt.trim() || description.split('\n')[0].trim();
 
   // Gather all guides from levels
   const guides: RideGuide[] = [
@@ -103,7 +104,77 @@ export const KandieEventPage: React.FC = () => {
     ...(eventDetails?.level3?.guides?.nodes || []),
   ];
 
+  const paceByLevel: Record<string, string> = {
+    'Level 1': '22 - 25 km/h',
+    'Level 2': '25 - 28 km/h',
+    'Level 2+': '28 - 30 km/h',
+    'Level 3': '30 - 33 km/h',
+  };
+  const levelsWithGuides = [
+    {
+      label: 'Level 1',
+      guides: (eventDetails?.level1?.guides?.nodes || []).map((guide) => guide.title),
+      pace: paceByLevel['Level 1'],
+      routeUrl: eventDetails?.level1?.routeUrl,
+    },
+    {
+      label: 'Level 2',
+      guides: (eventDetails?.level2?.guides?.nodes || []).map((guide) => guide.title),
+      pace: paceByLevel['Level 2'],
+      routeUrl: eventDetails?.level2?.routeUrl,
+    },
+    {
+      label: 'Level 2+',
+      guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide) => guide.title),
+      pace: paceByLevel['Level 2+'],
+      routeUrl: eventDetails?.level2plus?.routeUrl,
+    },
+    {
+      label: 'Level 3',
+      guides: (eventDetails?.level3?.guides?.nodes || []).map((guide) => guide.title),
+      pace: paceByLevel['Level 3'],
+      routeUrl: eventDetails?.level3?.routeUrl,
+    },
+  ].filter((level) => level.guides.length > 0);
+
   const isPublic = new Date() >= new Date(eventDetails?.publicReleaseDate || '');
+  const eventDateValue = eventDetails?.eventDate || '';
+  const eventDate = eventDateValue ? new Date(eventDateValue) : null;
+  const eventDatePart = eventDateValue.split('T')[0];
+  const eventDateForWeekday = eventDatePart ? new Date(`${eventDatePart}T12:00:00`) : null;
+  const eventDateTimeMatch = eventDateValue.match(/T(\d{2}:\d{2})/);
+  const timeFromEventDate = eventDateTimeMatch?.[1];
+  const getOrdinal = (day: number) => {
+    const mod10 = day % 10;
+    const mod100 = day % 100;
+    if (mod10 === 1 && mod100 !== 11) return `${day}st`;
+    if (mod10 === 2 && mod100 !== 12) return `${day}nd`;
+    if (mod10 === 3 && mod100 !== 13) return `${day}rd`;
+    return `${day}th`;
+  };
+  const weekdayLabel = eventDateForWeekday && !Number.isNaN(eventDateForWeekday.getTime())
+    ? eventDateForWeekday.toLocaleDateString([], { weekday: 'short' })
+    : '';
+  const monthLabel = eventDate && !Number.isNaN(eventDate.getTime())
+    ? eventDate.toLocaleDateString([], { month: 'long' })
+    : '';
+  const dayLabel = eventDate && !Number.isNaN(eventDate.getTime())
+    ? getOrdinal(eventDate.getDate())
+    : '';
+  const yearLabel = eventDate && !Number.isNaN(eventDate.getTime())
+    ? String(eventDate.getFullYear())
+    : '';
+  const dateLabel = weekdayLabel && monthLabel && dayLabel && yearLabel
+    ? `${weekdayLabel}, ${dayLabel} ${monthLabel}, ${yearLabel}`
+    : eventDateValue;
+  const timeLabel = eventDetails?.workshopStartTime?.trim()
+    || timeFromEventDate;
+  const meetingPoint = eventDetails?.meetingPoint;
+  const locationName = meetingPoint?.name || '';
+  const locationStreetCity = meetingPoint?.street && meetingPoint?.city
+    ? `${meetingPoint.street}, ${meetingPoint.city}`
+    : [meetingPoint?.street, meetingPoint?.city].filter(Boolean).join(' ');
+  const locationLabel = [locationName, locationStreetCity].filter(Boolean).join('\n');
 
   return (
     <div className="bg-white min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
@@ -119,10 +190,11 @@ export const KandieEventPage: React.FC = () => {
       />
 
       <section>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+        <div className="max-w-[88rem] mx-auto px-6">
+          <div className="w-full border-t border-black/10 mt-10 mb-10" />
+          <div className="flex flex-col lg:flex-row lg:justify-center lg:items-start gap-20">
             {/* Main content */}
-            <article className="space-y-12 order-2 lg:order-1">
+            <article className="space-y-12 order-2 lg:order-1 flex-1 min-w-0">
               <div className="prose prose-lg max-w-none">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
@@ -142,43 +214,19 @@ export const KandieEventPage: React.FC = () => {
               )}
 
               {/* Partners or extra info could go here */}
-              {eventData?.excerpt && (
-                <section>
-                  <h2 className="text-2xl font-heading-regular text-primary-ink mb-4">Intro</h2>
-                  <div className="prose max-w-none text-primary-ink">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw as any, rehypeSanitize as any]}
-                    >
-                      {eventData.excerpt}
-                    </ReactMarkdown>
-                  </div>
-                </section>
-              )}
             </article>
 
-            {/* Sidebar: sticky event card */}
-            <aside className="order-1 lg:order-2">
-              <div className="lg:sticky lg:top-28">
+            <aside className="order-1 lg:order-2 w-full lg:flex-1 min-w-0 lg:self-start lg:sticky lg:top-28 h-fit">
+              <div>
                 <EventSidebarCard
-                  date={new Date(eventDetails?.eventDate || '').toLocaleDateString()}
-                  time={eventDetails?.workshopStartTime}
-                  location={`${eventDetails?.meetingPoint?.name || ''} ${eventDetails?.meetingPoint?.street || ''} ${eventDetails?.meetingPoint?.city || ''}`}
+                  date={dateLabel}
+                  time={timeLabel}
+                  location={locationLabel}
                   category={eventDetails?.rideCategory}
-                  capacity={eventDetails?.workshopCapacity}
                   type={eventDetails?.primaryType}
+                  levels={levelsWithGuides}
                   isPublic={isPublic}
                 />
-
-                {/* Quick details below the card to match typical event pages */}
-                <div className="mt-6 text-sm text-slate-600">
-                  {eventDetails?.rideCategory && (
-                    <div className="mb-2"><strong>Category:</strong> {eventDetails.rideCategory}</div>
-                  )}
-                  {eventDetails?.isFlintaOnly && (
-                    <div className="mb-2 text-secondary-purple-rain font-semibold">Flinta-only event</div>
-                  )}
-                </div>
               </div>
             </aside>
           </div>

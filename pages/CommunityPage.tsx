@@ -151,7 +151,7 @@ export const CommunityPage: React.FC = () => {
       </div>
 
       <section className="relative z-10 min-h-[28rem] pt-32 md:pt-40 pb-8 md:pb-10">
-        <div className="section-side-margin mx-auto grid max-w-[88rem] grid-cols-12 gap-x-4 lg:gap-x-6">
+        <div className="mx-auto grid max-w-[88rem] grid-cols-12 gap-x-4 px-6 lg:gap-x-6">
           <div className="col-span-12">
             <AnimatedHeadline
               text="Community is the heart of Kandie Gang"
@@ -165,7 +165,7 @@ export const CommunityPage: React.FC = () => {
       </section>
 
       <section className="relative z-10 pt-4 md:pt-6 pb-16 md:pb-12">
-        <div className="section-side-margin max-w-7xl mx-auto space-y-8">
+        <div className="max-w-[88rem] mx-auto space-y-8 px-6">
           {/* Loading state */}
           {loading && (
             <div className="flex items-center justify-center py-16">

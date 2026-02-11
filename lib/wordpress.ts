@@ -1522,6 +1522,7 @@ export interface EventDetailsMetadata {
 export interface WPRideEvent {
   databaseId: string;
   title: string;
+  excerpt?: string;
   featuredImage?: {
     node: {
       sourceUrl: string;

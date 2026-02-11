@@ -9,6 +9,7 @@ export const GET_KANDIE_EVENTS_QUERY = `
       nodes {
         databaseId
         title
+        excerpt
         featuredImage {
           node {
             sourceUrl
@@ -96,6 +97,7 @@ export const GET_KANDIE_EVENT_QUERY = `
     rideEvent(id: $slug, idType: SLUG) {
       databaseId
       title
+      excerpt
       featuredImage {
         node {
           sourceUrl
