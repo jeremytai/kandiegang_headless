@@ -197,7 +197,14 @@ export const KandieEventPage: React.FC = () => {
           <div className="flex flex-col lg:flex-row lg:justify-center lg:items-start gap-20">
             {/* Main content */}
             <article className="space-y-12 order-2 lg:order-1 flex-1 min-w-0">
-              <div className="prose prose-lg max-w-none">
+              <div 
+                className="kandieEventPage max-w-none text-slate-600 leading-relaxed [&_h1]:text-4xl [&_h1]:font-heading-thin [&_h1]:tracking-normal [&_h2]:text-3xl [&_h2]:font-heading-thin [&_h2]:tracking-normal [&_h3]:text-3xl [&_h3]:font-heading-thin [&_h3]:tracking-normal [&_h4]:text-2xl [&_h4]:font-heading-thin [&_h4]:tracking-normal [&_h5]:text-xl [&_h5]:font-heading-thin [&_h5]:tracking-normal [&_h6]:font-heading-thin [&_h6]:tracking-normal [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2"
+              >
+                <style>{`
+                  .kandieEventPage h1, .kandieEventPage h2, .kandieEventPage h3, .kandieEventPage h4, .kandieEventPage h5, .kandieEventPage h6 {
+                    color: var(--color-secondary-purple-rain);
+                  }
+                `}</style>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeRaw as any, rehypeSanitize as any]}
@@ -208,9 +215,9 @@ export const KandieEventPage: React.FC = () => {
               </div>
 
               {/* Additional sections that mirror the Vertica layout: Guides / Speakers */}
-              {guides.length > 0 && (
+              {guides.length > 0 && eventDetails?.primaryType?.toLowerCase().includes('workshop') && (
                 <section>
-                  <h2 className="text-2xl font-heading-regular text-primary-ink mb-6">Speakers & Guides</h2>
+                  <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">Speakers</h2>
                   <GuideSection guides={guides} />
                 </section>
               )}
