@@ -1,3 +1,5 @@
+import typography from '@tailwindcss/typography';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
@@ -11,5 +13,5 @@ export default {
     'grid-cols-6',
   ],
   theme: { extend: {} },
-  plugins: [],
+  plugins: [typography],
 };
