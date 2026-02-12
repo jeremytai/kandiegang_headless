@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Link } from 'lucide-react';
 
 interface EventSidebarCardProps {
@@ -9,6 +9,7 @@ interface EventSidebarCardProps {
   type?: string;
   levels?: Array<{ label: string; guides: string[]; pace?: string; routeUrl?: string }>;
   isPublic: boolean;
+  publicReleaseDate?: string;
 }
 
 const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
@@ -19,16 +20,43 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   type,
   levels,
   isPublic,
+  publicReleaseDate,
 }) => {
   const labelClass = "text-xs tracking-[0.08em] text-slate-500";
   const valueClass = "text-sm text-slate-900";
   const locationLines = location.split('\n');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [routeModal, setRouteModal] = useState<{ url: string; label: string } | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (isPublic) return;
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [isPublic]);
+
+  const countdownLabel = useMemo(() => {
+    if (isPublic || !publicReleaseDate) return '';
+    const target = new Date(publicReleaseDate).getTime();
+    if (Number.isNaN(target)) return '';
+    const diffMs = Math.max(0, target - now);
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad2 = (value: number) => String(value).padStart(2, '0');
+    if (days > 0) {
+      return `${days}d ${pad2(hours)}h ${pad2(minutes)}m ${pad2(seconds)}s`;
+    }
+    return `${pad2(hours)}h ${pad2(minutes)}m ${pad2(seconds)}s`;
+  }, [isPublic, publicReleaseDate, now]);
 
   const toggleIndex = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
+
+  const placesPerGuide = 7;
 
   return (
     <aside className="bg-gray-50 p-6 rounded-lg space-y-4">
@@ -93,7 +121,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                       </div>
                       <div>
                         <p className={labelClass}>Places</p>
-                        <p className={valueClass}>7</p>
+                        <p className={valueClass}>{placesPerGuide * level.guides.length}</p>
                       </div>
                       <div>
                         <p className={labelClass}>Distance</p>
@@ -144,8 +172,10 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
         <hr className="border-t border-black/10" />
           {type && <div className="mb-4" />}
         <div>
-          <p className={labelClass}>Public</p>
-          <p className={valueClass}>{isPublic ? 'Yes' : 'No'}</p>
+          <p className={labelClass}>General Registration</p>
+          <p className={valueClass}>
+            {isPublic ? 'Yes' : (countdownLabel ? `Available in ${countdownLabel}` : 'No')}
+          </p>
         </div>
       </div>
 

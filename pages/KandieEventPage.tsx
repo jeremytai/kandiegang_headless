@@ -76,6 +76,10 @@ export const KandieEventPage: React.FC = () => {
   // Normalize newlines and common bullet characters so soft line-break lists
   // (or lists using en/em dashes or bullets from WP) become proper markdown lists
   const normalizedDescription = description
+    // Convert common WP HTML paragraph/line-break tags into markdown-friendly newlines
+    .replace(/<br\s*\/?>(\n)?/gi, '\n')
+    .replace(/<\/p>\s*<p>/gi, '\n\n')
+    .replace(/<\/?p>/gi, '')
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     // normalize common non-breaking/zero-width spaces
@@ -226,6 +230,7 @@ export const KandieEventPage: React.FC = () => {
                   type={eventDetails?.primaryType}
                   levels={levelsWithGuides}
                   isPublic={isPublic}
+                  publicReleaseDate={eventDetails?.publicReleaseDate}
                 />
               </div>
             </aside>
