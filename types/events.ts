@@ -10,6 +10,7 @@ export interface Guide {
   featuredImage?: {
     node?: {
       sourceUrl?: string;
+      altText?: string;
     };
   };
 }
@@ -18,7 +19,7 @@ export interface RideLevel {
   routeUrl?: string;
   gpxFile?: {
     node: {
-      mediaItemUrl: string;
+      id: string;
     };
   };
   guides?: {
@@ -35,6 +36,7 @@ export interface MeetingPoint {
 export interface EventDetails {
   primaryType: string;
   eventDate: string;
+  rideTime?: string;
   description: string;
   workshopCapacity?: number;
   workshopStartTime?: string;
@@ -44,19 +46,18 @@ export interface EventDetails {
   level2plus?: RideLevel;
   level3?: RideLevel;
   isFlintaOnly?: boolean;
-  publicReleaseDate?: string;
+  repeatingEvent?: boolean;
   meetingPoint?: MeetingPoint;
 }
 
 export interface FeaturedImage {
   node?: {
     sourceUrl?: string;
+    altText?: string;
   };
 }
 
 export interface KandieEventData {
   databaseId: string;
   title: string;
-  featuredImage?: FeaturedImage;
-  eventDetails?: EventDetails;
-}
+  publicReleaseDate?: string;

@@ -1483,6 +1483,7 @@ export interface RideGuide {
   featuredImage?: {
     node: {
       sourceUrl: string;
+      altText?: string;
     };
   };
 }
@@ -1491,7 +1492,7 @@ export interface RideLevel {
   routeUrl?: string;
   gpxFile?: {
     node: {
-      mediaItemUrl: string;
+      id: string;
     };
   };
   guides?: {
@@ -1502,6 +1503,7 @@ export interface RideLevel {
 export interface EventDetailsMetadata {
   primaryType: string; // 'Workshop', 'Social Ride', 'Road Event', etc.
   eventDate: string; // ISO date string
+  rideTime?: string; // HH:MM format
   description: string;
   workshopCapacity?: number;
   workshopStartTime?: string;
@@ -1511,7 +1513,7 @@ export interface EventDetailsMetadata {
   level2plus?: RideLevel;
   level3?: RideLevel;
   isFlintaOnly?: boolean;
-  publicReleaseDate?: string;
+  repeatingEvent?: boolean;
   meetingPoint?: {
     name?: string;
     street?: string;
@@ -1523,9 +1525,11 @@ export interface WPRideEvent {
   databaseId: string;
   title: string;
   excerpt?: string;
+  publicReleaseDate?: string;
   featuredImage?: {
     node: {
       sourceUrl: string;
+      altText?: string;
     };
   };
   eventDetails?: EventDetailsMetadata;

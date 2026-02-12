@@ -10,15 +10,18 @@ export const GET_KANDIE_EVENTS_QUERY = `
         databaseId
         title
         excerpt
+        publicReleaseDate
         featuredImage {
           node {
             sourceUrl
+            altText
           }
         }
         eventDetails {
           # Core Logic
           primaryType
           eventDate
+          rideTime
           description
           
           # Workshop Specifics
@@ -31,45 +34,84 @@ export const GET_KANDIE_EVENTS_QUERY = `
           # Levels (With Guide Avatars)
           level1 {
             routeUrl
-            gpxFile { node { mediaItemUrl } }
+            gpxFile {
+              node {
+                id
+              }
+            }
             guides {
               nodes {
                 ... on RideGuide {
                   title
-                  featuredImage { node { sourceUrl } }
+                  featuredImage {
+                    node {
+                      sourceUrl
+                      altText
+                    }
+                  }
                 }
               }
             }
           }
           level2 {
             routeUrl
+            gpxFile {
+              node {
+                id
+              }
+            }
             guides {
               nodes {
                 ... on RideGuide {
                   title
-                  featuredImage { node { sourceUrl } }
+                  featuredImage {
+                    node {
+                      sourceUrl
+                      altText
+                    }
+                  }
                 }
               }
             }
           }
           level2plus {
             routeUrl
+            gpxFile {
+              node {
+                id
+              }
+            }
             guides {
               nodes {
                 ... on RideGuide {
                   title
-                  featuredImage { node { sourceUrl } }
+                  featuredImage {
+                    node {
+                      sourceUrl
+                      altText
+                    }
+                  }
                 }
               }
             }
           }
           level3 {
             routeUrl
+            gpxFile {
+              node {
+                id
+              }
+            }
             guides {
               nodes {
                 ... on RideGuide {
                   title
-                  featuredImage { node { sourceUrl } }
+                  featuredImage {
+                    node {
+                      sourceUrl
+                      altText
+                    }
+                  }
                 }
               }
             }
@@ -77,7 +119,7 @@ export const GET_KANDIE_EVENTS_QUERY = `
 
           # Logistics & FLINTA
           isFlintaOnly
-          publicReleaseDate
+          repeatingEvent
           meetingPoint {
             name
             street
@@ -98,15 +140,18 @@ export const GET_KANDIE_EVENT_QUERY = `
       databaseId
       title
       excerpt
+      publicReleaseDate
       featuredImage {
         node {
           sourceUrl
+          altText
         }
       }
       eventDetails {
         # Core Logic
         primaryType
         eventDate
+        rideTime
         description
         
         # Workshop Specifics
@@ -119,45 +164,84 @@ export const GET_KANDIE_EVENT_QUERY = `
         # Levels (With Guide Avatars)
         level1 {
           routeUrl
-          gpxFile { node { mediaItemUrl } }
+          gpxFile {
+            node {
+              id
+            }
+          }
           guides {
             nodes {
               ... on RideGuide {
                 title
-                featuredImage { node { sourceUrl } }
+                featuredImage {
+                  node {
+                    sourceUrl
+                    altText
+                  }
+                }
               }
             }
           }
         }
         level2 {
           routeUrl
+          gpxFile {
+            node {
+              id
+            }
+          }
           guides {
             nodes {
               ... on RideGuide {
                 title
-                featuredImage { node { sourceUrl } }
+                featuredImage {
+                  node {
+                    sourceUrl
+                    altText
+                  }
+                }
               }
             }
           }
         }
         level2plus {
           routeUrl
+          gpxFile {
+            node {
+              id
+            }
+          }
           guides {
             nodes {
               ... on RideGuide {
                 title
-                featuredImage { node { sourceUrl } }
+                featuredImage {
+                  node {
+                    sourceUrl
+                    altText
+                  }
+                }
               }
             }
           }
         }
         level3 {
           routeUrl
+          gpxFile {
+            node {
+              id
+            }
+          }
           guides {
             nodes {
               ... on RideGuide {
                 title
-                featuredImage { node { sourceUrl } }
+                featuredImage {
+                  node {
+                    sourceUrl
+                    altText
+                  }
+                }
               }
             }
           }
@@ -165,7 +249,7 @@ export const GET_KANDIE_EVENT_QUERY = `
 
         # Logistics & FLINTA
         isFlintaOnly
-        publicReleaseDate
+        repeatingEvent
         meetingPoint {
           name
           street

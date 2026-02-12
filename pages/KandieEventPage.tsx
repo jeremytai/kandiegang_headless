@@ -30,12 +30,12 @@ export const KandieEventPage: React.FC = () => {
           return;
         }
 
-        // Transform gpxFile from { node: { mediaItemUrl } } to string
+        // Transform gpxFile from { node: { id } } to string
         const transformLevel = (level: any) => {
           if (!level) return undefined;
           return {
             ...level,
-            gpxFile: level.gpxFile?.node?.mediaItemUrl || undefined,
+            gpxFile: level.gpxFile?.node?.id || undefined,
           };
         };
 
@@ -70,7 +70,7 @@ export const KandieEventPage: React.FC = () => {
     );
   }
 
-  const { title, featuredImage, eventDetails, excerpt } = eventData;
+  const { title, featuredImage, eventDetails, excerpt, publicReleaseDate } = eventData;
   const description = eventDetails?.description || '';
   const rawExcerpt = excerpt || eventDetails?.excerpt || '';
   // Normalize newlines and common bullet characters so soft line-break lists
@@ -141,13 +141,11 @@ export const KandieEventPage: React.FC = () => {
     },
   ].filter((level) => level.guides.length > 0);
 
-  const isPublic = new Date() >= new Date(eventDetails?.publicReleaseDate || '');
+  const isPublic = new Date() >= new Date(publicReleaseDate || '');
   const eventDateValue = eventDetails?.eventDate || '';
   const eventDate = eventDateValue ? new Date(eventDateValue) : null;
   const eventDatePart = eventDateValue.split('T')[0];
   const eventDateForWeekday = eventDatePart ? new Date(`${eventDatePart}T12:00:00`) : null;
-  const eventDateTimeMatch = eventDateValue.match(/T(\d{2}:\d{2})/);
-  const timeFromEventDate = eventDateTimeMatch?.[1];
   const getOrdinal = (day: number) => {
     const mod10 = day % 10;
     const mod100 = day % 100;
@@ -172,7 +170,7 @@ export const KandieEventPage: React.FC = () => {
     ? `${weekdayLabel}, ${dayLabel} ${monthLabel}, ${yearLabel}`
     : eventDateValue;
   const timeLabel = eventDetails?.workshopStartTime?.trim()
-    || timeFromEventDate;
+    || eventDetails?.rideTime?.trim();
   const meetingPoint = eventDetails?.meetingPoint;
   const locationName = meetingPoint?.name || '';
   const locationStreetCity = meetingPoint?.street && meetingPoint?.city
@@ -230,7 +228,7 @@ export const KandieEventPage: React.FC = () => {
                   type={eventDetails?.primaryType}
                   levels={levelsWithGuides}
                   isPublic={isPublic}
-                  publicReleaseDate={eventDetails?.publicReleaseDate}
+                  publicReleaseDate={publicReleaseDate}
                 />
               </div>
             </aside>

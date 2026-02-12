@@ -30,6 +30,7 @@ export interface EventDetails {
   primaryType: string;
   rideCategory?: string;
   eventDate: string;
+  rideTime?: string;
   description: string;
   excerpt?: string;
   workshopCapacity?: number;
@@ -39,7 +40,6 @@ export interface EventDetails {
   level2plus?: RideLevel;
   level3?: RideLevel;
   isFlintaOnly?: boolean;
-  publicReleaseDate?: string;
   repeatingEvent?: boolean;
   meetingPoint?: MeetingPoint;
 }
@@ -48,6 +48,7 @@ export interface KandieEventData {
   databaseId: string;
   title: string;
   excerpt?: string;
+  publicReleaseDate?: string;
   featuredImage?: {
     node: {
       sourceUrl: string;
