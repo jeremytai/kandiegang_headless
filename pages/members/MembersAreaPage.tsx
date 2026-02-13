@@ -17,6 +17,7 @@ import { canPurchase, type ShopProduct } from '../../lib/products';
 import { Loader2, ArrowRight, Moon, Sun } from 'lucide-react';
 import { AnimatedHeadline } from '../../components/AnimatedHeadline';
 import { MembersConfetti } from '../../components/MembersConfetti';
+import { AccountStatusAccordion } from '../../components/AccountStatusAccordion';
 
 const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
 const MEMBERS_ONLY_POSTS_FIRST = 20;
@@ -217,7 +218,20 @@ export const MembersAreaPage: React.FC = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6">
+        {/* Membership status accordion for users without active membership */}
+        {initialMembershipCheckDone && !cyclingMember && !guide && (
+          <AccountStatusAccordion
+            onRefreshMembership={handleRefreshMembership}
+            onContact={() => {
+              if (typeof window !== 'undefined') {
+                window.location.href = 'mailto:info@kandiegang.com?subject=Membership%20Help';
+              }
+            }}
+          />
+        )}
         <header className="mb-2 md:mb-6 text-center relative">
+          {/* Account/membership info moved to MemberSidebar component. Insert <MemberSidebar /> in your sidebar layout. */}
+
           <div className="absolute right-0 top-0 flex items-center gap-1">
             {!hideAccountAndDarkMode && (
               <>
