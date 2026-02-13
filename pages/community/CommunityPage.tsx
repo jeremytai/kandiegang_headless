@@ -190,9 +190,15 @@ export const CommunityPage: React.FC = () => {
           {/* Events display */}
           {!loading && events.length > 0 && (
             <>
-              <EventsLayout events={[events[0]]} />
+              <EventsLayout events={events.slice(0, 1)} />
               <ThreeThingsToDo />
-              {events.length > 1 && <EventsLayout events={[events[1]]} showTopBorder />}
+              {events.slice(1, 7).map((event, index) => (
+                <EventsLayout
+                  key={event.id}
+                  events={[event]}
+                  showTopBorder={index === 0}
+                />
+              ))}
             </>
           )}
 

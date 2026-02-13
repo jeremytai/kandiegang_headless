@@ -12,7 +12,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, AlertCircle } from 'lucide-react';
 import { CompanySection } from '../../components/sections/CompanySection';
 import { CompanyValuesSection } from '../../components/sections/CompanyValuesSection.tsx';
 import { AboutHero } from '../../components/sections/AboutHero';
@@ -48,9 +48,9 @@ export const AboutPage: React.FC = () => {
   //   fetchPage();
   // }, []);
 
-  const [_page, _setPage] = useState<WPPage | null>(null);
+  const [page, _setPage] = useState<WPPage | null>(null);
   const [_loading, _setLoading] = useState(false);
-  const [_error, _setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const { openContactModal } = useContactModal();
 
   // Default content to display if WordPress content is not available

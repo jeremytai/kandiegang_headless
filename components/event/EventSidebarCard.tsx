@@ -28,6 +28,8 @@ interface EventSidebarCardProps {
     allowWaitlist?: boolean;
   };
   onSignup?: (level: { levelKey: string; label: string }) => void;
+  registrations?: Record<string, { isWaitlist: boolean }>;
+  onCancelRegistration?: (levelKey: string) => void;
   workshop?: {
     capacity: number;
     spotsLeft?: number;
@@ -46,6 +48,8 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   publicReleaseDate,
   signupState,
   onSignup,
+  registrations,
+  onCancelRegistration,
   workshop,
 }) => {
   const labelClass = 'text-xs tracking-[0.08em] text-slate-500';
@@ -54,6 +58,8 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [routeModal, setRouteModal] = useState<{ url: string; label: string } | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [workshopOpen, setWorkshopOpen] = useState(true);
+  const [cancelTarget, setCancelTarget] = useState<{ key: string; label: string } | null>(null);
 
   useEffect(() => {
     if (isPublic) return;
@@ -125,6 +131,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
           <div>
             {levels.map((level, index) => {
               const isOpen = openIndex === index;
+              const registration = registrations?.[level.levelKey];
               return (
                 <div
                   key={level.label}
@@ -135,7 +142,14 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                     onClick={() => toggleIndex(index)}
                     className="flex w-full items-start justify-between text-left group"
                   >
-                    <span className="text-sm font-medium text-primary-ink">{level.label}</span>
+                    <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
+                      {level.label}
+                      {!isOpen && level.spotsLeft != null && level.places != null && (
+                        <span className="text-xs font-normal text-slate-500">
+                          {`${level.spotsLeft} of ${level.places} spots available`}
+                        </span>
+                      )}
+                    </span>
                     <span
                       className={`inline-flex shrink-0 pt-0.5 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
                     >
@@ -173,7 +187,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           <div className="flex items-center gap-3">
                             <button
                               type="button"
-                              className={`${valueClass} underline underline-offset-2`}
+                              className={valueClass}
                               onClick={() =>
                                 setRouteModal({ url: level.routeUrl as string, label: level.label })
                               }
@@ -200,22 +214,43 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           Waitlist open
                         </span>
                       )}
-                      <button
-                        type="button"
-                        className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                        disabled={
-                          (!signupState?.allowWaitlist && level.isSoldOut) ||
-                          signupState?.disabled ||
-                          !canSignup
-                        }
-                        onClick={() => onSignup?.({ levelKey: level.levelKey, label: level.label })}
-                      >
-                        {level.isSoldOut
-                          ? signupState?.allowWaitlist
-                            ? 'Join Waitlist'
-                            : 'Sold Out'
-                          : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
-                      </button>
+                      {registration ? (
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                          <p className="font-semibold">
+                            {registration.isWaitlist
+                              ? "You're on the waitlist."
+                              : "You're spot is saved."}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCancelTarget({ key: level.levelKey, label: level.label })
+                            }
+                            className="mt-1 text-xs text-secondary-drift hover:underline"
+                          >
+                            Can't make it? Cancel your spot
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          disabled={
+                            (!signupState?.allowWaitlist && level.isSoldOut) ||
+                            signupState?.disabled ||
+                            !canSignup
+                          }
+                          onClick={() =>
+                            onSignup?.({ levelKey: level.levelKey, label: level.label })
+                          }
+                        >
+                          {level.isSoldOut
+                            ? signupState?.allowWaitlist
+                              ? 'Join Waitlist'
+                              : 'Sold Out'
+                            : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -225,39 +260,77 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
         )}
         {workshop && (
           <div className="border-t border-black/10 pt-4">
-            <div className="space-y-3">
-              <div>
-                <p className={labelClass}>Workshop places</p>
-                <p className={valueClass}>
-                  {workshop.capacity}
-                  {workshop.spotsLeft != null && ` total · ${workshop.spotsLeft} left`}
-                </p>
-              </div>
-              {signupState?.helper && (
-                <p className="text-xs text-slate-500">{signupState.helper}</p>
-              )}
-              {(workshop.spotsLeft ?? 1) <= 0 && signupState?.allowWaitlist && (
-                <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
-                  Waitlist open
-                </span>
-              )}
-              <button
-                type="button"
-                className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={
-                  ((workshop.spotsLeft ?? 1) <= 0 && !signupState?.allowWaitlist) ||
-                  signupState?.disabled ||
-                  !canSignup
-                }
-                onClick={() => onSignup?.({ levelKey: 'workshop', label: 'Workshop' })}
+            <button
+              type="button"
+              onClick={() => setWorkshopOpen((prev) => !prev)}
+              className="flex w-full items-start justify-between text-left group"
+            >
+              <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
+                Workshop
+                {!workshopOpen && workshop.spotsLeft != null && (
+                  <span className="text-xs font-normal text-slate-500">
+                    {`${workshop.spotsLeft} of ${workshop.capacity} spots available`}
+                  </span>
+                )}
+              </span>
+              <span
+                className={`inline-flex shrink-0 pt-0.5 transition-transform duration-300 ease-in-out ${workshopOpen ? 'rotate-180' : ''}`}
               >
-                {(workshop.spotsLeft ?? 1) <= 0
-                  ? signupState?.allowWaitlist
-                    ? 'Join Waitlist'
-                    : 'Sold Out'
-                  : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
-              </button>
-            </div>
+                <ChevronDown className="h-4 w-4 text-slate-500 group-hover:text-slate-700 transition-colors" />
+              </span>
+            </button>
+            {workshopOpen && (
+              <div className="pt-2 space-y-3">
+                <div>
+                  <p className={labelClass}>Workshop places</p>
+                  <p className={valueClass}>
+                    {workshop.capacity}
+                    {workshop.spotsLeft != null && ` total · ${workshop.spotsLeft} left`}
+                  </p>
+                </div>
+                {signupState?.helper && (
+                  <p className="text-xs text-slate-500">{signupState.helper}</p>
+                )}
+                {(workshop.spotsLeft ?? 1) <= 0 && signupState?.allowWaitlist && (
+                  <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                    Waitlist open
+                  </span>
+                )}
+                {registrations?.workshop ? (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    <p className="font-semibold">
+                      {registrations.workshop.isWaitlist
+                        ? "You're on the waitlist."
+                        : "You're spot is saved."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setCancelTarget({ key: 'workshop', label: 'Workshop' })}
+                      className="mt-1 text-xs text-secondary-drift hover:underline"
+                    >
+                      Can't make it? Cancel your spot
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={
+                      ((workshop.spotsLeft ?? 1) <= 0 && !signupState?.allowWaitlist) ||
+                      signupState?.disabled ||
+                      !canSignup
+                    }
+                    onClick={() => onSignup?.({ levelKey: 'workshop', label: 'Workshop' })}
+                  >
+                    {(workshop.spotsLeft ?? 1) <= 0
+                      ? signupState?.allowWaitlist
+                        ? 'Join Waitlist'
+                        : 'Sold Out'
+                      : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
         <hr className="border-t border-black/10" />
@@ -299,6 +372,50 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                 className="h-full w-full"
                 loading="lazy"
               />
+            </div>
+          </div>
+        </div>
+      )}
+      {cancelTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Cancel registration"
+          onClick={() => setCancelTarget(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-primary-ink">
+              Cancel {cancelTarget.label} spot?
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              This will free up your spot for someone else in{' '}
+              <span className="font-medium text-slate-900">{cancelTarget.label}</span>. You can
+              re-register if spots are still available.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCancelTarget(null)}
+                className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                Keep spot
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onCancelRegistration) {
+                    onCancelRegistration(cancelTarget.key);
+                  }
+                  setCancelTarget(null);
+                }}
+                className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900"
+              >
+                Yes, cancel
+              </button>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { KandieEventData, RideGuide } from '../../lib/events';
 import { getKandieEventBySlug, transformMediaUrl } from '../../lib/wordpress';
 import { useAuth } from '../../context/AuthContext';
 import { useMemberLoginOffcanvas } from '../../context/MemberLoginOffcanvasContext';
+import { supabase } from '../../lib/supabaseClient';
 import {
   EVENT_SIGNUP_STORAGE_KEY,
   type EventSignupIntent,
@@ -26,6 +27,7 @@ export const KandieEventPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [restoredSignup, setRestoredSignup] = useState(false);
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
+  const [registrations, setRegistrations] = useState<Record<string, { isWaitlist: boolean }>>({});
 
   const refreshCapacity = useCallback(async () => {
     if (!eventData?.databaseId) return;
@@ -45,6 +47,34 @@ export const KandieEventPage: React.FC = () => {
       controller.abort();
     }
   }, [eventData?.databaseId]);
+
+  const refreshRegistrations = useCallback(async () => {
+    if (!eventData?.databaseId || !user?.id || !supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('ride_level,is_waitlist')
+        .eq('event_id', Number(eventData.databaseId))
+        .eq('user_id', user.id)
+        .is('cancelled_at', null);
+
+      if (error) {
+        console.warn('Registration lookup failed:', error);
+        return;
+      }
+      const next: Record<string, { isWaitlist: boolean }> = {};
+      (data ?? []).forEach((row) => {
+        const level =
+          typeof row.ride_level === 'string' && row.ride_level.trim()
+            ? row.ride_level
+            : 'workshop';
+        next[level] = { isWaitlist: Boolean(row.is_waitlist) };
+      });
+      setRegistrations(next);
+    } catch (err) {
+      console.warn('Registration lookup failed:', err);
+    }
+  }, [eventData?.databaseId, user?.id]);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -97,15 +127,21 @@ export const KandieEventPage: React.FC = () => {
   }, [eventData?.databaseId, refreshCapacity]);
 
   useEffect(() => {
+    if (!eventData?.databaseId || !user?.id) return;
+    refreshRegistrations();
+  }, [eventData?.databaseId, user?.id, refreshRegistrations]);
+
+  useEffect(() => {
     if (!eventData?.databaseId || typeof window === 'undefined') return;
     const handler = (event: Event) => {
       const detail = (event as CustomEvent).detail as { eventId?: string } | undefined;
       if (detail?.eventId !== eventData.databaseId) return;
       refreshCapacity();
+      refreshRegistrations();
     };
     window.addEventListener('kandiegang:event-signup-complete', handler);
     return () => window.removeEventListener('kandiegang:event-signup-complete', handler);
-  }, [eventData?.databaseId, refreshCapacity]);
+  }, [eventData?.databaseId, refreshCapacity, refreshRegistrations]);
 
   useEffect(() => {
     if (!eventData || !user || restoredSignup) return;
@@ -235,7 +271,7 @@ export const KandieEventPage: React.FC = () => {
     memberRelease && now >= memberRelease && (!publicRelease || now < (publicRelease as Date))
   );
   const isFlintaWindow = Boolean(
-    flintaRelease && now >= flintaRelease && (!memberRelease || now < (memberRelease as Date))
+    flintaRelease && now >= flintaRelease && (!publicRelease || now < (publicRelease as Date))
   );
   const canSignupNow = isPublic || isMemberWindow || isFlintaWindow;
   const requiresFlintaAttestation = isFlintaOnly || (!isPublic && !isMember);
@@ -269,6 +305,28 @@ export const KandieEventPage: React.FC = () => {
       requiresFlintaAttestation,
     };
     openEventSignup(intent);
+  };
+
+  const handleCancelRegistration = async (levelKey: string) => {
+    if (!supabase || !user?.id || !eventData?.databaseId) return;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) return;
+      const response = await fetch('/api/event-cancel-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ eventId: eventData.databaseId, rideLevel: levelKey }),
+      });
+      if (!response.ok) return;
+      refreshCapacity();
+      refreshRegistrations();
+    } catch {
+      // Ignore cancel errors for now; users still have email cancel.
+    }
   };
 
   const eventDateValue = eventDetails?.eventDate || '';
@@ -390,6 +448,8 @@ export const KandieEventPage: React.FC = () => {
                     allowWaitlist,
                   }}
                   onSignup={handleSignup}
+                  registrations={registrations}
+                  onCancelRegistration={handleCancelRegistration}
                   workshop={
                     isWorkshop && workshopCapacity
                       ? {

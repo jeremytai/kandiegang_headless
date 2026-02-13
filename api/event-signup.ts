@@ -290,10 +290,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (hasReleaseDate && releaseDate) {
       const isPublic = now >= releaseDate;
       const inMemberWindow = isWithinWindow(now, releaseDate, MEMBER_EARLY_DAYS);
-      const inFlintaWindow = isWithinWindow(now, releaseDate, FLINTA_EARLY_DAYS) && !inMemberWindow;
+      const inFlintaWindow = isWithinWindow(now, releaseDate, FLINTA_EARLY_DAYS);
 
       if (!isPublic) {
-        if (inMemberWindow && !isMember) {
+        if (inMemberWindow && !isMember && !flintaAttested) {
           return res.status(403).json({ error: 'Member early access only.' });
         }
         if (inFlintaWindow && !flintaAttested) {
