@@ -84,7 +84,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   const [waitlisted, setWaitlisted] = useState(false);
   const [lookupDisplayName, setLookupDisplayName] = useState<string | null>(null);
   const [lookupDoneFor, setLookupDoneFor] = useState<string | null>(null);
-  const [lookupInFlight, setLookupInFlight] = useState(false);
+  const [_lookupInFlight, _setLookupInFlight] = useState(false);
 
   const isMember = Boolean(profile?.is_member);
   const displayName =
@@ -101,9 +101,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   );
   const needsFlintaAttestation = intent.requiresFlintaAttestation;
   const canSubmit = !needsFlintaAttestation || flintaAttested;
-  const hasNames = shouldSkipNameEntry
-    ? true
-    : Boolean(firstName.trim() && lastName.trim());
+  const hasNames = shouldSkipNameEntry ? true : Boolean(firstName.trim() && lastName.trim());
   const hasEmail = Boolean(email.trim());
   const hasAuthEmail = Boolean(user?.email && user.email.trim());
 
@@ -130,7 +128,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     }
 
     const timer = window.setTimeout(async () => {
-      setLookupInFlight(true);
+      _setLookupInFlight(true);
       try {
         const response = await fetch('/api/profile-lookup', {
           method: 'POST',
@@ -157,7 +155,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         // Ignore lookup errors; fall back to manual entry.
       } finally {
         setLookupDoneFor(trimmed);
-        setLookupInFlight(false);
+        _setLookupInFlight(false);
       }
     }, 350);
 

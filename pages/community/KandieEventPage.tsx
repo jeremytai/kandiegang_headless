@@ -65,9 +65,7 @@ export const KandieEventPage: React.FC = () => {
       const next: Record<string, { isWaitlist: boolean }> = {};
       (data ?? []).forEach((row) => {
         const level =
-          typeof row.ride_level === 'string' && row.ride_level.trim()
-            ? row.ride_level
-            : 'workshop';
+          typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
         next[level] = { isWaitlist: Boolean(row.is_waitlist) };
       });
       setRegistrations(next);

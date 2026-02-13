@@ -193,11 +193,7 @@ export const CommunityPage: React.FC = () => {
               <EventsLayout events={events.slice(0, 1)} />
               <ThreeThingsToDo />
               {events.slice(1, 7).map((event, index) => (
-                <EventsLayout
-                  key={event.id}
-                  events={[event]}
-                  showTopBorder={index === 0}
-                />
+                <EventsLayout key={event.id} events={[event]} showTopBorder={index === 0} />
               ))}
             </>
           )}

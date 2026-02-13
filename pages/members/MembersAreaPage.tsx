@@ -69,7 +69,7 @@ function AccountStatusAccordion() {
 
 const HELLO_GREETINGS = ['Shwmae', 'Kaixo', 'Aluu', "Yá'át'ééh", 'Kia ora', 'Demat', 'Bures'];
 
-function isCyclingMember(plans: string[] | null | undefined): boolean {
+function _isCyclingMember(plans: string[] | null | undefined): boolean {
   if (!Array.isArray(plans)) return false;
   const lower = plans.map((p) => p.toLowerCase());
   return lower.some(
