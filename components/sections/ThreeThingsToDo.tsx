@@ -7,9 +7,9 @@
 
 import React, { useCallback, useState } from 'react';
 import { Check } from 'lucide-react';
-import { KandieCodeModal } from './KandieCodeModal';
-import { RideLevelsModal } from './RideLevelsModal';
-import { WaiverModal } from './WaiverModal';
+import { KandieCodeModal } from '../modals/KandieCodeModal';
+import { RideLevelsModal } from '../modals/RideLevelsModal';
+import { WaiverModal } from '../modals/WaiverModal';
 
 type SpecHref = 'kandie-code' | 'ride-levels' | 'ride-waiver';
 

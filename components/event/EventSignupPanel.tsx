@@ -26,6 +26,23 @@ const btnPrimary =
   'inline-flex items-center justify-center rounded-full bg-black px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:bg-slate-400';
 
 const EVENT_SIGNUP_STORAGE_KEY = 'eventSignupIntent';
+const SIGNUP_COMPLETE_EVENT = 'kandiegang:event-signup-complete';
+
+function emitSignupComplete(eventId: string) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(SIGNUP_COMPLETE_EVENT, { detail: { eventId } }));
+}
+
+function splitDisplayName(displayName?: string | null): { first: string; last: string } {
+  if (!displayName || typeof displayName !== 'string') {
+    return { first: '', last: '' };
+  }
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) {
+    return { first: '', last: '' };
+  }
+  return { first: parts[0], last: parts.slice(1).join(' ') };
+}
 
 function buildReturnUrl(): string | undefined {
   if (typeof window === 'undefined') return undefined;
@@ -65,11 +82,28 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [signupComplete, setSignupComplete] = useState(false);
   const [waitlisted, setWaitlisted] = useState(false);
+  const [lookupDisplayName, setLookupDisplayName] = useState<string | null>(null);
+  const [lookupDoneFor, setLookupDoneFor] = useState<string | null>(null);
+  const [lookupInFlight, setLookupInFlight] = useState(false);
 
   const isMember = Boolean(profile?.is_member);
+  const displayName =
+    profile?.display_name ??
+    (user?.user_metadata as Record<string, unknown> | undefined)?.full_name ??
+    (user?.user_metadata as Record<string, unknown> | undefined)?.name ??
+    null;
+  const derivedNames = useMemo(() => splitDisplayName(displayName), [displayName]);
+  const lookupNames = useMemo(() => splitDisplayName(lookupDisplayName), [lookupDisplayName]);
+  const hasDerivedNames = Boolean(derivedNames.first && derivedNames.last);
+  const hasLookupNames = Boolean(lookupNames.first && lookupNames.last);
+  const shouldSkipNameEntry = Boolean(
+    (user && isMember && hasDerivedNames) || (!user && hasLookupNames)
+  );
   const needsFlintaAttestation = intent.requiresFlintaAttestation;
   const canSubmit = !needsFlintaAttestation || flintaAttested;
-  const hasNames = Boolean(firstName.trim() && lastName.trim());
+  const hasNames = shouldSkipNameEntry
+    ? true
+    : Boolean(firstName.trim() && lastName.trim());
   const hasEmail = Boolean(email.trim());
   const hasAuthEmail = Boolean(user?.email && user.email.trim());
 
@@ -77,6 +111,58 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     () => `${intent.eventTitle} · ${intent.levelLabel}`,
     [intent.eventTitle, intent.levelLabel]
   );
+
+  React.useEffect(() => {
+    if (!user || !hasDerivedNames) return;
+    setFirstName((prev) => (prev ? prev : derivedNames.first));
+    setLastName((prev) => (prev ? prev : derivedNames.last));
+  }, [user, hasDerivedNames, derivedNames.first, derivedNames.last]);
+
+  React.useEffect(() => {
+    if (user) return;
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !trimmed.includes('@') || trimmed === lookupDoneFor) {
+      if (!trimmed) {
+        setLookupDisplayName(null);
+        setLookupDoneFor(null);
+      }
+      return;
+    }
+
+    const timer = window.setTimeout(async () => {
+      setLookupInFlight(true);
+      try {
+        const response = await fetch('/api/profile-lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmed }),
+        });
+        if (!response.ok) return;
+        const data = (await response.json().catch(() => ({}))) as {
+          displayName?: string | null;
+        };
+        const nextDisplayName =
+          typeof data?.displayName === 'string' && data.displayName.trim()
+            ? data.displayName.trim()
+            : null;
+        setLookupDisplayName(nextDisplayName);
+        if (nextDisplayName) {
+          const derived = splitDisplayName(nextDisplayName);
+          if (derived.first && derived.last) {
+            setFirstName((prev) => (prev ? prev : derived.first));
+            setLastName((prev) => (prev ? prev : derived.last));
+          }
+        }
+      } catch {
+        // Ignore lookup errors; fall back to manual entry.
+      } finally {
+        setLookupDoneFor(trimmed);
+        setLookupInFlight(false);
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [email, lookupDoneFor, user]);
 
   const handleSendMagicLink = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -164,6 +250,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         setIsSubmitting(false);
         return;
       }
+      emitSignupComplete(intent.eventId);
       if (data?.waitlisted) {
         setWaitlisted(true);
       } else {
@@ -344,36 +431,43 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         {intent.accessNote && <p className="text-xs text-slate-500 mt-2">{intent.accessNote}</p>}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="event-confirm-first-name" className={labelClass}>
-            First name
-          </label>
-          <input
-            id="event-confirm-first-name"
-            type="text"
-            autoComplete="given-name"
-            required
-            className={inputClass}
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
+      {shouldSkipNameEntry ? (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          Signing up as{' '}
+          <span className="font-semibold">{user ? displayName : lookupDisplayName}</span>
         </div>
-        <div>
-          <label htmlFor="event-confirm-last-name" className={labelClass}>
-            Last name
-          </label>
-          <input
-            id="event-confirm-last-name"
-            type="text"
-            autoComplete="family-name"
-            required
-            className={inputClass}
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="event-confirm-first-name" className={labelClass}>
+              First name
+            </label>
+            <input
+              id="event-confirm-first-name"
+              type="text"
+              autoComplete="given-name"
+              required
+              className={inputClass}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="event-confirm-last-name" className={labelClass}>
+              Last name
+            </label>
+            <input
+              id="event-confirm-last-name"
+              type="text"
+              autoComplete="family-name"
+              required
+              className={inputClass}
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {!isMember && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">

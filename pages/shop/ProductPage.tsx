@@ -18,12 +18,8 @@ import { AddToCartButton } from '../../components/shop/AddToCartButton';
 import { ProductVariantSelector } from '../../components/shop/ProductVariantSelector';
 import { StripePaymentTrustBar } from '../../components/shop/StripePaymentTrustBar';
 import { getProductPrice, getStripePriceId, canPurchase, ShopProduct } from '../../lib/products';
-import { AnimatedHeadline } from '../../components/AnimatedHeadline';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useAuth } from '../../context/AuthContext';
-import { AddToCartButton } from '../../components/AddToCartButton';
-import { ProductVariantSelector } from '../../components/ProductVariantSelector';
-import { StripePaymentTrustBar } from '../../components/StripePaymentTrustBar';
 
 /** FAQ-style accordion for product details (body + SKU). */
 function ProductDetailsAccordion({

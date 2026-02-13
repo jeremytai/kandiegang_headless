@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../../context/CartContext';
 
 export interface AddToCartButtonProps {
   priceId: string;

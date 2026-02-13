@@ -10,7 +10,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { imageSrc } from '../lib/images';
+import { imageSrc } from '../../lib/images';
 
 /** Base paths for marquee images. Use 1200w in prod for good quality at reasonable size. */
 const MARQUEE_IMAGE_BASES = [

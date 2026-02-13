@@ -18,6 +18,7 @@ import { Loader2, ArrowRight, Moon, Sun, ChevronDown } from 'lucide-react';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { MembersConfetti } from '../../components/common/MembersConfetti';
 import { MemberMetaCard } from '../../components/member/MemberMetaCard';
+import { KandieGangCyclingClubPage } from '../site/KandieGangCyclingClubPage';
 
 const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
 const MEMBERS_ONLY_POSTS_FIRST = 20;
@@ -142,8 +143,8 @@ export const MembersAreaPage: React.FC = () => {
   }, []);
 
   const guide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
-  const canSeeMembersOnlyPosts = isCyclingMember(profile?.membership_plans) || guide;
-  const cyclingMember = isCyclingMember(profile?.membership_plans);
+  const cyclingMember = Boolean(profile?.is_member);
+  const canSeeMembersOnlyPosts = cyclingMember || guide;
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -236,6 +237,20 @@ export const MembersAreaPage: React.FC = () => {
   }
 
   if (!user) return null;
+
+  if (!initialMembershipCheckDone) {
+    return (
+      <main className="bg-white dark:bg-slate-900 min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
+        <div className="max-w-7xl mx-auto px-6">
+          <p className="text-slate-600 dark:text-slate-400">Checking your membership…</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!cyclingMember && !guide) {
+    return <KandieGangCyclingClubPage />;
+  }
 
   return (
     <main

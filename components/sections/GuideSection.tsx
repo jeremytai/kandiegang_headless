@@ -1,6 +1,6 @@
 import React from 'react';
-import { RideGuide } from '../lib/events';
-import { transformMediaUrl } from '../lib/wordpress';
+import { RideGuide } from '../../lib/events';
+import { transformMediaUrl } from '../../lib/wordpress';
 
 interface GuideSectionProps {
   guides: RideGuide[];

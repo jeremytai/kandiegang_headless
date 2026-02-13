@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import EventHeader from '../../components/event/EventHeader';
@@ -26,6 +26,25 @@ export const KandieEventPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [restoredSignup, setRestoredSignup] = useState(false);
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
+
+  const refreshCapacity = useCallback(async () => {
+    if (!eventData?.databaseId) return;
+    const controller = new AbortController();
+    try {
+      const response = await fetch(`/api/event-capacity?eventId=${eventData.databaseId}`, {
+        signal: controller.signal,
+      });
+      if (!response.ok) return;
+      const data = (await response.json().catch(() => ({}))) as unknown;
+      if (data && typeof data === 'object' && 'counts' in data) {
+        setCapacityCounts(data.counts as Record<string, number>);
+      }
+    } catch {
+      // Capacity is optional; ignore errors.
+    } finally {
+      controller.abort();
+    }
+  }, [eventData?.databaseId]);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -74,24 +93,19 @@ export const KandieEventPage: React.FC = () => {
 
   useEffect(() => {
     if (!eventData?.databaseId) return;
-    const controller = new AbortController();
-    const loadCapacity = async () => {
-      try {
-        const response = await fetch(`/api/event-capacity?eventId=${eventData.databaseId}`, {
-          signal: controller.signal,
-        });
-        if (!response.ok) return;
-        const data = (await response.json().catch(() => ({}))) as unknown;
-        if (data && typeof data === 'object' && 'counts' in data) {
-          setCapacityCounts(data.counts as Record<string, number>);
-        }
-      } catch {
-        // Capacity is optional; ignore errors.
-      }
+    refreshCapacity();
+  }, [eventData?.databaseId, refreshCapacity]);
+
+  useEffect(() => {
+    if (!eventData?.databaseId || typeof window === 'undefined') return;
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent).detail as { eventId?: string } | undefined;
+      if (detail?.eventId !== eventData.databaseId) return;
+      refreshCapacity();
     };
-    loadCapacity();
-    return () => controller.abort();
-  }, [eventData?.databaseId]);
+    window.addEventListener('kandiegang:event-signup-complete', handler);
+    return () => window.removeEventListener('kandiegang:event-signup-complete', handler);
+  }, [eventData?.databaseId, refreshCapacity]);
 
   useEffect(() => {
     if (!eventData || !user || restoredSignup) return;

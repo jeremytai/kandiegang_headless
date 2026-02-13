@@ -8,8 +8,8 @@
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { AnimatedHeadline } from './AnimatedHeadline';
-import { imageSrc } from '../lib/images';
+import { AnimatedHeadline } from '../visual/AnimatedHeadline';
+import { imageSrc } from '../../lib/images';
 
 /** Guide photos from public/images/guides (base path without extension). */
 const HEADLINE_IMAGE_BASES = [

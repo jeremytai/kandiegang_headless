@@ -37,6 +37,12 @@ export default defineConfig(({ mode }) => {
       ...(env.VITE_WP_GRAPHQL_URL
         ? { 'import.meta.env.VITE_WP_GRAPHQL_URL': JSON.stringify(env.VITE_WP_GRAPHQL_URL) }
         : {}),
+      ...(env.VITE_SUPABASE_URL
+        ? { 'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL) }
+        : {}),
+      ...(env.VITE_SUPABASE_ANON_KEY
+        ? { 'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY) }
+        : {}),
       'import.meta.env.VITE_LAST_GIT_DATE': JSON.stringify(lastGitDate),
     },
     resolve: {
