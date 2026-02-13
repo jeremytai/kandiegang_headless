@@ -546,6 +546,7 @@ This project is private and proprietary.
 ## TODO
 
 - Normalize WordPress event descriptions so Markdown lists render correctly (handle en-dash/em-dash, common bullet characters, numbered markers like `)` or `.`, and strip zero-width/non-breaking spaces). Add a regression test or example content and remove dev-only debug UI after verification.
+- Add a guide/admin page to view event registrations (signed-up attendees), not just waitlist entries.
 
 ## 🤝 Contributing
 

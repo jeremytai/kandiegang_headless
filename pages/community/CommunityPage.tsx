@@ -7,11 +7,13 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { AnimatedBlob } from '../../components/visual/AnimatedBlob';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { EventsLayout, EventsLayoutEvent } from '../../components/event/EventsLayout';
 import { ThreeThingsToDo } from '../../components/sections/ThreeThingsToDo';
 import { getKandieEvents, WPRideEvent, transformMediaUrl } from '../../lib/wordpress';
+// import { imageSrc } from '../../lib/images';
 
 /**
  * Fallback events if WordPress fetch fails
@@ -205,6 +207,7 @@ export const CommunityPage: React.FC = () => {
           )}
         </div>
       </section>
+
     </div>
   );
 };

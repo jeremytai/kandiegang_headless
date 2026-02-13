@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { imageSrc } from '../../lib/images';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import EventHeader from '../../components/event/EventHeader';
@@ -461,7 +463,41 @@ export const KandieEventPage: React.FC = () => {
             </aside>
           </div>
         </div>
+
       </section>
+
+      {/* Partner CTA (sits above global newsletter section) */}
+      <div className="w-full px-4 md:px-6 mt-20">
+        <section className="relative rounded-xl p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
+          <img
+            src={imageSrc('/images/250923_kandiegangsocialride-10-2048x1539')}
+            alt="Kandie Gang Social Ride"
+            width={1920}
+            height={1539}
+            className="absolute inset-0 w-full h-full object-cover object-top z-0"
+            style={{ left: 0, top: 0, width: '100%', height: '100%' }}
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-slate-900/70" aria-hidden />
+          <div className="relative z-10 flex flex-col items-center">
+            <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">
+              Become a Kandie Gang Member
+            </h2>
+            <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
+              Members only access, product discounts, and more.
+            </p>
+            <Link
+              to="/shop/kandie-gang-cycling-club-membership"
+              className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-white bg-transparent px-6 py-4 text-sm font-medium text-secondary-blush transition-colors hover:border-secondary-blush hover:bg-secondary-blush hover:text-white active:scale-95 md:gap-2 md:text-base"
+            >
+              <span>Join us</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-blush/20 p-1 transition-colors group-hover:bg-white">
+                <svg className="h-3 w-3 text-secondary-blush transition-colors" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </span>
+            </Link>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

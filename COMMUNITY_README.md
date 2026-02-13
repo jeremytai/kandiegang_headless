@@ -33,6 +33,11 @@ Maintaining our community values through smart registration windows.
     * If current time < `publicReleaseDate`, only priority members (FLINTA*) can see the signup button.
     * If current time > `publicReleaseDate`, the button becomes visible to the general public.
 
+### 4. Guide/Admin Registration Report 🧾
+A view for guides/admins to see everyone signed up for an event (not just the waitlist).
+* **The Task:** Create an admin/guide page that lists registrations by event and ride level.
+* **Access:** Restrict to guide/admin accounts and/or a shared report secret.
+
 ## 🛠 Technical Structure
 
 - **Types:** Definitions for WordPress/GraphQL data are located in `src/types/events.ts`.
