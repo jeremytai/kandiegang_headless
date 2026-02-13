@@ -9,8 +9,7 @@ export const MemberSidebar: React.FC = () => {
         (p.toLowerCase().includes("member") || p.toLowerCase().includes("membership"))
       )
     : false;
-  const guide = Boolean(profile?.is_guide) ||
-    (Array.isArray(profile?.membership_plans) && profile.membership_plans.some((p) => p.toLowerCase().includes("guide")));
+  const isMember = Boolean(profile?.is_member);
 
   return (
     <aside className="w-full flex flex-col items-center p-4">
@@ -18,7 +17,8 @@ export const MemberSidebar: React.FC = () => {
       <div className="text-base text-slate-700 dark:text-slate-200 mb-2">
         Logged in as <span className="font-bold">{profile?.display_name || user?.email || 'User'}</span>
       </div>
-      {(cyclingMember || guide) && (
+      
+      {isMember && (
         <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 mb-2 w-full max-w-xs flex flex-col items-center">
           <div className="text-sm text-slate-700 dark:text-slate-200 mb-1">
             Member since{' '}
