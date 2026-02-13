@@ -1489,6 +1489,7 @@ export interface RideGuide {
 }
 
 export interface RideLevel {
+  distanceKm?: number | null;
   routeUrl?: string;
   gpxFile?: {
     node: {

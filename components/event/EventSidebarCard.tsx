@@ -12,6 +12,7 @@ interface EventSidebarCardProps {
     label: string;
     guides: string[];
     pace?: string;
+    distanceKm?: number | null;
     routeUrl?: string;
     places?: number;
     spotsLeft?: number;
@@ -149,10 +150,12 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           {level.spotsLeft != null && ` total · ${level.spotsLeft} left`}
                         </p>
                       </div>
-                      <div>
-                        <p className={labelClass}>Distance</p>
-                        <p className={valueClass}>x km</p>
-                      </div>
+                      {typeof level.distanceKm === 'number' && (
+                        <div>
+                          <p className={labelClass}>Distance</p>
+                          <p className={valueClass}>{`${level.distanceKm} km`}</p>
+                        </div>
+                      )}
                       {level.pace && (
                         <div>
                           <p className={labelClass}>Pace</p>

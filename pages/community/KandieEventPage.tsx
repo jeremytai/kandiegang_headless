@@ -168,6 +168,7 @@ export const KandieEventPage: React.FC = () => {
       label: 'Level 1',
       guides: (eventDetails?.level1?.guides?.nodes || []).map((guide) => guide.title),
       pace: paceByLevel['Level 1'],
+      distanceKm: eventDetails?.level1?.distanceKm ?? null,
       routeUrl: eventDetails?.level1?.routeUrl,
     },
     {
@@ -175,6 +176,7 @@ export const KandieEventPage: React.FC = () => {
       label: 'Level 2',
       guides: (eventDetails?.level2?.guides?.nodes || []).map((guide) => guide.title),
       pace: paceByLevel['Level 2'],
+      distanceKm: eventDetails?.level2?.distanceKm ?? null,
       routeUrl: eventDetails?.level2?.routeUrl,
     },
     {
@@ -182,6 +184,7 @@ export const KandieEventPage: React.FC = () => {
       label: 'Level 2+',
       guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide) => guide.title),
       pace: paceByLevel['Level 2+'],
+      distanceKm: eventDetails?.level2plus?.distanceKm ?? null,
       routeUrl: eventDetails?.level2plus?.routeUrl,
     },
     {
@@ -189,6 +192,7 @@ export const KandieEventPage: React.FC = () => {
       label: 'Level 3',
       guides: (eventDetails?.level3?.guides?.nodes || []).map((guide) => guide.title),
       pace: paceByLevel['Level 3'],
+      distanceKm: eventDetails?.level3?.distanceKm ?? null,
       routeUrl: eventDetails?.level3?.routeUrl,
     },
   ].filter((level) => level.guides.length > 0);
