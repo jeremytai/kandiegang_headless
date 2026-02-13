@@ -56,21 +56,21 @@ const GlyphNut = () => (
 );
 
 const GlyphLogo = () => (
-  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="currentColor">
-    <rect
-      x="20"
-      y="30"
-      width="60"
-      height="50"
-      rx="25"
-      stroke="currentColor"
-      strokeWidth="6"
-      fill="none"
-    />
-    <path d="M20 55 H 80" stroke="currentColor" strokeWidth="6" />
-    <circle cx="40" cy="68" r="4" />
-    <circle cx="60" cy="68" r="4" />
-  </svg>
+  <div
+    role="img"
+    aria-label="Kandie Gang"
+    className="h-full w-full bg-secondary-current"
+    style={{
+      WebkitMaskImage: 'url(/logos/kandiegang_logo.svg)',
+      maskImage: 'url(/logos/kandiegang_logo.svg)',
+      WebkitMaskRepeat: 'no-repeat',
+      maskRepeat: 'no-repeat',
+      WebkitMaskSize: 'contain',
+      maskSize: 'contain',
+      WebkitMaskPosition: 'center',
+      maskPosition: 'center',
+    }}
+  />
 );
 
 interface PreloaderProps {
