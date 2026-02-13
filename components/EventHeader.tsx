@@ -16,7 +16,7 @@ const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBac
   return (
     // Main Wrapper with the "grey-50" background
     <section className="bg-primary-breath py-12 md:py-20 overflow-hidden">
-      <div className="max-w-[88rem] mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
           {/* Left Side: Content */}

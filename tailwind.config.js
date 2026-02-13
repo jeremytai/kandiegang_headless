@@ -12,6 +12,14 @@ export default {
     'grid-cols-5',
     'grid-cols-6',
   ],
-  theme: { extend: {} },
+  theme: {
+    extend: {
+      maxWidth: {
+        '7xl': '88rem',
+        '8xl': '88rem',
+        site: '88rem',
+      },
+    },
+  },
   plugins: [typography],
 };

@@ -74,6 +74,10 @@ function generateSlug(title: string): string {
     .replace(/-+/g, '-'); // Replace multiple hyphens with single hyphen
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, '').trim();
+}
+
 /**
  * Transform WordPress RideEvent to EventsLayoutEvent
  */
@@ -83,7 +87,7 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
   const slug = generateSlug(event.title);
   
   // Truncate description to 200 characters
-  const fullDescription = details?.description || '';
+  const fullDescription = stripHtml(event.excerpt || details?.description || '');
   const truncatedDescription = fullDescription.length > 200 
     ? fullDescription.substring(0, 200).trim() + '...'
     : fullDescription;
@@ -151,7 +155,7 @@ export const CommunityPage: React.FC = () => {
       </div>
 
       <section className="relative z-10 min-h-[28rem] pt-32 md:pt-40 pb-8 md:pb-10">
-        <div className="mx-auto grid max-w-[88rem] grid-cols-12 gap-x-4 px-6 lg:gap-x-6">
+        <div className="mx-auto grid max-w-site grid-cols-12 gap-x-4 px-6 lg:gap-x-6">
           <div className="col-span-12">
             <AnimatedHeadline
               text="Community is the heart of Kandie Gang"
@@ -165,7 +169,7 @@ export const CommunityPage: React.FC = () => {
       </section>
 
       <section className="relative z-10 pt-4 md:pt-6 pb-16 md:pb-12">
-        <div className="max-w-[88rem] mx-auto space-y-8 px-6">
+        <div className="max-w-site mx-auto space-y-8 px-6">
           {/* Loading state */}
           {loading && (
             <div className="flex items-center justify-center py-16">

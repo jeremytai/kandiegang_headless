@@ -15,6 +15,12 @@ import { AnimatedHeadline } from "../components/AnimatedHeadline";
 import { useAuth } from "../context/AuthContext";
 import { useMemberLoginOffcanvas } from "../context/MemberLoginOffcanvasContext";
 
+interface Speaker {
+  name: string;
+  title: string;
+  image?: string;
+}
+
 export const EventPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user, status } = useAuth();
@@ -107,7 +113,7 @@ export const EventPage: React.FC = () => {
 
         {/* Description */}
         <section className="mb-12">
-          <div className="prose prose-lg max-w-none text-primary-ink leading-relaxed whitespace-pre-line">
+          <div className="prose prose-lg max-w-none text-primary-ink leading-normal whitespace-pre-line">
             {description}
           </div>
         </section>

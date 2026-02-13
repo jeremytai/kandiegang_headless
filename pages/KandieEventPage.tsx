@@ -192,7 +192,7 @@ export const KandieEventPage: React.FC = () => {
       />
 
       <section>
-        <div className="max-w-[88rem] mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="w-full border-t border-black/10 mt-10 mb-10" />
           <div className="flex flex-col lg:flex-row lg:justify-center lg:items-start gap-20">
             {/* Main content */}
