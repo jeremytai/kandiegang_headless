@@ -8,14 +8,14 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { getProductBySlug, transformMediaUrl, extractProductImagesFromBlocks } from '../lib/wordpress';
-import { getProductPrice, getStripePriceId, canPurchase, ProductVariant, ShopProduct } from '../lib/products';
-import { AnimatedHeadline } from '../components/AnimatedHeadline';
-import { usePageMeta } from '../hooks/usePageMeta';
-import { useAuth } from '../context/AuthContext';
-import { AddToCartButton } from '../components/AddToCartButton';
-import { ProductVariantSelector } from '../components/ProductVariantSelector';
-import { StripePaymentTrustBar } from '../components/StripePaymentTrustBar';
+import { getProductBySlug, transformMediaUrl, extractProductImagesFromBlocks } from '../../lib/wordpress';
+import { getProductPrice, getStripePriceId, canPurchase, ProductVariant, ShopProduct } from '../../lib/products';
+import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { useAuth } from '../../context/AuthContext';
+import { AddToCartButton } from '../../components/AddToCartButton';
+import { ProductVariantSelector } from '../../components/ProductVariantSelector';
+import { StripePaymentTrustBar } from '../../components/StripePaymentTrustBar';
 
 /** FAQ-style accordion for product details (body + SKU). */
 function ProductDetailsAccordion({

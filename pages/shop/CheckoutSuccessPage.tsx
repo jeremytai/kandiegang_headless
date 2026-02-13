@@ -6,8 +6,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, Loader2, ArrowLeft, ShoppingBag } from 'lucide-react';
-import { usePageMeta } from '../hooks/usePageMeta';
-import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { posthog, FUNNEL_EVENTS } from '../../lib/posthog';
 
 export const CheckoutSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();

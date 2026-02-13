@@ -9,13 +9,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { getPostBySlug, getStoryBlocks, transformMediaUrl, WPPost } from '../lib/wordpress';
-import { buildMediaMap, normalizeBlocks } from '../lib/storyGalleries';
-import type { NormalizedBlock } from '../lib/storyGalleries';
-import { ExpandingHero } from '../components/ExpandingHero';
-import { AnimatedHeadline } from '../components/AnimatedHeadline';
-import { StoryBlocksRenderer } from '../components/StoryBlocksRenderer';
-import { usePageMeta } from '../hooks/usePageMeta';
+import { getPostBySlug, getStoryBlocks, transformMediaUrl, WPPost } from '../../lib/wordpress';
+import { buildMediaMap, normalizeBlocks } from '../../lib/storyGalleries';
+import type { NormalizedBlock } from '../../lib/storyGalleries';
+import { ExpandingHero } from '../../components/ExpandingHero';
+import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { StoryBlocksRenderer } from '../../components/StoryBlocksRenderer';
+import { usePageMeta } from '../../hooks/usePageMeta';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();

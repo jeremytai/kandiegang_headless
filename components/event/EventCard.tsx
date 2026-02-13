@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { imageSrc } from '../lib/images';
+import { imageSrc } from '../../lib/images';
 
 export interface EventCardProps {
   href: string;

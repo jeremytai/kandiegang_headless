@@ -8,11 +8,11 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { AnimatedBlob } from '../components/AnimatedBlob';
-import { AnimatedHeadline } from '../components/AnimatedHeadline';
-import { EventsLayout, EventsLayoutEvent } from '../components/EventsLayout';
-import { ThreeThingsToDo } from '../components/ThreeThingsToDo';
-import { getKandieEvents, WPRideEvent, transformMediaUrl } from '../lib/wordpress';
+import { AnimatedBlob } from '../../components/AnimatedBlob';
+import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { EventsLayout, EventsLayoutEvent } from '../../components/event/EventsLayout';
+import { ThreeThingsToDo } from '../../components/ThreeThingsToDo';
+import { getKandieEvents, WPRideEvent, transformMediaUrl } from '../../lib/wordpress';
 
 /**
  * Fallback events if WordPress fetch fails

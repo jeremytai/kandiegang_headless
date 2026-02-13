@@ -67,7 +67,7 @@ type AuthContextValue = {
    * Passwordless: send a magic link to the email. User clicks the link to sign in.
    * Returns { error } on failure; on success, show "Check your email" (no session until they click the link).
    */
-  signInWithMagicLink: (email: string) => Promise<{ error?: string }>;
+  signInWithMagicLink: (email: string, redirectTo?: string) => Promise<{ error?: string }>;
   /**
    * Sign in (or link when already logged in) with Discord OAuth.
    * Redirects away to Discord; on return, session is restored. Pass redirectTo to control where users land (default: /members).
@@ -338,15 +338,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const signInWithMagicLink = useCallback(
-    async (email: string): Promise<{ error?: string }> => {
+    async (email: string, redirectTo?: string): Promise<{ error?: string }> => {
       if (!supabase) {
         return { error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
       }
-      const redirectTo =
-        typeof window !== 'undefined' ? `${window.location.origin}/members` : undefined;
+      const redirectTarget =
+        redirectTo ?? (typeof window !== 'undefined' ? `${window.location.origin}/members` : undefined);
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: { emailRedirectTo: redirectTo },
+        options: { emailRedirectTo: redirectTarget },
       });
       if (error) {
         return { error: error.message || 'Could not send the login link. Please try again.' };

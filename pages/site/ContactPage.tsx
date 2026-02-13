@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { ContactForm } from '../components/ContactForm';
+import { ContactForm } from '../../components/ContactForm';
 
 export const ContactPage: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center bg-white px-6 pt-32 pb-20">

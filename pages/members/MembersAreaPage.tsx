@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
-import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
+import { useAuth } from '../../context/AuthContext';
+import { posthog, FUNNEL_EVENTS } from '../../lib/posthog';
 import {
   getCategoryPosts,
   wpQuery,
@@ -12,11 +12,11 @@ import {
   normalizeProductFields,
   type WPPost,
   type WPProduct,
-} from '../lib/wordpress';
-import { canPurchase, type ShopProduct } from '../lib/products';
+} from '../../lib/wordpress';
+import { canPurchase, type ShopProduct } from '../../lib/products';
 import { Loader2, ArrowRight, Moon, Sun } from 'lucide-react';
-import { AnimatedHeadline } from '../components/AnimatedHeadline';
-import { MembersConfetti } from '../components/MembersConfetti';
+import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { MembersConfetti } from '../../components/MembersConfetti';
 
 const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
 const MEMBERS_ONLY_POSTS_FIRST = 20;

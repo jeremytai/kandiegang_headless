@@ -8,8 +8,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2, Mail, Unlink } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useAuthProviders } from '../hooks/useAuthProviders';
+import { useAuth } from '../../context/AuthContext';
+import { useAuthProviders } from '../../hooks/useAuthProviders';
 
 function DiscordIcon({ className }: { className?: string }) {
   return (

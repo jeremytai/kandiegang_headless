@@ -10,10 +10,10 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
-import { getKandieEventBySlug } from "../lib/wordpress";
-import { AnimatedHeadline } from "../components/AnimatedHeadline";
-import { useAuth } from "../context/AuthContext";
-import { useMemberLoginOffcanvas } from "../context/MemberLoginOffcanvasContext";
+import { getKandieEventBySlug } from "../../lib/wordpress";
+import { AnimatedHeadline } from "../../components/AnimatedHeadline";
+import { useAuth } from "../../context/AuthContext";
+import { useMemberLoginOffcanvas } from "../../context/MemberLoginOffcanvasContext";
 
 interface Speaker {
   name: string;

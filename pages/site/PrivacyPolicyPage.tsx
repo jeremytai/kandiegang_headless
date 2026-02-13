@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { useContactModal } from '../context/ContactModalContext';
+import { useContactModal } from '../../context/ContactModalContext';
 
 const SECTION_SPACING = 'mb-12 md:mb-16';
 const SUBSECTION_SPACING = 'mb-6';

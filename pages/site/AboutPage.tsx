@@ -14,15 +14,15 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Loader2, AlertCircle } from 'lucide-react';
-import { CompanySection } from '../components/CompanySection';
-import { CompanyValuesSection } from '../components/CompanyValuesSection.tsx';
-import { AboutHero } from '../components/AboutHero';
-import { AnimatedHeadline } from '../components/AnimatedHeadline';
-import { useContactModal } from '../context/ContactModalContext';
-import { ImageMarquee } from '../components/ImageMarquee';
-import { imageSrc } from '../lib/images';
+import { CompanySection } from '../../components/CompanySection';
+import { CompanyValuesSection } from '../../components/CompanyValuesSection.tsx';
+import { AboutHero } from '../../components/AboutHero';
+import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { useContactModal } from '../../context/ContactModalContext';
+import { ImageMarquee } from '../../components/ImageMarquee';
+import { imageSrc } from '../../lib/images';
 // WordPress fetch – re-enable when ready (getPageBySlug)
-import { WPPage } from '../lib/wordpress';
+import { WPPage } from '../../lib/wordpress';
 
 export const AboutPage: React.FC = () => {
   // const [page, setPage] = useState<WPPage | null>(null);

@@ -6,8 +6,8 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { XCircle, ArrowLeft, ShoppingBag } from 'lucide-react';
-import { usePageMeta } from '../hooks/usePageMeta';
-import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { posthog, FUNNEL_EVENTS } from '../../lib/posthog';
 
 export const CheckoutCancelPage: React.FC = () => {
   usePageMeta('Checkout Cancelled | Kandie Gang', 'Your checkout was cancelled');

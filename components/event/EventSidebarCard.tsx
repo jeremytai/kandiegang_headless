@@ -7,9 +7,29 @@ interface EventSidebarCardProps {
   location: string;
   category?: string;
   type?: string;
-  levels?: Array<{ label: string; guides: string[]; pace?: string; routeUrl?: string }>;
+  levels?: Array<{
+    levelKey: string;
+    label: string;
+    guides: string[];
+    pace?: string;
+    routeUrl?: string;
+    places?: number;
+    spotsLeft?: number;
+    isSoldOut?: boolean;
+  }>;
   isPublic: boolean;
   publicReleaseDate?: string;
+  signupState?: {
+    label: string;
+    disabled: boolean;
+    helper?: string;
+    allowWaitlist?: boolean;
+  };
+  onSignup?: (level: { levelKey: string; label: string }) => void;
+  workshop?: {
+    capacity: number;
+    spotsLeft?: number;
+  };
 }
 
 const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
@@ -21,6 +41,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   levels,
   isPublic,
   publicReleaseDate,
+  signupState,
+  onSignup,
+  workshop,
 }) => {
   const labelClass = "text-xs tracking-[0.08em] text-slate-500";
   const valueClass = "text-sm text-slate-900";
@@ -121,7 +144,10 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                       </div>
                       <div>
                         <p className={labelClass}>Places</p>
-                        <p className={valueClass}>{placesPerGuide * level.guides.length}</p>
+                        <p className={valueClass}>
+                          {level.places ?? (placesPerGuide * level.guides.length)}
+                          {level.spotsLeft != null && ` total · ${level.spotsLeft} left`}
+                        </p>
                       </div>
                       <div>
                         <p className={labelClass}>Distance</p>
@@ -156,17 +182,60 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           </div>
                         </div>
                       )}
+                      {signupState?.helper && (
+                        <p className="text-xs text-slate-500">{signupState.helper}</p>
+                      )}
+                      {level.isSoldOut && signupState?.allowWaitlist && (
+                        <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                          Waitlist open
+                        </span>
+                      )}
                       <button
-                        className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors"
-                        disabled={!isPublic}
+                        type="button"
+                        className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={(!signupState?.allowWaitlist && level.isSoldOut) || signupState?.disabled || !isPublic}
+                        onClick={() => onSignup?.({ levelKey: level.levelKey, label: level.label })}
                       >
-                        {isPublic ? 'Sign Up' : 'Coming Soon'}
+                        {level.isSoldOut
+                          ? (signupState?.allowWaitlist ? 'Join Waitlist' : 'Sold Out')
+                          : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
                       </button>
                     </div>
                   )}
                 </div>
               );
             })}
+          </div>
+        )}
+        {workshop && (
+          <div className="border-t border-black/10 pt-4">
+            <div className="space-y-3">
+              <div>
+                <p className={labelClass}>Workshop places</p>
+                <p className={valueClass}>
+                  {workshop.capacity}
+                  {workshop.spotsLeft != null && ` total · ${workshop.spotsLeft} left`}
+                </p>
+              </div>
+              {signupState?.helper && (
+                <p className="text-xs text-slate-500">{signupState.helper}</p>
+              )}
+              {(workshop.spotsLeft ?? 1) <= 0 && signupState?.allowWaitlist && (
+                <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                  Waitlist open
+                </span>
+              )}
+              <button
+                type="button"
+                className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={((workshop.spotsLeft ?? 1) <= 0 && !signupState?.allowWaitlist) || signupState?.disabled || !isPublic}
+                onClick={() => onSignup?.({ levelKey: 'workshop', label: 'Workshop' })}
+              >
+                {(workshop.spotsLeft ?? 1) <= 0
+                  ? (signupState?.allowWaitlist ? 'Join Waitlist' : 'Sold Out')
+                  : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
+              </button>
+            </div>
           </div>
         )}
         <hr className="border-t border-black/10" />

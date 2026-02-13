@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import EventHeader from '../components/EventHeader';
-import GuideSection from '../components/GuideSection';
-import EventSidebarCard from '../components/EventSidebarCard';
-import { KandieEventData, RideGuide } from '../lib/events';
-import { getKandieEventBySlug, transformMediaUrl } from '../lib/wordpress';
+import EventHeader from '../../components/event/EventHeader';
+import GuideSection from '../../components/GuideSection';
+import EventSidebarCard from '../../components/event/EventSidebarCard';
+import { KandieEventData, RideGuide } from '../../lib/events';
+import { getKandieEventBySlug, transformMediaUrl } from '../../lib/wordpress';
+import { useAuth } from '../../context/AuthContext';
+import { useMemberLoginOffcanvas } from '../../context/MemberLoginOffcanvasContext';
+import { EVENT_SIGNUP_STORAGE_KEY, type EventSignupIntent } from '../../components/event/EventSignupPanel';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -14,8 +17,12 @@ import rehypeSanitize from 'rehype-sanitize';
 export const KandieEventPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const { openEventSignup } = useMemberLoginOffcanvas();
   const [eventData, setEventData] = useState<KandieEventData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [restoredSignup, setRestoredSignup] = useState(false);
+  const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -61,6 +68,47 @@ export const KandieEventPage: React.FC = () => {
 
     fetchEvent();
   }, [slug]);
+
+  useEffect(() => {
+    if (!eventData?.databaseId) return;
+    const controller = new AbortController();
+    const loadCapacity = async () => {
+      try {
+        const response = await fetch(`/api/event-capacity?eventId=${eventData.databaseId}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const data = await response.json().catch(() => ({}));
+        if (data && typeof data === 'object' && data.counts) {
+          setCapacityCounts(data.counts as Record<string, number>);
+        }
+      } catch {
+        // Capacity is optional; ignore errors.
+      }
+    };
+    loadCapacity();
+    return () => controller.abort();
+  }, [eventData?.databaseId]);
+
+  useEffect(() => {
+    if (!eventData || !user || restoredSignup) return;
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('eventSignup') !== '1') return;
+    const raw = sessionStorage.getItem(EVENT_SIGNUP_STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const intent = JSON.parse(raw) as EventSignupIntent;
+      if (intent.eventId === eventData.databaseId) {
+        openEventSignup(intent);
+      }
+    } finally {
+      sessionStorage.removeItem(EVENT_SIGNUP_STORAGE_KEY);
+      url.searchParams.delete('eventSignup');
+      window.history.replaceState(null, '', url.pathname + url.search);
+      setRestoredSignup(true);
+    }
+  }, [eventData, user, openEventSignup, restoredSignup]);
 
   if (loading || !eventData) {
     return (
@@ -116,32 +164,92 @@ export const KandieEventPage: React.FC = () => {
   };
   const levelsWithGuides = [
     {
+      levelKey: 'level1',
       label: 'Level 1',
       guides: (eventDetails?.level1?.guides?.nodes || []).map((guide) => guide.title),
       pace: paceByLevel['Level 1'],
       routeUrl: eventDetails?.level1?.routeUrl,
     },
     {
+      levelKey: 'level2',
       label: 'Level 2',
       guides: (eventDetails?.level2?.guides?.nodes || []).map((guide) => guide.title),
       pace: paceByLevel['Level 2'],
       routeUrl: eventDetails?.level2?.routeUrl,
     },
     {
+      levelKey: 'level2plus',
       label: 'Level 2+',
       guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide) => guide.title),
       pace: paceByLevel['Level 2+'],
       routeUrl: eventDetails?.level2plus?.routeUrl,
     },
     {
+      levelKey: 'level3',
       label: 'Level 3',
       guides: (eventDetails?.level3?.guides?.nodes || []).map((guide) => guide.title),
       pace: paceByLevel['Level 3'],
       routeUrl: eventDetails?.level3?.routeUrl,
     },
   ].filter((level) => level.guides.length > 0);
+  const workshopCapacity = eventDetails?.workshopCapacity ?? null;
+  const isWorkshop = Boolean(eventDetails?.primaryType?.toLowerCase().includes('workshop'));
+  const workshopCount = capacityCounts.workshop ?? 0;
+  const now = new Date();
+  const publicRelease = publicReleaseDate ? new Date(publicReleaseDate) : null;
+  const hasValidPublicRelease = Boolean(publicRelease && !Number.isNaN(publicRelease.getTime()));
+  const isPublic = !hasValidPublicRelease || now >= (publicRelease as Date);
+  const isMember = Boolean(profile?.is_member);
+  const isFlintaOnly = Boolean(eventDetails?.isFlintaOnly);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const memberEarlyDays = Number(import.meta.env.VITE_MEMBER_EARLY_DAYS ?? 2);
+  const flintaEarlyDays = Number(import.meta.env.VITE_FLINTA_EARLY_DAYS ?? 4);
+  const memberRelease = hasValidPublicRelease
+    ? new Date((publicRelease as Date).getTime() - memberEarlyDays * dayMs)
+    : null;
+  const flintaRelease = hasValidPublicRelease
+    ? new Date((publicRelease as Date).getTime() - flintaEarlyDays * dayMs)
+    : null;
+  const isMemberWindow = Boolean(
+    memberRelease && now >= memberRelease && (!publicRelease || now < (publicRelease as Date))
+  );
+  const isFlintaWindow = Boolean(
+    flintaRelease && now >= flintaRelease && (!memberRelease || now < (memberRelease as Date))
+  );
+  const canSignupNow = isPublic || isMemberWindow || isFlintaWindow;
+  const requiresFlintaAttestation = isFlintaOnly || (!isPublic && !isMember);
+  const allowWaitlist = canSignupNow;
 
-  const isPublic = new Date() >= new Date(publicReleaseDate || '');
+  const signupLabel = !canSignupNow
+    ? 'Coming Soon'
+    : isPublic
+      ? 'Sign Up'
+      : isMember
+        ? 'Member Signup'
+        : 'FLINTA Early Access';
+
+  const signupHelper = !canSignupNow
+    ? 'Early access opens soon'
+    : isPublic
+      ? undefined
+      : isMember
+        ? 'Member early access is open'
+        : 'FLINTA early access is open';
+
+  const handleSignup = (level: { levelKey: string; label: string }) => {
+    if (!eventData) return;
+    const intent: EventSignupIntent = {
+      eventId: eventData.databaseId,
+      eventTitle: eventData.title,
+      levelKey: level.levelKey,
+      levelLabel: level.label,
+      eventType: eventDetails?.primaryType,
+      accessNote: signupHelper,
+      requiresFlintaAttestation,
+    };
+    openEventSignup(intent);
+  };
+
   const eventDateValue = eventDetails?.eventDate || '';
   const eventDate = eventDateValue ? new Date(eventDateValue) : null;
   const eventDatePart = eventDateValue.split('T')[0];
@@ -233,9 +341,34 @@ export const KandieEventPage: React.FC = () => {
                   location={locationLabel}
                   category={eventDetails?.rideCategory}
                   type={eventDetails?.primaryType}
-                  levels={levelsWithGuides}
+                  levels={levelsWithGuides.map((level) => {
+                    const places = level.guides.length * 7;
+                    const used = capacityCounts[level.levelKey] ?? 0;
+                    const spotsLeft = Math.max(places - used, 0);
+                    return {
+                      ...level,
+                      places,
+                      spotsLeft,
+                      isSoldOut: spotsLeft === 0,
+                    };
+                  })}
                   isPublic={isPublic}
                   publicReleaseDate={publicReleaseDate}
+                  signupState={{
+                    label: signupLabel,
+                    disabled: !canSignupNow,
+                    helper: signupHelper,
+                    allowWaitlist,
+                  }}
+                  onSignup={handleSignup}
+                  workshop={
+                    isWorkshop && workshopCapacity
+                      ? {
+                          capacity: workshopCapacity,
+                          spotsLeft: Math.max(workshopCapacity - workshopCount, 0),
+                        }
+                      : undefined
+                  }
                 />
               </div>
             </aside>

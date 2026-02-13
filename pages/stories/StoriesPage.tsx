@@ -20,9 +20,9 @@ import {
   WPCategory,
   clearWPCache,
   transformMediaUrl,
-} from '../lib/wordpress';
-import { AnimatedHeadline } from '../components/AnimatedHeadline';
-import { usePageMeta } from '../hooks/usePageMeta';
+} from '../../lib/wordpress';
+import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { usePageMeta } from '../../hooks/usePageMeta';
 
 const STORIES_CATEGORY_SLUG = 'social-rides';
 const POSTS_FIRST = 24;

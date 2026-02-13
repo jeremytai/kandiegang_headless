@@ -37,30 +37,32 @@ import { CartProvider } from './context/CartContext';
 import { CartOffcanvas } from './components/CartOffcanvas';
 
 // Lazy-loaded pages (code-split by route to keep main bundle under 600 kB)
-const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
-const CommunityPage = lazy(() => import('./pages/CommunityPage').then((m) => ({ default: m.CommunityPage })));
-const StoriesPage = lazy(() => import('./pages/StoriesPage').then((m) => ({ default: m.StoriesPage })));
-const StoryPage = lazy(() => import('./pages/StoryPage').then((m) => ({ default: m.StoryPage })));
-const FontsPage = lazy(() => import('./pages/FontsPage').then((m) => ({ default: m.FontsPage })));
-const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
-const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })));
-const ImprintPage = lazy(() => import('./pages/ImprintPage').then((m) => ({ default: m.ImprintPage })));
-const WaiverPage = lazy(() => import('./pages/WaiverPage').then((m) => ({ default: m.WaiverPage })));
-const KandieCodePage = lazy(() => import('./pages/KandieCodePage').then((m) => ({ default: m.KandieCodePage })));
-const RideLevelsPage = lazy(() => import('./pages/RideLevelsPage').then((m) => ({ default: m.RideLevelsPage })));
-const KandieGangCyclingClubPage = lazy(() => import('./pages/KandieGangCyclingClubPage').then((m) => ({ default: m.KandieGangCyclingClubPage })));
-const EventPage = lazy(() => import('./pages/EventPage').then((m) => ({ default: m.EventPage })));
-const KandieEventPage = lazy(() => import('./pages/KandieEventPage').then((m) => ({ default: m.KandieEventPage })));
-const MemberLoginPage = lazy(() => import('./pages/MemberLoginPage').then((m) => ({ default: m.MemberLoginPage })));
-const ShopLoginPage = lazy(() => import('./pages/ShopLoginPage').then((m) => ({ default: m.ShopLoginPage })));
-const ShopPage = lazy(() => import('./pages/ShopPage').then((m) => ({ default: m.ShopPage })));
-const ProductPage = lazy(() => import('./pages/ProductPage').then((m) => ({ default: m.ProductPage })));
-const CheckoutSuccessPage = lazy(() => import('./pages/CheckoutSuccessPage').then((m) => ({ default: m.CheckoutSuccessPage })));
-const CheckoutCancelPage = lazy(() => import('./pages/CheckoutCancelPage').then((m) => ({ default: m.CheckoutCancelPage })));
-const SignUpPage = lazy(() => import('./pages/SignUpPage').then((m) => ({ default: m.SignUpPage })));
-const MembersAreaPage = lazy(() => import('./pages/MembersAreaPage').then((m) => ({ default: m.MembersAreaPage })));
-const MembersSettingsPage = lazy(() => import('./pages/MembersSettingsPage').then((m) => ({ default: m.MembersSettingsPage })));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
+const AboutPage = lazy(() => import('./pages/site/AboutPage').then((m) => ({ default: m.AboutPage })));
+const CommunityPage = lazy(() => import('./pages/community/CommunityPage').then((m) => ({ default: m.CommunityPage })));
+const StoriesPage = lazy(() => import('./pages/stories/StoriesPage').then((m) => ({ default: m.StoriesPage })));
+const StoryPage = lazy(() => import('./pages/stories/StoryPage').then((m) => ({ default: m.StoryPage })));
+const FontsPage = lazy(() => import('./pages/site/FontsPage').then((m) => ({ default: m.FontsPage })));
+const ContactPage = lazy(() => import('./pages/site/ContactPage').then((m) => ({ default: m.ContactPage })));
+const PrivacyPolicyPage = lazy(() => import('./pages/site/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })));
+const ImprintPage = lazy(() => import('./pages/site/ImprintPage').then((m) => ({ default: m.ImprintPage })));
+const WaiverPage = lazy(() => import('./pages/site/WaiverPage').then((m) => ({ default: m.WaiverPage })));
+const KandieCodePage = lazy(() => import('./pages/site/KandieCodePage').then((m) => ({ default: m.KandieCodePage })));
+const RideLevelsPage = lazy(() => import('./pages/site/RideLevelsPage').then((m) => ({ default: m.RideLevelsPage })));
+const KandieGangCyclingClubPage = lazy(() => import('./pages/site/KandieGangCyclingClubPage').then((m) => ({ default: m.KandieGangCyclingClubPage })));
+const EventPage = lazy(() => import('./pages/community/EventPage').then((m) => ({ default: m.EventPage })));
+const KandieEventPage = lazy(() => import('./pages/community/KandieEventPage').then((m) => ({ default: m.KandieEventPage })));
+const MemberLoginPage = lazy(() => import('./pages/members/MemberLoginPage').then((m) => ({ default: m.MemberLoginPage })));
+const ShopLoginPage = lazy(() => import('./pages/shop/ShopLoginPage').then((m) => ({ default: m.ShopLoginPage })));
+const ShopPage = lazy(() => import('./pages/shop/ShopPage').then((m) => ({ default: m.ShopPage })));
+const ProductPage = lazy(() => import('./pages/shop/ProductPage').then((m) => ({ default: m.ProductPage })));
+const CheckoutSuccessPage = lazy(() => import('./pages/shop/CheckoutSuccessPage').then((m) => ({ default: m.CheckoutSuccessPage })));
+const CheckoutCancelPage = lazy(() => import('./pages/shop/CheckoutCancelPage').then((m) => ({ default: m.CheckoutCancelPage })));
+const EventCancelPage = lazy(() => import('./pages/community/EventCancelPage').then((m) => ({ default: m.EventCancelPage })));
+const WaitlistAdminPage = lazy(() => import('./pages/members/WaitlistAdminPage').then((m) => ({ default: m.WaitlistAdminPage })));
+const SignUpPage = lazy(() => import('./pages/members/SignUpPage').then((m) => ({ default: m.SignUpPage })));
+const MembersAreaPage = lazy(() => import('./pages/members/MembersAreaPage').then((m) => ({ default: m.MembersAreaPage })));
+const MembersSettingsPage = lazy(() => import('./pages/members/MembersSettingsPage').then((m) => ({ default: m.MembersSettingsPage })));
+const NotFoundPage = lazy(() => import('./pages/site/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
 
 const PageLoader = () => <div className="min-h-[40vh] flex items-center justify-center" aria-hidden />;
 
@@ -192,6 +194,8 @@ const App: React.FC = () => {
                   <Route path="/shop/:slug" element={<ProductPage />} />
                   <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
                   <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
+                  <Route path="/event/cancel" element={<EventCancelPage />} />
+                  <Route path="/admin/waitlist" element={<WaitlistAdminPage />} />
                   <Route path="/signup" element={<SignUpPage />} />
                   <Route path="/members" element={<MembersAreaPage />} />
                   <Route path="/members/settings" element={<MembersSettingsPage />} />

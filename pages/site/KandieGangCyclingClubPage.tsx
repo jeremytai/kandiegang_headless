@@ -9,8 +9,8 @@ import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ArrowRight, ArrowUpRight } from 'lucide-react';
-import { AnimatedHeadline } from '../components/AnimatedHeadline';
-import { imageSrc } from '../lib/images';
+import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { imageSrc } from '../../lib/images';
 
 /** Hero gallery image base paths (no extension). Resolved via imageSrc() for dev .jpg / prod .webp. */
 const HERO_IMAGE_BASES = [

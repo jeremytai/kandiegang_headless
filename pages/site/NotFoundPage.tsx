@@ -7,9 +7,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { ExpandingHero } from '../components/ExpandingHero';
-import { AnimatedHeadline } from '../components/AnimatedHeadline';
-import { imageSrc } from '../lib/images';
+import { ExpandingHero } from '../../components/ExpandingHero';
+import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { imageSrc } from '../../lib/images';
 
 const NOT_FOUND_IMAGE_BASE = '/images/230902_7mesh-59';
 

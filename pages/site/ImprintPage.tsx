@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { useContactModal } from '../context/ContactModalContext';
+import { useContactModal } from '../../context/ContactModalContext';
 
 const SECTION_SPACING = 'mb-12 md:mb-16';
 const PARAGRAPH_CLASS = 'text-slate-600 text-[15px] md:text-base leading-relaxed mb-4';

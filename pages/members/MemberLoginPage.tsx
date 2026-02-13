@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MemberLoginForm } from '../components/MemberLoginForm';
+import { MemberLoginForm } from '../../components/MemberLoginForm';
 
 export const MemberLoginPage: React.FC = () => {
   const navigate = useNavigate();

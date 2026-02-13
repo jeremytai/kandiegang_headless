@@ -16,11 +16,11 @@ import {
   clearWPCache,
   transformMediaUrl,
   normalizeProductFields,
-} from '../lib/wordpress';
-import { canPurchase, ShopProduct } from '../lib/products';
-import { AnimatedHeadline } from '../components/AnimatedHeadline';
-import { usePageMeta } from '../hooks/usePageMeta';
-import { useAuth } from '../context/AuthContext';
+} from '../../lib/wordpress';
+import { canPurchase, ShopProduct } from '../../lib/products';
+import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { useAuth } from '../../context/AuthContext';
 
 export const ShopPage: React.FC = () => {
   const [products, setProducts] = useState<WPProduct[]>([]);

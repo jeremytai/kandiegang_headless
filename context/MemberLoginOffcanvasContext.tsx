@@ -13,6 +13,7 @@ import { OffCanvas } from '../components/OffCanvas';
 import { useContactModal } from './ContactModalContext';
 import { MemberLoginForm } from '../components/MemberLoginForm';
 import { MemberSignupForm } from '../components/MemberSignupForm';
+import { EventSignupPanel, type EventSignupIntent } from '../components/event/EventSignupPanel';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 
@@ -24,6 +25,7 @@ function hasDiscordIdentity(user: { identities?: Array<{ provider: string }> } |
 
 type MemberLoginOffcanvasContextValue = {
   openMemberLogin: () => void;
+  openEventSignup: (intent: EventSignupIntent) => void;
   closeMemberLogin: () => void;
 };
 
@@ -83,7 +85,7 @@ function isGuideFromPlans(plans: string[] | null | undefined): boolean {
   return plans.some((p) => p.toLowerCase().includes('guide'));
 }
 
-type PanelView = 'login' | 'signup';
+type PanelView = 'login' | 'signup' | 'event-signup';
 
 /** Account view when user is logged in. Own component so hook count is independent of the auth/form view. */
 function MemberOffcanvasAccountContent({
@@ -506,13 +508,23 @@ function MemberOffcanvasContent({
   panelView,
   setPanelView,
   onLogoutRedirect,
+  eventSignupIntent,
 }: {
   onClose: () => void;
   panelView: PanelView;
   setPanelView: (v: PanelView) => void;
   onLogoutRedirect: () => void;
+  eventSignupIntent: EventSignupIntent | null;
 }) {
   const { user } = useAuth();
+  if (panelView === 'event-signup' && eventSignupIntent) {
+    return (
+      <EventSignupPanel
+        intent={eventSignupIntent}
+        onClose={onClose}
+      />
+    );
+  }
   if (user) {
     return (
       <MemberOffcanvasAccountContent onClose={onClose} onLogoutRedirect={onLogoutRedirect} />
@@ -532,12 +544,19 @@ export const MemberLoginOffcanvasProvider: React.FC<{ children: React.ReactNode 
   const [open, setOpen] = useState(false);
   const [panelView, setPanelView] = useState<PanelView>('login');
   const [greeting, setGreeting] = useState(pickRandomGreeting);
+  const [eventSignupIntent, setEventSignupIntent] = useState<EventSignupIntent | null>(null);
   const { user } = useAuth();
 
   const openMemberLogin = useCallback(() => setOpen(true), []);
+  const openEventSignup = useCallback((intent: EventSignupIntent) => {
+    setEventSignupIntent(intent);
+    setPanelView('event-signup');
+    setOpen(true);
+  }, []);
   const closeMemberLogin = useCallback(() => {
     setOpen(false);
     setPanelView('login');
+    setEventSignupIntent(null);
   }, []);
   const onLogoutRedirect = useCallback(() => navigate('/'), [navigate]);
 
@@ -545,10 +564,16 @@ export const MemberLoginOffcanvasProvider: React.FC<{ children: React.ReactNode 
     if (open && !user) setGreeting(pickRandomGreeting());
   }, [open, user]);
 
-  const title = user ? 'Account' : panelView === 'signup' ? 'Create account' : greeting;
+  const title = user
+    ? 'Account'
+    : panelView === 'event-signup'
+      ? 'Event signup'
+      : panelView === 'signup'
+        ? 'Create account'
+        : greeting;
 
   return (
-    <MemberLoginOffcanvasContext.Provider value={{ openMemberLogin, closeMemberLogin }}>
+    <MemberLoginOffcanvasContext.Provider value={{ openMemberLogin, openEventSignup, closeMemberLogin }}>
       {children}
       <OffCanvas
         open={open}
@@ -560,6 +585,7 @@ export const MemberLoginOffcanvasProvider: React.FC<{ children: React.ReactNode 
           panelView={panelView}
           setPanelView={setPanelView}
           onLogoutRedirect={onLogoutRedirect}
+          eventSignupIntent={eventSignupIntent}
         />
       </OffCanvas>
     </MemberLoginOffcanvasContext.Provider>

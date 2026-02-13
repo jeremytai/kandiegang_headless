@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { WaiverContent } from '../pages/WaiverPage';
+import { WaiverContent } from '../pages/site/WaiverPage';
 
 interface WaiverModalProps {
   isOpen: boolean;
