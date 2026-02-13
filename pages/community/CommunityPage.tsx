@@ -1,4 +1,3 @@
-
 /**
  * CommunityPage.tsx
  * Community page: hero, upcoming events, and required reading (Kandie Code, Ride Levels, Waiver).
@@ -8,10 +7,10 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { AnimatedBlob } from '../../components/AnimatedBlob';
-import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { AnimatedBlob } from '../../components/visual/AnimatedBlob';
+import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { EventsLayout, EventsLayoutEvent } from '../../components/event/EventsLayout';
-import { ThreeThingsToDo } from '../../components/ThreeThingsToDo';
+import { ThreeThingsToDo } from '../../components/sections/ThreeThingsToDo';
 import { getKandieEvents, WPRideEvent, transformMediaUrl } from '../../lib/wordpress';
 
 /**
@@ -24,7 +23,8 @@ const FALLBACK_EVENTS: EventsLayoutEvent[] = [
     imageBase: '/images/250701_photosafari-40',
     title: 'Kandie Gang Bike Repair Workshop',
     tag: 'Workshop',
-    description: 'Wer seine Tool Skills erweitern möchte, ist hier genau richtig. Robert L. wird uns zeigen, was die wichtigsten Tipps & Tricks sind beim Reparieren',
+    description:
+      'Wer seine Tool Skills erweitern möchte, ist hier genau richtig. Robert L. wird uns zeigen, was die wichtigsten Tipps & Tricks sind beim Reparieren',
     startDate: '2026-04-22T18:00:00.000Z',
     endDate: '2026-04-22T21:00:00.000Z',
     year: '2026',
@@ -52,7 +52,8 @@ const FALLBACK_EVENTS: EventsLayoutEvent[] = [
     imageBase: '/images/250621_hamburg-14',
     title: 'Tour de Energie',
     tag: 'Road Event',
-    description: 'If last year is any indication, this will be a fun, challenging ride with thirty other Kandies in Göttingen.',
+    description:
+      'If last year is any indication, this will be a fun, challenging ride with thirty other Kandies in Göttingen.',
     startDate: '2026-06-21T09:00:00.000Z',
     endDate: '2026-06-21T14:00:00.000Z',
     year: '2026',
@@ -85,18 +86,19 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
   const details = event.eventDetails;
   const eventDate = details?.eventDate ? new Date(details.eventDate) : new Date();
   const slug = generateSlug(event.title);
-  
+
   // Truncate description to 200 characters
   const fullDescription = stripHtml(event.excerpt || details?.description || '');
-  const truncatedDescription = fullDescription.length > 200 
-    ? fullDescription.substring(0, 200).trim() + '...'
-    : fullDescription;
-  
+  const truncatedDescription =
+    fullDescription.length > 200
+      ? fullDescription.substring(0, 200).trim() + '...'
+      : fullDescription;
+
   return {
     id: event.databaseId || `event-${Date.now()}`,
     href: `/event/${slug}`,
-    imageUrl: event.featuredImage?.node?.sourceUrl 
-      ? transformMediaUrl(event.featuredImage.node.sourceUrl) 
+    imageUrl: event.featuredImage?.node?.sourceUrl
+      ? transformMediaUrl(event.featuredImage.node.sourceUrl)
       : undefined,
     title: event.title,
     tag: details?.primaryType || 'Event',
@@ -120,9 +122,9 @@ export const CommunityPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const wpEvents = await getKandieEvents(20);
-        
+
         if (wpEvents && wpEvents.length > 0) {
           const transformedEvents = wpEvents.map(transformToEventsLayoutEvent);
           setEvents(transformedEvents);

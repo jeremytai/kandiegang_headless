@@ -13,7 +13,9 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://kandiegang.com');
 const WP_GRAPHQL_URL =
-  process.env.VITE_WP_GRAPHQL_URL || process.env.WP_GRAPHQL_URL || 'https://wp-origin.kandiegang.com/graphql';
+  process.env.VITE_WP_GRAPHQL_URL ||
+  process.env.WP_GRAPHQL_URL ||
+  'https://wp-origin.kandiegang.com/graphql';
 
 const FLINTA_EARLY_DAYS = Number(process.env.FLINTA_EARLY_DAYS ?? 4);
 const MEMBER_EARLY_DAYS = Number(process.env.MEMBER_EARLY_DAYS ?? 2);
@@ -75,14 +77,17 @@ async function fetchEventAccessData(eventId: number): Promise<EventAccessData | 
   const guideCounts = {
     level1: Array.isArray(details.level1?.guides?.nodes) ? details.level1.guides.nodes.length : 0,
     level2: Array.isArray(details.level2?.guides?.nodes) ? details.level2.guides.nodes.length : 0,
-    level2plus: Array.isArray(details.level2plus?.guides?.nodes) ? details.level2plus.guides.nodes.length : 0,
+    level2plus: Array.isArray(details.level2plus?.guides?.nodes)
+      ? details.level2plus.guides.nodes.length
+      : 0,
     level3: Array.isArray(details.level3?.guides?.nodes) ? details.level3.guides.nodes.length : 0,
   };
 
   return {
     publicReleaseDate: rideEvent.publicReleaseDate ?? null,
     isFlintaOnly: details.isFlintaOnly ?? null,
-    workshopCapacity: typeof details.workshopCapacity === 'number' ? details.workshopCapacity : null,
+    workshopCapacity:
+      typeof details.workshopCapacity === 'number' ? details.workshopCapacity : null,
     guideCounts,
   };
 }
@@ -149,7 +154,7 @@ function buildWaitlistText(eventTitle: string, rideLevel: string): string {
   ].join('\n');
 }
 
-function buildPromotedHtml(eventTitle: string, rideLevel: string): string {
+function _buildPromotedHtml(eventTitle: string, rideLevel: string): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -165,7 +170,7 @@ function buildPromotedHtml(eventTitle: string, rideLevel: string): string {
 </html>`;
 }
 
-function buildPromotedText(eventTitle: string, rideLevel: string): string {
+function _buildPromotedText(eventTitle: string, rideLevel: string): string {
   return [
     'A spot opened up',
     '',
@@ -236,7 +241,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data: { user }, error: userError } = await anonClient.auth.getUser(token);
+    const {
+      data: { user },
+      error: userError,
+    } = await anonClient.auth.getUser(token);
     if (userError || !user) {
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
@@ -308,7 +316,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (existing) {
       return res.status(409).json({
-        error: existing.is_waitlist ? 'You are already on the waitlist.' : 'You are already registered for this level.',
+        error: existing.is_waitlist
+          ? 'You are already on the waitlist.'
+          : 'You are already registered for this level.',
       });
     }
 
@@ -350,9 +360,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       insertPayload.is_waitlist = false;
     }
 
-    const { error: insertError } = await adminClient
-      .from('registrations')
-      .insert(insertPayload);
+    const { error: insertError } = await adminClient.from('registrations').insert(insertPayload);
 
     if (insertError) {
       console.error('Event signup insert error:', insertError);

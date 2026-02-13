@@ -7,6 +7,9 @@
     "dev": "vite",
     "dev:vercel": "npm run build && vercel dev -A vercel.dev.json",
     "build": "vite build && node scripts/optimize-images.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -31,16 +34,24 @@
     "yet-another-react-lightbox": "^3.28.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@vercel/node": "^5.6.2",
     "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.1.0",
     "@tailwindcss/typography": "^0.5.16",
     "autoprefixer": "^10.4.24",
     "postcss": "^8.5.6",
+    "prettier": "^3.4.2",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.19",
+    "typescript-eslint": "^8.26.0",
     "typescript": "~5.8.2",
     "vite": "^7.3.1"
   }

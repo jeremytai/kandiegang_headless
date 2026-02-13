@@ -9,11 +9,10 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { OffCanvas } from '../components/OffCanvas';
+import { OffCanvas } from '../components/layout/OffCanvas';
 import { useContactModal } from './ContactModalContext';
-import { MemberLoginForm } from '../components/MemberLoginForm';
-import { MemberSignupForm } from '../components/MemberSignupForm';
 import { EventSignupPanel, type EventSignupIntent } from '../components/event/EventSignupPanel';
+import { MemberMetaCard } from '../components/member/MemberMetaCard';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 
@@ -32,17 +31,340 @@ type MemberLoginOffcanvasContextValue = {
 const MemberLoginOffcanvasContext = createContext<MemberLoginOffcanvasContextValue | null>(null);
 
 const LOGIN_GREETINGS: string[] = [
-  'Hey Beautiful 👋!',        // English
-  '¡Hola, guapa 👋!',         // Spanish
-  'Salut belle 👋!',         // French
-  'Ciao bella 👋!',           // Italian
-  'Hey Schöne 👋!',           // German
-  'Oi linda 👋!',             // Portuguese
+  'Hey Beautiful 👋!', // English
+  '¡Hola, guapa 👋!', // Spanish
+  'Salut belle 👋!', // French
+  'Ciao bella 👋!', // Italian
+  'Hey Schöne 👋!', // German
+  'Oi linda 👋!', // Portuguese
 ];
 
 function pickRandomGreeting(): string {
   return LOGIN_GREETINGS[Math.floor(Math.random() * LOGIN_GREETINGS.length)];
 }
+
+function DiscordIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+    </svg>
+  );
+}
+
+export interface MemberLoginFormProps {
+  /** Called after successful login (e.g. close sidebar and navigate). */
+  onSuccess?: () => void;
+  /** Tighter layout for sidebar/embed use. */
+  compact?: boolean;
+  /** When set, "Become a member" closes the sidebar/overlay before navigating (e.g. offcanvas). */
+  onClose?: () => void;
+}
+
+export interface MemberSignupFormProps {
+  onSuccess?: () => void;
+  onShowLogin?: () => void;
+  compact?: boolean;
+}
+
+const inputClass =
+  'block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-black focus:ring-1 focus:ring-black';
+const labelClass = 'block text-sm font-medium text-slate-800 mb-1';
+const btnPrimary =
+  'inline-flex items-center justify-center rounded-full bg-black px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:bg-slate-400';
+
+export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
+  onSuccess: _onSuccess,
+  compact = false,
+  onClose,
+}) => {
+  const { signInWithMagicLink, signInWithDiscord, status } = useAuth();
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [discordLoading, setDiscordLoading] = useState(false);
+
+  const handleDiscordSignIn = async () => {
+    setError(null);
+    setDiscordLoading(true);
+    const { error: discordError } = await signInWithDiscord();
+    setDiscordLoading(false);
+    if (discordError) setError(discordError);
+  };
+
+  const handleMagicLink = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!email.trim()) {
+      setError('Enter your email address first.');
+      return;
+    }
+    setError(null);
+    setIsSubmitting(true);
+    const { error: magicError } = await signInWithMagicLink(email.trim());
+    setIsSubmitting(false);
+    if (magicError) {
+      setError(magicError);
+      return;
+    }
+    setMagicLinkSent(true);
+  };
+
+  if (magicLinkSent) {
+    return (
+      <div className={compact ? 'space-y-3' : 'space-y-4'}>
+        <h2
+          className={
+            compact ? 'text-xl font-bold text-primary-ink' : 'text-2xl font-bold text-primary-ink'
+          }
+        >
+          Check your email
+        </h2>
+        <p className="text-slate-600 text-sm">
+          We sent a login link to <strong>{email}</strong>. Click the link to sign in; you&apos;ll
+          be taken straight to the members area. The link expires in about an hour.
+        </p>
+        <p className="text-xs text-slate-500">
+          Didn&apos;t get it? Check spam, or{' '}
+          <button
+            type="button"
+            onClick={() => setMagicLinkSent(false)}
+            className="font-medium text-black underline hover:no-underline"
+          >
+            try again
+          </button>
+          .
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={compact ? 'space-y-4' : 'space-y-6'}>
+      {!compact && (
+        <p className="text-slate-600 max-w-prose">
+          Welcome back to Kandie Gang. Log in with your password or get a passwordless link by
+          email.
+        </p>
+      )}
+
+      <p className="text-sm font-normal text-primary-ink">
+        You are just a few clicks away from goodness.
+      </p>
+
+      <form onSubmit={handleMagicLink} className="space-y-4">
+        <div>
+          <label htmlFor="member-login-email" className={labelClass}>
+            Email address
+          </label>
+          <input
+            id="member-login-email"
+            type="email"
+            autoComplete="email"
+            required
+            className={inputClass}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        {error && <p className="text-sm text-red-600">{error}</p>}
+
+        <div className="flex flex-col gap-3">
+          <button
+            type="submit"
+            disabled={isSubmitting || status === 'loading' || !email.trim()}
+            className={btnPrimary}
+          >
+            {isSubmitting || status === 'loading' ? 'Sending…' : 'Email me a login link'}
+          </button>
+        </div>
+      </form>
+
+      <div className="flex flex-col gap-3">
+        <p className="text-center text-sm text-slate-500">or</p>
+        <button
+          type="button"
+          onClick={handleDiscordSignIn}
+          disabled={discordLoading || status === 'loading'}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#5865F2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4752C4] disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {discordLoading || status === 'loading' ? (
+            'Connecting…'
+          ) : (
+            <>
+              <DiscordIcon className="h-5 w-5" />
+              Sign in with Discord
+            </>
+          )}
+        </button>
+      </div>
+
+      <p className="text-sm text-slate-600">
+        Don&apos;t have an account?{' '}
+        <Link
+          to="/kandiegangcyclingclub"
+          onClick={onClose}
+          className="font-medium text-black underline hover:no-underline"
+        >
+          Become a member
+        </Link>
+      </p>
+      {!compact && (
+        <p className="text-xs text-slate-500">
+          Check your email for the login link or use the reset link from our emails.
+        </p>
+      )}
+    </div>
+  );
+};
+
+export const MemberSignupForm: React.FC<MemberSignupFormProps> = ({
+  onSuccess,
+  onShowLogin,
+  compact = false,
+}) => {
+  const { signInWithMagicLink, signInWithDiscord, status } = useAuth();
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [discordLoading, setDiscordLoading] = useState(false);
+
+  const handleDiscordSignUp = async () => {
+    setError(null);
+    setDiscordLoading(true);
+    const { error: discordError } = await signInWithDiscord();
+    setDiscordLoading(false);
+    if (discordError) setError(discordError);
+    else onSuccess?.();
+  };
+
+  const handleMagicLink = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!email.trim()) {
+      setError('Enter your email address first.');
+      return;
+    }
+    setError(null);
+    setIsSubmitting(true);
+    const { error: magicError } = await signInWithMagicLink(email.trim());
+    setIsSubmitting(false);
+    if (magicError) {
+      setError(magicError);
+      return;
+    }
+    setMagicLinkSent(true);
+  };
+
+  if (magicLinkSent) {
+    return (
+      <div className={compact ? 'space-y-3' : 'space-y-4'}>
+        <h2
+          className={
+            compact ? 'text-xl font-bold text-primary-ink' : 'text-2xl font-bold text-primary-ink'
+          }
+        >
+          <span className="font-gtplanar">Check your email</span>
+        </h2>
+        <p className="text-slate-600 text-sm">
+          We sent a signup link to <strong>{email}</strong>. Click the link to create your account
+          and sign in. The link expires in about an hour.
+        </p>
+        <p className="text-xs text-slate-500">
+          Didn&apos;t get it? Check spam, or{' '}
+          <button
+            type="button"
+            onClick={() => setMagicLinkSent(false)}
+            className="font-medium text-black underline hover:no-underline"
+          >
+            try again
+          </button>
+          .
+        </p>
+        {onShowLogin && (
+          <button
+            type="button"
+            onClick={onShowLogin}
+            className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-900"
+          >
+            Back to log in
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={compact ? 'space-y-4' : 'space-y-6'}>
+      {!compact && (
+        <p className="text-slate-600 max-w-prose">
+          Sign up to get a Kandie Gang account. After signing in, we can link your membership if
+          you&apos;re already a member.
+        </p>
+      )}
+
+      <form onSubmit={handleMagicLink} className="space-y-4">
+        <div>
+          <label htmlFor="member-signup-email" className={labelClass}>
+            Email address
+          </label>
+          <input
+            id="member-signup-email"
+            type="email"
+            autoComplete="email"
+            required
+            className={inputClass}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        {error && <p className="text-sm text-red-600">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={isSubmitting || status === 'loading' || !email.trim()}
+          className={`w-full ${btnPrimary}`}
+        >
+          {isSubmitting || status === 'loading' ? 'Sending…' : 'Email me a signup link'}
+        </button>
+      </form>
+
+      <p className="text-center text-sm text-slate-500">or</p>
+
+      <div className="flex flex-col gap-3">
+        <button
+          type="button"
+          onClick={handleDiscordSignUp}
+          disabled={discordLoading || status === 'loading'}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#5865F2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4752C4] disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {discordLoading || status === 'loading' ? (
+            'Connecting…'
+          ) : (
+            <>
+              <DiscordIcon className="h-5 w-5" />
+              Sign up with Discord
+            </>
+          )}
+        </button>
+      </div>
+
+      {onShowLogin && (
+        <p className="text-sm text-slate-600">
+          Already have an account?{' '}
+          <button
+            type="button"
+            onClick={onShowLogin}
+            className="font-medium text-black underline hover:no-underline"
+          >
+            Log in
+          </button>
+        </p>
+      )}
+    </div>
+  );
+};
 
 export function useMemberLoginOffcanvas(): MemberLoginOffcanvasContextValue {
   const ctx = useContext(MemberLoginOffcanvasContext);
@@ -50,13 +372,6 @@ export function useMemberLoginOffcanvas(): MemberLoginOffcanvasContextValue {
     throw new Error('useMemberLoginOffcanvas must be used within MemberLoginOffcanvasProvider');
   }
   return ctx;
-}
-
-function formatMemberSince(dateStr: string | null | undefined): string | null {
-  if (!dateStr) return null;
-  const d = new Date(dateStr + 'T00:00:00');
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function getDaysLeft(expirationStr: string | null | undefined): number | null {
@@ -75,7 +390,9 @@ function isCyclingMember(plans: string[] | null | undefined): boolean {
   if (!Array.isArray(plans)) return false;
   const lower = plans.map((p) => p.toLowerCase());
   return lower.some(
-    (p) => (p.includes('cycling') && (p.includes('member') || p.includes('membership'))) || p === 'kandie gang cycling club membership'
+    (p) =>
+      (p.includes('cycling') && (p.includes('member') || p.includes('membership'))) ||
+      p === 'kandie gang cycling club membership'
   );
 }
 
@@ -127,19 +444,19 @@ function MemberOffcanvasAccountContent({
     setIsRefreshingMembership(false);
   }, [refreshProfile]);
 
-  const memberSinceFormatted = formatMemberSince(profile?.member_since ?? null);
   const daysLeft = getDaysLeft(profile?.membership_expiration ?? null);
   const showCyclingMember = isCyclingMember(profile?.membership_plans);
   const showGuide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
   const hasRolePills = showCyclingMember || showGuide;
-  const isMember = Boolean(profile?.is_member);
+  const isMember = profile?.is_member === true;
 
   if (!user) return null;
 
   return (
     <div className="space-y-6">
       <p className="text-slate-600 text-sm">
-        Logged in as <span className="font-medium text-slate-900">{profile?.display_name || user.email}</span>
+        Welcome back{' '}
+        <span className="font-medium text-slate-900">{profile?.display_name || user.email}</span>
         {user.email && profile?.display_name && (
           <span className="block text-slate-500 mt-0.5">{user.email}</span>
         )}
@@ -158,53 +475,30 @@ function MemberOffcanvasAccountContent({
           )}
         </div>
       )}
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-700 space-y-1">
-        <p>
-          <span className="font-semibold">Member since</span>{' '}
-          {memberSinceFormatted ?? '—'}
-        </p>
-        <p>
-          <span
-            className={
-              daysLeft != null && daysLeft > 0 && daysLeft < 30
-                ? 'font-bold text-red-600'
-                : 'font-light'
-            }
-          >
-            {daysLeft != null
-              ? daysLeft > 0
-                ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left on membership`
-                : daysLeft === 0
-                  ? 'Membership expires today'
-                  : 'Membership expired'
-              : '—'}
-          </span>
-          {profile?.membership_source && (
-            <span className="font-light">
-              {' '}
-              · synced from {profile.membership_source}
-            </span>
-          )}
-        </p>
-      </div>
+      {isMember && <MemberMetaCard profile={profile} daysLeft={daysLeft} variant="offcanvas" />}
 
       {!isMember && (
         <div className="space-y-3">
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
             <p className="font-semibold mb-1">You&apos;re almost there.</p>
             <p className="mb-1">
-              We couldn&apos;t find an active membership for this account. We checked our current system (and WordPress) for the email you signed in with.
+              We couldn&apos;t find an active membership for this account. We checked our current
+              system (and WordPress) for the email you signed in with.
             </p>
             <p>
               If you&apos;re already a Kandie Gang member from our previous setup,{' '}
               <button
                 type="button"
-                onClick={() => { onClose(); openContactModal(); }}
+                onClick={() => {
+                  onClose();
+                  openContactModal();
+                }}
                 className="font-semibold underline"
               >
                 reach out
-              </button>
-              {' '}and we&apos;ll link your account. Otherwise, keep an eye on our channels for the next membership window.
+              </button>{' '}
+              and we&apos;ll link your account. Otherwise, keep an eye on our channels for the next
+              membership window.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -218,7 +512,10 @@ function MemberOffcanvasAccountContent({
             </button>
             <button
               type="button"
-              onClick={() => { onClose(); openContactModal(); }}
+              onClick={() => {
+                onClose();
+                openContactModal();
+              }}
               className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900"
             >
               Contact us about membership
@@ -230,7 +527,8 @@ function MemberOffcanvasAccountContent({
       {daysLeft != null && daysLeft < 30 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
           <p className="font-medium mb-2">
-            Renew your membership today to extend your Kandie Gang benefits and continued support of the club.
+            Renew your membership today to extend your Kandie Gang benefits and continued support of
+            the club.
           </p>
           <Link
             to="/shop/kandie-gang-cycling-club-membership"
@@ -292,7 +590,9 @@ function MemberOffcanvasAccountContent({
         onClose={() => setDeleteAccountModalOpen(false)}
         onRequestDelete={async () => {
           if (!supabase) return false;
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
           if (!session?.access_token) return false;
           const res = await fetch('/api/delete-account', {
             method: 'POST',
@@ -408,7 +708,10 @@ function DeleteAccountModal({
           >
             {deleted ? (
               <div className="flex flex-1 flex-col overflow-y-auto px-6 pt-12 pb-8 text-center">
-                <p id="delete-account-modal-title" className="font-heading text-xl font-normal text-primary-ink">
+                <p
+                  id="delete-account-modal-title"
+                  className="font-heading text-xl font-normal text-primary-ink"
+                >
                   Goodbyes are always difficult; your account has been deleted.
                 </p>
               </div>
@@ -424,7 +727,10 @@ function DeleteAccountModal({
                   <X className="h-6 w-6" />
                 </button>
                 <div className="flex flex-1 flex-col overflow-y-auto px-6 pt-12 pb-8">
-                  <h2 id="delete-account-modal-title" className="font-heading text-xl font-normal text-primary-ink mb-2">
+                  <h2
+                    id="delete-account-modal-title"
+                    className="font-heading text-xl font-normal text-primary-ink mb-2"
+                  >
                     Oh, you&apos;re about to delete your account.
                   </h2>
                   <p className="text-slate-600 text-sm mb-6">
@@ -486,20 +792,10 @@ function MemberOffcanvasAuthContent({
 }) {
   if (panelView === 'signup') {
     return (
-      <MemberSignupForm
-        compact
-        onSuccess={onClose}
-        onShowLogin={() => setPanelView('login')}
-      />
+      <MemberSignupForm compact onSuccess={onClose} onShowLogin={() => setPanelView('login')} />
     );
   }
-  return (
-    <MemberLoginForm
-      compact
-      onSuccess={onClose}
-      onClose={onClose}
-    />
-  );
+  return <MemberLoginForm compact onSuccess={onClose} onClose={onClose} />;
 }
 
 /** Single hook (useAuth) then branch to account vs auth content. Avoids React #300 hooks order. */
@@ -518,17 +814,10 @@ function MemberOffcanvasContent({
 }) {
   const { user } = useAuth();
   if (panelView === 'event-signup' && eventSignupIntent) {
-    return (
-      <EventSignupPanel
-        intent={eventSignupIntent}
-        onClose={onClose}
-      />
-    );
+    return <EventSignupPanel intent={eventSignupIntent} onClose={onClose} />;
   }
   if (user) {
-    return (
-      <MemberOffcanvasAccountContent onClose={onClose} onLogoutRedirect={onLogoutRedirect} />
-    );
+    return <MemberOffcanvasAccountContent onClose={onClose} onLogoutRedirect={onLogoutRedirect} />;
   }
   return (
     <MemberOffcanvasAuthContent
@@ -539,7 +828,9 @@ function MemberOffcanvasContent({
   );
 }
 
-export const MemberLoginOffcanvasProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const MemberLoginOffcanvasProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [panelView, setPanelView] = useState<PanelView>('login');
@@ -573,13 +864,11 @@ export const MemberLoginOffcanvasProvider: React.FC<{ children: React.ReactNode 
         : greeting;
 
   return (
-    <MemberLoginOffcanvasContext.Provider value={{ openMemberLogin, openEventSignup, closeMemberLogin }}>
+    <MemberLoginOffcanvasContext.Provider
+      value={{ openMemberLogin, openEventSignup, closeMemberLogin }}
+    >
       {children}
-      <OffCanvas
-        open={open}
-        onClose={closeMemberLogin}
-        title={title}
-      >
+      <OffCanvas open={open} onClose={closeMemberLogin} title={title}>
         <MemberOffcanvasContent
           onClose={closeMemberLogin}
           panelView={panelView}

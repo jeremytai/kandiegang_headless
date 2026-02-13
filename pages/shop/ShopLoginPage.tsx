@@ -26,9 +26,7 @@ export const ShopLoginPage: React.FC = () => {
   return (
     <main className="px-4 pb-16 pt-32 md:px-8 md:pb-24 md:pt-40">
       <div className="mx-auto max-w-xl">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-          Shop login
-        </h1>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">Shop login</h1>
         <p className="text-slate-600 mb-8 max-w-prose">
           Use the same email you use at checkout so we can link your orders and membership.
         </p>
@@ -64,11 +62,7 @@ export const ShopLoginPage: React.FC = () => {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-red-600">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
@@ -80,10 +74,10 @@ export const ShopLoginPage: React.FC = () => {
         </form>
 
         <p className="mt-6 text-xs text-slate-500">
-          If you can&apos;t access your account yet, continue as a guest at checkout or reach out so we can connect your profile.
+          If you can&apos;t access your account yet, continue as a guest at checkout or reach out so
+          we can connect your profile.
         </p>
       </div>
     </main>
   );
 };
-

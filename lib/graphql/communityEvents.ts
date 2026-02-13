@@ -267,4 +267,3 @@ export const GET_KANDIE_EVENT_QUERY = `
     }
   }
 `;
-

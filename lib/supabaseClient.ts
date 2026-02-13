@@ -21,7 +21,6 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | und
 const hasConfig = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
 if (!hasConfig) {
-  // eslint-disable-next-line no-console
   console.warn(
     '[supabaseClient] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is not set. Supabase auth will be disabled. Set them in Vercel (or .env) to enable auth.'
   );
@@ -30,4 +29,3 @@ if (!hasConfig) {
 export const supabase: SupabaseClient | null = hasConfig
   ? createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
   : null;
-

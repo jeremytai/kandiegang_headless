@@ -101,9 +101,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setItems((prev) => {
       const existing = prev.find((i) => i.id === id);
       if (existing) {
-        return prev.map((i) =>
-          i.id === id ? { ...i, quantity: i.quantity + quantity } : i
-        );
+        return prev.map((i) => (i.id === id ? { ...i, quantity: i.quantity + quantity } : i));
       }
       const newItem: CartLineItem = {
         id,
@@ -135,9 +133,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setItems((prev) => prev.filter((i) => i.id !== id));
       return;
     }
-    setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, quantity: q } : i))
-    );
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantity: q } : i)));
   }, []);
 
   const clearCart = useCallback(() => {
@@ -159,9 +155,5 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isOpen,
   };
 
-  return (
-    <CartContext.Provider value={value}>
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };

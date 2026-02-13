@@ -22,7 +22,8 @@ function getDeviceInfo(): DeviceInfo {
   }
   const ua = navigator.userAgent;
   const platform = navigator.platform ?? '';
-  const isIOS = /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isIOS =
+    /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isMac = /Mac/.test(platform);
   const isAndroid = /Android/.test(ua);
   const isChrome = /Chrome\//.test(ua) && !/Edge\//.test(ua);

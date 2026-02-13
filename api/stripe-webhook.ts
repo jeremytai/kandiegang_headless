@@ -45,12 +45,16 @@ function buildWelcomeHtml(params: WelcomeEmailParams): string {
 function buildWelcomeText(params: WelcomeEmailParams): string {
   const membersUrl = `${SITE_BASE_URL}/members`;
   return [
-    'Welcome to the Kandie Gang Cycling Club', '',
-    "Thank you for becoming a member. You're in.", '',
+    'Welcome to the Kandie Gang Cycling Club',
+    '',
+    "Thank you for becoming a member. You're in.",
+    '',
     'Your membership is active for one year:',
     `Start: ${params.memberSince}`,
-    `Expires: ${params.membershipExpiration}`, '',
-    `Go to Members Area: ${membersUrl}`, '',
+    `Expires: ${params.membershipExpiration}`,
+    '',
+    `Go to Members Area: ${membersUrl}`,
+    '',
     'Kandie Gang Cycling Club',
   ].join('\n');
 }
@@ -92,7 +96,10 @@ const stripe =
 
 function isClubMembershipPurchase(productSlugs: string | null | undefined): boolean {
   if (!productSlugs || typeof productSlugs !== 'string') return false;
-  return productSlugs.split(',').map((s) => s.trim()).includes(CLUB_MEMBERSHIP_SLUG);
+  return productSlugs
+    .split(',')
+    .map((s) => s.trim())
+    .includes(CLUB_MEMBERSHIP_SLUG);
 }
 
 function toDateString(d: Date): string {
@@ -167,21 +174,30 @@ async function handleWebhook(req: Request | VercelRequest): Promise<Response | v
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[stripe-webhook] Signature verification failed:', message);
-    return new Response(JSON.stringify({ error: `Webhook signature verification failed: ${message}` }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: `Webhook signature verification failed: ${message}` }),
+      {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 
   if (event.type !== 'checkout.session.completed') {
-    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
   const sessionId = session.id;
 
   if (!isClubMembershipPurchase(session.metadata?.productSlugs)) {
-    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const customerEmail =
@@ -227,12 +243,26 @@ async function handleWebhook(req: Request | VercelRequest): Promise<Response | v
   }
 
   if (!profileId) {
-    console.warn('[stripe-webhook] No profile found for session', sessionId, 'userId=', metadataUserId, 'email=', customerEmail);
-    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    console.warn(
+      '[stripe-webhook] No profile found for session',
+      sessionId,
+      'userId=',
+      metadataUserId,
+      'email=',
+      customerEmail
+    );
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   if (!emailForWelcome) {
-    const { data: profileRow } = await supabase.from('profiles').select('email').eq('id', profileId).single();
+    const { data: profileRow } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', profileId)
+      .single();
     emailForWelcome = profileRow?.email ?? null;
   }
 
@@ -282,7 +312,10 @@ async function handleWebhook(req: Request | VercelRequest): Promise<Response | v
     }
   }
 
-  return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
 /** Vercel handler: supports Node (req, res) and Web Request. */

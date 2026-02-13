@@ -10,16 +10,15 @@
  * - Fetches content from WordPress headless CMS.
  */
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Loader2, AlertCircle } from 'lucide-react';
-import { CompanySection } from '../../components/CompanySection';
-import { CompanyValuesSection } from '../../components/CompanyValuesSection.tsx';
-import { AboutHero } from '../../components/AboutHero';
-import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { ArrowRight } from 'lucide-react';
+import { CompanySection } from '../../components/sections/CompanySection';
+import { CompanyValuesSection } from '../../components/sections/CompanyValuesSection.tsx';
+import { AboutHero } from '../../components/sections/AboutHero';
+import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { useContactModal } from '../../context/ContactModalContext';
-import { ImageMarquee } from '../../components/ImageMarquee';
+import { ImageMarquee } from '../../components/visual/ImageMarquee';
 import { imageSrc } from '../../lib/images';
 // WordPress fetch – re-enable when ready (getPageBySlug)
 import { WPPage } from '../../lib/wordpress';
@@ -49,19 +48,20 @@ export const AboutPage: React.FC = () => {
   //   fetchPage();
   // }, []);
 
-  const [page, setPage] = useState<WPPage | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_page, _setPage] = useState<WPPage | null>(null);
+  const [_loading, _setLoading] = useState(false);
+  const [_error, _setError] = useState<string | null>(null);
   const { openContactModal } = useContactModal();
 
   // Default content to display if WordPress content is not available
   const defaultContent = {
-    intro: "We're on a mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).",
-    visionTitle: "A cycling culture in which every rider and path belong.",
+    intro:
+      "We're on a mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).",
+    visionTitle: 'A cycling culture in which every rider and path belong.',
     visionText: [
-      "By breaking old norms and centering diversity, creativity, and empathy, every ride, path, and connection becomes a space shaped by those who show up and participate.",
-      "Through group rides, community meetups, and shared creative projects, we actively welcome people of all identities and backgrounds, encouraging participation over perfection."
-    ]
+      'By breaking old norms and centering diversity, creativity, and empathy, every ride, path, and connection becomes a space shaped by those who show up and participate.',
+      'Through group rides, community meetups, and shared creative projects, we actively welcome people of all identities and backgrounds, encouraging participation over perfection.',
+    ],
   };
 
   return (
@@ -70,7 +70,8 @@ export const AboutPage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-3">
         <AnimatePresence mode="wait">
-          {/* WordPress loader – re-enable when ready
+          {
+            /* WordPress loader – re-enable when ready
           {loading ? (
             <motion.div
               key="loading"
@@ -90,53 +91,60 @@ export const AboutPage: React.FC = () => {
               </div>
             </motion.div>
           ) : */
-          error ? (
-            <motion.div
-              key="error"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="my-40 max-w-3xl"
-            >
-              <div className="flex items-center gap-3 text-amber-600 bg-amber-50 px-5 py-3 rounded-full border border-amber-100 w-fit mb-6">
-                <AlertCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">{error}</span>
-              </div>
-              <motion.div 
+            error ? (
+              <motion.div
+                key="error"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="my-40 max-w-3xl"
               >
-                <p className="text-3xl md:text-4xl font-light text-slate-500 leading-tight tracking-tight">
-                  {defaultContent.intro}
-                </p>
+                <div className="flex items-center gap-3 text-amber-600 bg-amber-50 px-5 py-3 rounded-full border border-amber-100 w-fit mb-6">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">{error}</span>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="my-40 max-w-3xl"
+                >
+                  <p className="text-3xl md:text-4xl font-light text-slate-500 leading-tight tracking-tight">
+                    {defaultContent.intro}
+                  </p>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="content"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="my-12"
-            >
-              {/* Intro moved into section below to span all columns */}
-            </motion.div>
-          )}
+            ) : (
+              <motion.div
+                key="content"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="my-12"
+              >
+                {/* Intro moved into section below to span all columns */}
+              </motion.div>
+            )
+          }
         </AnimatePresence>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-20 mb-40 mt-0">
           <div className="space-y-3 md:space-y-8">
-            <h2 className="text-xs font-normal font-gtplanar uppercase tracking-[0.3em] text-secondary-purple-rain">Our Vision</h2>
+            <h2 className="text-xs font-normal font-gtplanar uppercase tracking-[0.3em] text-secondary-purple-rain">
+              Our Vision
+            </h2>
             <AnimatedHeadline
               as="h3"
-              text={page?.title ? extractTextFromHTML(page.title) || defaultContent.visionTitle : defaultContent.visionTitle}
+              text={
+                page?.title
+                  ? extractTextFromHTML(page.title) || defaultContent.visionTitle
+                  : defaultContent.visionTitle
+              }
               className="text-4xl md:text-5xl font-light tracking-normal text-secondary-purple-rain"
               lineHeight={1.25}
             />
           </div>
           <div className="space-y-6 text-lg md:text-xl text-slate-500 font-light leading-relaxed">
             {page?.content ? (
-              <div 
+              <div
                 className="prose prose-lg max-w-none"
                 dangerouslySetInnerHTML={{ __html: extractContentSection(page.content, 1) }}
               />
@@ -174,7 +182,6 @@ export const AboutPage: React.FC = () => {
             </div>
           </div>
         </section> */}
-
       </div>
 
       <div className="w-full px-4 md:px-6">
@@ -189,7 +196,9 @@ export const AboutPage: React.FC = () => {
           />
           <div className="absolute inset-0 bg-slate-900/50" aria-hidden />
           <div className="relative z-10 flex flex-col items-center">
-            <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">Want to  partner with us?</h2>
+            <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">
+              Want to partner with us?
+            </h2>
             <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
               We're a collective of diverse cyclists, makers, and doers based in Hamburg, Germany.
             </p>
@@ -200,7 +209,12 @@ export const AboutPage: React.FC = () => {
             >
               <span>Contact us</span>
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-blush/20 p-1 transition-colors group-hover:bg-white">
-                <ArrowRight className="h-3 w-3 text-secondary-blush transition-colors" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                <ArrowRight
+                  className="h-3 w-3 text-secondary-blush transition-colors"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </span>
             </button>
           </div>
@@ -210,7 +224,7 @@ export const AboutPage: React.FC = () => {
   );
 };
 
-const InvestorLogo = ({ name }: { name: string }) => (
+const _InvestorLogo = ({ name }: { name: string }) => (
   <span className="text-lg md:text-2xl font-bold tracking-tighter text-slate-900 whitespace-nowrap cursor-default hover:text-black transition-colors">
     {name}
   </span>
@@ -238,5 +252,8 @@ function extractContentSection(html: string, sectionIndex: number): string {
     return paragraphs[sectionIndex].outerHTML;
   }
   // Fallback: return all paragraphs after the first
-  return Array.from(paragraphs).slice(1).map(p => p.outerHTML).join('');
+  return Array.from(paragraphs)
+    .slice(1)
+    .map((p) => p.outerHTML)
+    .join('');
 }

@@ -70,7 +70,7 @@ export const WaitlistAdminPage: React.FC = () => {
         return;
       }
       setRows(Array.isArray(data?.rows) ? data.rows : []);
-    } catch (err) {
+    } catch (_err) {
       setError('Unable to load waitlist report.');
       setRows([]);
     } finally {
@@ -109,11 +109,15 @@ export const WaitlistAdminPage: React.FC = () => {
         </h1>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 space-y-4">
           <p className="text-sm text-slate-600">
-            Enter the waitlist report secret to view the current queue. You can filter by event id or ride level.
+            Enter the waitlist report secret to view the current queue. You can filter by event id
+            or ride level.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="waitlist-secret">
+              <label
+                className="block text-sm font-medium text-slate-700 mb-1"
+                htmlFor="waitlist-secret"
+              >
                 Report secret
               </label>
               <input
@@ -125,7 +129,10 @@ export const WaitlistAdminPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="waitlist-event">
+              <label
+                className="block text-sm font-medium text-slate-700 mb-1"
+                htmlFor="waitlist-event"
+              >
                 Event ID (optional)
               </label>
               <input
@@ -137,7 +144,10 @@ export const WaitlistAdminPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="waitlist-level">
+              <label
+                className="block text-sm font-medium text-slate-700 mb-1"
+                htmlFor="waitlist-level"
+              >
                 Ride level (optional)
               </label>
               <input

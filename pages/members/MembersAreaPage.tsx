@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { posthog, FUNNEL_EVENTS } from '../../lib/posthog';
 import {
@@ -14,23 +14,59 @@ import {
   type WPProduct,
 } from '../../lib/wordpress';
 import { canPurchase, type ShopProduct } from '../../lib/products';
-import { Loader2, ArrowRight, Moon, Sun } from 'lucide-react';
-import { AnimatedHeadline } from '../../components/AnimatedHeadline';
-import { MembersConfetti } from '../../components/MembersConfetti';
-import { AccountStatusAccordion } from '../../components/AccountStatusAccordion';
+import { Loader2, ArrowRight, Moon, Sun, ChevronDown } from 'lucide-react';
+import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
+import { MembersConfetti } from '../../components/common/MembersConfetti';
+import { MemberMetaCard } from '../../components/member/MemberMetaCard';
 
 const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
 const MEMBERS_ONLY_POSTS_FIRST = 20;
 
-const HELLO_GREETINGS = [
-  'Shwmae',
-  'Kaixo',
-  'Aluu',
-  'Yá\'át\'ééh',
-  'Kia ora',
-  'Demat',
-  'Bures',
-];
+/** Account status accordion for non-members. */
+function AccountStatusAccordion() {
+  const [isOpen, setIsOpen] = useState(true);
+  const buttonId = 'account-status-accordion-button';
+  const panelId = 'account-status-accordion-panel';
+  const { profile } = useAuth();
+
+  return (
+    <div className="overflow-hidden border border-secondary-purple-rain/30 rounded-xl bg-white/80 dark:bg-slate-900/80 mb-6">
+      <button
+        type="button"
+        onClick={() => setIsOpen((o) => !o)}
+        className="flex w-full items-center justify-between px-6 py-4 text-left group focus:outline-none"
+        aria-expanded={isOpen}
+        aria-controls={panelId}
+        id={buttonId}
+      >
+        <span
+          className={`inline-flex shrink-0 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
+        >
+          <ChevronDown className="h-5 w-5 opacity-60 text-secondary-purple-rain group-hover:opacity-100 transition-opacity" />
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            id={panelId}
+            role="region"
+            aria-labelledby={buttonId}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+          >
+            <div className="px-6 pb-6">
+              <MemberMetaCard profile={profile} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+const HELLO_GREETINGS = ['Shwmae', 'Kaixo', 'Aluu', "Yá'át'ééh", 'Kia ora', 'Demat', 'Bures'];
 
 function isCyclingMember(plans: string[] | null | undefined): boolean {
   if (!Array.isArray(plans)) return false;
@@ -47,17 +83,6 @@ function isGuideFromPlans(plans: string[] | null | undefined): boolean {
   return plans.some((p) => p.toLowerCase().includes('guide'));
 }
 
-function getDaysLeft(expirationStr: string | null | undefined): number | null {
-  if (!expirationStr) return null;
-  const exp = new Date(expirationStr + 'T23:59:59');
-  if (Number.isNaN(exp.getTime())) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  exp.setHours(0, 0, 0, 0);
-  const diffMs = exp.getTime() - today.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-}
-
 function scrollToTop() {
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   document.documentElement.scrollTop = 0;
@@ -68,7 +93,6 @@ export const MembersAreaPage: React.FC = () => {
   const { status, user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [initialMembershipCheckDone, setInitialMembershipCheckDone] = useState(false);
   const [membersOnlyPosts, setMembersOnlyPosts] = useState<WPPost[]>([]);
   const [membersOnlyLoading, setMembersOnlyLoading] = useState(false);
@@ -87,6 +111,7 @@ export const MembersAreaPage: React.FC = () => {
     try {
       return localStorage.getItem('membersAreaDarkMode') === '1';
     } catch {
+      // Ignore storage errors (private mode, blocked storage, etc.).
       return false;
     }
   });
@@ -99,7 +124,9 @@ export const MembersAreaPage: React.FC = () => {
   useEffect(() => {
     try {
       localStorage.setItem('membersAreaDarkMode', darkMode ? '1' : '0');
-    } catch {}
+    } catch {
+      // Ignore storage errors (private mode, blocked storage, etc.).
+    }
   }, [darkMode]);
 
   useEffect(() => {
@@ -120,7 +147,11 @@ export const MembersAreaPage: React.FC = () => {
 
   useEffect(() => {
     if (status === 'loading') return;
-    if (!user && typeof window !== 'undefined' && sessionStorage.getItem('logoutRedirecting') !== '1') {
+    if (
+      !user &&
+      typeof window !== 'undefined' &&
+      sessionStorage.getItem('logoutRedirecting') !== '1'
+    ) {
       navigate('/login/member', { replace: true, state: { from: '/members' } });
       return;
     }
@@ -173,10 +204,11 @@ export const MembersAreaPage: React.FC = () => {
     wpQuery<GetProductsResponse>(GET_PRODUCTS_QUERY, {}, { useCache: true })
       .then((data) => {
         if (cancelled) return;
-        const normalized = data?.shopProducts?.nodes?.map((p) => ({
-          ...p,
-          productFields: normalizeProductFields(p.productFields) ?? p.productFields,
-        })) ?? [];
+        const normalized =
+          data?.shopProducts?.nodes?.map((p) => ({
+            ...p,
+            productFields: normalizeProductFields(p.productFields) ?? p.productFields,
+          })) ?? [];
         setMemberOnlyProducts(normalized.filter((p) => p.productFields?.membersOnly));
       })
       .catch((err) => {
@@ -192,12 +224,6 @@ export const MembersAreaPage: React.FC = () => {
       cancelled = true;
     };
   }, [canSeeMembersOnlyPosts]);
-
-  const handleRefreshMembership = async () => {
-    setIsRefreshing(true);
-    await refreshProfile();
-    setIsRefreshing(false);
-  };
 
   if (status === 'loading') {
     return (
@@ -219,16 +245,7 @@ export const MembersAreaPage: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-6">
         {/* Membership status accordion for users without active membership */}
-        {initialMembershipCheckDone && !cyclingMember && !guide && (
-          <AccountStatusAccordion
-            onRefreshMembership={handleRefreshMembership}
-            onContact={() => {
-              if (typeof window !== 'undefined') {
-                window.location.href = 'mailto:info@kandiegang.com?subject=Membership%20Help';
-              }
-            }}
-          />
-        )}
+        {initialMembershipCheckDone && !cyclingMember && !guide && <AccountStatusAccordion />}
         <header className="mb-2 md:mb-6 text-center relative">
           {/* Account/membership info moved to MemberSidebar component. Insert <MemberSidebar /> in your sidebar layout. */}
 
@@ -351,7 +368,12 @@ export const MembersAreaPage: React.FC = () => {
                     const productSlug = product.slug || '';
                     const productHref = productSlug ? `/shop/${productSlug}` : '#';
                     return (
-                      <Link key={product.id} to={productHref} state={{ from: '/members' }} className="block">
+                      <Link
+                        key={product.id}
+                        to={productHref}
+                        state={{ from: '/members' }}
+                        className="block"
+                      >
                         <motion.article
                           initial={{ opacity: 0, y: 24 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -416,15 +438,25 @@ export const MembersAreaPage: React.FC = () => {
                 </p>
               ) : membersOnlyPosts.length === 0 ? (
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  No members-only posts yet. Check back later—we pull from the Photo Gallery category in WordPress.
+                  No members-only posts yet. Check back later—we pull from the Photo Gallery
+                  category in WordPress.
                 </p>
               ) : (
                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
                   {membersOnlyPosts.map((story, i) => {
-                    const slug = story.uri?.replace(/^\/+|\/+$/g, '').split('/').pop() ?? '';
+                    const slug =
+                      story.uri
+                        ?.replace(/^\/+|\/+$/g, '')
+                        .split('/')
+                        .pop() ?? '';
                     const storyHref = slug ? `/story/${slug}` : '/stories';
                     return (
-                      <Link key={story.id} to={storyHref} state={{ from: '/members' }} className="block">
+                      <Link
+                        key={story.id}
+                        to={storyHref}
+                        state={{ from: '/members' }}
+                        className="block"
+                      >
                         <motion.article
                           initial={{ opacity: 0, y: 24 }}
                           animate={{ opacity: 1, y: 0 }}

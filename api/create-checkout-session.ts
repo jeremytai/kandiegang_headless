@@ -49,7 +49,9 @@ function stripeErrorMessage(err: unknown): string {
   if (err && typeof err === 'object' && 'type' in err) {
     const stripeErr = err as { type?: string; code?: string; message?: string };
     if (stripeErr.type === 'StripeInvalidRequestError') {
-      return stripeErr.message ?? 'Invalid request to payment provider (e.g. invalid price or product).';
+      return (
+        stripeErr.message ?? 'Invalid request to payment provider (e.g. invalid price or product).'
+      );
     }
     if (stripeErr.type === 'StripeAuthenticationError') {
       return 'Payment provider configuration error. Check STRIPE_SECRET_KEY (use sk_test_... or sk_live_...).';
@@ -92,8 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return sendResponse(500, {
         error:
           'Stripe is not configured. Set STRIPE_SECRET_KEY in .env (or Vercel env). Use `vercel dev` for local checkout.',
-        hint:
-          'When using vercel dev, ensure STRIPE_SECRET_KEY is in your .env file.',
+        hint: 'When using vercel dev, ensure STRIPE_SECRET_KEY is in your .env file.',
       });
     }
 
@@ -121,12 +122,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         productTitle: i.productTitle,
         productSlug: i.productSlug,
       }));
-    } else if (
-      legacyPriceId &&
-      legacyProductId &&
-      legacyProductTitle &&
-      legacyProductSlug
-    ) {
+    } else if (legacyPriceId && legacyProductId && legacyProductTitle && legacyProductSlug) {
       lineItems = [
         {
           priceId: legacyPriceId,
@@ -161,8 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host =
-      req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
     const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/shop`;

@@ -40,9 +40,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const counts: Record<string, number> = {};
     const rows = Array.isArray(data) ? data : [];
     rows.forEach((row) => {
-      const level = typeof row.ride_level === 'string' && row.ride_level.trim()
-        ? row.ride_level
-        : 'workshop';
+      const level =
+        typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
       counts[level] = (counts[level] ?? 0) + 1;
     });
 

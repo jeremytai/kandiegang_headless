@@ -8,8 +8,10 @@ import React from 'react';
 
 const SECTION_SPACING = 'mb-12 md:mb-16';
 const PARAGRAPH_CLASS = 'text-slate-600 text-[15px] md:text-base leading-relaxed mb-4';
-const LEVEL_HEADING_CLASS = 'font-heading text-primary-ink text-xl md:text-2xl font-normal tracking-tight mb-4';
-const SPEC_ROW_CLASS = 'text-slate-600 text-[15px] md:text-base leading-relaxed py-2 border-b border-slate-100 last:border-0 flex justify-between gap-4';
+const LEVEL_HEADING_CLASS =
+  'font-heading text-primary-ink text-xl md:text-2xl font-normal tracking-tight mb-4';
+const SPEC_ROW_CLASS =
+  'text-slate-600 text-[15px] md:text-base leading-relaxed py-2 border-b border-slate-100 last:border-0 flex justify-between gap-4';
 const SPEC_LABEL = 'text-slate-500 shrink-0';
 const SPEC_VALUE = 'text-primary-ink font-medium text-right';
 
@@ -64,14 +66,26 @@ const LEVELS = [
 ] as const;
 
 /** Shared content for RideLevelsPage and RideLevelsModal. */
-export const RideLevelsContent: React.FC<{ variant?: 'page' | 'modal'; headerAction?: React.ReactNode }> = ({ variant = 'page', headerAction }) => {
+export const RideLevelsContent: React.FC<{
+  variant?: 'page' | 'modal';
+  headerAction?: React.ReactNode;
+}> = ({ variant = 'page', headerAction }) => {
   const isModal = variant === 'modal';
   return (
     <>
-      <header className={isModal ? 'pt-24 pb-6 px-6 max-w-4xl mx-auto' : 'pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left'}>
+      <header
+        className={
+          isModal
+            ? 'pt-24 pb-6 px-6 max-w-4xl mx-auto'
+            : 'pt-32 md:pt-40 pb-12 md:pb-16 px-6 max-w-4xl mx-auto text-center md:text-left'
+        }
+      >
         <div className={isModal ? 'flex items-start justify-between gap-4' : undefined}>
           <div className={isModal ? 'min-w-0 flex-1' : undefined}>
-            <h1 id={isModal ? 'ridelevels-modal-title' : undefined} className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4">
+            <h1
+              id={isModal ? 'ridelevels-modal-title' : undefined}
+              className="font-heading text-primary-ink text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight mb-4"
+            >
               Ride Levels
             </h1>
             <p className="text-slate-500 text-sm md:text-base">
@@ -84,7 +98,8 @@ export const RideLevelsContent: React.FC<{ variant?: 'page' | 'modal'; headerAct
 
       <main className="max-w-3xl mx-auto px-6 pb-24 md:pb-32">
         <p className={PARAGRAPH_CLASS}>
-          Du willst bei einem Kandie Ride mitfahren und willst das für Dich passende Level finden? Dann bist Du hier genau richtig, denn hier findest Du die Eckdaten zu den vier Gruppen.
+          Du willst bei einem Kandie Ride mitfahren und willst das für Dich passende Level finden?
+          Dann bist Du hier genau richtig, denn hier findest Du die Eckdaten zu den vier Gruppen.
         </p>
 
         {LEVELS.map((level) => (

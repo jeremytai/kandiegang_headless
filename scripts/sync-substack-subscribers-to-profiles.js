@@ -172,7 +172,10 @@ function loadSubscribersFromCsv(csvPath) {
     if (!email || !email.includes('@')) continue;
     const optedInAt = optinIdx >= 0 ? parseDateToYMD(fields[optinIdx] || '') : null;
     // Keep earliest opt-in if duplicate emails
-    if (!map.has(email) || (optedInAt && (!map.get(email).optedInAt || optedInAt < map.get(email).optedInAt))) {
+    if (
+      !map.has(email) ||
+      (optedInAt && (!map.get(email).optedInAt || optedInAt < map.get(email).optedInAt))
+    ) {
       map.set(email, { optedInAt });
     }
   }
@@ -183,7 +186,9 @@ async function main() {
   const csvPath = process.argv[2] || join(root, 'scripts', 'substack-subscribers-export.csv');
   if (!existsSync(csvPath)) {
     console.error('CSV file not found:', csvPath);
-    console.error('Usage: node scripts/sync-substack-subscribers-to-profiles.js [path-to-export.csv]');
+    console.error(
+      'Usage: node scripts/sync-substack-subscribers-to-profiles.js [path-to-export.csv]'
+    );
     console.error('Substack: Dashboard > Subscribers > Export');
     console.error('Mailchimp: Audience > Export audience');
     process.exit(1);
@@ -197,9 +202,7 @@ async function main() {
 
   const supabase = createClient(url, serviceRoleKey);
 
-  const { data: profiles, error: listError } = await supabase
-    .from('profiles')
-    .select('id, email');
+  const { data: profiles, error: listError } = await supabase.from('profiles').select('id, email');
 
   if (listError) {
     console.error('Failed to list profiles:', listError.message);
@@ -230,7 +233,12 @@ async function main() {
 
     if (isSubscriber) {
       setTrue++;
-      console.log('  ', profile.email || profile.id, '-> subscriber', newsletter_opted_in_at ? `(opted in ${newsletter_opted_in_at})` : '');
+      console.log(
+        '  ',
+        profile.email || profile.id,
+        '-> subscriber',
+        newsletter_opted_in_at ? `(opted in ${newsletter_opted_in_at})` : ''
+      );
     } else {
       setFalse++;
     }

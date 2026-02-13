@@ -6,14 +6,14 @@
  * CTA: logged-in users go to /members; others open a login sidebar.
  */
 
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Calendar } from "lucide-react";
-import { getKandieEventBySlug } from "../../lib/wordpress";
-import { AnimatedHeadline } from "../../components/AnimatedHeadline";
-import { useAuth } from "../../context/AuthContext";
-import { useMemberLoginOffcanvas } from "../../context/MemberLoginOffcanvasContext";
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowLeft, MapPin, Calendar } from 'lucide-react';
+import { getKandieEventBySlug } from '../../lib/wordpress';
+import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
+import { useAuth } from '../../context/AuthContext';
+import { useMemberLoginOffcanvas } from '../../context/MemberLoginOffcanvasContext';
 
 interface Speaker {
   name: string;
@@ -25,7 +25,7 @@ export const EventPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user, status } = useAuth();
   const { openMemberLogin } = useMemberLoginOffcanvas();
-  const [event, setEvent] = useState<any | null>(null);
+  const [event, setEvent] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -40,7 +40,9 @@ export const EventPage: React.FC = () => {
     };
 
     fetchEvent();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [slug]);
 
   if (!slug || !event) {
@@ -122,12 +124,10 @@ export const EventPage: React.FC = () => {
         {(price != null || ctaLabel != null) && (
           <section className="mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-2xl bg-primary-ecru border border-primary-ecru">
             {price != null && (
-              <p className="text-sm md:text-base text-slate-700 font-medium m-0">
-                {price}
-              </p>
+              <p className="text-sm md:text-base text-slate-700 font-medium m-0">{price}</p>
             )}
             {ctaLabel != null &&
-              (status === "loading" ? (
+              (status === 'loading' ? (
                 <span className="inline-flex items-center gap-2 rounded-full bg-secondary-purple-rain/70 px-5 py-2.5 text-sm font-medium text-white shrink-0">
                   {ctaLabel}
                 </span>
@@ -153,15 +153,10 @@ export const EventPage: React.FC = () => {
         {/* Speakers */}
         {speakers != null && speakers.length > 0 && (
           <section className="mt-14">
-            <h2 className="text-2xl font-heading-regular text-primary-ink mb-8">
-              Speakers
-            </h2>
+            <h2 className="text-2xl font-heading-regular text-primary-ink mb-8">Speakers</h2>
             <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 list-none p-0 m-0">
               {speakers.map((speaker: Speaker) => (
-                <li
-                  key={speaker.name}
-                  className="text-center"
-                >
+                <li key={speaker.name} className="text-center">
                   {speaker.image != null ? (
                     <img
                       src={speaker.image}
@@ -176,12 +171,8 @@ export const EventPage: React.FC = () => {
                       {speaker.name.charAt(0)}
                     </div>
                   )}
-                  <p className="font-semibold text-primary-ink m-0 text-base">
-                    {speaker.name}
-                  </p>
-                  <p className="text-slate-600 text-sm mt-0.5 m-0">
-                    {speaker.title}
-                  </p>
+                  <p className="font-semibold text-primary-ink m-0 text-base">{speaker.name}</p>
+                  <p className="text-slate-600 text-sm mt-0.5 m-0">{speaker.title}</p>
                 </li>
               ))}
             </ul>
@@ -194,9 +185,7 @@ export const EventPage: React.FC = () => {
             <h2 className="text-xl font-heading-regular text-primary-ink mb-4">
               With support from
             </h2>
-            <p className="text-slate-600 text-sm md:text-base leading-relaxed m-0">
-              {partners}
-            </p>
+            <p className="text-slate-600 text-sm md:text-base leading-relaxed m-0">{partners}</p>
           </section>
         )}
       </div>

@@ -5,22 +5,13 @@
  * Responsibilities:
  * - Keep track of current Supabase auth session (user).
  * - Load and expose the matching `profiles` row.
- * - Bridge membership status from WordPress into Supabase profiles.
  * - Provide `login`, `logout`, and `refreshProfile` helpers.
  */
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { syncAuthProvidersForUser } from '../lib/authProviders';
-import { fetchMembershipStatus } from '../lib/wordpress';
 import { posthog, FUNNEL_EVENTS } from '../lib/posthog';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -40,7 +31,7 @@ export interface Profile {
   member_since: string | null;
   /** Latest active membership expiration (YYYY-MM-DD). */
   membership_expiration: string | null;
-  /** Whether the user is a Kandie Gang Guide (manual or synced from WP/CSV). */
+  /** Whether the user is a Kandie Gang Guide (manual or admin updates). */
   is_guide: boolean;
   /** True when email matches a Substack/Mailchimp subscriber export (synced via script). */
   is_substack_subscriber: boolean;
@@ -83,10 +74,7 @@ type AuthContextValue = {
     options?: { displayName?: string }
   ) => Promise<{ error?: string; needsEmailConfirmation?: boolean }>;
   logout: () => Promise<void>;
-  /**
-   * Reloads the Supabase profile and, if possible, reconciles membership
-   * status from WordPress into Supabase.
-   */
+  /** Reloads the Supabase profile. */
   refreshProfile: () => Promise<void>;
   /**
    * Link Discord to the current user (redirects to Discord). Only when already logged in.
@@ -119,8 +107,7 @@ function getDiscordProfileFromUser(user: User): {
     (typeof data.name === 'string' ? data.name : null) ??
     (typeof data.username === 'string' ? data.username : null) ??
     null;
-  let avatarUrl =
-    typeof data.avatar_url === 'string' ? data.avatar_url : null;
+  let avatarUrl = typeof data.avatar_url === 'string' ? data.avatar_url : null;
   if (!avatarUrl && typeof data.avatar === 'string' && discordId) {
     avatarUrl = `https://cdn.discordapp.com/avatars/${discordId}/${data.avatar}.png`;
   }
@@ -152,7 +139,6 @@ async function loadUserAndProfile(): Promise<{
 
   const { data: sessionResult, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) {
-    // eslint-disable-next-line no-console
     console.warn('[AuthContext] Failed to read Supabase session', sessionError);
   }
 
@@ -174,12 +160,31 @@ async function loadUserAndProfile(): Promise<{
     .single();
 
   if (profileError) {
-    // eslint-disable-next-line no-console
     console.warn('[AuthContext] Failed to load profile for user', user.id, profileError);
     return { user, profile: null };
   }
 
   if (!raw) return { user, profile: null };
+
+  const isMemberRaw = raw.is_member;
+  const isMember =
+    isMemberRaw === true || isMemberRaw === 'true' || isMemberRaw === 1 || isMemberRaw === '1';
+  const isMemberKnown =
+    isMemberRaw === true ||
+    isMemberRaw === false ||
+    isMemberRaw === 'true' ||
+    isMemberRaw === 'false' ||
+    isMemberRaw === 1 ||
+    isMemberRaw === 0 ||
+    isMemberRaw === '1' ||
+    isMemberRaw === '0' ||
+    isMemberRaw == null;
+  if (!isMemberKnown) {
+    posthog.capture('membership_is_member_unexpected', {
+      user_id: user.id,
+      value: isMemberRaw,
+    });
+  }
 
   // Normalize: PostgREST returns snake_case; ensure we have a consistent shape
   const profile: Profile = {
@@ -187,7 +192,7 @@ async function loadUserAndProfile(): Promise<{
     email: raw.email ?? null,
     display_name: raw.display_name ?? null,
     wp_user_id: raw.wp_user_id ?? null,
-    is_member: Boolean(raw.is_member),
+    is_member: isMember,
     membership_source: raw.membership_source ?? null,
     membership_plans: Array.isArray(raw.membership_plans) ? raw.membership_plans : [],
     member_since: raw.member_since ?? null,
@@ -226,9 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     })();
 
-    const {
-      data: authListener,
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setStatus(session?.user ? 'authenticated' : 'unauthenticated');
       // Strip hash from URL after OAuth/magic-link callback (Supabase puts tokens in hash)
@@ -260,62 +263,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(loadedUser);
     setProfile(loadedProfile);
     setStatus(loadedUser ? 'authenticated' : 'unauthenticated');
-
-    // Bridge membership status from WordPress if we have an identity to look up.
-    if (!loadedUser) return;
-
-    const emailForLookup =
-      loadedProfile?.email ?? loadedUser.email ?? null;
-
-    if (!emailForLookup) return;
-
-    try {
-      // Don't overwrite membership when Supabase is the source of truth for this user (e.g. manual grant or migrated member).
-      if (loadedProfile?.membership_source === 'supabase') return;
-
-      const membership = await fetchMembershipStatus(emailForLookup);
-
-      if (membership && typeof membership.isMember === 'boolean') {
-        const wpIsGuide =
-          Array.isArray(membership.roles) &&
-          membership.roles.some((r) => String(r).toLowerCase().includes('guide'));
-        const nextProfile: Profile | null = loadedProfile
-          ? {
-              ...loadedProfile,
-              is_member: membership.isMember,
-              membership_source: membership.membershipSource ?? 'wordpress',
-              is_guide: loadedProfile.is_guide || wpIsGuide,
-            }
-          : null;
-
-        if (nextProfile) {
-          const { error: upsertError } = await supabase
-            .from('profiles')
-            .update({
-              is_member: nextProfile.is_member,
-              membership_source: nextProfile.membership_source,
-              is_guide: nextProfile.is_guide,
-            })
-            .eq('id', nextProfile.id);
-
-          if (upsertError) {
-            // eslint-disable-next-line no-console
-            console.warn('[AuthContext] Failed to update membership flags in Supabase', upsertError);
-          } else {
-            setProfile(nextProfile);
-          }
-        }
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn('[AuthContext] Failed to bridge membership status from WordPress', error);
-    }
   }, []);
 
   const login = useCallback(
     async (email: string, password: string): Promise<{ error?: string }> => {
       if (!supabase) {
-        return { error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+        return {
+          error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+        };
       }
       setStatus('loading');
       const { error, data } = await supabase.auth.signInWithPassword({
@@ -340,10 +295,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithMagicLink = useCallback(
     async (email: string, redirectTo?: string): Promise<{ error?: string }> => {
       if (!supabase) {
-        return { error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+        return {
+          error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+        };
       }
       const redirectTarget =
-        redirectTo ?? (typeof window !== 'undefined' ? `${window.location.origin}/members` : undefined);
+        redirectTo ??
+        (typeof window !== 'undefined' ? `${window.location.origin}/members` : undefined);
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: { emailRedirectTo: redirectTarget },
@@ -360,7 +318,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithDiscord = useCallback(
     async (options?: { redirectTo?: string }): Promise<{ error?: string }> => {
       if (!supabase) {
-        return { error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+        return {
+          error: 'Sign-in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+        };
       }
       const redirectTo =
         options?.redirectTo ??
@@ -388,16 +348,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       options?: { displayName?: string }
     ): Promise<{ error?: string; needsEmailConfirmation?: boolean }> => {
       if (!supabase) {
-        return { error: 'Sign-up is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+        return {
+          error: 'Sign-up is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+        };
       }
       setStatus('loading');
       const { error, data } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
-          data: options?.displayName
-            ? { display_name: options.displayName }
-            : undefined,
+          data: options?.displayName ? { display_name: options.displayName } : undefined,
         },
       });
 
@@ -411,10 +371,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setStatus(sessionUser ? 'authenticated' : 'unauthenticated');
       if (sessionUser) {
         await refreshProfile();
-        posthog.capture(FUNNEL_EVENTS.SIGNUP_REQUESTED, { method: 'password', immediate_session: true });
+        posthog.capture(FUNNEL_EVENTS.SIGNUP_REQUESTED, {
+          method: 'password',
+          immediate_session: true,
+        });
         return {};
       }
-      posthog.capture(FUNNEL_EVENTS.SIGNUP_REQUESTED, { method: 'password', immediate_session: false });
+      posthog.capture(FUNNEL_EVENTS.SIGNUP_REQUESTED, {
+        method: 'password',
+        immediate_session: false,
+      });
       return { needsEmailConfirmation: true };
     },
     [refreshProfile]
@@ -445,7 +411,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: { redirectTo },
       });
       if (error) {
-        return { error: error.message || 'Could not link Discord. It may already be connected to another account.' };
+        return {
+          error:
+            error.message ||
+            'Could not link Discord. It may already be connected to another account.',
+        };
       }
       return {};
     },
@@ -485,7 +455,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       linkDiscord,
       unlinkIdentity,
     }),
-    [status, user, profile, login, signInWithMagicLink, signInWithDiscord, signUp, logout, refreshProfile, linkDiscord, unlinkIdentity]
+    [
+      status,
+      user,
+      profile,
+      login,
+      signInWithMagicLink,
+      signInWithDiscord,
+      signUp,
+      logout,
+      refreshProfile,
+      linkDiscord,
+      unlinkIdentity,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -498,4 +480,3 @@ export const useAuth = (): AuthContextValue => {
   }
   return ctx;
 };
-

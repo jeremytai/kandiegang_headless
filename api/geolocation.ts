@@ -53,13 +53,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const response = await fetch(url, {
       signal: controller.signal,
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       return res.status(response.status).json({ error: 'Upstream request failed' });
     }
-    
+
     const data = await response.json();
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     return res.status(200).json(data);

@@ -59,7 +59,7 @@ export function getProductPrice(
       return variant.pricePublic ?? 0;
     }
   }
-  
+
   if (isMember && product.productFields.priceMember != null) {
     return product.productFields.priceMember;
   }
@@ -84,7 +84,7 @@ export function getStripePriceId(
       return variant.stripePriceIdPublic ?? '';
     }
   }
-  
+
   if (isMember && product.productFields.stripePriceIdMember) {
     return product.productFields.stripePriceIdMember;
   }
@@ -104,7 +104,7 @@ export function canPurchase(
   if (product.productFields.membersOnly && !isMember) {
     return false;
   }
-  
+
   // For products with variants, check variant inventory
   if (product.productFields.hasVariants && product.productFields.variants?.length) {
     const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : -1;
@@ -116,7 +116,7 @@ export function canPurchase(
     // No variant selected (e.g. shop listing): in stock if any variant has inventory
     return product.productFields.variants.some((v) => (v.inventory ?? 0) > 0);
   }
-  
+
   // For simple products without variants, check product-level inventory directly
   // inStock is computed from inventory in WordPress, so we check inventory here too
   return (product.productFields.inventory ?? 0) > 0;

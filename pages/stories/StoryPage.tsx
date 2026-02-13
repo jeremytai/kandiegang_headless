@@ -12,9 +12,9 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { getPostBySlug, getStoryBlocks, transformMediaUrl, WPPost } from '../../lib/wordpress';
 import { buildMediaMap, normalizeBlocks } from '../../lib/storyGalleries';
 import type { NormalizedBlock } from '../../lib/storyGalleries';
-import { ExpandingHero } from '../../components/ExpandingHero';
-import { AnimatedHeadline } from '../../components/AnimatedHeadline';
-import { StoryBlocksRenderer } from '../../components/StoryBlocksRenderer';
+import { ExpandingHero } from '../../components/visual/ExpandingHero';
+import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
+import { StoryBlocksRenderer } from '../../components/common/StoryBlocksRenderer';
 import { usePageMeta } from '../../hooks/usePageMeta';
 
 function stripHtml(html: string): string {
@@ -26,7 +26,8 @@ const DEMO_POST_SLUG = 'kandie-gang-season-opener-2025';
 const DEMO_POST: WPPost = {
   id: 'demo-1',
   title: 'Kandie Gang Season Opener – 2025',
-  excerpt: '<p>With a new year comes a new start location for our Kandie Gang Tuesday Social Rides.</p>',
+  excerpt:
+    '<p>With a new year comes a new start location for our Kandie Gang Tuesday Social Rides.</p>',
   date: '2025-04-08T12:00:00.000Z',
   uri: `/story/${DEMO_POST_SLUG}`,
   featuredImage: {
@@ -70,10 +71,7 @@ export const StoryPage: React.FC = () => {
         if (cancelled) return;
         if (blocksData?.post && blocksData.post.editorBlocks?.length) {
           const referenceImageUrl = blocksData.post.featuredImage?.node?.sourceUrl;
-          const mediaMap = buildMediaMap(
-            blocksData.mediaItems?.nodes ?? [],
-            referenceImageUrl
-          );
+          const mediaMap = buildMediaMap(blocksData.mediaItems?.nodes ?? [], referenceImageUrl);
           const normalized = normalizeBlocks(blocksData.post.editorBlocks, mediaMap);
           setNormalizedBlocks(normalized);
           setPost({
@@ -119,7 +117,9 @@ export const StoryPage: React.FC = () => {
   usePageMeta(
     post ? `${stripHtml(post.title)} | Kandie Gang` : 'Story | Kandie Gang',
     post ? stripHtml(post.excerpt) : null,
-    post?.featuredImage?.node?.sourceUrl ? transformMediaUrl(post.featuredImage.node.sourceUrl) : null
+    post?.featuredImage?.node?.sourceUrl
+      ? transformMediaUrl(post.featuredImage.node.sourceUrl)
+      : null
   );
 
   if (!slug) {
@@ -156,7 +156,9 @@ export const StoryPage: React.FC = () => {
             <p className="text-slate-500 mb-6">{error ?? 'Story not found.'}</p>
             <Link
               to={backToHref}
-              onClick={() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }}
+              onClick={() => {
+                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+              }}
               className="inline-flex items-center gap-2 text-secondary-purple-rain font-bold hover:underline mb-20"
             >
               <ArrowLeft className="w-4 h-4" /> {backToLabel}
@@ -199,14 +201,20 @@ export const StoryPage: React.FC = () => {
             </section>
 
             <ExpandingHero
-              imageUrl={post.featuredImage?.node?.sourceUrl ? transformMediaUrl(post.featuredImage.node.sourceUrl) : undefined}
+              imageUrl={
+                post.featuredImage?.node?.sourceUrl
+                  ? transformMediaUrl(post.featuredImage.node.sourceUrl)
+                  : undefined
+              }
               imageAlt={stripHtml(post.title)}
             />
 
             <div className="sticky top-0 z-10 max-w-4xl mx-auto px-6 pt-5 pb-6 bg-primary-breath/90 backdrop-blur-sm">
               <Link
                 to={backToHref}
-                onClick={() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }}
+                onClick={() => {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                }}
                 className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" /> {backToLabel}

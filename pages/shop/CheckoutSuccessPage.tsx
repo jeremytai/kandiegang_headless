@@ -13,7 +13,7 @@ export const CheckoutSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const [isVerifying, setIsVerifying] = useState(true);
-  const [isValid, setIsValid] = useState(false);
+  const [_isValid, _setIsValid] = useState(false);
 
   usePageMeta('Order Confirmed | Kandie Gang', 'Thank you for your purchase');
 
@@ -21,7 +21,7 @@ export const CheckoutSuccessPage: React.FC = () => {
     // In a production app, you might want to verify the session with your backend
     // For now, we'll just check if session_id exists
     if (sessionId) {
-      setIsValid(true);
+      _setIsValid(true);
       posthog.capture(FUNNEL_EVENTS.ORDER_COMPLETED, { session_id: sessionId });
     }
     setIsVerifying(false);
@@ -32,7 +32,9 @@ export const CheckoutSuccessPage: React.FC = () => {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center space-y-6">
           <Loader2 className="w-12 h-12 animate-spin text-slate-400" />
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Verifying Order</p>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+            Verifying Order
+          </p>
         </div>
       </div>
     );
@@ -60,7 +62,9 @@ export const CheckoutSuccessPage: React.FC = () => {
           {/* Session ID (for reference) */}
           {sessionId && (
             <div className="bg-slate-50 rounded-lg p-4 w-full">
-              <p className="text-xs text-slate-500 uppercase tracking-widest mb-2">Order Reference</p>
+              <p className="text-xs text-slate-500 uppercase tracking-widest mb-2">
+                Order Reference
+              </p>
               <p className="text-sm font-mono text-slate-700 break-all">{sessionId}</p>
             </div>
           )}

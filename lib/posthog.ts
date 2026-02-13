@@ -25,10 +25,14 @@ export function initPostHog(): void {
   if (initialized) return;
   if (typeof window === 'undefined') return;
 
-  const key = (import.meta as unknown as { env: { VITE_POSTHOG_KEY?: string } }).env.VITE_POSTHOG_KEY?.trim();
+  const key = (
+    import.meta as unknown as { env: { VITE_POSTHOG_KEY?: string } }
+  ).env.VITE_POSTHOG_KEY?.trim();
   if (!key) return;
 
-  const host = (import.meta as unknown as { env: { VITE_POSTHOG_HOST?: string } }).env.VITE_POSTHOG_HOST?.trim();
+  const host = (
+    import.meta as unknown as { env: { VITE_POSTHOG_HOST?: string } }
+  ).env.VITE_POSTHOG_HOST?.trim();
   posthog.init(key, {
     api_host: host || 'https://us.i.posthog.com',
     person_profiles: 'identified_only',

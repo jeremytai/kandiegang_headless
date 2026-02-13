@@ -31,7 +31,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data: { user }, error: userError } = await anonClient.auth.getUser(token);
+    const {
+      data: { user },
+      error: userError,
+    } = await anonClient.auth.getUser(token);
     if (userError || !user) {
       return res.status(401).json({ error: 'Invalid or expired token' });
     }

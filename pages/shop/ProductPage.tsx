@@ -8,8 +8,16 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { getProductBySlug, transformMediaUrl, extractProductImagesFromBlocks } from '../../lib/wordpress';
-import { getProductPrice, getStripePriceId, canPurchase, ProductVariant, ShopProduct } from '../../lib/products';
+import {
+  getProductBySlug,
+  transformMediaUrl,
+  extractProductImagesFromBlocks,
+} from '../../lib/wordpress';
+import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
+import { AddToCartButton } from '../../components/shop/AddToCartButton';
+import { ProductVariantSelector } from '../../components/shop/ProductVariantSelector';
+import { StripePaymentTrustBar } from '../../components/shop/StripePaymentTrustBar';
+import { getProductPrice, getStripePriceId, canPurchase, ShopProduct } from '../../lib/products';
 import { AnimatedHeadline } from '../../components/AnimatedHeadline';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useAuth } from '../../context/AuthContext';
@@ -33,16 +41,21 @@ function ProductDetailsAccordion({
 
   // Mobile padding is applied by the parent wrapper in ProductPage so Details aligns with the button
   const paddingClass = variant === 'mobile' ? '' : '';
-  const textColorClass = variant === 'desktop' ? 'text-secondary-purple-rain' : 'text-secondary-current';
+  const textColorClass =
+    variant === 'desktop' ? 'text-secondary-purple-rain' : 'text-secondary-current';
 
   return (
-    <div className={`flex w-full flex-col items-start self-start text-left border-t border-b border-slate-200 pt-2 pb-2 mt-4 pl-4 ${paddingClass}`}>
+    <div
+      className={`flex w-full flex-col items-start self-start text-left border-t border-b border-slate-200 pt-2 pb-2 mt-4 pl-4 ${paddingClass}`}
+    >
       <button
         type="button"
         onClick={() => setIsOpen((o) => !o)}
         className="flex w-full cursor-pointer items-center justify-between text-left group"
       >
-        <span className={`text-sm font-medium tracking-wide ${textColorClass} group-hover:opacity-80`}>
+        <span
+          className={`text-sm font-medium tracking-wide ${textColorClass} group-hover:opacity-80`}
+        >
           Details
         </span>
         <span
@@ -61,18 +74,16 @@ function ProductDetailsAccordion({
             transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
             className="overflow-hidden"
           >
-            <div className={`pt-4 pb-2 ${textColorClass} text-xs md:text-sm prose prose-sm max-w-[44ch]`}>
+            <div
+              className={`pt-4 pb-2 ${textColorClass} text-xs md:text-sm prose prose-sm max-w-[44ch]`}
+            >
               {bodyHtml && (
                 <div
                   className={variant === 'desktop' ? 'prose-purple' : ''}
                   dangerouslySetInnerHTML={{ __html: bodyHtml }}
                 />
               )}
-              {sku && (
-                <div className="text-secondary-purple-rain/60 text-sm pt-4">
-                  SKU: {sku}
-                </div>
-              )}
+              {sku && <div className="text-secondary-purple-rain/60 text-sm pt-4">SKU: {sku}</div>}
             </div>
           </motion.div>
         )}
@@ -86,14 +97,16 @@ function ProductDetailsAccordion({
  * Returns array of { id, sourceUrl, altText } objects.
  * Transforms URLs using transformMediaUrl to ensure they load correctly.
  */
-function extractImagesFromContent(content?: string): Array<{ id: string; sourceUrl: string; altText?: string }> {
+function extractImagesFromContent(
+  content?: string
+): Array<{ id: string; sourceUrl: string; altText?: string }> {
   if (!content) return [];
-  
+
   const images: Array<{ id: string; sourceUrl: string; altText?: string }> = [];
   const parser = new DOMParser();
   const doc = parser.parseFromString(content, 'text/html');
   const imgTags = doc.querySelectorAll('img');
-  
+
   imgTags.forEach((img, index) => {
     const src = img.getAttribute('src');
     if (src) {
@@ -106,7 +119,7 @@ function extractImagesFromContent(content?: string): Array<{ id: string; sourceU
       });
     }
   });
-  
+
   return images;
 }
 
@@ -135,11 +148,11 @@ function getContentWithoutFirstParagraph(content?: string): string {
  */
 function removeImagesFromContent(content?: string): string {
   if (!content) return '';
-  
+
   const parser = new DOMParser();
   const doc = parser.parseFromString(content, 'text/html');
   const imgTags = doc.querySelectorAll('img');
-  
+
   // Remove all img tags and their parent containers (if they're in figure/picture tags)
   imgTags.forEach((img) => {
     const parent = img.parentElement;
@@ -151,7 +164,7 @@ function removeImagesFromContent(content?: string): string {
       img.remove();
     }
   });
-  
+
   return doc.body.innerHTML;
 }
 
@@ -177,9 +190,9 @@ export const ProductPage: React.FC = () => {
   // Get product images (featured image + gallery blocks + fallback to HTML content)
   const productImages = useMemo(() => {
     if (!product) return [];
-    
+
     const images: Array<{ id: string; sourceUrl: string; altText?: string }> = [];
-    
+
     // Add featured image first
     if (product.featuredImage?.node?.sourceUrl) {
       images.push({
@@ -188,7 +201,7 @@ export const ProductPage: React.FC = () => {
         altText: product.featuredImage.node.altText,
       });
     }
-    
+
     // Priority 1: Extract images from Gallery blocks (if available)
     if (product.editorBlocks && product.editorBlocks.length > 0) {
       const referenceImageUrl = product.featuredImage?.node?.sourceUrl;
@@ -202,11 +215,11 @@ export const ProductPage: React.FC = () => {
         return images; // Use gallery blocks, skip HTML parsing
       }
     }
-    
+
     // Priority 2: Fallback to extracting images from HTML content (backward compatibility)
     const contentImages = extractImagesFromContent(product.content);
     images.push(...contentImages);
-    
+
     return images;
   }, [product]);
 
@@ -281,7 +294,8 @@ export const ProductPage: React.FC = () => {
 
   // Handle sticky/fixed behavior for thumbnails and right column
   useEffect(() => {
-    if (typeof window === 'undefined' || window.innerWidth < 1024 || productImages.length === 0) return;
+    if (typeof window === 'undefined' || window.innerWidth < 1024 || productImages.length === 0)
+      return;
 
     // Calculate sticky end threshold based on image count
     const IMAGE_HEIGHT = 800; // Approximate height per image
@@ -321,7 +335,9 @@ export const ProductPage: React.FC = () => {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center space-y-6">
           <Loader2 className="w-12 h-12 animate-spin text-slate-400" />
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Loading Product</p>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+            Loading Product
+          </p>
         </div>
       </div>
     );
@@ -345,7 +361,7 @@ export const ProductPage: React.FC = () => {
   const hasVariants = product.productFields?.hasVariants ?? false;
   const variants = product.productFields?.variants ?? [];
   const variantIndex = hasVariants ? selectedVariantIndex : undefined;
-  
+
   // Convert product to ShopProduct format for helper functions
   const shopProduct: ShopProduct = {
     id: product.id,
@@ -355,13 +371,17 @@ export const ProductPage: React.FC = () => {
     featuredImage: product.featuredImage,
     productFields: {
       hasVariants,
-      pricePublic: product.productFields?.pricePublic ? parseFloat(product.productFields.pricePublic) : undefined,
-      priceMember: product.productFields?.priceMember ? parseFloat(product.productFields.priceMember) : undefined,
+      pricePublic: product.productFields?.pricePublic
+        ? parseFloat(product.productFields.pricePublic)
+        : undefined,
+      priceMember: product.productFields?.priceMember
+        ? parseFloat(product.productFields.priceMember)
+        : undefined,
       stripePriceIdPublic: product.productFields?.stripePriceIdPublic,
       stripePriceIdMember: product.productFields?.stripePriceIdMember,
       inventory: product.productFields?.inventory,
       sku: product.productFields?.sku,
-      variants: variants.map(v => ({
+      variants: variants.map((v) => ({
         label: v.label,
         pricePublic: v.pricePublic,
         priceMember: v.priceMember,
@@ -374,16 +394,16 @@ export const ProductPage: React.FC = () => {
       inStock: product.productFields?.inStock ?? true,
     },
   };
-  
+
   // Calculate pricing using helper functions
   const displayPrice = getProductPrice(shopProduct, isMember, variantIndex);
   const stripePriceId = getStripePriceId(shopProduct, isMember, variantIndex);
   const canPurchaseProduct = canPurchase(shopProduct, isMember, variantIndex);
-  
+
   // Calculate public price and discount status for display
   let publicPrice = displayPrice;
   let hasDiscount = false;
-  
+
   if (hasVariants && selectedVariantIndex >= 0 && variants[selectedVariantIndex]) {
     const variant = variants[selectedVariantIndex];
     publicPrice = variant.pricePublic;
@@ -392,16 +412,17 @@ export const ProductPage: React.FC = () => {
     publicPrice = shopProduct.productFields.pricePublic ?? 0;
     hasDiscount = isMember && !!shopProduct.productFields.priceMember;
   }
-  
-  const variantLabel = hasVariants && selectedVariantIndex >= 0 && variants[selectedVariantIndex]
-    ? variants[selectedVariantIndex].label
-    : product.productFields?.variantLabel;
+
+  const _variantLabel =
+    hasVariants && selectedVariantIndex >= 0 && variants[selectedVariantIndex]
+      ? variants[selectedVariantIndex].label
+      : product.productFields?.variantLabel;
 
   const rawTitle = (product.title ?? '')
     .replace(/<[^>]*>/g, '')
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)));
   const productSlug = (product.slug ?? '').toLowerCase();
-  const hideTitleAndSizeLabel =
+  const _hideTitleAndSizeLabel =
     /Cycling Socks/i.test(rawTitle) ||
     (/Love Story/i.test(rawTitle) && /Socks?/i.test(rawTitle)) ||
     /love-story.*socks|cycling-socks|socks.*love-story/i.test(productSlug);
@@ -523,7 +544,9 @@ export const ProductPage: React.FC = () => {
                     </p>
                   )}
                   {!canPurchaseProduct && (hasVariants ? selectedVariantIndex >= 0 : true) && (
-                    <p className="text-xs font-medium text-red-600 uppercase tracking-widest mt-1.5">Out of Stock</p>
+                    <p className="text-xs font-medium text-red-600 uppercase tracking-widest mt-1.5">
+                      Out of Stock
+                    </p>
                   )}
                   {shopProduct.productFields.membersOnly && !isMember && (
                     <p className="text-xs font-medium text-secondary-purple-rain/70 uppercase tracking-widest mt-1.5">
@@ -535,7 +558,9 @@ export const ProductPage: React.FC = () => {
               {product.content && getFirstParagraph(product.content) && (
                 <div
                   className="max-w-[44ch] mt-4 text-left text-secondary-purple-rain text-xs md:text-sm prose prose-sm prose-purple prose-p:my-0"
-                  dangerouslySetInnerHTML={{ __html: removeImagesFromContent(getFirstParagraph(product.content)) }}
+                  dangerouslySetInnerHTML={{
+                    __html: removeImagesFromContent(getFirstParagraph(product.content)),
+                  }}
                 />
               )}
             </div>
@@ -562,9 +587,17 @@ export const ProductPage: React.FC = () => {
                   productId={product.id}
                   productTitle={product.title}
                   productSlug={product.slug ?? ''}
-                  variantLabel={hasVariants && selectedVariantIndex >= 0 ? variants[selectedVariantIndex].label : undefined}
+                  variantLabel={
+                    hasVariants && selectedVariantIndex >= 0
+                      ? variants[selectedVariantIndex].label
+                      : undefined
+                  }
                   price={displayPrice > 0 ? displayPrice : undefined}
-                  disabled={hasVariants && selectedVariantIndex < 0 ? false : (!stripePriceId || !canPurchaseProduct)}
+                  disabled={
+                    hasVariants && selectedVariantIndex < 0
+                      ? false
+                      : !stripePriceId || !canPurchaseProduct
+                  }
                   onBeforeAdd={() => {
                     if (hasVariants && selectedVariantIndex < 0) {
                       setShowVariantRequiredMessage(true);
@@ -584,7 +617,11 @@ export const ProductPage: React.FC = () => {
               </div>
               <div className="mt-2 w-full">
                 <ProductDetailsAccordion
-                  bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
+                  bodyHtml={
+                    product.content && getContentWithoutFirstParagraph(product.content)
+                      ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content))
+                      : ''
+                  }
                   sku={product.productFields?.sku}
                   variant="desktop"
                 />
@@ -645,7 +682,11 @@ export const ProductPage: React.FC = () => {
                         setActiveImageIndex(i);
                         const el = mobileCarouselRef.current;
                         if (el && el.children[i]) {
-                          el.children[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                          el.children[i].scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'nearest',
+                            inline: 'center',
+                          });
                         }
                       }}
                       className={`aspect-[3/4] w-7 cursor-pointer overflow-hidden rounded-md outline-2 outline-offset-3 transition-[outline,ring] ${
@@ -706,7 +747,9 @@ export const ProductPage: React.FC = () => {
                   </p>
                 )}
                 {!canPurchaseProduct && (hasVariants ? selectedVariantIndex >= 0 : true) && (
-                  <p className="text-xs font-medium text-red-600 uppercase tracking-widest mt-1.5">Out of Stock</p>
+                  <p className="text-xs font-medium text-red-600 uppercase tracking-widest mt-1.5">
+                    Out of Stock
+                  </p>
                 )}
                 {shopProduct.productFields.membersOnly && !isMember && (
                   <p className="text-xs font-medium text-secondary-purple-rain/70 uppercase tracking-widest mt-1.5">
@@ -720,7 +763,9 @@ export const ProductPage: React.FC = () => {
             {product.content && getFirstParagraph(product.content) && (
               <div
                 className="max-w-[44ch] w-full px-4 text-left text-secondary-current text-xs md:text-sm prose prose-sm prose-p:my-0 self-start"
-                dangerouslySetInnerHTML={{ __html: removeImagesFromContent(getFirstParagraph(product.content)) }}
+                dangerouslySetInnerHTML={{
+                  __html: removeImagesFromContent(getFirstParagraph(product.content)),
+                }}
               />
             )}
 
@@ -745,9 +790,17 @@ export const ProductPage: React.FC = () => {
                 productId={product.id}
                 productTitle={product.title}
                 productSlug={product.slug ?? ''}
-                variantLabel={hasVariants && selectedVariantIndex >= 0 ? variants[selectedVariantIndex].label : undefined}
+                variantLabel={
+                  hasVariants && selectedVariantIndex >= 0
+                    ? variants[selectedVariantIndex].label
+                    : undefined
+                }
                 price={displayPrice > 0 ? displayPrice : undefined}
-                disabled={hasVariants && selectedVariantIndex < 0 ? false : (!stripePriceId || !canPurchaseProduct)}
+                disabled={
+                  hasVariants && selectedVariantIndex < 0
+                    ? false
+                    : !stripePriceId || !canPurchaseProduct
+                }
                 className="w-full self-start"
                 onBeforeAdd={() => {
                   if (hasVariants && selectedVariantIndex < 0) {
@@ -770,7 +823,11 @@ export const ProductPage: React.FC = () => {
             {/* 9. Product details accordion — tight under payment bar */}
             <div className="mt-2 w-full px-4">
               <ProductDetailsAccordion
-                bodyHtml={product.content && getContentWithoutFirstParagraph(product.content) ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content)) : ''}
+                bodyHtml={
+                  product.content && getContentWithoutFirstParagraph(product.content)
+                    ? removeImagesFromContent(getContentWithoutFirstParagraph(product.content))
+                    : ''
+                }
                 sku={product.productFields?.sku}
                 variant="mobile"
               />

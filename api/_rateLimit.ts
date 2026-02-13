@@ -19,7 +19,11 @@ function getClientIp(req: VercelRequest): string {
   return req.socket?.remoteAddress || 'unknown';
 }
 
-export function checkRateLimit(req: VercelRequest, res: VercelResponse, options: RateLimitOptions): boolean {
+export function checkRateLimit(
+  req: VercelRequest,
+  res: VercelResponse,
+  options: RateLimitOptions
+): boolean {
   const now = Date.now();
   const ip = getClientIp(req);
   const key = `${options.keyPrefix}:${ip}`;

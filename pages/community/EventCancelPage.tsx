@@ -32,7 +32,7 @@ export const EventCancelPage: React.FC = () => {
         }
         setStatus('success');
         setMessage('Your event spot has been cancelled.');
-      } catch (err) {
+      } catch (_err) {
         setStatus('error');
         setMessage('Unable to cancel this event spot.');
       }

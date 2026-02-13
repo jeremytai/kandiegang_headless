@@ -1,4 +1,3 @@
-
 /**
  * lib/wordpress.ts
  * A type-safe bridge for interacting with a Headless WordPress backend via GraphQL.
@@ -10,10 +9,14 @@ import type { StoryBlocksData } from './storyGalleries';
 
 // WordPress GraphQL endpoint from environment variable
 // Falls back to demo endpoint if not configured
-const WP_GRAPHQL_URL = import.meta.env.VITE_WP_GRAPHQL_URL || 'https://wp-origin.kandiegang.com/graphql';
+const WP_GRAPHQL_URL =
+  import.meta.env.VITE_WP_GRAPHQL_URL || 'https://wp-origin.kandiegang.com/graphql';
 
 // Only rewrite media URLs when a CDN base is explicitly set (e.g. public S3 or CloudFront).
-const MEDIA_CDN_BASE = (import.meta.env.VITE_MEDIA_CDN_URL as string | undefined)?.replace(/\/$/, '');
+const MEDIA_CDN_BASE = (import.meta.env.VITE_MEDIA_CDN_URL as string | undefined)?.replace(
+  new RegExp('/$'),
+  ''
+);
 
 /** Matches kandiegang.com origin (http(s), optional www) for replacement with CDN. */
 const KANDIEGANG_ORIGIN = /^https?:\/\/(www\.)?kandiegang\.com/;
@@ -29,13 +32,15 @@ export function transformMediaUrl(url: string, _referenceImageUrl?: string): str
   // Check if URL is already on S3 or another external CDN - don't modify these
   // Matches: *.s3.*.amazonaws.com, *.cloudfront.net, *.cdn.*, etc.
   // Extract domain part and check for CDN indicators
-  const domainMatch = url.match(/^https?:\/\/([^\/]+)/);
+  const domainMatch = url.match(/^https?:\/\/([^/]+)/);
   const domain = domainMatch ? domainMatch[1] : '';
   const isExternalCDN = /\.(s3\.|cloudfront\.|cdn\.|amazonaws\.com)/i.test(domain);
-  
+
   // Strip WordPress image sizes (-1024x768, -300x200, etc.) to use original
   // Only do this for WordPress URLs, not external CDN URLs where the size suffix might be part of the actual filename
-  const originalUrl = isExternalCDN ? url : url.replace(/-(\d+x\d+)\.(jpg|jpeg|png|gif|webp)$/i, '.$2');
+  const originalUrl = isExternalCDN
+    ? url
+    : url.replace(/-(\d+x\d+)\.(jpg|jpeg|png|gif|webp)$/i, '.$2');
 
   if (!MEDIA_CDN_BASE) return originalUrl;
   if (originalUrl.includes(MEDIA_CDN_BASE)) return originalUrl;
@@ -103,7 +108,7 @@ export interface GraphQLResponse<T> {
 }
 
 // Simple in-memory cache for WordPress queries
-const queryCache = new Map<string, { data: any; timestamp: number }>();
+const queryCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
@@ -111,19 +116,19 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
  * Includes retry logic, caching, and comprehensive error handling.
  */
 export async function wpQuery<T>(
-  query: string, 
+  query: string,
   variables = {},
-  options: { 
+  options: {
     useCache?: boolean;
     retries?: number;
     retryDelay?: number;
   } = {}
 ): Promise<T> {
   const { useCache = true, retries = 2, retryDelay = 1000 } = options;
-  
+
   // Create cache key from query and variables
   const cacheKey = useCache ? `${query}:${JSON.stringify(variables)}` : null;
-  
+
   // Check cache
   if (cacheKey && queryCache.has(cacheKey)) {
     const cached = queryCache.get(cacheKey)!;
@@ -134,7 +139,7 @@ export async function wpQuery<T>(
   }
 
   let lastError: Error | null = null;
-  
+
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await fetch(WP_GRAPHQL_URL, {
@@ -155,7 +160,7 @@ export async function wpQuery<T>(
       const json: GraphQLResponse<T> = await response.json();
 
       if (json.errors) {
-        const errorMessages = json.errors.map(e => e.message).join(', ');
+        const errorMessages = json.errors.map((e) => e.message).join(', ');
         console.error('[WordPress] GraphQL Errors:', json.errors);
         console.error('[WordPress] Full error details:', JSON.stringify(json.errors, null, 2));
         if (import.meta.env.DEV) {
@@ -164,7 +169,7 @@ export async function wpQuery<T>(
         }
         throw new Error(`GraphQL Error: ${errorMessages}`);
       }
-      
+
       if (import.meta.env.DEV && json.data) {
         console.log('[WordPress] Query successful');
       }
@@ -184,7 +189,7 @@ export async function wpQuery<T>(
       return json.data;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       // Don't retry on GraphQL errors (client errors)
       if (lastError.message.includes('GraphQL Error')) {
         throw lastError;
@@ -193,8 +198,10 @@ export async function wpQuery<T>(
       // Retry on network errors
       if (attempt < retries) {
         const delay = retryDelay * Math.pow(2, attempt); // Exponential backoff
-        console.warn(`WordPress query failed, retrying in ${delay}ms... (attempt ${attempt + 1}/${retries + 1})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        console.warn(
+          `WordPress query failed, retrying in ${delay}ms... (attempt ${attempt + 1}/${retries + 1})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
     }
@@ -501,7 +508,17 @@ export function clearWPCache(): void {
  */
 export type ProductEditorBlock =
   | { name: string; attributes?: { content?: string } } // CoreParagraph
-  | { name: string; attributes?: { id: string | number; url?: string; alt?: string; caption?: string; width?: number; height?: number } } // CoreImage
+  | {
+      name: string;
+      attributes?: {
+        id: string | number;
+        url?: string;
+        alt?: string;
+        caption?: string;
+        width?: number;
+        height?: number;
+      };
+    } // CoreImage
   | { name: string; attributes?: { ids: (string | number)[]; columns?: number } }; // CoreGallery
 
 /** Variant shape used after normalization (built from flat ACF fields). */
@@ -522,7 +539,9 @@ export type FlatProductFields = Record<string, unknown>;
  * Build variants array from flat ACF productFields (variant1Label, variant1PricePublic, ...).
  * Only slots with a non-empty label are included.
  */
-export function buildVariantsFromProductFields(pf: FlatProductFields | null | undefined): WPProductVariantShape[] {
+export function buildVariantsFromProductFields(
+  pf: FlatProductFields | null | undefined
+): WPProductVariantShape[] {
   if (!pf || typeof pf !== 'object') return [];
   const variants: WPProductVariantShape[] = [];
   for (let i = 1; i <= 10; i++) {
@@ -539,7 +558,10 @@ export function buildVariantsFromProductFields(pf: FlatProductFields | null | un
       pricePublic: typeof pricePublic === 'number' ? pricePublic : Number(pricePublic) || 0,
       priceMember: priceMember != null && priceMember !== '' ? Number(priceMember) : undefined,
       stripePriceIdPublic: stripePriceIdPublic != null ? String(stripePriceIdPublic) : '',
-      stripePriceIdMember: stripePriceIdMember != null && stripePriceIdMember !== '' ? String(stripePriceIdMember) : undefined,
+      stripePriceIdMember:
+        stripePriceIdMember != null && stripePriceIdMember !== ''
+          ? String(stripePriceIdMember)
+          : undefined,
       sku: sku != null && sku !== '' ? String(sku) : undefined,
       inventory: typeof inventory === 'number' ? inventory : Number(inventory) || 0,
     });
@@ -551,7 +573,9 @@ export function buildVariantsFromProductFields(pf: FlatProductFields | null | un
  * Normalize productFields from flat ACF variant fields to include a variants array.
  * Use after fetching so the rest of the app can keep using productFields.variants.
  */
-export function normalizeProductFields(pf: FlatProductFields | null | undefined): WPProduct['productFields'] {
+export function normalizeProductFields(
+  pf: FlatProductFields | null | undefined
+): WPProduct['productFields'] {
   if (!pf) return undefined;
   const variants = buildVariantsFromProductFields(pf);
   return {
@@ -1181,7 +1205,7 @@ export function extractProductImagesFromBlocks(
   if (!editorBlocks || editorBlocks.length === 0) return [];
 
   const images: Array<{ id: string; sourceUrl: string; altText?: string }> = [];
-  
+
   // Build media map for resolving gallery IDs
   const mediaMap = mediaItems
     ? Object.fromEntries(
@@ -1241,12 +1265,14 @@ export function extractProductImagesFromBlocks(
 /**
  * Helper function to fetch a product by slug.
  * Uses shopProduct to match the shopProducts pattern.
- * Note: If your GraphQL schema uses 'product' instead of 'shopProduct', 
+ * Note: If your GraphQL schema uses 'product' instead of 'shopProduct',
  * update GET_PRODUCT_QUERY to use 'product' instead.
  * @param slug - The product slug
  * @returns The product data with mediaItems or null if not found
  */
-export async function getProductBySlug(slug: string): Promise<(WPProductDetail & { mediaItems?: ProductMediaItemNode[] }) | null> {
+export async function getProductBySlug(
+  slug: string
+): Promise<(WPProductDetail & { mediaItems?: ProductMediaItemNode[] }) | null> {
   if (import.meta.env.DEV) {
     console.log('[Product] Fetching product with slug:', slug);
   }
@@ -1264,7 +1290,9 @@ export async function getProductBySlug(slug: string): Promise<(WPProductDetail &
       }
       return {
         ...data.shopProduct,
-        productFields: normalizeProductFields(data.shopProduct.productFields as FlatProductFields) ?? data.shopProduct.productFields,
+        productFields:
+          normalizeProductFields(data.shopProduct.productFields as FlatProductFields) ??
+          data.shopProduct.productFields,
         mediaItems: data.mediaItems?.nodes,
       };
     } else {
@@ -1294,7 +1322,8 @@ export async function getProductBySlug(slug: string): Promise<(WPProductDetail &
       }
       return {
         ...node,
-        productFields: normalizeProductFields(node.productFields as FlatProductFields) ?? node.productFields,
+        productFields:
+          normalizeProductFields(node.productFields as FlatProductFields) ?? node.productFields,
         mediaItems: fallbackData.mediaItems?.nodes,
       };
     } else {
@@ -1318,7 +1347,11 @@ export async function getProductBySlug(slug: string): Promise<(WPProductDetail &
     const match = nodes.find(
       (p) =>
         (p.slug && p.slug.toLowerCase() === slugLower) ||
-        (p.uri && p.uri.replace(/^\/+|\/+$/g, '').toLowerCase().endsWith(slugLower))
+        (p.uri &&
+          p.uri
+            .replace(/^\/+|\/+$/g, '')
+            .toLowerCase()
+            .endsWith(slugLower))
     );
     if (match) {
       if (import.meta.env.DEV) {
@@ -1326,7 +1359,8 @@ export async function getProductBySlug(slug: string): Promise<(WPProductDetail &
       }
       return {
         ...match,
-        productFields: normalizeProductFields(match.productFields as FlatProductFields) ?? match.productFields,
+        productFields:
+          normalizeProductFields(match.productFields as FlatProductFields) ?? match.productFields,
       } as WPProductDetail & { mediaItems?: ProductMediaItemNode[] };
     }
   } catch (error) {
@@ -1362,7 +1396,9 @@ export async function getProductVariants(parentId: string): Promise<WPProductVar
     }
 
     // Fallback: Fetch all products and filter client-side
-    type VariantNode = WPProductVariant & { productFields?: { parentProduct?: { edges?: Array<{ node?: { id: string } }> } } };
+    type VariantNode = WPProductVariant & {
+      productFields?: { parentProduct?: { edges?: Array<{ node?: { id: string } }> } };
+    };
     const allData = await wpQuery<{ shopProducts: { nodes: Array<VariantNode> } }>(
       GET_ALL_PRODUCTS_FOR_VARIANTS_QUERY,
       {},
@@ -1375,102 +1411,10 @@ export async function getProductVariants(parentId: string): Promise<WPProductVar
       return productParentId === parentId;
     });
 
-    return variants.map(({ productFields, ...rest }) => rest as WPProductVariant);
+    return variants.map(({ productFields: _productFields, ...rest }) => rest as WPProductVariant);
   } catch (error) {
     console.error('Failed to fetch product variants:', error);
     return [];
-  }
-}
-
-/**
- * Lightweight membership status as seen from WordPress.
- * This is intentionally minimal and defensive so the frontend degrades gracefully
- * if the underlying schema changes.
- */
-export type WordpressMembershipStatus = {
-  isMember: boolean;
-  membershipSource: 'wordpress' | 'supabase' | 'unknown';
-  roles?: string[];
-};
-
-const GET_MEMBERSHIP_STATUS_QUERY = `
-  query GetMembershipStatus($email: String!, $id: ID, $idType: UserNodeIdTypeEnum) {
-    user(id: $id, idType: $idType) @include(if: $id) {
-      id
-      email
-      roles {
-        nodes {
-          name
-          slug
-        }
-      }
-    }
-    userByEmail(email: $email) {
-      id
-      email
-      roles {
-        nodes {
-          name
-          slug
-        }
-      }
-    }
-  }
-`;
-
-type MembershipStatusResponse = {
-  user: {
-    roles?: { nodes?: Array<{ name: string; slug: string }> };
-  } | null;
-  userByEmail: {
-    roles?: { nodes?: Array<{ name: string; slug: string }> };
-  } | null;
-};
-
-/**
- * Fetches membership status from WordPress given an email or WP user id.
- * This is a best-effort helper: if anything fails, it returns "not a member"
- * rather than throwing, so the frontend can still rely on Supabase flags.
- */
-export async function fetchMembershipStatus(
-  emailOrWpId: string | number
-): Promise<WordpressMembershipStatus> {
-  const email =
-    typeof emailOrWpId === 'string' && emailOrWpId.includes('@') ? emailOrWpId : '';
-
-  try {
-    const data = await wpQuery<MembershipStatusResponse>(
-      GET_MEMBERSHIP_STATUS_QUERY,
-      {
-        email,
-        id: typeof emailOrWpId === 'number' ? String(emailOrWpId) : null,
-        idType: typeof emailOrWpId === 'number' ? 'DATABASE_ID' : null,
-      },
-      { useCache: false }
-    );
-
-    const roles =
-      data.user?.roles?.nodes ??
-      data.userByEmail?.roles?.nodes ??
-      [];
-
-    const roleSlugs = roles.map((role) => role.slug);
-
-    // Heuristic: treat specific roles as "member". Adjust as needed in WordPress.
-    const MEMBER_ROLE_SLUGS = ['kandiegang_member', 'member', 'subscriber'];
-    const isMember = roleSlugs.some((slug) => MEMBER_ROLE_SLUGS.includes(slug));
-
-    return {
-      isMember,
-      membershipSource: 'wordpress',
-      roles: roleSlugs,
-    };
-  } catch (error) {
-    console.warn('Failed to fetch membership status from WordPress:', error);
-    return {
-      isMember: false,
-      membershipSource: 'unknown',
-    };
   }
 }
 
@@ -1555,15 +1499,18 @@ export async function getKandieEvents(first: number = 20): Promise<WPRideEvent[]
       { first },
       { useCache: true }
     );
-    
+
     if (import.meta.env.DEV) {
       console.log('[Community] Raw WordPress response:', data);
       if (data.rideEvents?.nodes?.[0]) {
         console.log('[Community] First event data:', data.rideEvents.nodes[0]);
-        console.log('[Community] First event featuredImage:', data.rideEvents.nodes[0].featuredImage);
+        console.log(
+          '[Community] First event featuredImage:',
+          data.rideEvents.nodes[0].featuredImage
+        );
       }
     }
-    
+
     return data.rideEvents?.nodes ?? null;
   } catch (error) {
     console.error('[Community] Failed to fetch events from WordPress:', error);
@@ -1584,11 +1531,11 @@ export async function getKandieEventBySlug(slug: string): Promise<WPRideEvent | 
       { slug },
       { useCache: true }
     );
-    
+
     if (import.meta.env.DEV) {
       console.log('[Event] Fetched event:', data.rideEvent);
     }
-    
+
     return data.rideEvent ?? null;
   } catch (error) {
     console.error(`[Event] Failed to fetch event with slug "${slug}":`, error);

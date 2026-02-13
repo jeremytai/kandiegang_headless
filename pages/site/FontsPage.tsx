@@ -30,7 +30,7 @@ export const FontsPage: React.FC = () => {
       400: 'font-weight-400',
       500: 'font-weight-500',
       600: 'font-weight-600',
-      700: 'font-weight-700'
+      700: 'font-weight-700',
     };
     return weightMap[weight] || '';
   };
@@ -48,7 +48,7 @@ export const FontsPage: React.FC = () => {
       weights: [{ weight: 400, style: 'normal', label: 'Normal' }],
       sample: 'The quick brown fox jumps over the lazy dog',
       sizes: ['text-6xl', 'text-4xl', 'text-2xl', 'text-xl'],
-      usage: 'Use var(--font-heading-thin) or .font-heading-thin for thin headings'
+      usage: 'Use var(--font-heading-thin) or .font-heading-thin for thin headings',
     },
     {
       name: 'IvyOra Disp Lt',
@@ -57,7 +57,7 @@ export const FontsPage: React.FC = () => {
       weights: [{ weight: 400, style: 'normal', label: 'Normal' }],
       sample: 'The quick brown fox jumps over the lazy dog',
       sizes: ['text-6xl', 'text-4xl', 'text-2xl', 'text-xl'],
-      usage: 'Use var(--font-heading-light) or .font-heading-light for light headings'
+      usage: 'Use var(--font-heading-light) or .font-heading-light for light headings',
     },
     {
       name: 'IvyOra Disp Reg',
@@ -66,7 +66,7 @@ export const FontsPage: React.FC = () => {
       weights: [{ weight: 400, style: 'normal', label: 'Normal' }],
       sample: 'The quick brown fox jumps over the lazy dog',
       sizes: ['text-6xl', 'text-4xl', 'text-2xl', 'text-xl'],
-      usage: 'Default heading font (h1–h6). Use var(--font-heading-regular) or .font-heading'
+      usage: 'Default heading font (h1–h6). Use var(--font-heading-regular) or .font-heading',
     },
     {
       name: 'GTPlanar',
@@ -79,19 +79,19 @@ export const FontsPage: React.FC = () => {
         { weight: 400, style: 'normal', label: 'Regular' },
         { weight: 400, style: 'italic', label: 'Italic' },
         { weight: 700, style: 'normal', label: 'Bold' },
-        { weight: 700, style: 'italic', label: 'Bold Italic' }
+        { weight: 700, style: 'italic', label: 'Bold Italic' },
       ],
       sample: 'The quick brown fox jumps over the lazy dog. 1234567890',
       sizes: ['text-2xl', 'text-xl', 'text-lg', 'text-base'],
-      usage: 'Used for all body text, paragraphs, and list items. Use var(--font-body)'
-    }
+      usage: 'Used for all body text, paragraphs, and list items. Use var(--font-body)',
+    },
   ];
 
   const characterSets = {
     uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
     lowercase: 'abcdefghijklmnopqrstuvwxyz',
     numbers: '0123456789',
-    punctuation: '.,;:!?\'"()[]{}@#$%^&*-+=/\\|<>`~'
+    punctuation: '.,;:!?\'"()[]{}@#$%^&*-+=/\\|<>`~',
   };
 
   return (
@@ -125,22 +125,17 @@ export const FontsPage: React.FC = () => {
                 {font.name}
               </h2>
               <p className="text-lg text-slate-500 font-light">{font.description}</p>
-              <p className="text-sm text-slate-400 mt-2 font-mono">
-                font-family: '{font.family}'
-              </p>
-              <p className="text-sm text-slate-400 mt-1">
-                Usage: {font.usage}
-              </p>
+              <p className="text-sm text-slate-400 mt-2 font-mono">font-family: '{font.family}'</p>
+              <p className="text-sm text-slate-400 mt-1">Usage: {font.usage}</p>
             </div>
 
             {/* Weights and Styles */}
             <div className="space-y-16 mb-16">
-              {font.weights.map((weight, weightIndex) => (
+              {font.weights.map((weight, _weightIndex) => (
                 <div key={`${weight.weight}-${weight.style}`} className="space-y-8">
                   <div className="flex items-center gap-4">
                     <span className="text-xs font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-4 py-2 rounded-full">
-                      {weight.label} ({weight.weight})
-                      {weight.style === 'italic' && ' • Italic'}
+                      {weight.label} ({weight.weight}){weight.style === 'italic' && ' • Italic'}
                     </span>
                     <code className="text-xs text-slate-400 font-mono">
                       font-weight: {weight.weight}; font-style: {weight.style};
@@ -192,9 +187,7 @@ export const FontsPage: React.FC = () => {
                   <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
                     Numbers
                   </p>
-                  <p className={`text-2xl ${getFontClass(font.family)}`}>
-                    {characterSets.numbers}
-                  </p>
+                  <p className={`text-2xl ${getFontClass(font.family)}`}>{characterSets.numbers}</p>
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
@@ -221,22 +214,51 @@ export const FontsPage: React.FC = () => {
             <div className="bg-slate-800 rounded-lg p-4">
               <div className="text-slate-400 mb-2">CSS Custom Properties:</div>
               <div className="space-y-2 text-slate-200">
-                <div><span className="text-[#f9f100]">--font-heading-thin:</span> "IvyOra Disp Thi", sans-serif</div>
-                <div><span className="text-[#f9f100]">--font-heading-light:</span> "IvyOra Disp Lt", sans-serif</div>
-                <div><span className="text-[#f9f100]">--font-heading-regular:</span> "IvyOra Disp Reg", sans-serif</div>
-                <div><span className="text-[#f9f100]">--font-body:</span> "GTPlanar", "GTPlanar Fallback", sans-serif</div>
-                <div><span className="text-[#f9f100]">--font-size:</span> 16px</div>
-                <div><span className="text-[#f9f100]">--font-weight:</span> 300</div>
+                <div>
+                  <span className="text-[#f9f100]">--font-heading-thin:</span> "IvyOra Disp Thi",
+                  sans-serif
+                </div>
+                <div>
+                  <span className="text-[#f9f100]">--font-heading-light:</span> "IvyOra Disp Lt",
+                  sans-serif
+                </div>
+                <div>
+                  <span className="text-[#f9f100]">--font-heading-regular:</span> "IvyOra Disp Reg",
+                  sans-serif
+                </div>
+                <div>
+                  <span className="text-[#f9f100]">--font-body:</span> "GTPlanar", "GTPlanar
+                  Fallback", sans-serif
+                </div>
+                <div>
+                  <span className="text-[#f9f100]">--font-size:</span> 16px
+                </div>
+                <div>
+                  <span className="text-[#f9f100]">--font-weight:</span> 300
+                </div>
               </div>
             </div>
             <div className="bg-slate-800 rounded-lg p-4">
               <div className="text-slate-400 mb-2">Utility Classes:</div>
               <div className="space-y-2 text-slate-200">
-                <div><span className="text-[#f9f100]">.font-heading</span> - Default heading (IvyOra Disp Reg)</div>
-                <div><span className="text-[#f9f100]">.font-headline</span> - Same as --font-heading-regular</div>
-                <div><span className="text-[#f9f100]">.font-subheadline</span> - Same as --font-body (GTPlanar)</div>
-                <div><span className="text-[#f9f100]">.font-body</span> - Body text (GTPlanar)</div>
-                <div><span className="text-[#f9f100]">.subheadline</span> - Subheadlines (GTPlanar)</div>
+                <div>
+                  <span className="text-[#f9f100]">.font-heading</span> - Default heading (IvyOra
+                  Disp Reg)
+                </div>
+                <div>
+                  <span className="text-[#f9f100]">.font-headline</span> - Same as
+                  --font-heading-regular
+                </div>
+                <div>
+                  <span className="text-[#f9f100]">.font-subheadline</span> - Same as --font-body
+                  (GTPlanar)
+                </div>
+                <div>
+                  <span className="text-[#f9f100]">.font-body</span> - Body text (GTPlanar)
+                </div>
+                <div>
+                  <span className="text-[#f9f100]">.subheadline</span> - Subheadlines (GTPlanar)
+                </div>
               </div>
             </div>
           </div>
@@ -290,7 +312,8 @@ export const FontsPage: React.FC = () => {
               </h3>
               <div className="border border-slate-200 rounded-2xl p-8 bg-slate-50">
                 <p className="text-lg md:text-xl text-slate-700 leading-relaxed font-light mb-4 font-body">
-                  We believe that robots belong in our homes. Not just to perform tasks, but to unlock human potential by removing the burden of repetitive chores.
+                  We believe that robots belong in our homes. Not just to perform tasks, but to
+                  unlock human potential by removing the burden of repetitive chores.
                 </p>
                 <p className="text-sm text-slate-500 font-mono">
                   &lt;p&gt; (automatically uses GTPlanar via --font-body)
@@ -311,10 +334,12 @@ export const FontsPage: React.FC = () => {
                   Powered by state-of-the-art AI
                 </h2>
                 <p className="text-lg text-slate-600 leading-relaxed font-light mb-4 font-body">
-                  Kandie Gang simplifies the complexities of daily life through intelligent automation and elegant design.
+                  Kandie Gang simplifies the complexities of daily life through intelligent
+                  automation and elegant design.
                 </p>
                 <p className="text-base text-slate-500 italic leading-relaxed font-body">
-                  Every aspect is designed to blend into your living space while providing maximum utility.
+                  Every aspect is designed to blend into your living space while providing maximum
+                  utility.
                 </p>
               </div>
             </div>

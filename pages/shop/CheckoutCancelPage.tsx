@@ -38,7 +38,7 @@ export const CheckoutCancelPage: React.FC = () => {
           {/* Message */}
           <div className="bg-primary-breath rounded-lg p-6 w-full">
             <p className="text-slate-700">
-              If you encountered any issues during checkout or have questions about our products, 
+              If you encountered any issues during checkout or have questions about our products,
               please don't hesitate to contact us. We're here to help!
             </p>
           </div>

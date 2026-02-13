@@ -1,9 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import {
-  filterByRegion,
-  getDefaultOrderPriority,
-} from '../utils/paymentMethodMapping';
+import { filterByRegion, getDefaultOrderPriority } from '../utils/paymentMethodMapping';
 import { getDeviceWalletOrder } from '../utils/deviceDetection';
 
 export type Region = 'EU' | 'US' | 'GLOBAL';
@@ -57,7 +54,7 @@ function orderByRegionPriority(methods: string[], region: Region): string[] {
 
 export function useStripePaymentMethods({
   paymentMethodTypes,
-  clientSecret,
+  clientSecret: _clientSecret,
   region = 'EU',
   stripePublishableKey,
 }: UseStripePaymentMethodsOptions): {
@@ -81,7 +78,9 @@ export function useStripePaymentMethods({
     if (!mounted || typeof window === 'undefined') return;
     const key =
       stripePublishableKey ??
-      (typeof import.meta !== 'undefined' && (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_STRIPE_PUBLISHABLE_KEY);
+      (typeof import.meta !== 'undefined' &&
+        (import.meta as unknown as { env?: Record<string, string> }).env
+          ?.VITE_STRIPE_PUBLISHABLE_KEY);
     if (!key) {
       setWalletChecked(true);
       return;
@@ -116,14 +115,15 @@ export function useStripePaymentMethods({
   }, [mounted, region, stripePublishableKey]);
 
   const paymentMethods = useMemo(() => {
-    const explicit = paymentMethodTypes && paymentMethodTypes.length > 0
-      ? paymentMethodTypes
-      : ['card'];
+    const explicit =
+      paymentMethodTypes && paymentMethodTypes.length > 0 ? paymentMethodTypes : ['card'];
     const filtered = filterByRegion(explicit, region);
     const withWallets: string[] = [...filtered];
     if (mounted && walletChecked) {
-      if (walletAvailability.applePay && !withWallets.includes('apple_pay')) withWallets.push('apple_pay');
-      if (walletAvailability.googlePay && !withWallets.includes('google_pay')) withWallets.push('google_pay');
+      if (walletAvailability.applePay && !withWallets.includes('apple_pay'))
+        withWallets.push('apple_pay');
+      if (walletAvailability.googlePay && !withWallets.includes('google_pay'))
+        withWallets.push('google_pay');
     }
     const ordered = orderByRegionPriority(withWallets, region);
     return applyDeviceOrder(ordered);

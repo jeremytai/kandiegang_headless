@@ -45,10 +45,7 @@ export function getPaymentMethodConfig(id: string): PaymentMethodConfig {
   );
 }
 
-export function filterByRegion(
-  methodIds: string[],
-  region: 'EU' | 'US' | 'GLOBAL'
-): string[] {
+export function filterByRegion(methodIds: string[], region: 'EU' | 'US' | 'GLOBAL'): string[] {
   if (region === 'GLOBAL') return methodIds;
   return methodIds.filter((id) => {
     const config = getPaymentMethodConfig(id);

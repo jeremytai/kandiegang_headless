@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import EventHeader from '../../components/event/EventHeader';
-import GuideSection from '../../components/GuideSection';
+import GuideSection from '../../components/sections/GuideSection';
 import EventSidebarCard from '../../components/event/EventSidebarCard';
 import { KandieEventData, RideGuide } from '../../lib/events';
 import { getKandieEventBySlug, transformMediaUrl } from '../../lib/wordpress';
 import { useAuth } from '../../context/AuthContext';
 import { useMemberLoginOffcanvas } from '../../context/MemberLoginOffcanvasContext';
-import { EVENT_SIGNUP_STORAGE_KEY, type EventSignupIntent } from '../../components/event/EventSignupPanel';
+import {
+  EVENT_SIGNUP_STORAGE_KEY,
+  type EventSignupIntent,
+} from '../../components/event/EventSignupPanel';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -32,13 +35,13 @@ export const KandieEventPage: React.FC = () => {
         const event = await getKandieEventBySlug(slug);
 
         if (!event) {
-          console.error("Event not found for slug:", slug);
+          console.error('Event not found for slug:', slug);
           setLoading(false);
           return;
         }
 
         // Transform gpxFile from { node: { id } } to string
-        const transformLevel = (level: any) => {
+        const transformLevel = (level: Record<string, unknown> | undefined) => {
           if (!level) return undefined;
           return {
             ...level,
@@ -48,7 +51,7 @@ export const KandieEventPage: React.FC = () => {
 
         const transformedEvent: KandieEventData = {
           ...event,
-          databaseId: event.databaseId || "0", // fallback if undefined
+          databaseId: event.databaseId || '0', // fallback if undefined
           eventDetails: event.eventDetails
             ? {
                 ...event.eventDetails,
@@ -78,8 +81,8 @@ export const KandieEventPage: React.FC = () => {
           signal: controller.signal,
         });
         if (!response.ok) return;
-        const data = await response.json().catch(() => ({}));
-        if (data && typeof data === 'object' && data.counts) {
+        const data = (await response.json().catch(() => ({}))) as unknown;
+        if (data && typeof data === 'object' && 'counts' in data) {
           setCapacityCounts(data.counts as Record<string, number>);
         }
       } catch {
@@ -138,11 +141,11 @@ export const KandieEventPage: React.FC = () => {
     // Convert common bullet characters to hyphen
     .replace(/^\s*[•·]\s+/gm, '- ')
     // Convert lines starting with various bullet-like markers (including tabs/spaces) to hyphen
-    .replace(/^[\s\u00A0\u200B\uFEFF\u2060]*[\*+\u2022\u00B7\u2023\-]\s+/gm, '- ')
+    .replace(/^[\s\u00A0\u200B\uFEFF\u2060]*[*+\u2022\u00B7\u2023-]\s+/gm, '- ')
     // Convert numbered lists using ')' or '.' to canonical numbered form (e.g., '1.' stays '1.')
-    .replace(/^[\s\u00A0\u200B\uFEFF\u2060]*(\d+)[\)\.]+\s*/gm, (_m, n) => `${n}. `)
+    .replace(/^[\s\u00A0\u200B\uFEFF\u2060]*(\d+)[).]+\s*/gm, (_m, n) => `${n}. `)
     // Ensure a blank line before list markers (hyphen, asterisk, plus, or numbered with '.' or ')')
-    .replace(/([^\n])\n(?=\s*(?:[-*+]|\d+[\.\)])\s)/g, '$1\n\n')
+    .replace(/([^\n])\n(?=\s*(?:[-*+]|\d+[.)])\s)/g, '$1\n\n')
     // Collapse excessive blank lines
     .replace(/\n{3,}/g, '\n\n');
   // Debug logs removed for production
@@ -266,28 +269,29 @@ export const KandieEventPage: React.FC = () => {
     if (mod10 === 3 && mod100 !== 13) return `${day}rd`;
     return `${day}th`;
   };
-  const weekdayLabel = eventDateForWeekday && !Number.isNaN(eventDateForWeekday.getTime())
-    ? eventDateForWeekday.toLocaleDateString([], { weekday: 'short' })
-    : '';
-  const monthLabel = eventDate && !Number.isNaN(eventDate.getTime())
-    ? eventDate.toLocaleDateString([], { month: 'long' })
-    : '';
-  const dayLabel = eventDate && !Number.isNaN(eventDate.getTime())
-    ? getOrdinal(eventDate.getDate())
-    : '';
-  const yearLabel = eventDate && !Number.isNaN(eventDate.getTime())
-    ? String(eventDate.getFullYear())
-    : '';
-  const dateLabel = weekdayLabel && monthLabel && dayLabel && yearLabel
-    ? `${weekdayLabel}, ${dayLabel} ${monthLabel}, ${yearLabel}`
-    : eventDateValue;
-  const timeLabel = eventDetails?.workshopStartTime?.trim()
-    || eventDetails?.rideTime?.trim();
+  const weekdayLabel =
+    eventDateForWeekday && !Number.isNaN(eventDateForWeekday.getTime())
+      ? eventDateForWeekday.toLocaleDateString([], { weekday: 'short' })
+      : '';
+  const monthLabel =
+    eventDate && !Number.isNaN(eventDate.getTime())
+      ? eventDate.toLocaleDateString([], { month: 'long' })
+      : '';
+  const dayLabel =
+    eventDate && !Number.isNaN(eventDate.getTime()) ? getOrdinal(eventDate.getDate()) : '';
+  const yearLabel =
+    eventDate && !Number.isNaN(eventDate.getTime()) ? String(eventDate.getFullYear()) : '';
+  const dateLabel =
+    weekdayLabel && monthLabel && dayLabel && yearLabel
+      ? `${weekdayLabel}, ${dayLabel} ${monthLabel}, ${yearLabel}`
+      : eventDateValue;
+  const timeLabel = eventDetails?.workshopStartTime?.trim() || eventDetails?.rideTime?.trim();
   const meetingPoint = eventDetails?.meetingPoint;
   const locationName = meetingPoint?.name || '';
-  const locationStreetCity = meetingPoint?.street && meetingPoint?.city
-    ? `${meetingPoint.street}, ${meetingPoint.city}`
-    : [meetingPoint?.street, meetingPoint?.city].filter(Boolean).join(' ');
+  const locationStreetCity =
+    meetingPoint?.street && meetingPoint?.city
+      ? `${meetingPoint.street}, ${meetingPoint.city}`
+      : [meetingPoint?.street, meetingPoint?.city].filter(Boolean).join(' ');
   const locationLabel = [locationName, locationStreetCity].filter(Boolean).join('\n');
 
   return (
@@ -309,9 +313,7 @@ export const KandieEventPage: React.FC = () => {
           <div className="flex flex-col lg:flex-row lg:justify-center lg:items-start gap-20">
             {/* Main content */}
             <article className="space-y-12 order-2 lg:order-1 flex-1 min-w-0">
-              <div 
-                className="kandieEventPage max-w-none text-slate-600 leading-relaxed [&_h1]:text-4xl [&_h1]:font-heading-thin [&_h1]:tracking-normal [&_h2]:text-3xl [&_h2]:font-heading-thin [&_h2]:tracking-normal [&_h3]:text-3xl [&_h3]:font-heading-thin [&_h3]:tracking-normal [&_h4]:text-2xl [&_h4]:font-heading-thin [&_h4]:tracking-normal [&_h5]:text-xl [&_h5]:font-heading-thin [&_h5]:tracking-normal [&_h6]:font-heading-thin [&_h6]:tracking-normal [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2"
-              >
+              <div className="kandieEventPage max-w-none text-slate-600 leading-relaxed [&_h1]:text-4xl [&_h1]:font-heading-thin [&_h1]:tracking-normal [&_h2]:text-3xl [&_h2]:font-heading-thin [&_h2]:tracking-normal [&_h3]:text-3xl [&_h3]:font-heading-thin [&_h3]:tracking-normal [&_h4]:text-2xl [&_h4]:font-heading-thin [&_h4]:tracking-normal [&_h5]:text-xl [&_h5]:font-heading-thin [&_h5]:tracking-normal [&_h6]:font-heading-thin [&_h6]:tracking-normal [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2">
                 <style>{`
                   .kandieEventPage h1, .kandieEventPage h2, .kandieEventPage h3, .kandieEventPage h4, .kandieEventPage h5, .kandieEventPage h6 {
                     color: var(--color-secondary-purple-rain);
@@ -319,7 +321,12 @@ export const KandieEventPage: React.FC = () => {
                 `}</style>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw as any, rehypeSanitize as any]}
+                  rehypePlugins={[
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    rehypeRaw as any,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    rehypeSanitize as any,
+                  ]}
                 >
                   {normalizedDescription}
                 </ReactMarkdown>
@@ -327,12 +334,15 @@ export const KandieEventPage: React.FC = () => {
               </div>
 
               {/* Additional sections that mirror the Vertica layout: Guides / Speakers */}
-              {guides.length > 0 && eventDetails?.primaryType?.toLowerCase().includes('workshop') && (
-                <section>
-                  <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">Speakers</h2>
-                  <GuideSection guides={guides} />
-                </section>
-              )}
+              {guides.length > 0 &&
+                eventDetails?.primaryType?.toLowerCase().includes('workshop') && (
+                  <section>
+                    <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">
+                      Speakers
+                    </h2>
+                    <GuideSection guides={guides} />
+                  </section>
+                )}
 
               {/* Partners or extra info could go here */}
             </article>

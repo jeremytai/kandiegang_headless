@@ -54,19 +54,22 @@ console.log('Checking Supabase connectivity…');
 
 const supabase = createClient(url, anonKey);
 
-supabase.auth.getSession().then(({ data, error }) => {
-  if (error) {
-    console.error('Supabase auth check failed:', error.message);
+supabase.auth
+  .getSession()
+  .then(({ data, error }) => {
+    if (error) {
+      console.error('Supabase auth check failed:', error.message);
+      process.exit(1);
+    }
+    console.log('Supabase OK: project reachable, anon key valid.');
+    if (data.session) {
+      console.log('  (You have an existing session; no action needed.)');
+    } else {
+      console.log('  (No session; login will create one.)');
+    }
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('Supabase request failed:', err.message || err);
     process.exit(1);
-  }
-  console.log('Supabase OK: project reachable, anon key valid.');
-  if (data.session) {
-    console.log('  (You have an existing session; no action needed.)');
-  } else {
-    console.log('  (No session; login will create one.)');
-  }
-  process.exit(0);
-}).catch((err) => {
-  console.error('Supabase request failed:', err.message || err);
-  process.exit(1);
-});
+  });

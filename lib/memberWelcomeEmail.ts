@@ -50,7 +50,7 @@ function buildWelcomeText(params: WelcomeEmailParams): string {
   return [
     'Welcome to the Kandie Gang Cycling Club',
     '',
-    'Thank you for becoming a member. You\'re in.',
+    "Thank you for becoming a member. You're in.",
     '',
     `Your membership is active for one year:`,
     `Start: ${params.memberSince}`,

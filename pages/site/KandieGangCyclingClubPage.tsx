@@ -8,8 +8,8 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ArrowRight, ArrowUpRight } from 'lucide-react';
-import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { ChevronDown, ArrowRight } from 'lucide-react';
+import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { imageSrc } from '../../lib/images';
 
 /** Hero gallery image base paths (no extension). Resolved via imageSrc() for dev .jpg / prod .webp. */
@@ -22,12 +22,21 @@ const HERO_IMAGE_BASES = [
 ];
 
 const BENEFIT_PILLS = [
-  { label: 'Members-only access', sub: 'As a member you get full access \nto galleries from the social rides.' },
-  { label: 'Up to 20% discount', sub: 'When Kandie Gang merch drops, \nyou get up to a 20% discount.' },
-  { label: 'OG water bottle', sub: 'One archive issue, original Kandie Gang \nIt\'s a love story bidet ' },
+  {
+    label: 'Members-only access',
+    sub: 'As a member you get full access \nto galleries from the social rides.',
+  },
+  {
+    label: 'Up to 20% discount',
+    sub: 'When Kandie Gang merch drops, \nyou get up to a 20% discount.',
+  },
+  {
+    label: 'OG water bottle',
+    sub: "One archive issue, original Kandie Gang \nIt's a love story bidet ",
+  },
 ];
 
-const WHAT_YOU_GET: { title: string; description: string }[] = [
+const _WHAT_YOU_GET: { title: string; description: string }[] = [
   {
     title: 'Group rides',
     description:
@@ -50,7 +59,7 @@ const WHAT_YOU_GET: { title: string; description: string }[] = [
   },
 ];
 
-const GET_INVOLVED = [
+const _GET_INVOLVED = [
   {
     title: 'Join Discord',
     description: 'Coordinate rides, get updates, and connect with the crew.',
@@ -76,7 +85,8 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     question: 'Do I need a paid membership to join a ride?',
     answer: (
       <>
-        No. You can join rides without a paid membership. That said, memberships help us keep things running and supports the community.
+        No. You can join rides without a paid membership. That said, memberships help us keep things
+        running and supports the community.
       </>
     ),
   },
@@ -85,7 +95,10 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     answer: (
       <>
         We have four groups so you can find the right pace. Details and guidelines can be found{' '}
-        <Link to="/ridelevels" className="text-secondary-drift hover:underline">here</Link> and in the FAQs on Discord.
+        <Link to="/ridelevels" className="text-secondary-drift hover:underline">
+          here
+        </Link>{' '}
+        and in the FAQs on Discord.
       </>
     ),
   },
@@ -93,8 +106,12 @@ const CLUB_FAQS: { question: string; answer: React.ReactNode }[] = [
     question: 'What is the Kandie Code?',
     answer: (
       <>
-        The Kandie Code is our shared set of guidelines for how we ride and treat each other. We ask everyone to read and follow it. You can find it {' '}
-        <Link to="/kandiecode" className="text-secondary-drift hover:underline">here</Link>.
+        The Kandie Code is our shared set of guidelines for how we ride and treat each other. We ask
+        everyone to read and follow it. You can find it{' '}
+        <Link to="/kandiecode" className="text-secondary-drift hover:underline">
+          here
+        </Link>
+        .
       </>
     ),
   },
@@ -115,13 +132,17 @@ function ClubFAQItem({
   isLast?: boolean;
 }) {
   return (
-    <div className={`overflow-hidden border-t border-secondary-purple-rain/50 py-6 md:py-8 ${isLast ? 'border-b border-secondary-purple-rain/50' : ''}`}>
+    <div
+      className={`overflow-hidden border-t border-secondary-purple-rain/50 py-6 md:py-8 ${isLast ? 'border-b border-secondary-purple-rain/50' : ''}`}
+    >
       <button
         onClick={onClick}
         className="flex w-full cursor-pointer items-start justify-between text-left group"
       >
         <span className="max-w-[60ch] flex-1 pr-4">
-          <p className="text-lg md:text-xl font-medium tracking-tight text-secondary-purple-rain">{question}</p>
+          <p className="text-lg md:text-xl font-medium tracking-tight text-secondary-purple-rain">
+            {question}
+          </p>
         </span>
         <span
           className={`inline-flex shrink-0 pt-1 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
@@ -153,7 +174,11 @@ export const KandieGangCyclingClubPage: React.FC = () => {
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [stickyOffset, setStickyOffset] = useState<number | null>(null); // null = fixed, number = absolute top offset
-  const [benefitTooltip, setBenefitTooltip] = useState<{ x: number; y: number; sub: string } | null>(null);
+  const [benefitTooltip, setBenefitTooltip] = useState<{
+    x: number;
+    y: number;
+    sub: string;
+  } | null>(null);
   const mobileCarouselRef = useRef<HTMLDivElement>(null);
   const imageScrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const benefitTooltipRef = useRef<HTMLDivElement>(null);
@@ -250,7 +275,9 @@ export const KandieGangCyclingClubPage: React.FC = () => {
               {HERO_IMAGE_BASES.map((src, i) => (
                 <div
                   key={src}
-                  ref={(el) => { imageScrollRefs.current[i] = el; }}
+                  ref={(el) => {
+                    imageScrollRefs.current[i] = el;
+                  }}
                   className="aspect-[3/4] w-full overflow-hidden rounded-lg"
                 >
                   <img
@@ -331,7 +358,9 @@ export const KandieGangCyclingClubPage: React.FC = () => {
             {/* Body text */}
             <div className="max-w-[44ch] text-secondary-purple-rain text-base md:text-lg lg:text-xl">
               <p>
-                The Kandie Gang Cycling Club is an active community of like-minded cyclists of all ages and abilities. By becoming a member, you not only believe in our mission but actively support it with your contribution.
+                The Kandie Gang Cycling Club is an active community of like-minded cyclists of all
+                ages and abilities. By becoming a member, you not only believe in our mission but
+                actively support it with your contribution.
               </p>
             </div>
 
@@ -344,7 +373,11 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                   role="button"
                   className="outline-none"
                   onMouseEnter={(e) => setBenefitTooltip({ x: e.clientX, y: e.clientY, sub })}
-                  onMouseMove={(e) => setBenefitTooltip((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : null))}
+                  onMouseMove={(e) =>
+                    setBenefitTooltip((prev) =>
+                      prev ? { ...prev, x: e.clientX, y: e.clientY } : null
+                    )
+                  }
                   onMouseLeave={() => setBenefitTooltip(null)}
                 >
                   <p className="cursor-pointer text-secondary-current/70 underline decoration-dotted underline-offset-[3.5px] text-sm font-medium tracking-wide">
@@ -419,7 +452,11 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                       setActiveImageIndex(i);
                       const el = mobileCarouselRef.current;
                       if (el && el.children[i]) {
-                        el.children[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        el.children[i].scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'nearest',
+                          inline: 'center',
+                        });
                       }
                     }}
                     className={`aspect-[3/4] w-7 cursor-pointer overflow-hidden rounded-md outline-2 outline-offset-3 transition-[outline,ring] ${
@@ -430,12 +467,12 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                   >
                     <img
                       alt=""
-                    draggable="false"
-                    loading="lazy"
-                    width={1920}
-                    height={2400}
-                    src={imageSrc(src)}
-                    className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
+                      draggable="false"
+                      loading="lazy"
+                      width={1920}
+                      height={2400}
+                      src={imageSrc(src)}
+                      className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
                     />
                   </button>
                 ))}
@@ -445,7 +482,8 @@ export const KandieGangCyclingClubPage: React.FC = () => {
             {/* Body text */}
             <div className="max-w-[44ch] px-4 text-secondary-current text-base md:text-lg lg:px-8 lg:text-xl">
               <p className="[&+&]:mt-[1em]">
-                Be part of an inclusive cycling community. Group rides, training, and a crew that supports every rider—no matter your level or background.
+                Be part of an inclusive cycling community. Group rides, training, and a crew that
+                supports every rider—no matter your level or background.
               </p>
             </div>
 
@@ -458,7 +496,11 @@ export const KandieGangCyclingClubPage: React.FC = () => {
                   role="button"
                   className="outline-none"
                   onMouseEnter={(e) => setBenefitTooltip({ x: e.clientX, y: e.clientY, sub })}
-                  onMouseMove={(e) => setBenefitTooltip((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : null))}
+                  onMouseMove={(e) =>
+                    setBenefitTooltip((prev) =>
+                      prev ? { ...prev, x: e.clientX, y: e.clientY } : null
+                    )
+                  }
                   onMouseLeave={() => setBenefitTooltip(null)}
                 >
                   <p className="cursor-pointer text-secondary-current/70 underline decoration-dotted underline-offset-[3.5px] text-sm font-medium tracking-wide">
@@ -562,7 +604,9 @@ export const KandieGangCyclingClubPage: React.FC = () => {
           />
           <div className="absolute inset-0 bg-slate-900/50" aria-hidden />
           <div className="relative z-10 flex flex-col items-center">
-            <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">Become a Kandie Gang Member</h2>
+            <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">
+              Become a Kandie Gang Member
+            </h2>
             <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
               Members only access, product discounts, and more.
             </p>

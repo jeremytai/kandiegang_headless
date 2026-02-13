@@ -40,7 +40,9 @@ async function optimizeImages() {
     distExists = false;
   }
   if (!distExists) {
-    console.warn('scripts/optimize-images.js: dist/images not found (run after vite build). Skipping.');
+    console.warn(
+      'scripts/optimize-images.js: dist/images not found (run after vite build). Skipping.'
+    );
     return;
   }
 
@@ -53,7 +55,7 @@ async function optimizeImages() {
   for (const filePath of imageFiles) {
     const ext = path.extname(filePath);
     const basePath = filePath.slice(0, -ext.length);
-    const baseName = path.basename(basePath);
+    const _baseName = path.basename(basePath);
 
     try {
       const pipeline = sharp(filePath);

@@ -48,8 +48,8 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   onSignup,
   workshop,
 }) => {
-  const labelClass = "text-xs tracking-[0.08em] text-slate-500";
-  const valueClass = "text-sm text-slate-900";
+  const labelClass = 'text-xs tracking-[0.08em] text-slate-500';
+  const valueClass = 'text-sm text-slate-900';
   const locationLines = location.split('\n');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [routeModal, setRouteModal] = useState<{ url: string; label: string } | null>(null);
@@ -126,7 +126,10 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
             {levels.map((level, index) => {
               const isOpen = openIndex === index;
               return (
-                <div key={level.label} className="overflow-hidden border-t border-black/10 py-3 first:border-t-0">
+                <div
+                  key={level.label}
+                  className="overflow-hidden border-t border-black/10 py-3 first:border-t-0"
+                >
                   <button
                     type="button"
                     onClick={() => toggleIndex(index)}
@@ -148,7 +151,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                       <div>
                         <p className={labelClass}>Places</p>
                         <p className={valueClass}>
-                          {level.places ?? (placesPerGuide * level.guides.length)}
+                          {level.places ?? placesPerGuide * level.guides.length}
                           {level.spotsLeft != null && ` total · ${level.spotsLeft} left`}
                         </p>
                       </div>
@@ -171,7 +174,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                             <button
                               type="button"
                               className={`${valueClass} underline underline-offset-2`}
-                              onClick={() => setRouteModal({ url: level.routeUrl as string, label: level.label })}
+                              onClick={() =>
+                                setRouteModal({ url: level.routeUrl as string, label: level.label })
+                              }
                             >
                               View Route
                             </button>
@@ -198,11 +203,17 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                       <button
                         type="button"
                         className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                        disabled={(!signupState?.allowWaitlist && level.isSoldOut) || signupState?.disabled || !canSignup}
+                        disabled={
+                          (!signupState?.allowWaitlist && level.isSoldOut) ||
+                          signupState?.disabled ||
+                          !canSignup
+                        }
                         onClick={() => onSignup?.({ levelKey: level.levelKey, label: level.label })}
                       >
                         {level.isSoldOut
-                          ? (signupState?.allowWaitlist ? 'Join Waitlist' : 'Sold Out')
+                          ? signupState?.allowWaitlist
+                            ? 'Join Waitlist'
+                            : 'Sold Out'
                           : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
                       </button>
                     </div>
@@ -233,22 +244,28 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
               <button
                 type="button"
                 className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={((workshop.spotsLeft ?? 1) <= 0 && !signupState?.allowWaitlist) || signupState?.disabled || !canSignup}
+                disabled={
+                  ((workshop.spotsLeft ?? 1) <= 0 && !signupState?.allowWaitlist) ||
+                  signupState?.disabled ||
+                  !canSignup
+                }
                 onClick={() => onSignup?.({ levelKey: 'workshop', label: 'Workshop' })}
               >
                 {(workshop.spotsLeft ?? 1) <= 0
-                  ? (signupState?.allowWaitlist ? 'Join Waitlist' : 'Sold Out')
+                  ? signupState?.allowWaitlist
+                    ? 'Join Waitlist'
+                    : 'Sold Out'
                   : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
               </button>
             </div>
           </div>
         )}
         <hr className="border-t border-black/10" />
-          {type && <div className="mb-4" />}
+        {type && <div className="mb-4" />}
         <div>
           <p className={labelClass}>General Registration</p>
           <p className={valueClass}>
-            {isPublic ? 'Yes' : (countdownLabel ? `Available in ${countdownLabel}` : 'No')}
+            {isPublic ? 'Yes' : countdownLabel ? `Available in ${countdownLabel}` : 'No'}
           </p>
         </div>
       </div>

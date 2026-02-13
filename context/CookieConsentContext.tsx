@@ -18,12 +18,6 @@ export type ConsentPreferences = {
   marketing: boolean;
 };
 
-const DEFAULT_CONSENT: ConsentPreferences = {
-  necessary: true,
-  analytics: false,
-  marketing: false,
-};
-
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -45,7 +39,12 @@ function setCookie(name: string, value: string, maxAgeDays: number) {
 function parseStored(raw: string | null): ConsentPreferences | null {
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as { v?: number; necessary?: boolean; analytics?: boolean; marketing?: boolean };
+    const parsed = JSON.parse(raw) as {
+      v?: number;
+      necessary?: boolean;
+      analytics?: boolean;
+      marketing?: boolean;
+    };
     if (parsed.v !== CONSENT_VERSION) return null;
     return {
       necessary: parsed.necessary !== false,
@@ -59,7 +58,8 @@ function parseStored(raw: string | null): ConsentPreferences | null {
 
 function readConsent(): ConsentPreferences | null {
   try {
-    const fromStorage = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    const fromStorage =
+      typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
     const fromCookie = getCookie(COOKIE_NAME);
     const raw = fromStorage ?? fromCookie;
     return parseStored(raw);
@@ -134,9 +134,5 @@ export const CookieConsentProvider: React.FC<{ children: React.ReactNode }> = ({
     closeCookiePreferences,
   };
 
-  return (
-    <CookieConsentContext.Provider value={value}>
-      {children}
-    </CookieConsentContext.Provider>
-  );
+  return <CookieConsentContext.Provider value={value}>{children}</CookieConsentContext.Provider>;
 };

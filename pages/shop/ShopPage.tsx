@@ -18,7 +18,7 @@ import {
   normalizeProductFields,
 } from '../../lib/wordpress';
 import { canPurchase, ShopProduct } from '../../lib/products';
-import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useAuth } from '../../context/AuthContext';
 
@@ -30,7 +30,7 @@ export const ShopPage: React.FC = () => {
 
   usePageMeta(
     'Shop | Kandie Gang',
-    "Exclusive Kandie Gang products including limited edition apparel and accessories because we believe in the power of collectivism and standing out from the crowd."
+    'Exclusive Kandie Gang products including limited edition apparel and accessories because we believe in the power of collectivism and standing out from the crowd.'
   );
 
   const fetchProducts = async (invalidateCache = false) => {
@@ -61,23 +61,23 @@ export const ShopPage: React.FC = () => {
           }))
         );
       } else {
-        const errorMsg = data.shopProducts ? "No products found" : "Invalid response structure";
+        const errorMsg = data.shopProducts ? 'No products found' : 'Invalid response structure';
         console.warn('[Shop]', errorMsg, data);
         setError(errorMsg);
         setProducts([]);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.warn("Failed to fetch products:", errorMessage);
-      
+      console.warn('Failed to fetch products:', errorMessage);
+
       if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        setError("Unable to connect to WordPress. Check WordPress URL and CORS.");
+        setError('Unable to connect to WordPress. Check WordPress URL and CORS.');
       } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
-        setError("WordPress access denied. Check URL and CORS.");
+        setError('WordPress access denied. Check URL and CORS.');
       } else if (errorMessage.includes('GraphQL Error')) {
-        setError("WordPress configuration error.");
+        setError('WordPress configuration error.');
       } else {
-        setError("Unable to load products at this time.");
+        setError('Unable to load products at this time.');
       }
       setProducts([]);
     } finally {
@@ -89,9 +89,7 @@ export const ShopPage: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const shopProducts = products.filter(
-    (p) => !(p.productFields?.membersOnly ?? false)
-  );
+  const shopProducts = products.filter((p) => !(p.productFields?.membersOnly ?? false));
 
   return (
     <div className="bg-white min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
@@ -103,7 +101,7 @@ export const ShopPage: React.FC = () => {
             className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8"
           />
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -111,9 +109,9 @@ export const ShopPage: React.FC = () => {
             >
               Kandie Gang product drops.
             </motion.p>
-            
+
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-xs font-bold text-amber-600 bg-amber-50 px-5 py-2.5 rounded-full border border-amber-100 flex items-center gap-2 shadow-sm w-fit"
@@ -127,7 +125,7 @@ export const ShopPage: React.FC = () => {
 
         <AnimatePresence mode="wait">
           {loading ? (
-            <motion.div 
+            <motion.div
               key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -140,10 +138,12 @@ export const ShopPage: React.FC = () => {
                   <div className="w-2 h-2 bg-black rounded-full animate-pulse" />
                 </div>
               </div>
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Loading Products</p>
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">
+                Loading Products
+              </p>
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               key="content"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -154,10 +154,11 @@ export const ShopPage: React.FC = () => {
                 {shopProducts.length > 0 ? (
                   shopProducts.map((product, i) => {
                     const isMember = !!user;
-                    const displayPrice = isMember && product.productFields?.priceMember
-                      ? product.productFields.priceMember
-                      : product.productFields?.pricePublic;
-                    
+                    const displayPrice =
+                      isMember && product.productFields?.priceMember
+                        ? product.productFields.priceMember
+                        : product.productFields?.pricePublic;
+
                     // Convert to ShopProduct format for canPurchase
                     const shopProduct: ShopProduct = {
                       id: product.id,
@@ -167,13 +168,17 @@ export const ShopPage: React.FC = () => {
                       featuredImage: product.featuredImage,
                       productFields: {
                         hasVariants: product.productFields?.hasVariants ?? false,
-                        pricePublic: product.productFields?.pricePublic ? parseFloat(product.productFields.pricePublic) : undefined,
-                        priceMember: product.productFields?.priceMember ? parseFloat(product.productFields.priceMember) : undefined,
+                        pricePublic: product.productFields?.pricePublic
+                          ? parseFloat(product.productFields.pricePublic)
+                          : undefined,
+                        priceMember: product.productFields?.priceMember
+                          ? parseFloat(product.productFields.priceMember)
+                          : undefined,
                         stripePriceIdPublic: product.productFields?.stripePriceIdPublic,
                         stripePriceIdMember: product.productFields?.stripePriceIdMember,
                         inventory: product.productFields?.inventory,
                         sku: product.productFields?.sku,
-                        variants: product.productFields?.variants?.map(v => ({
+                        variants: product.productFields?.variants?.map((v) => ({
                           label: v.label,
                           pricePublic: v.pricePublic,
                           priceMember: v.priceMember,
@@ -186,11 +191,11 @@ export const ShopPage: React.FC = () => {
                         inStock: product.productFields?.inStock ?? true,
                       },
                     };
-                    
+
                     const isInStock = canPurchase(shopProduct, isMember);
                     const productSlug = product.slug || '';
                     const productHref = productSlug ? `/shop/${productSlug}` : '#';
-                    
+
                     return (
                       <Link key={product.id} to={productHref} className="block">
                         <motion.article
@@ -199,45 +204,49 @@ export const ShopPage: React.FC = () => {
                           transition={{ delay: Math.min(i * 0.05, 0.3) }}
                           className="group cursor-pointer flex flex-col"
                         >
-                        <div className="overflow-hidden rounded-xl aspect-[3/4] bg-slate-100 mb-4 relative">
-                          <img
-                            src={
-                              product.featuredImage?.node?.sourceUrl
-                                ? transformMediaUrl(product.featuredImage.node.sourceUrl)
-                                : 'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?q=80&w=800'
-                            }
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            alt={product.featuredImage?.node?.altText || product.title}
-                            loading="lazy"
-                          />
-                          {!isInStock && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                              <span className="text-white font-bold uppercase tracking-widest text-xs">
-                                Out of Stock
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <h2 
-                            className="text-lg md:text-xl font-gtplanar font-bold tracking-normal text-secondary-purple-rain leading-tight line-clamp-2 flex-1"
-                            dangerouslySetInnerHTML={{ __html: product.title }}
-                          />
-                        </div>
-                        {displayPrice && (
-                          <p className="text-secondary-purple-rain font-gtplanar font-medium text-base md:text-lg mt-4 mb-8">
-                            € {displayPrice} 
-                            {isMember && product.productFields?.priceMember && product.productFields?.pricePublic && (
-                              <span className="text-slate-500 text-sm font-normal ml-2 line-through">
-                                {product.productFields.pricePublic}
-                              </span>
+                          <div className="overflow-hidden rounded-xl aspect-[3/4] bg-slate-100 mb-4 relative">
+                            <img
+                              src={
+                                product.featuredImage?.node?.sourceUrl
+                                  ? transformMediaUrl(product.featuredImage.node.sourceUrl)
+                                  : 'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?q=80&w=800'
+                              }
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              alt={product.featuredImage?.node?.altText || product.title}
+                              loading="lazy"
+                            />
+                            {!isInStock && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <span className="text-white font-bold uppercase tracking-widest text-xs">
+                                  Out of Stock
+                                </span>
+                              </div>
                             )}
-                          </p>
-                        )}
-                        <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-secondary-purple-rain text-white group-hover:border-slate-600 group-hover:bg-slate-200 transition-colors mb-10">
-                          <span className="font-medium text-white text-sm tracking-normal">Buy</span>
-                          <ArrowRight className="w-4 h-4 text-white shrink-0" />
-                        </div>
+                          </div>
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h2
+                              className="text-lg md:text-xl font-gtplanar font-bold tracking-normal text-secondary-purple-rain leading-tight line-clamp-2 flex-1"
+                              dangerouslySetInnerHTML={{ __html: product.title }}
+                            />
+                          </div>
+                          {displayPrice && (
+                            <p className="text-secondary-purple-rain font-gtplanar font-medium text-base md:text-lg mt-4 mb-8">
+                              € {displayPrice}
+                              {isMember &&
+                                product.productFields?.priceMember &&
+                                product.productFields?.pricePublic && (
+                                  <span className="text-slate-500 text-sm font-normal ml-2 line-through">
+                                    {product.productFields.pricePublic}
+                                  </span>
+                                )}
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-secondary-purple-rain text-white group-hover:border-slate-600 group-hover:bg-slate-200 transition-colors mb-10">
+                            <span className="font-medium text-white text-sm tracking-normal">
+                              Buy
+                            </span>
+                            <ArrowRight className="w-4 h-4 text-white shrink-0" />
+                          </div>
                         </motion.article>
                       </Link>
                     );

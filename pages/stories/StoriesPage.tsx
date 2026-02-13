@@ -1,11 +1,10 @@
-
 /**
  * StoriesPage.tsx
  * An editorial journal/blog page for the Kandie Gang brand.
  * Refactored to fetch live data from a Headless WordPress bridge via GraphQL.
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
@@ -21,7 +20,7 @@ import {
   clearWPCache,
   transformMediaUrl,
 } from '../../lib/wordpress';
-import { AnimatedHeadline } from '../../components/AnimatedHeadline';
+import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { usePageMeta } from '../../hooks/usePageMeta';
 
 const STORIES_CATEGORY_SLUG = 'social-rides';
@@ -54,106 +53,118 @@ export const StoriesPage: React.FC = () => {
     };
   }, []);
 
-  const fetchStories = async (append = false, invalidateCache = false) => {
-    if (invalidateCache) clearWPCache();
-    if (!append) {
-      setLoading(true);
-      setError(null);
-    }
-    const after = append ? pageInfo?.endCursor ?? null : null;
-    try {
-      let result: { nodes: WPPost[]; pageInfo: WPPostsPageInfo } | null = null;
-      let categoriesData: WPCategory[] | null = null;
-
+  const fetchStories = useCallback(
+    async (append = false, invalidateCache = false) => {
+      if (invalidateCache) clearWPCache();
+      if (!append) {
+        setLoading(true);
+        setError(null);
+      }
+      const after = append ? (pageInfo?.endCursor ?? null) : null;
       try {
-        result = await getCategoryPosts(STORIES_CATEGORY_SLUG, POSTS_FIRST, after);
-        if (import.meta.env.DEV && result) {
-          console.log('[Stories] Loaded from category "%s": %d posts', STORIES_CATEGORY_SLUG, result.nodes.length);
-        }
-      } catch (categoryErr) {
-        if (import.meta.env.DEV) {
-          console.warn('[Stories] Category query failed, falling back to all posts:', categoryErr);
-        }
-      }
+        let result: { nodes: WPPost[]; pageInfo: WPPostsPageInfo } | null = null;
+        let categoriesData: WPCategory[] | null = null;
 
-      if (!result && !append) {
         try {
-          const postsData = await wpQuery<GetPostsResponse>(
-            GET_POSTS_QUERY,
-            { first: POSTS_FIRST, after },
-            { useCache: !append }
-          );
-          result = {
-            nodes: postsData.posts.nodes,
-            pageInfo: postsData.posts.pageInfo,
-          };
+          result = await getCategoryPosts(STORIES_CATEGORY_SLUG, POSTS_FIRST, after);
           if (import.meta.env.DEV && result) {
-            console.log('[Stories] Loaded from all posts: %d posts', result.nodes.length);
+            console.log(
+              '[Stories] Loaded from category "%s": %d posts',
+              STORIES_CATEGORY_SLUG,
+              result.nodes.length
+            );
           }
-        } catch (postsErr) {
+        } catch (categoryErr) {
           if (import.meta.env.DEV) {
-            console.error('[Stories] WordPress fetch failed:', postsErr);
+            console.warn(
+              '[Stories] Category query failed, falling back to all posts:',
+              categoryErr
+            );
           }
-          throw postsErr;
         }
-      }
 
-      if (!append) {
-        categoriesData = await getCategories().catch(() => []);
-      }
+        if (!result && !append) {
+          try {
+            const postsData = await wpQuery<GetPostsResponse>(
+              GET_POSTS_QUERY,
+              { first: POSTS_FIRST, after },
+              { useCache: !append }
+            );
+            result = {
+              nodes: postsData.posts.nodes,
+              pageInfo: postsData.posts.pageInfo,
+            };
+            if (import.meta.env.DEV && result) {
+              console.log('[Stories] Loaded from all posts: %d posts', result.nodes.length);
+            }
+          } catch (postsErr) {
+            if (import.meta.env.DEV) {
+              console.error('[Stories] WordPress fetch failed:', postsErr);
+            }
+            throw postsErr;
+          }
+        }
 
-      if (!result) {
         if (!append) {
-          setError("No posts found in WordPress");
-          setPosts(FALLBACK_STORIES);
-          setPageInfo({ hasNextPage: false, endCursor: null });
-          setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
+          categoriesData = await getCategories().catch(() => []);
         }
-      } else {
-        const { nodes, pageInfo: nextPageInfo } = result;
-        if (!append && nodes.length === 0) {
-          setError("No posts found in WordPress");
-          setPosts(FALLBACK_STORIES);
-          setPageInfo({ hasNextPage: false, endCursor: null });
-          setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
-        } else if (append) {
-          setPosts((prev) => [...prev, ...nodes]);
-          setPageInfo(nextPageInfo);
+
+        if (!result) {
+          if (!append) {
+            setError('No posts found in WordPress');
+            setPosts(FALLBACK_STORIES);
+            setPageInfo({ hasNextPage: false, endCursor: null });
+            setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
+          }
         } else {
-          setPosts(nodes);
-          setPageInfo(nextPageInfo);
-          if (categoriesData && categoriesData.length > 0) {
-            setCategories(categoriesData);
+          const { nodes, pageInfo: nextPageInfo } = result;
+          if (!append && nodes.length === 0) {
+            setError('No posts found in WordPress');
+            setPosts(FALLBACK_STORIES);
+            setPageInfo({ hasNextPage: false, endCursor: null });
+            setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
+          } else if (append) {
+            setPosts((prev) => [...prev, ...nodes]);
+            setPageInfo(nextPageInfo);
           } else {
-            setCategories(deriveCategoriesFromPosts(nodes));
+            setPosts(nodes);
+            setPageInfo(nextPageInfo);
+            if (categoriesData && categoriesData.length > 0) {
+              setCategories(categoriesData);
+            } else {
+              setCategories(deriveCategoriesFromPosts(nodes));
+            }
           }
         }
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      if (!append) {
-        console.warn("Falling back to mock data due to connection error:", errorMessage);
-        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-          setError("Unable to connect to WordPress. Check WordPress URL and CORS. Showing archived content.");
-        } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
-          setError("WordPress access denied. Check URL and CORS. Showing archived content.");
-        } else if (errorMessage.includes('GraphQL Error')) {
-          setError("WordPress configuration error. Showing archived content.");
-        } else {
-          setError("Archive access only. Live connection pending.");
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        if (!append) {
+          console.warn('Falling back to mock data due to connection error:', errorMessage);
+          if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+            setError(
+              'Unable to connect to WordPress. Check WordPress URL and CORS. Showing archived content.'
+            );
+          } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
+            setError('WordPress access denied. Check URL and CORS. Showing archived content.');
+          } else if (errorMessage.includes('GraphQL Error')) {
+            setError('WordPress configuration error. Showing archived content.');
+          } else {
+            setError('Archive access only. Live connection pending.');
+          }
+          setPosts(FALLBACK_STORIES);
+          setPageInfo({ hasNextPage: false, endCursor: null });
+          setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
         }
-        setPosts(FALLBACK_STORIES);
-        setPageInfo({ hasNextPage: false, endCursor: null });
-        setCategories(deriveCategoriesFromPosts(FALLBACK_STORIES));
+      } finally {
+        if (append) {
+          setLoadMoreLoading(false);
+        } else {
+          setLoading(false);
+        }
       }
-    } finally {
-      if (append) {
-        setLoadMoreLoading(false);
-      } else {
-        setLoading(false);
-      }
-    }
-  };
+    },
+    [pageInfo?.endCursor]
+  );
 
   const loadMore = () => {
     if (!pageInfo?.hasNextPage || loadMoreLoading) return;
@@ -168,13 +179,11 @@ export const StoriesPage: React.FC = () => {
 
   useEffect(() => {
     fetchStories();
-  }, []);
+  }, [fetchStories]);
 
   const filteredPosts = useMemo(() => {
     if (!selectedCategory) return posts;
-    return posts.filter((post) =>
-      post.categories?.nodes?.some((c) => c.name === selectedCategory)
-    );
+    return posts.filter((post) => post.categories?.nodes?.some((c) => c.name === selectedCategory));
   }, [posts, selectedCategory]);
 
   return (
@@ -187,17 +196,18 @@ export const StoriesPage: React.FC = () => {
             className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em] mb-8"
           />
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
             >
-              Since our start in 2021, we've had has some epic shared experiences. Here are some of our most memorable stories.
+              Since our start in 2021, we've had has some epic shared experiences. Here are some of
+              our most memorable stories.
             </motion.p>
-            
+
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-xs font-bold text-amber-600 bg-amber-50 px-5 py-2.5 rounded-full border border-amber-100 flex items-center gap-2 shadow-sm w-fit"
@@ -211,7 +221,7 @@ export const StoriesPage: React.FC = () => {
 
         <AnimatePresence mode="wait">
           {loading ? (
-            <motion.div 
+            <motion.div
               key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -224,18 +234,24 @@ export const StoriesPage: React.FC = () => {
                   <div className="w-2 h-2 bg-black rounded-full animate-pulse" />
                 </div>
               </div>
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Syncing Bridge</p>
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">
+                Syncing Bridge
+              </p>
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               key="content"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
               {/* Category filter */}
-              {false && categories.length > 0 && (
-                <nav className="mb-10 md:mb-14 flex flex-wrap items-center gap-2" aria-label="Filter by category">
+              {/* eslint-disable-next-line no-constant-binary-expression */}
+              {Boolean(false && categories.length > 0) && (
+                <nav
+                  className="mb-10 md:mb-14 flex flex-wrap items-center gap-2"
+                  aria-label="Filter by category"
+                >
                   <button
                     type="button"
                     onClick={() => setSelectedCategory(null)}
@@ -267,7 +283,11 @@ export const StoriesPage: React.FC = () => {
               {/* 4-column story grid */}
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
                 {filteredPosts.map((story, i) => {
-                  const slug = story.uri?.replace(/^\/+|\/+$/g, '').split('/').pop() ?? '';
+                  const slug =
+                    story.uri
+                      ?.replace(/^\/+|\/+$/g, '')
+                      .split('/')
+                      .pop() ?? '';
                   const storyHref = slug ? `/story/${slug}` : '/stories';
                   return (
                     <Link key={story.id} to={storyHref} className="block">
@@ -344,7 +364,10 @@ function deriveCategoriesFromPosts(posts: WPPost[]): WPCategory[] {
         seen.add(node.name);
         result.push({
           name: node.name,
-          slug: node.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+          slug: node.name
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, ''),
         });
       }
     }
@@ -354,30 +377,46 @@ function deriveCategoriesFromPosts(posts: WPPost[]): WPCategory[] {
 
 const FALLBACK_STORIES: WPPost[] = [
   {
-    id: "fb-1",
-    title: "Kandie Gang Season Opener – 2025",
-    excerpt: "With a new year comes a new start location for our Kandie Gang Tuesday Social Rides.",
-    date: "2025-04-08T12:00:00.000Z",
-    uri: "/story/kandie-gang-season-opener-2025",
-    categories: { nodes: [{ name: "Social Rides" }] },
-    featuredImage: { node: { sourceUrl: "https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/04/08130624/250401_kandiegang_seasonopener_2025-28-scaled.jpg?q=80&w=1200" } }
+    id: 'fb-1',
+    title: 'Kandie Gang Season Opener – 2025',
+    excerpt: 'With a new year comes a new start location for our Kandie Gang Tuesday Social Rides.',
+    date: '2025-04-08T12:00:00.000Z',
+    uri: '/story/kandie-gang-season-opener-2025',
+    categories: { nodes: [{ name: 'Social Rides' }] },
+    featuredImage: {
+      node: {
+        sourceUrl:
+          'https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/04/08130624/250401_kandiegang_seasonopener_2025-28-scaled.jpg?q=80&w=1200',
+      },
+    },
   },
   {
-    id: "fb-2",
-    title: "Human Rides No. 1 \– It's a Love Story",
-    excerpt: "We believe, and know, the bicycle can be used as a vehicle for change.",
-    date: "2025-08-03T12:00:00.000Z",
-    uri: "/story/human-rides-no-1-its-a-love-story",
-    categories: { nodes: [{ name: "Social Rides" }] },
-    featuredImage: { node: { sourceUrl: "https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2024/07/10205323/240707_humanrides-75-scaled.jpg?q=80&w=800" } }
+    id: 'fb-2',
+    title: "Human Rides No. 1 – It's a Love Story",
+    excerpt: 'We believe, and know, the bicycle can be used as a vehicle for change.',
+    date: '2025-08-03T12:00:00.000Z',
+    uri: '/story/human-rides-no-1-its-a-love-story',
+    categories: { nodes: [{ name: 'Social Rides' }] },
+    featuredImage: {
+      node: {
+        sourceUrl:
+          'https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2024/07/10205323/240707_humanrides-75-scaled.jpg?q=80&w=800',
+      },
+    },
   },
   {
-    id: "fb-3",
-    title: "Karfreitag Gravel",
-    excerpt: "On my bike (yes, my Yeti Arc X) I threw on a Brooks B13 saddle with carbon rails. For longish rides like these, I’d rather sacrifice weight for comfort and comfortable it was.",
+    id: 'fb-3',
+    title: 'Karfreitag Gravel',
+    excerpt:
+      'On my bike (yes, my Yeti Arc X) I threw on a Brooks B13 saddle with carbon rails. For longish rides like these, I’d rather sacrifice weight for comfort and comfortable it was.',
     date: new Date().toISOString(),
-    uri: "/story/karfreitag-gravel",
-    categories: { nodes: [{ name: "Social Rides" }] },
-    featuredImage: { node: { sourceUrl: "https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2023/04/11230009/230407_kandiegang_karfreitag_gravel-27-scaled.jpg?q=80&w=800" } }
-  }
+    uri: '/story/karfreitag-gravel',
+    categories: { nodes: [{ name: 'Social Rides' }] },
+    featuredImage: {
+      node: {
+        sourceUrl:
+          'https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2023/04/11230009/230407_kandiegang_karfreitag_gravel-27-scaled.jpg?q=80&w=800',
+      },
+    },
+  },
 ];

@@ -60,7 +60,9 @@ async function main() {
     console.error('Profiles table check failed:', anonError.message);
     if (anonError.code === '42P01') {
       console.error('\nThe table does not exist yet. Run the migration first:');
-      console.error('  Supabase Dashboard → SQL Editor → paste supabase/migrations/20250205000000_create_profiles_table.sql');
+      console.error(
+        '  Supabase Dashboard → SQL Editor → paste supabase/migrations/20250205000000_create_profiles_table.sql'
+      );
       console.error('  Or: supabase db push');
     }
     process.exit(1);
@@ -85,7 +87,15 @@ async function main() {
     if (rows.length > 0) {
       console.log('\n  Sample:');
       rows.slice(0, 5).forEach((r, i) => {
-        console.log('   ', i + 1, r.email || r.id, '| is_member:', r.is_member, '|', r.membership_source || '—');
+        console.log(
+          '   ',
+          i + 1,
+          r.email || r.id,
+          '| is_member:',
+          r.is_member,
+          '|',
+          r.membership_source || '—'
+        );
       });
     }
   } else {

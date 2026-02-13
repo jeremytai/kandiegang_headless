@@ -52,4 +52,3 @@ export const EventsLayout: React.FC<EventsLayoutProps> = ({ events, showTopBorde
     </section>
   );
 };
-

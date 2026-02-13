@@ -320,7 +320,7 @@ The **Members area** (`/members`) and member login (StickyTop, offcanvas) use **
 - **Auth**: Email/password, magic link, or Discord OAuth. Session and user come from Supabase Auth.
 - **Profile** (table `public.profiles`): One row per user (`profiles.id = auth.users.id`). The app reads:
   - `is_member`, `membership_source`, `membership_plans` (array, e.g. `["Kandie Gang Cycling Club Membership"]`), `member_since`, `membership_expiration`
-  - **`is_guide`**: Boolean; marks the user as a Kandie Gang Guide (can be set manually or synced from WordPress role).
+   - **`is_guide`**: Boolean; marks the user as a Kandie Gang Guide (can be set manually).
   - **`is_substack_subscriber`**: Boolean; set by syncing from a Substack or Mailchimp CSV export (see below).
   - **`newsletter_opted_in_at`**: Date (YYYY-MM-DD) when the user opted in to the newsletter, when the CSV includes an opt-in date column.
 - **Display**: Users can be both **Kandie Gang Cycling Member** (from a plan name containing "cycling" + "member"/"membership") and **Kandie Gang Guide** (from `is_guide` or a plan name containing "guide"). The Members page and account panel show both when applicable.
@@ -332,12 +332,15 @@ In `.env` or your host's config, set:
 - `VITE_SUPABASE_URL`: Your Supabase project URL
 - `VITE_SUPABASE_ANON_KEY`: Supabase anon (public) key
 
-Service role key is only for scripts (e.g. CSV sync), not the frontend.
+Service role key is only for scripts (e.g. subscriber CSV sync), not the frontend.
 
-### Syncing membership
+### Membership updates
 
-- **WooCommerce Memberships CSV**: Run `node scripts/sync-membership-csv-to-profiles.js [path-to-memberships.csv]` to set `is_member`, `membership_plans`, `member_since`, `membership_expiration` from the export. The script aggregates multiple active plans per user (e.g. Cycling Club + Guide if both appear in the CSV). Requires `VITE_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
-- **WordPress bridge**: On login/refresh, the app can update `is_member` and `membership_source` from WordPress; if the user's WP role slug contains "guide", `is_guide` is set to `true` in Supabase (see `context/AuthContext.tsx`). Set `membership_source` to `supabase` when Supabase is the source of truth so the app doesn't overwrite manual changes.
+- Membership status is written in Supabase (Stripe webhook on checkout plus manual updates in Supabase).
+- Use `membership_plans` with `Kandie Gang Cycling Club Membership` for cycling membership access.
+
+### Subscriber sync
+
 - **Substack or Mailchimp subscribers CSV**: Run `node scripts/sync-substack-subscribers-to-profiles.js [path-to-export.csv]` to set `is_substack_subscriber` and `newsletter_opted_in_at` by matching profile email to the export. **Substack**: Dashboard > Subscribers > Export. **Mailchimp**: Audience > Export audience. The script looks for an email column (e.g. "Email", "Email Address") and an optional opt-in date column (e.g. "OPTIN_TIME", "Timestamp", "Signup Date"). Re-run periodically to reflect current subscribers.
 
 ### Manual profile updates

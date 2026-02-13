@@ -121,9 +121,8 @@ export function normalizeBlocks(
   for (const block of editorBlocks) {
     if (block.name === 'core/paragraph') {
       flushImages();
-      const content = block.attributes && 'content' in block.attributes
-        ? (block.attributes.content ?? '')
-        : '';
+      const content =
+        block.attributes && 'content' in block.attributes ? (block.attributes.content ?? '') : '';
       output.push({ type: 'paragraph', content });
       continue;
     }
@@ -147,7 +146,12 @@ export function normalizeBlocks(
       continue;
     }
 
-    if (block.name === 'core/gallery' && block.attributes && 'ids' in block.attributes && block.attributes.ids?.length) {
+    if (
+      block.name === 'core/gallery' &&
+      block.attributes &&
+      'ids' in block.attributes &&
+      block.attributes.ids?.length
+    ) {
       flushImages();
       const images = block.attributes.ids
         .map((id) => mediaMap[String(id)])

@@ -12,7 +12,9 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://kandiegang.com');
 const WP_GRAPHQL_URL =
-  process.env.VITE_WP_GRAPHQL_URL || process.env.WP_GRAPHQL_URL || 'https://wp-origin.kandiegang.com/graphql';
+  process.env.VITE_WP_GRAPHQL_URL ||
+  process.env.WP_GRAPHQL_URL ||
+  'https://wp-origin.kandiegang.com/graphql';
 
 type EventCancelBody = {
   token?: string;

@@ -28,7 +28,7 @@ export interface UseAuthProvidersResult {
 }
 
 export function useAuthProviders(): UseAuthProvidersResult {
-  const { user, linkDiscord: authLinkDiscord, unlinkIdentity, refreshProfile } = useAuth();
+  const { user, linkDiscord: authLinkDiscord, unlinkIdentity } = useAuth();
   const [providers, setProviders] = useState<AuthProviderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +60,9 @@ export function useAuthProviders(): UseAuthProvidersResult {
   }, [fetchProviders]);
 
   const linkDiscord = useCallback(async () => {
-    const result = await authLinkDiscord({ redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/members/settings` });
+    const result = await authLinkDiscord({
+      redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/members/settings`,
+    });
     if (result.error) setError(result.error);
     return result;
   }, [authLinkDiscord]);

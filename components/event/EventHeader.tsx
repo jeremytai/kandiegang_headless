@@ -18,7 +18,6 @@ const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBac
     <section className="bg-primary-breath py-12 md:py-20 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          
           {/* Left Side: Content */}
           <div className="order-2 lg:order-1 lg:col-span-7">
             {onBack && (
@@ -29,17 +28,17 @@ const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBac
                 <ArrowLeft className="w-4 h-4" /> Events
               </button>
             )}
-            
+
             <h1 className="text-4xl md:text-6xl font-heading-regular text-secondary-purple-rain leading-tight mb-6">
               {title}
             </h1>
-            
+
             {intro && (
               <div className="w-full">
                 <div className="text-xl md:text-xl font-light leading-normal text-slate-600">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw as any, rehypeSanitize as any]}
+                    rehypePlugins={[rehypeRaw, rehypeSanitize]}
                   >
                     {intro}
                   </ReactMarkdown>
@@ -52,15 +51,10 @@ const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBac
           <div className={`order-1 lg:order-2 lg:col-span-5 ${onBack ? 'lg:mt-10' : ''}`}>
             {imageUrl && (
               <div className="rounded-lg overflow-hidden h-full">
-                <img
-                  src={imageUrl}
-                  alt={title}
-                  className="w-full h-full object-cover object-top"
-                />
+                <img src={imageUrl} alt={title} className="w-full h-full object-cover object-top" />
               </div>
             )}
           </div>
-
         </div>
       </div>
     </section>

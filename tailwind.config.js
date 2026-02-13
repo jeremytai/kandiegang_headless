@@ -3,7 +3,16 @@ import typography from '@tailwindcss/typography';
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
-  content: ['./index.html', './App.tsx', './index.tsx', './components/**/*.tsx', './pages/**/*.tsx', './context/**/*.tsx', './lib/**/*.ts', './hooks/**/*.ts'],
+  content: [
+    './index.html',
+    './App.tsx',
+    './index.tsx',
+    './components/**/*.tsx',
+    './pages/**/*.tsx',
+    './context/**/*.tsx',
+    './lib/**/*.ts',
+    './hooks/**/*.ts',
+  ],
   safelist: [
     'grid-cols-1',
     'grid-cols-2',

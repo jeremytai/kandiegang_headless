@@ -19,7 +19,10 @@ function DiscordIcon({ className }: { className?: string }) {
   );
 }
 
-function providerLabel(identity: { provider: string; identity_data?: Record<string, unknown> }): string {
+function providerLabel(identity: {
+  provider: string;
+  identity_data?: Record<string, unknown>;
+}): string {
   if (identity.provider === 'discord') {
     const name =
       (identity.identity_data?.full_name as string) ??
@@ -37,14 +40,7 @@ function providerLabel(identity: { provider: string; identity_data?: Record<stri
 export const MembersSettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { status, user, refreshProfile } = useAuth();
-  const {
-    loading,
-    error,
-    linkDiscord,
-    unlinkProvider,
-    canUnlink,
-    identities,
-  } = useAuthProviders();
+  const { loading, error, linkDiscord, unlinkProvider, canUnlink, identities } = useAuthProviders();
 
   const [unlinkConfirm, setUnlinkConfirm] = useState<{ id: string; provider: string } | null>(null);
   const [unlinkLoading, setUnlinkLoading] = useState(false);
@@ -175,7 +171,9 @@ export const MembersSettingsPage: React.FC = () => {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setUnlinkConfirm({ id: identity.id, provider: identity.provider })}
+                      onClick={() =>
+                        setUnlinkConfirm({ id: identity.id, provider: identity.provider })
+                      }
                       disabled={!canUnlink}
                       title={!canUnlink ? 'Keep at least one login method' : 'Unlink this account'}
                       className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"

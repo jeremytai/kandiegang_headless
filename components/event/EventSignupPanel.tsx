@@ -182,7 +182,8 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-primary-ink">You are on the waitlist</h2>
         <p className="text-sm text-slate-600">
-          We have added you to the waitlist for <strong>{levelSummary}</strong>. If a spot opens up, we will email you right away.
+          We have added you to the waitlist for <strong>{levelSummary}</strong>. If a spot opens up,
+          we will email you right away.
         </p>
         <button type="button" onClick={onClose} className={btnPrimary}>
           Close
@@ -196,7 +197,8 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-primary-ink">You are in!</h2>
         <p className="text-sm text-slate-600">
-          We have saved your spot for <strong>{levelSummary}</strong>. You will receive a confirmation email shortly.
+          We have saved your spot for <strong>{levelSummary}</strong>. You will receive a
+          confirmation email shortly.
         </p>
         <button type="button" onClick={onClose} className={btnPrimary}>
           Close
@@ -211,7 +213,8 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         <div className="space-y-3">
           <h2 className="text-xl font-semibold text-primary-ink">Check your email</h2>
           <p className="text-sm text-slate-600">
-            We sent a signup link to <strong>{email}</strong>. Open it to finish registering for <strong>{levelSummary}</strong>.
+            We sent a signup link to <strong>{email}</strong>. Open it to finish registering for{' '}
+            <strong>{levelSummary}</strong>.
           </p>
           <p className="text-xs text-slate-500">
             The link expires in about an hour. If you do not see it, check spam or try again.
@@ -225,9 +228,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         <div>
           <h2 className="text-xl font-semibold text-primary-ink">Sign up for this event</h2>
           <p className="text-sm text-slate-600">{levelSummary}</p>
-          {intent.accessNote && (
-            <p className="text-xs text-slate-500 mt-2">{intent.accessNote}</p>
-          )}
+          {intent.accessNote && <p className="text-xs text-slate-500 mt-2">{intent.accessNote}</p>}
         </div>
 
         <form onSubmit={handleSendMagicLink} className="space-y-4">
@@ -285,7 +286,9 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
                 onChange={(e) => setFlintaAttested(e.target.checked)}
                 required
               />
-              <span>I identify as FLINTA* and understand this early access window is for FLINTA* riders.</span>
+              <span>
+                I identify as FLINTA* and understand this early access window is for FLINTA* riders.
+              </span>
             </label>
           )}
 
@@ -338,9 +341,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       <div>
         <h2 className="text-xl font-semibold text-primary-ink">Confirm your spot</h2>
         <p className="text-sm text-slate-600">{levelSummary}</p>
-        {intent.accessNote && (
-          <p className="text-xs text-slate-500 mt-2">{intent.accessNote}</p>
-        )}
+        {intent.accessNote && <p className="text-xs text-slate-500 mt-2">{intent.accessNote}</p>}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -390,7 +391,9 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
             onChange={(e) => setFlintaAttested(e.target.checked)}
             required
           />
-          <span>I identify as FLINTA* and understand this early access window is for FLINTA* riders.</span>
+          <span>
+            I identify as FLINTA* and understand this early access window is for FLINTA* riders.
+          </span>
         </label>
       )}
 
@@ -435,7 +438,6 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         . You also agree to creating an account on KandieGang.com and agree to receiving emails.
       </p>
     </div>
-
   );
 };
 

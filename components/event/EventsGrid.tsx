@@ -20,4 +20,3 @@ export const EventsGrid: React.FC<EventsGridProps> = ({ events }) => {
     </section>
   );
 };
-

@@ -13,7 +13,6 @@ export function usePageMeta(
   ogImage?: string | null
 ): void {
   useEffect(() => {
-    const prevTitle = document.title;
     const descMeta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     const prevDescription = descMeta?.getAttribute('content') ?? '';
 

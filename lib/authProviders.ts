@@ -19,8 +19,14 @@ export interface AuthProviderRow {
 /**
  * Build rows for auth_providers from the current Supabase user (email + identities).
  */
-function buildAuthProviderRows(user: User): Array<{ user_id: string; provider_type: AuthProviderType; provider_user_id: string }> {
-  const rows: Array<{ user_id: string; provider_type: AuthProviderType; provider_user_id: string }> = [];
+function buildAuthProviderRows(
+  user: User
+): Array<{ user_id: string; provider_type: AuthProviderType; provider_user_id: string }> {
+  const rows: Array<{
+    user_id: string;
+    provider_type: AuthProviderType;
+    provider_user_id: string;
+  }> = [];
   if (user.email?.trim()) {
     rows.push({
       user_id: user.id,
