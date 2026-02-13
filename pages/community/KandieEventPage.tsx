@@ -230,7 +230,7 @@ export const KandieEventPage: React.FC = () => {
       ? 'Sign Up'
       : isMember
         ? 'Member Signup'
-        : 'FLINTA Early Access';
+        : 'FLINTA* Early Access';
 
   const signupHelper = !canSignupNow
     ? 'Early access opens soon'
@@ -238,7 +238,7 @@ export const KandieEventPage: React.FC = () => {
       ? undefined
       : isMember
         ? 'Member early access is open'
-        : 'FLINTA early access is open';
+        : 'FLINTA* early access is open';
 
   const handleSignup = (level: { levelKey: string; label: string }) => {
     if (!eventData) return;
@@ -357,6 +357,7 @@ export const KandieEventPage: React.FC = () => {
                     };
                   })}
                   isPublic={isPublic}
+                  canSignup={canSignupNow}
                   publicReleaseDate={publicReleaseDate}
                   signupState={{
                     label: signupLabel,

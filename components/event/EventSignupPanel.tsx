@@ -10,6 +10,8 @@ export type EventSignupIntent = {
   eventType?: string;
   accessNote?: string;
   requiresFlintaAttestation: boolean;
+  firstName?: string;
+  lastName?: string;
 };
 
 export interface EventSignupPanelProps {
@@ -27,7 +29,18 @@ const EVENT_SIGNUP_STORAGE_KEY = 'eventSignupIntent';
 
 function buildReturnUrl(): string | undefined {
   if (typeof window === 'undefined') return undefined;
-  const url = new URL(window.location.href);
+  const envRedirect = (import.meta as { env?: Record<string, string | undefined> }).env;
+  const explicitBase =
+    envRedirect?.VITE_AUTH_REDIRECT_URL?.trim() ||
+    envRedirect?.VITE_PUBLIC_SITE_URL?.trim() ||
+    envRedirect?.VITE_SITE_URL?.trim() ||
+    '';
+  const currentUrl = new URL(window.location.href);
+  const url = explicitBase ? new URL(explicitBase, window.location.origin) : currentUrl;
+  if (explicitBase) {
+    url.pathname = currentUrl.pathname;
+    url.search = currentUrl.search;
+  }
   url.searchParams.set('eventSignup', '1');
   return url.toString();
 }
@@ -44,6 +57,8 @@ function storeIntent(intent: EventSignupIntent): void {
 export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onClose }) => {
   const { user, profile, signInWithMagicLink } = useAuth();
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState(intent.firstName ?? '');
+  const [lastName, setLastName] = useState(intent.lastName ?? '');
   const [flintaAttested, setFlintaAttested] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +69,9 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   const isMember = Boolean(profile?.is_member);
   const needsFlintaAttestation = intent.requiresFlintaAttestation;
   const canSubmit = !needsFlintaAttestation || flintaAttested;
+  const hasNames = Boolean(firstName.trim() && lastName.trim());
+  const hasEmail = Boolean(email.trim());
+  const hasAuthEmail = Boolean(user?.email && user.email.trim());
 
   const levelSummary = useMemo(
     () => `${intent.eventTitle} · ${intent.levelLabel}`,
@@ -66,13 +84,22 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       setError('Enter your email address first.');
       return;
     }
+    if (!hasNames) {
+      setError('Enter your first and last name.');
+      return;
+    }
     if (!canSubmit) {
-      setError('Please confirm the FLINTA self-attestation.');
+      setError('Please confirm the FLINTA* self-attestation.');
       return;
     }
     setError(null);
     setIsSubmitting(true);
-    storeIntent({ ...intent, requiresFlintaAttestation: needsFlintaAttestation });
+    storeIntent({
+      ...intent,
+      requiresFlintaAttestation: needsFlintaAttestation,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+    });
     const { error: magicError } = await signInWithMagicLink(email.trim(), buildReturnUrl());
     setIsSubmitting(false);
     if (magicError) {
@@ -84,7 +111,15 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
 
   const handleConfirmSignup = async () => {
     if (!canSubmit) {
-      setError('Please confirm the FLINTA self-attestation.');
+      setError('Please confirm the FLINTA* self-attestation.');
+      return;
+    }
+    if (!hasNames) {
+      setError('Enter your first and last name.');
+      return;
+    }
+    if (!hasAuthEmail) {
+      setError('Please log in again to confirm your email address.');
       return;
     }
     if (!supabase) {
@@ -114,6 +149,8 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
           rideLevel: intent.levelKey,
           eventType: intent.eventType,
           flintaAttested,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
         }),
       });
 
@@ -194,6 +231,36 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         </div>
 
         <form onSubmit={handleSendMagicLink} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="event-signup-first-name" className={labelClass}>
+                First name
+              </label>
+              <input
+                id="event-signup-first-name"
+                type="text"
+                autoComplete="given-name"
+                required
+                className={inputClass}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="event-signup-last-name" className={labelClass}>
+                Last name
+              </label>
+              <input
+                id="event-signup-last-name"
+                type="text"
+                autoComplete="family-name"
+                required
+                className={inputClass}
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </div>
+          </div>
           <div>
             <label htmlFor="event-signup-email" className={labelClass}>
               Email address
@@ -218,7 +285,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
                 onChange={(e) => setFlintaAttested(e.target.checked)}
                 required
               />
-              <span>I identify as FLINTA and understand this early access window is for FLINTA riders.</span>
+              <span>I identify as FLINTA* and understand this early access window is for FLINTA* riders.</span>
             </label>
           )}
 
@@ -226,11 +293,41 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
 
           <button
             type="submit"
-            disabled={isSubmitting || !email.trim() || !canSubmit}
+            disabled={isSubmitting || !hasEmail || !hasNames || !canSubmit}
             className={btnPrimary}
           >
             {isSubmitting ? 'Sending…' : 'Email me a signup link'}
           </button>
+          <p className="text-xs text-slate-500">
+            By continuing you agree to our{' '}
+            <a
+              href="/terms-of-service"
+              className="text-secondary-drift hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Terms
+            </a>
+            , the{' '}
+            <a
+              href="/waiver"
+              className="text-secondary-drift hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Waiver
+            </a>
+            , and how we handle your data per our{' '}
+            <a
+              href="/privacy-policy"
+              className="text-secondary-drift hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Privacy Policy
+            </a>
+            . You also agree to creating an account on KandieGang.com and agree to receiving emails.
+          </p>
         </form>
       </div>
     );
@@ -244,6 +341,37 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         {intent.accessNote && (
           <p className="text-xs text-slate-500 mt-2">{intent.accessNote}</p>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="event-confirm-first-name" className={labelClass}>
+            First name
+          </label>
+          <input
+            id="event-confirm-first-name"
+            type="text"
+            autoComplete="given-name"
+            required
+            className={inputClass}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="event-confirm-last-name" className={labelClass}>
+            Last name
+          </label>
+          <input
+            id="event-confirm-last-name"
+            type="text"
+            autoComplete="family-name"
+            required
+            className={inputClass}
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </div>
       </div>
 
       {!isMember && (
@@ -262,7 +390,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
             onChange={(e) => setFlintaAttested(e.target.checked)}
             required
           />
-          <span>I identify as FLINTA and understand this early access window is for FLINTA riders.</span>
+          <span>I identify as FLINTA* and understand this early access window is for FLINTA* riders.</span>
         </label>
       )}
 
@@ -271,12 +399,43 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       <button
         type="button"
         onClick={handleConfirmSignup}
-        disabled={isSubmitting || !canSubmit}
+        disabled={isSubmitting || !canSubmit || !hasNames || !hasAuthEmail}
         className={btnPrimary}
       >
         {isSubmitting ? 'Submitting…' : 'Confirm signup'}
       </button>
+      <p className="text-xs text-slate-500">
+        By continuing you agree to our{' '}
+        <a
+          href="/terms-of-service"
+          className="text-secondary-drift hover:underline"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Terms
+        </a>
+        , the{' '}
+        <a
+          href="/waiver"
+          className="text-secondary-drift hover:underline"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Waiver
+        </a>
+        , and how we handle your data per our{' '}
+        <a
+          href="/privacy-policy"
+          className="text-secondary-drift hover:underline"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Privacy Policy
+        </a>
+        . You also agree to creating an account on KandieGang.com and agree to receiving emails.
+      </p>
     </div>
+
   );
 };
 

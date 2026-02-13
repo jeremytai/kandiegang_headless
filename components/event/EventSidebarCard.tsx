@@ -19,6 +19,7 @@ interface EventSidebarCardProps {
     isSoldOut?: boolean;
   }>;
   isPublic: boolean;
+  canSignup: boolean;
   publicReleaseDate?: string;
   signupState?: {
     label: string;
@@ -41,6 +42,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   type,
   levels,
   isPublic,
+  canSignup,
   publicReleaseDate,
   signupState,
   onSignup,
@@ -196,7 +198,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                       <button
                         type="button"
                         className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                        disabled={(!signupState?.allowWaitlist && level.isSoldOut) || signupState?.disabled || !isPublic}
+                        disabled={(!signupState?.allowWaitlist && level.isSoldOut) || signupState?.disabled || !canSignup}
                         onClick={() => onSignup?.({ levelKey: level.levelKey, label: level.label })}
                       >
                         {level.isSoldOut
@@ -231,7 +233,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
               <button
                 type="button"
                 className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={((workshop.spotsLeft ?? 1) <= 0 && !signupState?.allowWaitlist) || signupState?.disabled || !isPublic}
+                disabled={((workshop.spotsLeft ?? 1) <= 0 && !signupState?.allowWaitlist) || signupState?.disabled || !canSignup}
                 onClick={() => onSignup?.({ levelKey: 'workshop', label: 'Workshop' })}
               >
                 {(workshop.spotsLeft ?? 1) <= 0

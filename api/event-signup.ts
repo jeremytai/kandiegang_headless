@@ -25,6 +25,8 @@ type EventSignupBody = {
   eventType?: string;
   flintaAttested?: boolean;
   eventTitle?: string;
+  firstName?: string;
+  lastName?: string;
 };
 
 type EventAccessData = {
@@ -218,6 +220,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const eventType = typeof body?.eventType === 'string' ? body.eventType : null;
   const eventTitle = typeof body?.eventTitle === 'string' ? body.eventTitle : 'Kandie Gang Event';
   const flintaAttested = Boolean(body?.flintaAttested);
+  const firstName = typeof body?.firstName === 'string' ? body.firstName.trim() : '';
+  const lastName = typeof body?.lastName === 'string' ? body.lastName.trim() : '';
 
   const eventId = typeof eventIdRaw === 'string' ? Number(eventIdRaw) : eventIdRaw;
   if (!eventId || Number.isNaN(eventId)) {
@@ -225,6 +229,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   if (!rideLevel) {
     return res.status(400).json({ error: 'Missing ride level' });
+  }
+  if (!firstName || !lastName) {
+    return res.status(400).json({ error: 'Missing first or last name' });
   }
 
   try {
@@ -312,6 +319,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       event_type: eventType ?? 'ride',
       cancel_token_hash: cancelTokenHash,
       cancel_token_issued_at: new Date().toISOString(),
+      first_name: firstName,
+      last_name: lastName,
     };
     const capacity = getCapacityForLevel(rideLevel, access);
     let waitlisted = false;
