@@ -296,7 +296,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     if (magicLinkSent) {
       return (
         <div className="space-y-3">
-          <h2 className="text-xl font-semibold text-primary-ink">Check your email</h2>
+          <h2 className="text-xl font-normal text-primary-ink">Check your email</h2>
           <p className="text-sm text-slate-600">
             We sent a signup link to <strong>{email}</strong>. Open it to finish registering for{' '}
             <strong>{levelSummary}</strong>.
