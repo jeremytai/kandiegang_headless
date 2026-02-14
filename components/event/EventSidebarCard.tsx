@@ -1,12 +1,3 @@
-  // Debug: log participantsByLevel and levelKey when sidebar is opened
-  useEffect(() => {
-    if (participantsSidebar) {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG participantsByLevel:', participantsByLevel);
-      // eslint-disable-next-line no-console
-      console.log('DEBUG sidebar.levelKey:', participantsSidebar.levelKey);
-    }
-  }, [participantsSidebar, participantsByLevel]);
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Link, Info } from 'lucide-react';
 
