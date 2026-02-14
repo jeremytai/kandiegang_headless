@@ -170,7 +170,10 @@ export async function wpQuery<T>(
         const errorMessages = json.errors.map((e) => e.message).join(', ');
         console.error('[WordPress] GraphQL Errors:', json.errors);
         console.error('[WordPress] Full error details:', JSON.stringify(json.errors, null, 2));
-        const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+        const isDev =
+          (typeof process !== 'undefined' &&
+            process.env &&
+            process.env.NODE_ENV === 'development') ||
           (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
         if (isDev) {
           console.error('[WordPress] Query that failed:', query);
@@ -179,7 +182,8 @@ export async function wpQuery<T>(
         throw new Error(`GraphQL Error: ${errorMessages}`);
       }
 
-      const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
         (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
       if (isDev && json.data) {
         console.log('[WordPress] Query successful');
@@ -1284,7 +1288,8 @@ export function extractProductImagesFromBlocks(
 export async function getProductBySlug(
   slug: string
 ): Promise<(WPProductDetail & { mediaItems?: ProductMediaItemNode[] }) | null> {
-  const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+  const isDev =
+    (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
     (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
   if (isDev) {
     console.log('[Product] Fetching product with slug:', slug);
@@ -1298,7 +1303,8 @@ export async function getProductBySlug(
       { useCache: true }
     );
     if (data.shopProduct) {
-      const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
         (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
       if (isDev) {
         console.log('[Product] ✓ Found via shopProduct query:', slug);
@@ -1311,7 +1317,8 @@ export async function getProductBySlug(
         mediaItems: data.mediaItems?.nodes,
       };
     } else {
-      const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
         (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
       if (isDev) {
         console.warn('[Product] shopProduct query returned null for slug:', slug);
@@ -1319,7 +1326,8 @@ export async function getProductBySlug(
     }
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+    const isDev =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
       (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
     if (isDev) {
       console.warn('[Product] shopProduct query failed:', errorMsg);
@@ -1336,7 +1344,8 @@ export async function getProductBySlug(
     );
     if (fallbackData.shopProducts?.nodes?.length > 0) {
       const node = fallbackData.shopProducts.nodes[0];
-      const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
         (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
       if (isDev) {
         console.log('[Product] ✓ Found via shopProducts filter query:', slug);
@@ -1348,7 +1357,8 @@ export async function getProductBySlug(
         mediaItems: fallbackData.mediaItems?.nodes,
       };
     } else {
-      const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
         (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
       if (isDev) {
         console.warn('[Product] shopProducts filter query returned no results for slug:', slug);
@@ -1356,7 +1366,8 @@ export async function getProductBySlug(
     }
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+    const isDev =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
       (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
     if (isDev) {
       console.warn('[Product] shopProducts filter query also failed:', errorMsg);
@@ -1379,7 +1390,8 @@ export async function getProductBySlug(
             .endsWith(slugLower))
     );
     if (match) {
-      const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
         (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
       if (isDev) {
         console.log('[Product] ✓ Found via products list fallback:', slug);
@@ -1391,7 +1403,8 @@ export async function getProductBySlug(
       } as WPProductDetail & { mediaItems?: ProductMediaItemNode[] };
     }
   } catch (error) {
-    const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+    const isDev =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
       (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
     if (isDev) {
       console.warn('[Product] List fallback failed:', error);

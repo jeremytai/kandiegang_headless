@@ -30,7 +30,9 @@ export const KandieEventPage: React.FC = () => {
   const [restoredSignup, setRestoredSignup] = useState(false);
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
   const [registrations, setRegistrations] = useState<Record<string, { isWaitlist: boolean }>>({});
-  const [participantsByLevel, setParticipantsByLevel] = useState<Record<string, Array<{ name: string; id: string }>>>({});
+  const [participantsByLevel, setParticipantsByLevel] = useState<
+    Record<string, Array<{ name: string; id: string }>>
+  >({});
   // Fetch all participants for the event and group by ride_level
   const refreshParticipantsByLevel = useCallback(async () => {
     if (!eventData?.databaseId || !supabase) return;
@@ -47,7 +49,8 @@ export const KandieEventPage: React.FC = () => {
       }
       const grouped: Record<string, Array<{ name: string; id: string }>> = {};
       (data ?? []).forEach((row) => {
-        const level = typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
+        const level =
+          typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
         if (!grouped[level]) grouped[level] = [];
         grouped[level].push({
           name: [row.first_name, row.last_name].filter(Boolean).join(' '),
@@ -154,7 +157,6 @@ export const KandieEventPage: React.FC = () => {
     if (!eventData?.databaseId) return;
     refreshCapacity();
   }, [eventData?.databaseId, refreshCapacity]);
-
 
   useEffect(() => {
     if (!eventData?.databaseId || !user?.id) return;

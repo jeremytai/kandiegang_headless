@@ -49,9 +49,15 @@ async function main() {
 
   console.log(`Participants for event "${eventSlug}" (ID: ${eventId}):`);
   data.forEach((row, i) => {
-    console.log(
-      `${i + 1}. ${row.first_name} ${row.last_name} (user_id: ${row.user_id}, level: ${row.ride_level})`
-    );
+    const name = [row.first_name, row.last_name].filter(Boolean).join(' ');
+    if (!row.first_name && !row.last_name) {
+      console.log(
+        `${i + 1}. (NO NAME) user_id: ${row.user_id}, level: ${row.ride_level}, RAW:`,
+        row
+      );
+    } else {
+      console.log(`${i + 1}. ${name} (user_id: ${row.user_id}, level: ${row.ride_level})`);
+    }
   });
   console.log(`Total: ${data.length}`);
 }

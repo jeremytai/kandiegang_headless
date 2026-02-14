@@ -1,3 +1,12 @@
+  // Debug: log participantsByLevel and levelKey when sidebar is opened
+  useEffect(() => {
+    if (participantsSidebar) {
+      // eslint-disable-next-line no-console
+      console.log('DEBUG participantsByLevel:', participantsByLevel);
+      // eslint-disable-next-line no-console
+      console.log('DEBUG sidebar.levelKey:', participantsSidebar.levelKey);
+    }
+  }, [participantsSidebar, participantsByLevel]);
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Link, Info } from 'lucide-react';
 
@@ -462,7 +471,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
               >
                 &times;
               </button>
-              <h3 className="text-lg font-normal mb-4 mt-2">{participantsSidebar.label} Participants</h3>
+              <h3 className="text-lg font-normal mb-4 mt-2">
+                {participantsSidebar.label} Participants
+              </h3>
               <ul className="space-y-2">
                 {(participantsByLevel?.[participantsSidebar.levelKey] ?? []).length === 0 ? (
                   <li className="text-slate-500">No participants yet.</li>
