@@ -56,13 +56,12 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   currentUser,
   participantsByLevel,
 }) => {
-  const labelClass = 'text-xs tracking-[0.08em] text-slate-500';
-  const valueClass = 'text-sm text-slate-900';
+  const labelClass = 'text-xs tracking-[0.08em] text-secondary-purple-rain';
+  const valueClass = 'text-sm text-primary-ink';
   const locationLines = location.split('\n');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [routeModal, setRouteModal] = useState<{ url: string; label: string } | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const [workshopOpen, setWorkshopOpen] = useState(true);
   const [cancelTarget, setCancelTarget] = useState<{ key: string; label: string } | null>(null);
   const [participantsSidebar, setParticipantsSidebar] = useState<{
     levelKey: string;
@@ -100,7 +99,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
 
   const isWorkshop = type === 'workshop';
   return (
-    <aside className="bg-gray-50 p-6 rounded-lg space-y-4">
+    <aside className="bg-primary-breath p-6 rounded-lg space-y-4">
       <div>
         <div className="space-y-1 mb-4">
           <p className={labelClass}>Date & Time</p>
@@ -165,7 +164,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           </button>
                         )}
                         {level.spotsLeft != null && level.places != null && (
-                          <span className="text-xs font-normal text-slate-500">
+                          <span className="text-xs font-light text-slate-200">
                             {`${level.spotsLeft} of ${level.places} Spots available`}
                           </span>
                         )}
@@ -232,7 +231,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           </span>
                         )}
                         {registration ? (
-                          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                          <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                             <p className="font-semibold">
                               {registration.isWaitlist
                                 ? "You're on the waitlist."
@@ -251,7 +250,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                         ) : (
                           <button
                             type="button"
-                            className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             disabled={
                               (!signupState?.allowWaitlist && level.isSoldOut) ||
                               signupState?.disabled ||

@@ -424,7 +424,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-xl font-semibold text-primary-ink">Confirm your spot</h2>
+        <h2 className="text-xl font-normal text-primary-ink">Confirm your spot</h2>
         <p className="text-sm text-slate-600">{levelSummary}</p>
         {intent.accessNote && <p className="text-xs text-slate-500 mt-2">{intent.accessNote}</p>}
       </div>
