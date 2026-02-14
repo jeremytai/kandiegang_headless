@@ -572,3 +572,26 @@ This project is private and proprietary.
 ## 🤝 Contributing
 
 This is a private project. For questions or issues, please contact the project maintainers.
+
+## 👥 Guide/Participant Access Control & ID Sync
+
+To ensure only the correct guides can view participants for an event level, the system matches your Supabase profile's `wp_user_id` to the WordPress guide's `databaseId` for that event level.
+
+### How to verify and update your guide ID
+
+1. **Print all guide IDs and your profile info:**
+   ```bash
+   VITE_SUPABASE_URL=your_url VITE_SUPABASE_SERVICE_ROLE_KEY=your_key node scripts/print-guide-wp-ids.cjs
+   ```
+   This prints all Supabase guide profiles (with `wp_user_id`) and the guide IDs for each event level from WordPress. Compare your profile's `wp_user_id` to the correct WordPress guide `databaseId`.
+
+2. **Update your Supabase profile's `wp_user_id` if needed:**
+   - If your `wp_user_id` does not match your WordPress guide's `databaseId`, update it with:
+   ```bash
+   VITE_SUPABASE_URL=your_url VITE_SUPABASE_SERVICE_ROLE_KEY=your_key node scripts/update-guide-wp-id.cjs
+   ```
+   This will set your profile's `wp_user_id` to the correct value for guide access control.
+
+> **Note:** You must have the correct Supabase service role key and URL in your environment variables or pass them inline as shown above.
+
+---

@@ -23,7 +23,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const { data, error } = await adminClient.from('auth_providers').insert([body], { onConflict: ['provider_type', 'provider_user_id'] });
+
+    // Use upsert to avoid duplicate key errors
+    const { data, error } = await adminClient
+      .from('auth_providers')
+      .upsert([body], { onConflict: ['provider_type', 'provider_user_id'] });
 
     if (error) {
       console.error('auth-providers error:', error);

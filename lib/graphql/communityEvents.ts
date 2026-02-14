@@ -43,6 +43,7 @@ export const GET_KANDIE_EVENTS_QUERY = `
             guides {
               nodes {
                 ... on RideGuide {
+                  databaseId
                   title
                   featuredImage {
                     node {
@@ -65,6 +66,7 @@ export const GET_KANDIE_EVENTS_QUERY = `
             guides {
               nodes {
                 ... on RideGuide {
+                  databaseId
                   title
                   featuredImage {
                     node {
@@ -87,6 +89,7 @@ export const GET_KANDIE_EVENTS_QUERY = `
             guides {
               nodes {
                 ... on RideGuide {
+                  databaseId
                   title
                   featuredImage {
                     node {
@@ -109,6 +112,7 @@ export const GET_KANDIE_EVENTS_QUERY = `
             guides {
               nodes {
                 ... on RideGuide {
+                  databaseId
                   title
                   featuredImage {
                     node {
@@ -176,15 +180,16 @@ export const GET_KANDIE_EVENT_QUERY = `
           }
           guides {
             nodes {
-              ... on RideGuide {
-                title
-                featuredImage {
-                  node {
-                    sourceUrl
-                    altText
+                ... on RideGuide {
+                  databaseId
+                  title
+                  featuredImage {
+                    node {
+                      sourceUrl
+                      altText
+                    }
                   }
                 }
-              }
             }
           }
         }

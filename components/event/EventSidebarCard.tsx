@@ -10,7 +10,7 @@ interface EventSidebarCardProps {
   levels?: Array<{
     levelKey: string;
     label: string;
-    guides: string[];
+    guides: Array<{ id: string | number; name?: string; email?: string }>;
     pace?: string;
     distanceKm?: number | null;
     routeUrl?: string;
@@ -34,10 +34,11 @@ interface EventSidebarCardProps {
     capacity: number;
     spotsLeft?: number;
   };
-  currentUser?: { email: string; id: string; name?: string };
+  // currentUser?: { email: string; id: string; name?: string };
   participantsByLevel?: Record<string, Array<{ name: string; id: string }>>;
 }
 
+import { useAuth } from '../../context/AuthContext';
 const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   date,
   time,
@@ -53,9 +54,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   registrations,
   onCancelRegistration,
   workshop,
-  currentUser,
   participantsByLevel,
 }) => {
+  const { profile: currentUser } = useAuth();
   const labelClass = 'text-xs tracking-[0.08em] text-secondary-purple-rain';
   const valueClass = 'text-sm text-primary-ink';
   const locationLines = location.split('\n');
@@ -137,16 +138,35 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
         {!isWorkshop && <hr className="border-t border-black/10" />}
         {levels && levels.length > 0 && (
           <div>
+            {/* DEBUG: Show current user and guide IDs for troubleshooting */}
+            <div style={{ background: '#fffbe6', color: '#b45309', padding: 8, marginBottom: 12, borderRadius: 6, fontSize: 12 }}>
+              <div><strong>DEBUG:</strong></div>
+              <div>currentUser.wp_user_id: {String(currentUser?.wp_user_id)}</div>
+              <div>currentUser.is_guide: {String(currentUser?.is_guide)}</div>
+              {levels.map((level) => (
+                <div key={level.levelKey}>
+                  <span>Level <b>{level.label}</b> guide IDs: [
+                    {level.guides.map((g) => String(g.id)).join(', ')}
+                  ]</span>
+                </div>
+              ))}
+            </div>
             {isWorkshop
               ? levels.map((level) => {
                   const registration = registrations?.[level.levelKey];
-                  const isGuide = currentUser && level.guides.includes(currentUser.email);
+                  const isGuide = !!(
+                    currentUser &&
+                    currentUser.is_guide &&
+                    currentUser.wp_user_id &&
+                    Array.isArray(level.guides) &&
+                    level.guides.some((g) => String(g.id) === String(currentUser.wp_user_id))
+                  );
                   return (
                     <div
                       key={level.label}
                       className="border-t border-black/10 py-3 first:border-t-0"
                     >
-                      <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
+                      <span className="text-sm font-normal text-primary-ink flex items-center gap-2">
                         {level.label}
                         {isGuide && (
                           <button
@@ -173,7 +193,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                       <div className="pt-2 space-y-3">
                         <div>
                           <p className={labelClass}>Guides</p>
-                          <p className={valueClass}>{level.guides.join(', ')}</p>
+                          <p className={valueClass}>
+                            {level.guides.map((g) => g.name || g.email || g.id).join(', ')}
+                          </p>
                         </div>
                         <div>
                           <p className={labelClass}>Spots Available</p>
@@ -275,7 +297,13 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                   // ...existing code for toggling/accordion UI...
                   const isOpen = openIndex === index;
                   const registration = registrations?.[level.levelKey];
-                  const isGuide = currentUser && level.guides.includes(currentUser.email);
+                  const isGuide = !!(
+                    currentUser &&
+                    currentUser.is_guide &&
+                    currentUser.wp_user_id &&
+                    Array.isArray(level.guides) &&
+                    level.guides.some((g) => String(g.id) === String(currentUser.wp_user_id))
+                  );
                   return (
                     <div
                       key={level.label}
@@ -321,7 +349,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                         <div className="pt-2 space-y-3">
                           <div>
                             <p className={labelClass}>Guides</p>
-                            <p className={valueClass}>{level.guides.join(', ')}</p>
+                            <p className={valueClass}>
+                              {level.guides.map((g) => g.name || g.email || g.id).join(', ')}
+                            </p>
                           </div>
                           <div>
                             <p className={labelClass}>Spots Available</p>
