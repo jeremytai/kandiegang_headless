@@ -370,13 +370,14 @@ To set someone as a member or Guide in Supabase (e.g. manual grant or no CSV): u
 
 ### Linked accounts (email + Discord)
 
+
 Users can sign in with **email** (password or magic link) or **Discord** and link both to the same account so they don’t end up with duplicate profiles.
 
 - **Table**: `public.auth_providers` stores `(user_id, provider_type, provider_user_id)` with a unique constraint on `(provider_type, provider_user_id)` so each email or Discord ID can only be linked to one user. Migration: `supabase/migrations/20250208100000_create_auth_providers.sql`.
-- **Sync**: After each login (and after link/unlink), the app upserts the current user’s email and Discord identity into `auth_providers` via `lib/authProviders.ts` so the table stays in sync with Supabase Auth.
+- **Sync**: After each login (and after link/unlink), the app syncs the current user’s email and Discord identity into `auth_providers` via a secure API route (`/api/auth-providers`). This uses the Supabase service role key server-side, resolving previous 403 errors and keeping credentials safe.
 - **Settings**: **Account & security** (`/members/settings`) lists connected methods and lets users:
-  - **Connect Discord** — links Discord to the current account (redirects to Discord; on return, the new identity is linked). Requires **manual linking** to be enabled in Supabase: Dashboard → Authentication → Providers → (e.g. Discord) or set `GOTRUE_SECURITY_MANUAL_LINKING_ENABLED: true` when self-hosting.
-  - **Unlink** — remove a login method, with a confirmation step. At least one method must remain.
+   - **Connect Discord** — links Discord to the current account (redirects to Discord; on return, the new identity is linked). Requires **manual linking** to be enabled in Supabase: Dashboard → Authentication → Providers → (e.g. Discord) or set `GOTRUE_SECURITY_MANUAL_LINKING_ENABLED: true` when self-hosting.
+   - **Unlink** — remove a login method, with a confirmation step. At least one method must remain.
 - **Edge cases**: If a user tries to link a Discord (or email) that is already linked to another account, Supabase returns an error and the app shows a message. The unique constraint on `auth_providers` prevents duplicate links in the app’s own table.
 
 Hooks: `hooks/useAuthProviders.ts` (list providers, link Discord, unlink). Auth context exposes `linkDiscord` and `unlinkIdentity` for use by the settings page.
