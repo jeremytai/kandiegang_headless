@@ -367,7 +367,7 @@ export const KandieEventPage: React.FC = () => {
   const locationLabel = [locationName, locationStreetCity].filter(Boolean).join('\n');
 
   return (
-    <div className="bg-white min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
+    <div className="bg-white min-h-screen pt-0 selection:bg-[#f9f100] selection:text-black">
       <EventHeader
         title={title}
         intro={intro}
@@ -463,7 +463,6 @@ export const KandieEventPage: React.FC = () => {
             </aside>
           </div>
         </div>
-
       </section>
 
       {/* Partner CTA (sits above global newsletter section) */}
@@ -492,7 +491,18 @@ export const KandieEventPage: React.FC = () => {
             >
               <span>Join us</span>
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-blush/20 p-1 transition-colors group-hover:bg-white">
-                <svg className="h-3 w-3 text-secondary-blush transition-colors" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                <svg
+                  className="h-3 w-3 text-secondary-blush transition-colors"
+                  stroke="currentColor"
+                  fill="none"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  viewBox="0 0 24 24"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
               </span>
             </Link>
           </div>

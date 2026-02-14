@@ -450,98 +450,23 @@ function MemberOffcanvasAccountContent({
   const hasRolePills = showCyclingMember || showGuide;
   const isMember = profile?.is_member === true;
 
+  // FAQ-style accordion state
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   if (!user) return null;
-
-  return (
-    <div className="space-y-6">
-      <p className="text-slate-600 text-sm">
-        Welcome back{' '}
-        <span className="font-medium text-slate-900">{profile?.display_name || user.email}</span>
-        {user.email && profile?.display_name && (
-          <span className="block text-slate-500 mt-0.5">{user.email}</span>
-        )}
-      </p>
-      {hasRolePills && (
-        <div className="flex flex-wrap gap-2">
-          {showCyclingMember && (
-            <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
-              Kandie Gang Cycling Member
-            </span>
-          )}
-          {showGuide && (
-            <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
-              Kandie Gang Guide
-            </span>
+  // General section content
+  const generalSection = (
+    <div className="mb-6 px-6 md:px-8 -mx-6 md:-mx-8">
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <span className="font-medium text-slate-900">{profile?.display_name || user.email}</span>
+          {user.email && profile?.display_name && (
+            <span className="text-slate-500">{user.email}</span>
           )}
         </div>
-      )}
-      {isMember && <MemberMetaCard profile={profile} daysLeft={daysLeft} variant="offcanvas" />}
-
-      {!isMember && (
-        <div className="space-y-3">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-            <p className="font-semibold mb-1">You&apos;re almost there.</p>
-            <p className="mb-1">
-              We couldn&apos;t find an active membership for this account. We checked our current
-              system (and WordPress) for the email you signed in with.
-            </p>
-            <p>
-              If you&apos;re already a Kandie Gang member from our previous setup,{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  openContactModal();
-                }}
-                className="font-semibold underline"
-              >
-                reach out
-              </button>{' '}
-              and we&apos;ll link your account. Otherwise, keep an eye on our channels for the next
-              membership window.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={handleRefreshMembership}
-              disabled={isRefreshingMembership}
-              className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-900 disabled:opacity-50"
-            >
-              {isRefreshingMembership ? 'Refreshing…' : 'Refresh membership status'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                openContactModal();
-              }}
-              className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900"
-            >
-              Contact us about membership
-            </button>
-          </div>
-        </div>
-      )}
-
-      {daysLeft != null && daysLeft < 30 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-          <p className="font-medium mb-2">
-            Renew your membership today to extend your Kandie Gang benefits and continued support of
-            the club.
-          </p>
-          <Link
-            to="/shop/kandie-gang-cycling-club-membership"
-            onClick={onClose}
-            className="font-semibold text-amber-800 hover:underline"
-          >
-            Kandie Gang Membership
-          </Link>
-        </div>
-      )}
-
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-        <p className="text-xs font-semibold text-slate-700 mb-2">Connected accounts</p>
+        {/* TODO: Add editable fields for first/last name, email */}
+      </div>
+      <div className="mt-4">
+        <h4 className="text-xs font-semibold text-slate-700 mb-2">Connected accounts</h4>
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm text-slate-600">Discord</span>
           {discordConnected ? (
@@ -561,52 +486,232 @@ function MemberOffcanvasAccountContent({
           )}
         </div>
       </div>
+    </div>
+  );
+  const accordionSections = [
+    {
+      label: 'Membership',
+      content: (
+        <>
+          {hasRolePills && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {showCyclingMember && (
+                <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                  Kandie Gang Cycling Member
+                </span>
+              )}
+              {showGuide && (
+                <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                  Kandie Gang Guide
+                </span>
+              )}
+            </div>
+          )}
+          {isMember && <MemberMetaCard profile={profile} daysLeft={daysLeft} variant="offcanvas" />}
+          {!isMember && (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+                <p className="font-semibold mb-1">You&apos;re almost there.</p>
+                <p className="mb-1">
+                  We couldn&apos;t find an active membership for this account. We checked our
+                  current system (and WordPress) for the email you signed in with.
+                </p>
+                <p>
+                  If you&apos;re already a Kandie Gang member from our previous setup,{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      openContactModal();
+                    }}
+                    className="font-semibold underline"
+                  >
+                    reach out
+                  </button>{' '}
+                  and we&apos;ll link your account. Otherwise, keep an eye on our channels for the
+                  next membership window.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleRefreshMembership}
+                  disabled={isRefreshingMembership}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-900 disabled:opacity-50"
+                >
+                  {isRefreshingMembership ? 'Refreshing…' : 'Refresh membership status'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    openContactModal();
+                  }}
+                  className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900"
+                >
+                  Contact us about membership
+                </button>
+              </div>
+            </div>
+          )}
+          {daysLeft != null && daysLeft < 30 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 mt-3">
+              <p className="font-medium mb-2">
+                Renew your membership today to extend your Kandie Gang benefits and continued
+                support of the club.
+              </p>
+              <Link
+                to="/shop/kandie-gang-cycling-club-membership"
+                onClick={onClose}
+                className="font-semibold text-amber-800 hover:underline"
+              >
+                Kandie Gang Membership
+              </Link>
+            </div>
+          )}
+        </>
+      ),
+    },
+    {
+      label: 'Activity',
+      content: (
+        <>
+          {/* TODO: Fetch and display upcoming/past rides/events and purchase history */}
+          <div className="text-sm text-slate-500">
+            Coming soon: Your upcoming and past rides/events, purchase history.
+          </div>
+        </>
+      ),
+    },
+    {
+      label: 'Email Notifications',
+      content: (
+        <>
+          {/* TODO: Add toggles for event/ride notifications and newsletter */}
+          <div className="text-sm text-slate-500">
+            Coming soon: Manage your notification preferences.
+          </div>
+        </>
+      ),
+    },
+    {
+      label: 'Account',
+      content: (
+        <>
+          <div className="flex flex-col gap-3">
+            <Link
+              to={isMember ? '/members' : '/kandiegangcyclingclub'}
+              onClick={onClose}
+              className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition"
+            >
+              Members area
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 hover:border-slate-900 transition"
+            >
+              Log out
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteAccountModalOpen(true)}
+              className="mt-2 text-sm text-red-600 hover:underline bg-transparent border-none p-0 cursor-pointer font-normal"
+            >
+              Delete account
+            </button>
+          </div>
+          <DeleteAccountModal
+            isOpen={deleteAccountModalOpen}
+            onClose={() => setDeleteAccountModalOpen(false)}
+            onRequestDelete={async () => {
+              if (!supabase) return false;
+              const {
+                data: { session },
+              } = await supabase.auth.getSession();
+              if (!session?.access_token) return false;
+              const res = await fetch('/api/delete-account', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${session.access_token}` },
+              });
+              return res.ok;
+            }}
+            onDeleted={() => {
+              setDeleteAccountModalOpen(false);
+              onClose();
+              logout();
+              onLogoutRedirect();
+            }}
+          />
+        </>
+      ),
+    },
+  ];
 
-      <div className="flex flex-col gap-3">
-        <Link
-          to={isMember ? '/members' : '/kandiegangcyclingclub'}
-          onClick={onClose}
-          className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition"
-        >
-          Members area
-        </Link>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 hover:border-slate-900 transition"
-        >
-          Log out
-        </button>
-        <button
-          type="button"
-          onClick={() => setDeleteAccountModalOpen(true)}
-          className="mt-2 text-sm text-red-600 hover:underline bg-transparent border-none p-0 cursor-pointer font-normal"
-        >
-          Delete account
-        </button>
+  return (
+    <div className="flex flex-col">
+      {/* General section (not in accordion) */}
+      <div className="mb-6 px-6 md:px-8">
+        <h3 className="text-lg md:text-xl font-medium tracking-tight text-secondary-purple-rain mb-4">
+          General
+        </h3>
+        {generalSection}
       </div>
-      <DeleteAccountModal
-        isOpen={deleteAccountModalOpen}
-        onClose={() => setDeleteAccountModalOpen(false)}
-        onRequestDelete={async () => {
-          if (!supabase) return false;
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (!session?.access_token) return false;
-          const res = await fetch('/api/delete-account', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          });
-          return res.ok;
-        }}
-        onDeleted={() => {
-          setDeleteAccountModalOpen(false);
-          onClose();
-          logout();
-          onLogoutRedirect();
-        }}
-      />
+      {/* Accordion sections */}
+      {accordionSections.map((section, idx) => (
+        <div
+          key={section.label}
+          className={`overflow-hidden border-t border-secondary-purple-rain/50 py-6 md:py-8 ${idx === accordionSections.length - 1 ? 'border-b' : ''} -mx-6 md:-mx-8`}
+        >
+          <button
+            type="button"
+            onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+            className="flex w-full cursor-pointer items-start justify-between text-left group px-6 md:px-8"
+            aria-expanded={openIndex === idx ? 'true' : 'false'}
+            aria-controls={`settings-accordion-panel-${idx}`}
+            id={`settings-accordion-button-${idx}`}
+          >
+            <span className="max-w-[60ch] flex-1 pr-4">
+              <p className="text-lg md:text-xl font-medium tracking-tight text-secondary-purple-rain">
+                {section.label}
+              </p>
+            </span>
+            <span
+              className={`inline-flex shrink-0 pt-1 transition-transform duration-300 ease-in-out ${openIndex === idx ? 'rotate-180' : ''}`}
+            >
+              {/* ChevronDown icon, use same as FAQ */}
+              <svg
+                className="h-5 w-5 opacity-60 text-secondary-purple-rain group-hover:opacity-100 transition-opacity"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+          </button>
+          <AnimatePresence initial={false}>
+            {openIndex === idx && (
+              <motion.div
+                id={`settings-accordion-panel-${idx}`}
+                role="region"
+                aria-labelledby={`settings-accordion-button-${idx}`}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+              >
+                <div className="pt-6 pb-2 text-secondary-purple-rain leading-relaxed font-light text-base md:text-lg max-w-[65ch] px-6 md:px-8">
+                  {section.content}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ))}
     </div>
   );
 }
