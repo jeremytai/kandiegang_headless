@@ -45,6 +45,8 @@ export const MembersSettingsPage: React.FC = () => {
   const [unlinkConfirm, setUnlinkConfirm] = useState<{ id: string; provider: string } | null>(null);
   const [unlinkLoading, setUnlinkLoading] = useState(false);
   const [discordLoading, setDiscordLoading] = useState(false);
+  const [discordSuccess, setDiscordSuccess] = useState<string | null>(null);
+  const [discordError, setDiscordError] = useState<string | null>(null);
 
   const hasDiscord = identities.some((i) => i.provider === 'discord');
   const hasEmail = identities.some((i) => i.provider === 'email');
@@ -63,10 +65,14 @@ export const MembersSettingsPage: React.FC = () => {
 
   const handleLinkDiscord = async () => {
     setDiscordLoading(true);
+    setDiscordSuccess(null);
+    setDiscordError(null);
     const result = await linkDiscord();
     setDiscordLoading(false);
     if (result.error) {
-      // Error is already set by hook; could set a local state message here if preferred
+      setDiscordError(result.error);
+    } else {
+      setDiscordSuccess('Discord account linked successfully!');
     }
   };
 
@@ -192,27 +198,63 @@ export const MembersSettingsPage: React.FC = () => {
               Add another way to sign in to this account:
             </p>
             {!hasDiscord && (
-              <button
-                type="button"
-                onClick={handleLinkDiscord}
-                disabled={discordLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#5865F2] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4752C4] disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {discordLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Connecting…
-                  </>
-                ) : (
-                  <>
-                    <DiscordIcon className="w-5 h-5" />
-                    Connect Discord
-                  </>
+              <>
+                <button
+                  type="button"
+                  onClick={handleLinkDiscord}
+                  disabled={discordLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#5865F2] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4752C4] disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {discordLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Connecting…
+                    </>
+                  ) : (
+                    <>
+                      <DiscordIcon className="w-5 h-5" />
+                      Connect Discord
+                    </>
+                  )}
+                </button>
+                {/* Explanation under the button */}
+                <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                  Link your Discord account to unlock member-only Discord features, even if your emails differ. This lets you access exclusive channels and sync your membership status with Discord.
+                </p>
+                {discordError && (
+                  <div className="mt-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                    {discordError}
+                  </div>
                 )}
-              </button>
+                {discordSuccess && (
+                  <div className="mt-2 rounded border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+                    {discordSuccess}
+                  </div>
+                )}
+              </>
+            )}
+            {hasDiscord && (
+              <div className="flex items-center gap-3 mt-2">
+                {/* Show Discord username and avatar if available */}
+                {(() => {
+                  const discordIdentity = identities.find((i) => i.provider === 'discord');
+                  const avatar = discordIdentity?.identity_data?.avatar_url || discordIdentity?.identity_data?.picture;
+                  const name = discordIdentity?.identity_data?.full_name || discordIdentity?.identity_data?.username || discordIdentity?.identity_data?.name;
+                  return (
+                    <>
+                      {avatar && (
+                        <img src={avatar as string} alt="Discord avatar" className="w-7 h-7 rounded-full border border-slate-300 dark:border-slate-600" />
+                      )}
+                      <span className="text-sm text-slate-700 dark:text-slate-200 font-medium">
+                        {name ? `Connected as ${name}` : 'Discord connected'}
+                      </span>
+                    </>
+                  );
+                })()}
+              </div>
             )}
             {hasDiscord && hasEmail && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                 Email and Discord are both connected. You can unlink one above if needed.
               </p>
             )}

@@ -79,8 +79,8 @@ const StoriesPage = lazy(() =>
 const StoryPage = lazy(() =>
   import('./pages/stories/StoryPage').then((m) => ({ default: m.StoryPage }))
 );
-const FontsPage = lazy(() =>
-  import('./pages/site/FontsPage').then((m) => ({ default: m.FontsPage }))
+const DesignSystemWIP = lazy(() =>
+  import('./pages/site/DesignSystemWIP').then((m) => ({ default: m.DesignSystemWIP }))
 );
 const ContactPage = lazy(() =>
   import('./pages/site/ContactPage').then((m) => ({ default: m.ContactPage }))
@@ -274,7 +274,7 @@ const App: React.FC = () => {
                           element={<KandieGangCyclingClubPage />}
                         />
                         <Route path="/event/:slug" element={<KandieEventPage />} />
-                        <Route path="/fonts" element={<FontsPage />} />
+                        <Route path="/design-system" element={<DesignSystemWIP />} />
                         <Route path="/login/member" element={<MemberLoginPage />} />
                         <Route path="/login/shop" element={<ShopLoginPage />} />
                         <Route path="/shop" element={<ShopPage />} />

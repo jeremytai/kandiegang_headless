@@ -11,6 +11,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Accordion, AccordionItem } from '../../components/common/Accordion';
 
 export const DesignSystemWIP: React.FC = () => {
   // Helper function to get font showcase class name
@@ -177,14 +178,14 @@ export const DesignSystemWIP: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-20 text-center"
         >
-          <h1 className="text-h1 font-heading mb-6 text-primary-ink">Typography Showcase</h1>
+          <h1 className="text-h1 font-heading mb-6 text-primary-ink">Design System WIP</h1>
           <p className="text-xl text-slate-500 max-w-2xl mx-auto font-light">
-            A comprehensive display of all fonts used throughout the Kandie Gang website
+            Building out a design system for Kandie Gang line-by-line.
           </p>
         </motion.div>
         {/* Tailwind Colors */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Tailwind Colors</h2>
+          <h2 className="text-4xl font-normal mb-8 text-primary-ink">Tailwind Colors</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {tailwindColors.map((color) => (
               <div key={color.name} className={`rounded-xl p-6 border shadow-md ${color.value}`}>
@@ -198,7 +199,7 @@ export const DesignSystemWIP: React.FC = () => {
 
         {/* Spacing */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Spacing</h2>
+          <h2 className="text-4xl font-normal mb-8 text-primary-ink">Spacing</h2>
           <div className="flex flex-wrap gap-8">
             {spacings.map((spacing) => (
               <div
@@ -213,7 +214,7 @@ export const DesignSystemWIP: React.FC = () => {
 
         {/* Border Radius */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Border Radius</h2>
+          <h2 className="text-4xl font-normal mb-8 text-primary-ink">Border Radius</h2>
           <div className="flex flex-wrap gap-8">
             {borderRadius.map((radius) => (
               <div
@@ -228,7 +229,7 @@ export const DesignSystemWIP: React.FC = () => {
 
         {/* Shadows */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Shadows</h2>
+          <h2 className="text-4xl font-normal mb-8 text-primary-ink">Shadows</h2>
           <div className="flex flex-wrap gap-8">
             {shadows.map((shadow) => (
               <div
@@ -243,7 +244,7 @@ export const DesignSystemWIP: React.FC = () => {
 
         {/* Sample Buttons */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Sample Buttons</h2>
+          <h2 className="text-4xl font-normal mb-8 text-primary-ink">Sample Buttons</h2>
           <div className="flex flex-wrap gap-8">
             {sampleButtons.map((btn) => (
               <button key={btn.label} className={btn.className}>
@@ -255,7 +256,7 @@ export const DesignSystemWIP: React.FC = () => {
 
         {/* Sample Cards */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Sample Cards</h2>
+          <h2 className="text-4xl font-normal mb-8 text-primary-ink">Sample Cards</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {sampleCards.map((card) => (
               <div key={card.title} className={card.className}>
@@ -268,7 +269,7 @@ export const DesignSystemWIP: React.FC = () => {
 
         {/* Sample Alerts */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Sample Alerts</h2>
+          <h2 className="text-4xl font-normal mb-8 text-primary-ink">Sample Alerts</h2>
           <div className="flex flex-wrap gap-8">
             {sampleAlerts.map((alert) => (
               <div key={alert.type} className={alert.className}>
@@ -276,6 +277,44 @@ export const DesignSystemWIP: React.FC = () => {
                 <div>{alert.text}</div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Accordion Example */}
+        <section className="mb-32">
+          <h2 className="text-4xl font-normal mb-8 text-primary-ink">Accordion Example</h2>
+          <div className="bg-secondary-purple-rain rounded-xl p-8">
+            <Accordion
+              items={[
+                {
+                  title: 'What is Kandie Gang?',
+                  content: (
+                    <span>
+                      Kandie Gang is a cycling community focused on inclusivity, fun, and adventure.
+                      We welcome riders of all backgrounds and skill levels.
+                    </span>
+                  ),
+                },
+                {
+                  title: 'How do I join a ride?',
+                  content: (
+                    <span>
+                      Check our events calendar and sign up for any ride that fits your schedule.
+                      All details are provided on the event page.
+                    </span>
+                  ),
+                },
+                {
+                  title: 'What should I bring?',
+                  content: (
+                    <span>
+                      Bring your bike, helmet, water, and a positive attitude! Some rides may have
+                      specific requirements, so check the event details.
+                    </span>
+                  ),
+                },
+              ]}
+            />
           </div>
         </section>
 
@@ -289,7 +328,7 @@ export const DesignSystemWIP: React.FC = () => {
             className="mb-32"
           >
             <div className="border-b border-slate-200 pb-8 mb-12">
-              <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-slate-900 mb-3">
+              <h2 className="text-4xl md:text-6xl font-normal tracking-tighter text-slate-900 mb-3">
                 {font.name}
               </h2>
               <p className="text-lg text-slate-500 font-light">{font.description}</p>
@@ -302,7 +341,7 @@ export const DesignSystemWIP: React.FC = () => {
               {font.weights.map((weight, _weightIndex) => (
                 <div key={`${weight.weight}-${weight.style}`} className="space-y-8">
                   <div className="flex items-center gap-4">
-                    <span className="text-xs font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-4 py-2 rounded-full">
+                    <span className="text-xs font-normal uppercase tracking-widest text-slate-400 bg-slate-50 px-4 py-2 rounded-full">
                       {weight.label} ({weight.weight}){weight.style === 'italic' && ' • Italic'}
                     </span>
                     <code className="text-xs text-slate-400 font-mono">
@@ -333,7 +372,7 @@ export const DesignSystemWIP: React.FC = () => {
 
             {/* Character Set */}
             <div className="bg-slate-50 rounded-2xl p-8 space-y-6">
-              <h3 className="text-xl font-bold text-slate-900">Character Set</h3>
+              <h3 className="text-xl font-normal text-slate-900">Character Set</h3>
               <div className="space-y-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
@@ -377,7 +416,7 @@ export const DesignSystemWIP: React.FC = () => {
           transition={{ delay: 0.4 }}
           className="mt-32 bg-slate-900 text-white rounded-3xl p-12"
         >
-          <h2 className="text-4xl font-bold mb-8">CSS Variables</h2>
+          <h2 className="text-4xl font-normal mb-8">CSS Variables</h2>
           <div className="space-y-4 font-mono text-sm">
             <div className="bg-slate-800 rounded-lg p-4">
               <div className="text-slate-400 mb-2">CSS Custom Properties:</div>
@@ -439,7 +478,7 @@ export const DesignSystemWIP: React.FC = () => {
           transition={{ delay: 0.5 }}
           className="mt-32"
         >
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-slate-900 mb-12">
+          <h2 className="text-4xl md:text-6xl font-normal tracking-normal text-slate-900 mb-12">
             Usage Examples
           </h2>
           <div className="space-y-16">
