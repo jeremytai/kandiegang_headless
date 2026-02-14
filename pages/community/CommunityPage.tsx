@@ -6,6 +6,7 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { PasswordGate, getStoredUnlock } from '../../components/common/PasswordGate';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AnimatedBlob } from '../../components/visual/AnimatedBlob';
@@ -114,12 +115,16 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
   };
 }
 
+
 export const CommunityPage: React.FC = () => {
   const [events, setEvents] = useState<EventsLayoutEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unlocked, setUnlocked] = useState(() => getStoredUnlock());
+
 
   useEffect(() => {
+    if (!unlocked) return;
     const fetchEvents = async () => {
       try {
         setLoading(true);
@@ -149,7 +154,11 @@ export const CommunityPage: React.FC = () => {
     };
 
     fetchEvents();
-  }, []);
+  }, [unlocked]);
+
+  if (!unlocked) {
+    return <PasswordGate onUnlock={() => setUnlocked(true)} />;
+  }
 
   return (
     <div className="relative selection:bg-[#f9f100] selection:text-black overflow-x-hidden">
