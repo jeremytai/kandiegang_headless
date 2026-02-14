@@ -94,6 +94,33 @@ export const FontsPage: React.FC = () => {
     punctuation: '.,;:!?\'"()[]{}@#$%^&*-+=/\\|<>`~',
   };
 
+  // Tailwind theme showcase additions
+  const tailwindColors = [
+    { name: 'primary-breath', value: 'bg-primary-breath text-primary-ink' },
+    { name: 'primary-ecru', value: 'bg-primary-ecru text-primary-ink' },
+    { name: 'primary-ink', value: 'bg-primary-ink text-white' },
+    { name: 'secondary-purple-rain', value: 'bg-secondary-purple-rain text-white' },
+    { name: 'secondary-current', value: 'bg-secondary-current text-white' },
+    { name: 'secondary-blush', value: 'bg-secondary-blush text-primary-ink' },
+    { name: 'secondary-drift', value: 'bg-secondary-drift text-white' },
+    { name: 'secondary-signal', value: 'bg-secondary-signal text-primary-ink' },
+  ];
+  const spacings = ['p-2', 'p-4', 'p-8', 'm-2', 'm-4', 'm-8', 'gap-2', 'gap-4', 'gap-8'];
+  const borderRadius = ['rounded', 'rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-2xl', 'rounded-3xl', 'rounded-full'];
+  const shadows = ['shadow-sm', 'shadow', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl', 'shadow-inner', 'shadow-none'];
+  const sampleButtons = [
+    { label: 'Primary', className: 'bg-primary-breath text-primary-ink font-heading px-6 py-3 rounded-lg shadow-md hover:bg-primary-ecru' },
+    { label: 'Secondary', className: 'bg-secondary-drift text-white font-body px-6 py-3 rounded-lg shadow hover:bg-secondary-blush' },
+    { label: 'Accent', className: 'bg-secondary-signal text-primary-ink font-heading px-6 py-3 rounded-full shadow-lg hover:bg-secondary-purple-rain' },
+  ];
+  const sampleCards = [
+    { title: 'Card 1', className: 'bg-primary-breath border border-primary-ecru rounded-xl shadow-md p-8', text: 'This is a sample card using Tailwind theme colors.' },
+    { title: 'Card 2', className: 'bg-secondary-blush border border-secondary-current rounded-2xl shadow-lg p-8', text: 'Another card with secondary colors and shadow.' },
+  ];
+  const sampleAlerts = [
+    { type: 'Info', className: 'bg-secondary-drift text-white border-l-4 border-secondary-current p-4 rounded-md shadow', text: 'This is an info alert.' },
+    { type: 'Warning', className: 'bg-secondary-signal text-primary-ink border-l-4 border-secondary-blush p-4 rounded-md shadow', text: 'This is a warning alert.' },
+  ];
   return (
     <div className="bg-white min-h-screen py-20 px-6">
       <div className="max-w-7xl mx-auto">
@@ -103,13 +130,98 @@ export const FontsPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-20 text-center"
         >
-          <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-slate-900 mb-6">
+<h1 className="text-h1 font-heading mb-6 text-primary-ink">
             Typography Showcase
           </h1>
           <p className="text-xl text-slate-500 max-w-2xl mx-auto font-light">
             A comprehensive display of all fonts used throughout the Kandie Gang website
           </p>
         </motion.div>
+        {/* Tailwind Colors */}
+        <section className="mb-32">
+          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Tailwind Colors</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {tailwindColors.map((color) => (
+              <div key={color.name} className={`rounded-xl p-6 border shadow-md ${color.value}`}> 
+                <div className="text-lg font-bold mb-2">{color.name}</div>
+                <div className="text-sm font-mono">{color.value.replace(/bg-|text-/g, '')}</div>
+                <div className="mt-4 text-lg font-bold">Sample</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Spacing */}
+        <section className="mb-32">
+          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Spacing</h2>
+          <div className="flex flex-wrap gap-8">
+            {spacings.map((spacing) => (
+              <div key={spacing} className={`bg-primary-ecru text-primary-ink rounded-md ${spacing} min-w-[120px] min-h-[40px]`}>
+                <span className="font-mono">{spacing}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Border Radius */}
+        <section className="mb-32">
+          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Border Radius</h2>
+          <div className="flex flex-wrap gap-8">
+            {borderRadius.map((radius) => (
+              <div key={radius} className={`bg-primary-blush text-primary-ink ${radius} p-8 font-mono shadow-md min-w-[120px] min-h-[40px]`}>
+                {radius}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Shadows */}
+        <section className="mb-32">
+          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Shadows</h2>
+          <div className="flex flex-wrap gap-8">
+            {shadows.map((shadow) => (
+              <div key={shadow} className={`bg-secondary-current text-white rounded-lg p-8 font-mono ${shadow} min-w-[120px] min-h-[40px]`}>
+                {shadow}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Sample Buttons */}
+        <section className="mb-32">
+          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Sample Buttons</h2>
+          <div className="flex flex-wrap gap-8">
+            {sampleButtons.map((btn) => (
+              <button key={btn.label} className={btn.className}>{btn.label}</button>
+            ))}
+          </div>
+        </section>
+
+        {/* Sample Cards */}
+        <section className="mb-32">
+          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Sample Cards</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {sampleCards.map((card) => (
+              <div key={card.title} className={card.className}>
+                <div className="text-xl font-bold mb-2">{card.title}</div>
+                <div className="text-base font-body">{card.text}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Sample Alerts */}
+        <section className="mb-32">
+          <h2 className="text-4xl font-bold mb-8 text-primary-ink">Sample Alerts</h2>
+          <div className="flex flex-wrap gap-8">
+            {sampleAlerts.map((alert) => (
+              <div key={alert.type} className={alert.className}>
+                <div className="font-bold mb-2">{alert.type}</div>
+                <div>{alert.text}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Font Families */}
         {fontFamilies.map((font, index) => (
