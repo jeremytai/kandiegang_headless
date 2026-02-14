@@ -64,7 +64,10 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   const [now, setNow] = useState(() => Date.now());
   const [workshopOpen, setWorkshopOpen] = useState(true);
   const [cancelTarget, setCancelTarget] = useState<{ key: string; label: string } | null>(null);
-  const [participantsSidebar, setParticipantsSidebar] = useState<{ levelKey: string; label: string } | null>(null);
+  const [participantsSidebar, setParticipantsSidebar] = useState<{
+    levelKey: string;
+    label: string;
+  } | null>(null);
 
   useEffect(() => {
     if (isPublic) return;
@@ -95,6 +98,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
 
   const placesPerGuide = 7;
 
+  const isWorkshop = type === 'workshop';
   return (
     <aside className="bg-gray-50 p-6 rounded-lg space-y-4">
       <div>
@@ -131,270 +135,386 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
           )}
           {type && <div className="mb-2" />}
         </div>
-        <hr className="border-t border-black/10" />
+        {!isWorkshop && <hr className="border-t border-black/10" />}
         {levels && levels.length > 0 && (
           <div>
-            {levels.map((level, index) => {
-              const isOpen = openIndex === index;
-              const registration = registrations?.[level.levelKey];
-              const isGuide = currentUser && level.guides.includes(currentUser.email);
-              return (
-                <div
-                  key={level.label}
-                  className="overflow-hidden border-t border-black/10 py-3 first:border-t-0"
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleIndex(index)}
-                    className="flex w-full items-start justify-between text-left group"
-                  >
-                    <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
-                      {level.label}
-                      {/* Guide info icon */}
-                      {isGuide && (
-                        <button
-                          type="button"
-                          className="ml-1 p-1 rounded hover:bg-slate-100"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setParticipantsSidebar({ levelKey: level.levelKey, label: level.label });
-                          }}
-                          aria-label="View participants"
-                        >
-                          <Info className="h-4 w-4 text-slate-500" />
-                        </button>
-                      )}
-                      {!isOpen && level.spotsLeft != null && level.places != null && (
-                        <span className="text-xs font-normal text-slate-500">
-                          {`${level.spotsLeft} of ${level.places} spots available`}
-                        </span>
-                      )}
-                    </span>
-                    <span
-                      className={`inline-flex shrink-0 pt-0.5 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
+            {isWorkshop
+              ? levels.map((level) => {
+                  const registration = registrations?.[level.levelKey];
+                  const isGuide = currentUser && level.guides.includes(currentUser.email);
+                  return (
+                    <div
+                      key={level.label}
+                      className="border-t border-black/10 py-3 first:border-t-0"
                     >
-                      <ChevronDown className="h-4 w-4 text-slate-500 group-hover:text-slate-700 transition-colors" />
-                    </span>
-                  </button>
-                  {isOpen && (
-                    <div className="pt-2 space-y-3">
-                      <div>
-                        <p className={labelClass}>Guides</p>
-                        <p className={valueClass}>{level.guides.join(', ')}</p>
-                      </div>
-                      <div>
-                        <p className={labelClass}>Places</p>
-                        <p className={valueClass}>
-                          {level.places ?? placesPerGuide * level.guides.length}
-                          {level.spotsLeft != null && ` total · ${level.spotsLeft} left`}
-                        </p>
-                      </div>
-                      {typeof level.distanceKm === 'number' && (
-                        <div>
-                          <p className={labelClass}>Distance</p>
-                          <p className={valueClass}>{`${level.distanceKm} km`}</p>
-                        </div>
-                      )}
-                      {level.pace && (
-                        <div>
-                          <p className={labelClass}>Pace</p>
-                          <p className={valueClass}>{level.pace}</p>
-                        </div>
-                      )}
-                      {level.routeUrl && (
-                        <div>
-                          <p className={labelClass}>Route</p>
-                          <div className="flex items-center gap-3">
-                            <button
-                              type="button"
-                              className={valueClass}
-                              onClick={() =>
-                                setRouteModal({ url: level.routeUrl as string, label: level.label })
-                              }
-                            >
-                              View Route
-                            </button>
-                            <a
-                              className="inline-flex items-center text-slate-500 hover:text-slate-800"
-                              href={level.routeUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              aria-label={`Open ${level.label} route in a new tab`}
-                            >
-                              <Link className="h-4 w-4" aria-hidden />
-                            </a>
-                          </div>
-                        </div>
-                      )}
-                      {signupState?.helper && (
-                        <p className="text-xs text-slate-500">{signupState.helper}</p>
-                      )}
-                      {level.isSoldOut && signupState?.allowWaitlist && (
-                        <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
-                          Waitlist open
-                        </span>
-                      )}
-                      {registration ? (
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                          <p className="font-semibold">
-                            {registration.isWaitlist
-                              ? "You're on the waitlist."
-                              : "You're spot is saved."}
-                          </p>
+                      <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
+                        {level.label}
+                        {isGuide && (
                           <button
                             type="button"
+                            className="ml-1 p-1 rounded hover:bg-slate-100"
                             onClick={() =>
-                              setCancelTarget({ key: level.levelKey, label: level.label })
+                              setParticipantsSidebar({
+                                levelKey: level.levelKey,
+                                label: level.label,
+                              })
                             }
-                            className="mt-1 text-xs text-secondary-drift hover:underline"
+                            aria-label="View participants"
                           >
-                            Can't make it? Cancel your spot
+                            <Info className="h-4 w-4 text-slate-500" />
                           </button>
+                        )}
+                        {level.spotsLeft != null && level.places != null && (
+                          <span className="text-xs font-normal text-slate-500">
+                            {`${level.spotsLeft} of ${level.places} Spots available`}
+                          </span>
+                        )}
+                      </span>
+                      {/* No chevron or toggle for workshop */}
+                      <div className="pt-2 space-y-3">
+                        <div>
+                          <p className={labelClass}>Guides</p>
+                          <p className={valueClass}>{level.guides.join(', ')}</p>
                         </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                          disabled={
-                            (!signupState?.allowWaitlist && level.isSoldOut) ||
-                            signupState?.disabled ||
-                            !canSignup
-                          }
-                          onClick={() =>
-                            onSignup?.({ levelKey: level.levelKey, label: level.label })
-                          }
+                        <div>
+                          <p className={labelClass}>Spots Available</p>
+                          <p className={valueClass}>
+                            {level.places ?? placesPerGuide * level.guides.length}
+                            {level.spotsLeft != null && ` total · ${level.spotsLeft} left`}
+                          </p>
+                        </div>
+                        {typeof level.distanceKm === 'number' && (
+                          <div>
+                            <p className={labelClass}>Distance</p>
+                            <p className={valueClass}>{`${level.distanceKm} km`}</p>
+                          </div>
+                        )}
+                        {level.pace && (
+                          <div>
+                            <p className={labelClass}>Pace</p>
+                            <p className={valueClass}>{level.pace}</p>
+                          </div>
+                        )}
+                        {level.routeUrl && (
+                          <div>
+                            <p className={labelClass}>Route</p>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                className={valueClass}
+                                onClick={() =>
+                                  setRouteModal({
+                                    url: level.routeUrl as string,
+                                    label: level.label,
+                                  })
+                                }
+                              >
+                                View Route
+                              </button>
+                              <a
+                                className="inline-flex items-center text-slate-500 hover:text-slate-800"
+                                href={level.routeUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label={`Open ${level.label} route in a new tab`}
+                              >
+                                <Link className="h-4 w-4" aria-hidden />
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                        {signupState?.helper && (
+                          <p className="text-xs text-slate-500">{signupState.helper}</p>
+                        )}
+                        {level.isSoldOut && signupState?.allowWaitlist && (
+                          <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                            Waitlist open
+                          </span>
+                        )}
+                        {registration ? (
+                          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                            <p className="font-semibold">
+                              {registration.isWaitlist
+                                ? "You're on the waitlist."
+                                : "You're spot is saved."}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setCancelTarget({ key: level.levelKey, label: level.label })
+                              }
+                              className="mt-1 text-xs text-secondary-drift hover:underline"
+                            >
+                              Can't make it? Cancel your spot
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            disabled={
+                              (!signupState?.allowWaitlist && level.isSoldOut) ||
+                              signupState?.disabled ||
+                              !canSignup
+                            }
+                            onClick={() =>
+                              onSignup?.({ levelKey: level.levelKey, label: level.label })
+                            }
+                          >
+                            {level.isSoldOut
+                              ? signupState?.allowWaitlist
+                                ? 'Join Waitlist'
+                                : 'Sold Out'
+                              : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              : levels.map((level, index) => {
+                  // ...existing code for toggling/accordion UI...
+                  const isOpen = openIndex === index;
+                  const registration = registrations?.[level.levelKey];
+                  const isGuide = currentUser && level.guides.includes(currentUser.email);
+                  return (
+                    <div
+                      key={level.label}
+                      className="overflow-hidden border-t border-black/10 py-3 first:border-t-0"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleIndex(index)}
+                        className="flex w-full items-start justify-between text-left group"
+                      >
+                        <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
+                          {level.label}
+                          {/* Guide info icon */}
+                          {isGuide && (
+                            <button
+                              type="button"
+                              className="ml-1 p-1 rounded hover:bg-slate-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setParticipantsSidebar({
+                                  levelKey: level.levelKey,
+                                  label: level.label,
+                                });
+                              }}
+                              aria-label="View participants"
+                            >
+                              <Info className="h-4 w-4 text-slate-500" />
+                            </button>
+                          )}
+                          {!isOpen && level.spotsLeft != null && level.places != null && (
+                            <span className="text-xs font-normal text-slate-500">
+                              {`${level.spotsLeft} of ${level.places} Spots available`}
+                            </span>
+                          )}
+                        </span>
+                        <span
+                          className={`inline-flex shrink-0 pt-0.5 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
                         >
-                          {level.isSoldOut
-                            ? signupState?.allowWaitlist
-                              ? 'Join Waitlist'
-                              : 'Sold Out'
-                            : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
-                        </button>
+                          <ChevronDown className="h-4 w-4 text-slate-500 group-hover:text-slate-700 transition-colors" />
+                        </span>
+                      </button>
+                      {isOpen && (
+                        <div className="pt-2 space-y-3">
+                          <div>
+                            <p className={labelClass}>Guides</p>
+                            <p className={valueClass}>{level.guides.join(', ')}</p>
+                          </div>
+                          <div>
+                            <p className={labelClass}>Spots Available</p>
+                            <p className={valueClass}>
+                              {level.places ?? placesPerGuide * level.guides.length}
+                              {level.spotsLeft != null && ` total · ${level.spotsLeft} left`}
+                            </p>
+                          </div>
+                          {typeof level.distanceKm === 'number' && (
+                            <div>
+                              <p className={labelClass}>Distance</p>
+                              <p className={valueClass}>{`${level.distanceKm} km`}</p>
+                            </div>
+                          )}
+                          {level.pace && (
+                            <div>
+                              <p className={labelClass}>Pace</p>
+                              <p className={valueClass}>{level.pace}</p>
+                            </div>
+                          )}
+                          {level.routeUrl && (
+                            <div>
+                              <p className={labelClass}>Route</p>
+                              <div className="flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  className={valueClass}
+                                  onClick={() =>
+                                    setRouteModal({
+                                      url: level.routeUrl as string,
+                                      label: level.label,
+                                    })
+                                  }
+                                >
+                                  View Route
+                                </button>
+                                <a
+                                  className="inline-flex items-center text-slate-500 hover:text-slate-800"
+                                  href={level.routeUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  aria-label={`Open ${level.label} route in a new tab`}
+                                >
+                                  <Link className="h-4 w-4" aria-hidden />
+                                </a>
+                              </div>
+                            </div>
+                          )}
+                          {signupState?.helper && (
+                            <p className="text-xs text-slate-500">{signupState.helper}</p>
+                          )}
+                          {level.isSoldOut && signupState?.allowWaitlist && (
+                            <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                              Waitlist open
+                            </span>
+                          )}
+                          {registration ? (
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                              <p className="font-semibold">
+                                {registration.isWaitlist
+                                  ? "You're on the waitlist."
+                                  : "You're spot is saved."}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setCancelTarget({ key: level.levelKey, label: level.label })
+                                }
+                                className="mt-1 text-xs text-secondary-drift hover:underline"
+                              >
+                                Can't make it? Cancel your spot
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                              disabled={
+                                (!signupState?.allowWaitlist && level.isSoldOut) ||
+                                signupState?.disabled ||
+                                !canSignup
+                              }
+                              onClick={() =>
+                                onSignup?.({ levelKey: level.levelKey, label: level.label })
+                              }
+                            >
+                              {level.isSoldOut
+                                ? signupState?.allowWaitlist
+                                  ? 'Join Waitlist'
+                                  : 'Sold Out'
+                                : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                })}
           </div>
         )}
 
-      {/* Participants sidebar/modal for guides */}
-      {participantsSidebar && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-end bg-black/60"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Participants"
-          onClick={() => setParticipantsSidebar(null)}
-        >
+        {/* Participants sidebar/modal for guides */}
+        {participantsSidebar && (
           <div
-            className="w-full max-w-md h-full bg-white shadow-lg p-6 overflow-y-auto"
-            onClick={e => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-end bg-black/60"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Participants"
+            onClick={() => setParticipantsSidebar(null)}
           >
-            <h3 className="text-lg font-semibold mb-4">
-              {participantsSidebar.label} Participants
-            </h3>
-            <ul className="space-y-2">
-              {(participantsByLevel?.[participantsSidebar.levelKey] ?? []).length === 0 ? (
-                <li className="text-slate-500">No participants yet.</li>
-              ) : (
-                participantsByLevel![participantsSidebar.levelKey].map((p, i) => (
-                  <li key={p.id || i} className="text-slate-800">
-                    {p.name}
-                  </li>
-                ))
-              )}
-            </ul>
-            <button
-              type="button"
-              className="mt-6 rounded bg-black px-4 py-2 text-white"
-              onClick={() => setParticipantsSidebar(null)}
+            <div
+              className="w-full max-w-md h-full bg-white shadow-lg p-6 overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
             >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-        {workshop && (
-          <div className="border-t border-black/10 pt-4">
-            <button
-              type="button"
-              onClick={() => setWorkshopOpen((prev) => !prev)}
-              className="flex w-full items-start justify-between text-left group"
-            >
-              <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
-                Workshop
-                {!workshopOpen && workshop.spotsLeft != null && (
-                  <span className="text-xs font-normal text-slate-500">
-                    {`${workshop.spotsLeft} of ${workshop.capacity} spots available`}
-                  </span>
-                )}
-              </span>
-              <span
-                className={`inline-flex shrink-0 pt-0.5 transition-transform duration-300 ease-in-out ${workshopOpen ? 'rotate-180' : ''}`}
-              >
-                <ChevronDown className="h-4 w-4 text-slate-500 group-hover:text-slate-700 transition-colors" />
-              </span>
-            </button>
-            {workshopOpen && (
-              <div className="pt-2 space-y-3">
-                <div>
-                  <p className={labelClass}>Workshop places</p>
-                  <p className={valueClass}>
-                    {workshop.capacity}
-                    {workshop.spotsLeft != null && ` total · ${workshop.spotsLeft} left`}
-                  </p>
-                </div>
-                {signupState?.helper && (
-                  <p className="text-xs text-slate-500">{signupState.helper}</p>
-                )}
-                {(workshop.spotsLeft ?? 1) <= 0 && signupState?.allowWaitlist && (
-                  <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
-                    Waitlist open
-                  </span>
-                )}
-                {registrations?.workshop ? (
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                    <p className="font-semibold">
-                      {registrations.workshop.isWaitlist
-                        ? "You're on the waitlist."
-                        : "You're spot is saved."}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setCancelTarget({ key: 'workshop', label: 'Workshop' })}
-                      className="mt-1 text-xs text-secondary-drift hover:underline"
-                    >
-                      Can't make it? Cancel your spot
-                    </button>
-                  </div>
+              <h3 className="text-lg font-semibold mb-4">
+                {participantsSidebar.label} Participants
+              </h3>
+              <ul className="space-y-2">
+                {(participantsByLevel?.[participantsSidebar.levelKey] ?? []).length === 0 ? (
+                  <li className="text-slate-500">No participants yet.</li>
                 ) : (
-                  <button
-                    type="button"
-                    className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                    disabled={
-                      ((workshop.spotsLeft ?? 1) <= 0 && !signupState?.allowWaitlist) ||
-                      signupState?.disabled ||
-                      !canSignup
-                    }
-                    onClick={() => onSignup?.({ levelKey: 'workshop', label: 'Workshop' })}
-                  >
-                    {(workshop.spotsLeft ?? 1) <= 0
-                      ? signupState?.allowWaitlist
-                        ? 'Join Waitlist'
-                        : 'Sold Out'
-                      : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
-                  </button>
+                  participantsByLevel![participantsSidebar.levelKey].map((p, i) => (
+                    <li key={p.id || i} className="text-slate-800">
+                      {p.name}
+                    </li>
+                  ))
                 )}
+              </ul>
+              <button
+                type="button"
+                className="mt-6 rounded bg-black px-4 py-2 text-white"
+                onClick={() => setParticipantsSidebar(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+        {workshop && (
+          <div className="pt-2 space-y-3">
+            <div>
+              <p className={labelClass}>Workshop spots</p>
+              <p className={valueClass}>
+                {workshop.capacity}
+                {workshop.spotsLeft != null && ` total · ${workshop.spotsLeft} left`}
+              </p>
+            </div>
+            {signupState?.helper && <p className="text-xs text-slate-500">{signupState.helper}</p>}
+            {(workshop.spotsLeft ?? 1) <= 0 && signupState?.allowWaitlist && (
+              <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30">
+                Waitlist open
+              </span>
+            )}
+            {registrations?.workshop ? (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                <p className="font-semibold">
+                  {registrations.workshop.isWaitlist
+                    ? "You're on the waitlist."
+                    : "You're spot is saved."}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCancelTarget({ key: 'workshop', label: 'Workshop' })}
+                  className="mt-1 text-xs text-secondary-drift hover:underline"
+                >
+                  Can't make it? Cancel your spot
+                </button>
               </div>
+            ) : (
+              <button
+                type="button"
+                className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={
+                  ((workshop.spotsLeft ?? 1) <= 0 && !signupState?.allowWaitlist) ||
+                  signupState?.disabled ||
+                  !canSignup
+                }
+                onClick={() => onSignup?.({ levelKey: 'workshop', label: 'Workshop' })}
+              >
+                {(workshop.spotsLeft ?? 1) <= 0
+                  ? signupState?.allowWaitlist
+                    ? 'Join Waitlist'
+                    : 'Sold Out'
+                  : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
+              </button>
             )}
           </div>
         )}
         <hr className="border-t border-black/10" />
         {type && <div className="mb-4" />}
         <div>
-          <p className={labelClass}>General Registration</p>
+          <p className={labelClass}>Open Registration</p>
           <p className={valueClass}>
             {isPublic ? 'Yes' : countdownLabel ? `Available in ${countdownLabel}` : 'No'}
           </p>

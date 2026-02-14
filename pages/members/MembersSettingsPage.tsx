@@ -219,7 +219,9 @@ export const MembersSettingsPage: React.FC = () => {
                 </button>
                 {/* Explanation under the button */}
                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                  Link your Discord account to unlock member-only Discord features, even if your emails differ. This lets you access exclusive channels and sync your membership status with Discord.
+                  Link your Discord account to unlock member-only Discord features, even if your
+                  emails differ. This lets you access exclusive channels and sync your membership
+                  status with Discord.
                 </p>
                 {discordError && (
                   <div className="mt-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -238,12 +240,21 @@ export const MembersSettingsPage: React.FC = () => {
                 {/* Show Discord username and avatar if available */}
                 {(() => {
                   const discordIdentity = identities.find((i) => i.provider === 'discord');
-                  const avatar = discordIdentity?.identity_data?.avatar_url || discordIdentity?.identity_data?.picture;
-                  const name = discordIdentity?.identity_data?.full_name || discordIdentity?.identity_data?.username || discordIdentity?.identity_data?.name;
+                  const avatar =
+                    discordIdentity?.identity_data?.avatar_url ||
+                    discordIdentity?.identity_data?.picture;
+                  const name =
+                    discordIdentity?.identity_data?.full_name ||
+                    discordIdentity?.identity_data?.username ||
+                    discordIdentity?.identity_data?.name;
                   return (
                     <>
                       {avatar && (
-                        <img src={avatar as string} alt="Discord avatar" className="w-7 h-7 rounded-full border border-slate-300 dark:border-slate-600" />
+                        <img
+                          src={avatar as string}
+                          alt="Discord avatar"
+                          className="w-7 h-7 rounded-full border border-slate-300 dark:border-slate-600"
+                        />
                       )}
                       <span className="text-sm text-slate-700 dark:text-slate-200 font-medium">
                         {name ? `Connected as ${name}` : 'Discord connected'}

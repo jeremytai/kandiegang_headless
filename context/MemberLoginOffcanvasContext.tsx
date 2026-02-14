@@ -114,7 +114,9 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
       <div className={compact ? 'space-y-3' : 'space-y-4'}>
         <h2
           className={
-            compact ? 'text-xl font-normal text-primary-ink' : 'text-2xl font-normal text-primary-ink'
+            compact
+              ? 'text-xl font-normal text-primary-ink'
+              : 'text-2xl font-normal text-primary-ink'
           }
         >
           Check your email
