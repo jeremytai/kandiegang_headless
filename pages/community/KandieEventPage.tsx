@@ -30,6 +30,35 @@ export const KandieEventPage: React.FC = () => {
   const [restoredSignup, setRestoredSignup] = useState(false);
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
   const [registrations, setRegistrations] = useState<Record<string, { isWaitlist: boolean }>>({});
+  const [participantsByLevel, setParticipantsByLevel] = useState<Record<string, Array<{ name: string; id: string }>>>({});
+  // Fetch all participants for the event and group by ride_level
+  const refreshParticipantsByLevel = useCallback(async () => {
+    if (!eventData?.databaseId || !supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('ride_level,first_name,last_name,user_id')
+        .eq('event_id', Number(eventData.databaseId))
+        .is('cancelled_at', null)
+        .eq('is_waitlist', false);
+      if (error) {
+        console.warn('Participant lookup failed:', error);
+        return;
+      }
+      const grouped: Record<string, Array<{ name: string; id: string }>> = {};
+      (data ?? []).forEach((row) => {
+        const level = typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
+        if (!grouped[level]) grouped[level] = [];
+        grouped[level].push({
+          name: [row.first_name, row.last_name].filter(Boolean).join(' '),
+          id: row.user_id,
+        });
+      });
+      setParticipantsByLevel(grouped);
+    } catch (err) {
+      console.warn('Participant lookup failed:', err);
+    }
+  }, [eventData?.databaseId, supabase]);
 
   const refreshCapacity = useCallback(async () => {
     if (!eventData?.databaseId) return;
@@ -126,10 +155,16 @@ export const KandieEventPage: React.FC = () => {
     refreshCapacity();
   }, [eventData?.databaseId, refreshCapacity]);
 
+
   useEffect(() => {
     if (!eventData?.databaseId || !user?.id) return;
     refreshRegistrations();
   }, [eventData?.databaseId, user?.id, refreshRegistrations]);
+
+  useEffect(() => {
+    if (!eventData?.databaseId) return;
+    refreshParticipantsByLevel();
+  }, [eventData?.databaseId, refreshParticipantsByLevel]);
 
   useEffect(() => {
     if (!eventData?.databaseId || typeof window === 'undefined') return;
@@ -471,6 +506,7 @@ export const KandieEventPage: React.FC = () => {
                         }
                       : undefined
                   }
+                  participantsByLevel={participantsByLevel}
                 />
               </div>
             </aside>

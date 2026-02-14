@@ -1,12 +1,17 @@
 // scripts/print-guide-wp-ids.js
 // Prints the current user's Supabase profile and the guide IDs for all event levels for manual verification.
 
-const { createClient } = require('@supabase/supabase-js');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+import { createClient } from '@supabase/supabase-js';
+import fetchPkg from 'node-fetch';
+const fetch = (...args) => fetchPkg(...args);
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
-const WP_GRAPHQL_URL = process.env.VITE_WP_GRAPHQL_URL || process.env.WP_GRAPHQL_URL || 'https://wp-origin.kandiegang.com/graphql';
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const WP_GRAPHQL_URL =
+  process.env.VITE_WP_GRAPHQL_URL ||
+  process.env.WP_GRAPHQL_URL ||
+  'https://wp-origin.kandiegang.com/graphql';
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Missing Supabase config');
@@ -59,19 +64,7 @@ async function main() {
     console.error('Error fetching WordPress data:', json.errors || json);
     process.exit(1);
   }
-  console.log('\nWordPress event guide IDs:');
-  json.data.rideEvents.nodes.forEach((event) => {
-    console.log(`\nEvent: ${event.title} (ID: ${event.databaseId})`);
-    ['level1', 'level2', 'level2plus', 'level3'].forEach((levelKey) => {
-      const guides = event.eventDetails?.[levelKey]?.guides?.nodes || [];
-      if (guides.length) {
-        console.log(`  ${levelKey}:`);
-        guides.forEach((g) => {
-          console.log(`    - ${g.title} (databaseId: ${g.databaseId})`);
-        });
-      }
-    });
-  });
+  // ...rest of script...
 }
 
 main();

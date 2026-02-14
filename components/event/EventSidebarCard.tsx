@@ -138,19 +138,6 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
         {!isWorkshop && <hr className="border-t border-black/10" />}
         {levels && levels.length > 0 && (
           <div>
-            {/* DEBUG: Show current user and guide IDs for troubleshooting */}
-            <div style={{ background: '#fffbe6', color: '#b45309', padding: 8, marginBottom: 12, borderRadius: 6, fontSize: 12 }}>
-              <div><strong>DEBUG:</strong></div>
-              <div>currentUser.wp_user_id: {String(currentUser?.wp_user_id)}</div>
-              <div>currentUser.is_guide: {String(currentUser?.is_guide)}</div>
-              {levels.map((level) => (
-                <div key={level.levelKey}>
-                  <span>Level <b>{level.label}</b> guide IDs: [
-                    {level.guides.map((g) => String(g.id)).join(', ')}
-                  ]</span>
-                </div>
-              ))}
-            </div>
             {isWorkshop
               ? levels.map((level) => {
                   const registration = registrations?.[level.levelKey];
@@ -314,7 +301,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                         onClick={() => toggleIndex(index)}
                         className="flex w-full items-start justify-between text-left group"
                       >
-                        <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
+                        <span className="text-sm font-normal text-primary-ink flex items-center gap-2">
                           {level.label}
                           {/* Guide info icon */}
                           {isGuide && (
@@ -463,12 +450,19 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
             onClick={() => setParticipantsSidebar(null)}
           >
             <div
-              className="w-full max-w-md h-full bg-white shadow-lg p-6 overflow-y-auto"
+              className="relative w-full max-w-md h-full bg-white shadow-lg p-6 overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4">
-                {participantsSidebar.label} Participants
-              </h3>
+              {/* X Close Button */}
+              <button
+                type="button"
+                aria-label="Close sidebar"
+                className="absolute top-4 right-4 text-slate-400 hover:text-black focus:outline-none text-2xl"
+                onClick={() => setParticipantsSidebar(null)}
+              >
+                &times;
+              </button>
+              <h3 className="text-lg font-normal mb-4 mt-2">{participantsSidebar.label} Participants</h3>
               <ul className="space-y-2">
                 {(participantsByLevel?.[participantsSidebar.levelKey] ?? []).length === 0 ? (
                   <li className="text-slate-500">No participants yet.</li>
@@ -543,7 +537,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
         <hr className="border-t border-black/10" />
         {type && <div className="mb-4" />}
         <div>
-          <p className={labelClass}>Open Registration</p>
+          <p className={labelClass}>General Registration</p>
           <p className={valueClass}>
             {isPublic ? 'Yes' : countdownLabel ? `Available in ${countdownLabel}` : 'No'}
           </p>

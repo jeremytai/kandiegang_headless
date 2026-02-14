@@ -1,10 +1,11 @@
-// scripts/update-guide-wp-id.cjs
+// scripts/update-guide-wp-id.js
 // Updates the current user's Supabase profile wp_user_id to match the correct WordPress guide databaseId.
 
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Missing Supabase config');
@@ -39,7 +40,9 @@ async function main() {
     console.error('Failed to update profile:', updateError);
     process.exit(1);
   }
-  console.log(`Updated profile ${profile.display_name} (id: ${profile.id}) wp_user_id to ${correctWpId}`);
+  console.log(
+    `Updated profile ${profile.display_name} (id: ${profile.id}) wp_user_id to ${correctWpId}`
+  );
 }
 
 main();

@@ -7,7 +7,7 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+// ...existing code (removed unused Link import)
 import { AnimatedBlob } from '../../components/visual/AnimatedBlob';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { EventsLayout, EventsLayoutEvent } from '../../components/event/EventsLayout';

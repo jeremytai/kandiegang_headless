@@ -4,7 +4,6 @@
  */
 
 import type { User } from '@supabase/supabase-js';
-import { supabase } from './supabaseClient';
 
 export type AuthProviderType = 'email' | 'discord';
 
