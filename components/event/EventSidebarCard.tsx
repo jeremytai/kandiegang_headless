@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Link } from 'lucide-react';
+import { ChevronDown, Link, Info } from 'lucide-react';
 
 interface EventSidebarCardProps {
   date: string;
@@ -34,6 +34,8 @@ interface EventSidebarCardProps {
     capacity: number;
     spotsLeft?: number;
   };
+  currentUser?: { email: string; id: string; name?: string };
+  participantsByLevel?: Record<string, Array<{ name: string; id: string }>>;
 }
 
 const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
@@ -51,6 +53,8 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   registrations,
   onCancelRegistration,
   workshop,
+  currentUser,
+  participantsByLevel,
 }) => {
   const labelClass = 'text-xs tracking-[0.08em] text-slate-500';
   const valueClass = 'text-sm text-slate-900';
@@ -60,6 +64,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   const [now, setNow] = useState(() => Date.now());
   const [workshopOpen, setWorkshopOpen] = useState(true);
   const [cancelTarget, setCancelTarget] = useState<{ key: string; label: string } | null>(null);
+  const [participantsSidebar, setParticipantsSidebar] = useState<{ levelKey: string; label: string } | null>(null);
 
   useEffect(() => {
     if (isPublic) return;
@@ -132,6 +137,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
             {levels.map((level, index) => {
               const isOpen = openIndex === index;
               const registration = registrations?.[level.levelKey];
+              const isGuide = currentUser && level.guides.includes(currentUser.email);
               return (
                 <div
                   key={level.label}
@@ -144,6 +150,20 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                   >
                     <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
                       {level.label}
+                      {/* Guide info icon */}
+                      {isGuide && (
+                        <button
+                          type="button"
+                          className="ml-1 p-1 rounded hover:bg-slate-100"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setParticipantsSidebar({ levelKey: level.levelKey, label: level.label });
+                          }}
+                          aria-label="View participants"
+                        >
+                          <Info className="h-4 w-4 text-slate-500" />
+                        </button>
+                      )}
                       {!isOpen && level.spotsLeft != null && level.places != null && (
                         <span className="text-xs font-normal text-slate-500">
                           {`${level.spotsLeft} of ${level.places} spots available`}
@@ -258,6 +278,44 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
             })}
           </div>
         )}
+
+      {/* Participants sidebar/modal for guides */}
+      {participantsSidebar && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-end bg-black/60"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Participants"
+          onClick={() => setParticipantsSidebar(null)}
+        >
+          <div
+            className="w-full max-w-md h-full bg-white shadow-lg p-6 overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-4">
+              {participantsSidebar.label} Participants
+            </h3>
+            <ul className="space-y-2">
+              {(participantsByLevel?.[participantsSidebar.levelKey] ?? []).length === 0 ? (
+                <li className="text-slate-500">No participants yet.</li>
+              ) : (
+                participantsByLevel![participantsSidebar.levelKey].map((p, i) => (
+                  <li key={p.id || i} className="text-slate-800">
+                    {p.name}
+                  </li>
+                ))
+              )}
+            </ul>
+            <button
+              type="button"
+              className="mt-6 rounded bg-black px-4 py-2 text-white"
+              onClick={() => setParticipantsSidebar(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
         {workshop && (
           <div className="border-t border-black/10 pt-4">
             <button

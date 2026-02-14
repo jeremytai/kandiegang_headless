@@ -84,6 +84,27 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 
    The app will be available at `http://localhost:3000`
 
+
+## 🔗 Discord Account Linking & Membership Unification
+
+### How Discord Linking Works
+
+- Users can link their Discord account to their membership profile from the Members Settings page (`/members/settings`).
+- The "Connect Discord" button triggers the Discord OAuth flow. On success, the Discord user ID is stored in the user's profile.
+- This allows users to access Discord member features even if their Discord email differs from their membership email.
+- The UI displays the connected Discord username and avatar, and provides clear feedback on success or error.
+
+**Security:**
+- Linking is only possible when logged in, and the Discord OAuth flow ensures the user controls the Discord account being linked.
+- Each Discord account can only be linked to one profile.
+
+**Automated Backfill:**
+- For legacy users, a one-time script can backfill `discord_id` in the `profiles` table by matching emails between Discord and membership accounts. This should only be used if emails are guaranteed to match.
+
+**Recommended:**
+- Encourage users to self-link via the Members Settings page for maximum security and clarity.
+
+---
 ## 🏗️ Project Structure
 
 ```text
