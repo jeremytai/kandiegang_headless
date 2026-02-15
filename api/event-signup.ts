@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
-// import { checkRateLimit } from './_rateLimit';
+import { checkRateLimit } from './rateLimit';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
@@ -148,10 +148,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   console.log('[event-signup] Incoming request body:', req.body);
 
-  // Temporarily disabled rate limiting for debugging
-  // if (!checkRateLimit(req, res, { windowMs: 60_000, max: 20, keyPrefix: 'event-signup' })) {
-  //   return;
-  // }
+  if (!checkRateLimit(req, res, { windowMs: 60_000, max: 20, keyPrefix: 'event-signup' })) {
+    return;
+  }
 
   // Support both authenticated and guest signups
   const authHeader = req.headers.authorization;
