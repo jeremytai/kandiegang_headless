@@ -17,7 +17,8 @@ function getClientIp(req: NextApiRequest): string {
   if (value && typeof value === 'string') {
     return value.split(',')[0].trim();
   }
-  return (req.socket as any)?.remoteAddress || 'unknown';
+  // req.socket is a NodeJS.Socket, which has remoteAddress
+  return (req.socket as import('net').Socket)?.remoteAddress || 'unknown';
 }
 
 export function checkRateLimit(
