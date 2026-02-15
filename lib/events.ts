@@ -46,6 +46,7 @@ export interface EventDetails {
 }
 
 export interface KandieEventData {
+  slug: string;
   databaseId: string;
   title: string;
   excerpt?: string;

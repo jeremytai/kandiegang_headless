@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 
 export type EventSignupIntent = {
   eventId: string;
+  eventSlug: string; // NEW: event slug for redirect
   eventTitle: string;
   levelKey: string;
   levelLabel: string;
@@ -44,7 +45,7 @@ function splitDisplayName(displayName?: string | null): { first: string; last: s
   return { first: parts[0], last: parts.slice(1).join(' ') };
 }
 
-function buildReturnUrl(eventId?: string): string | undefined {
+function buildReturnUrl(eventSlug?: string): string | undefined {
   if (typeof window === 'undefined') return undefined;
   const envRedirect = (import.meta as { env?: Record<string, string | undefined> }).env;
   const explicitBase =
@@ -54,8 +55,8 @@ function buildReturnUrl(eventId?: string): string | undefined {
     '';
   // Redirect to the event page after login
   let eventPath = '/';
-  if (eventId) {
-    eventPath = `/events/${eventId}`;
+  if (eventSlug) {
+    eventPath = `/event/${eventSlug}`;
   }
   const url = explicitBase
     ? new URL(eventPath, explicitBase)
@@ -204,7 +205,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     // Pass eventId to buildReturnUrl for redirect
     const { error: magicError } = await signInWithMagicLink(
       trimmedEmail,
-      buildReturnUrl(intent.eventId)
+      buildReturnUrl(intent.eventSlug)
     );
     setIsSubmitting(false);
     if (magicError) {

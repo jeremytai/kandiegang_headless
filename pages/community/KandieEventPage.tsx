@@ -144,6 +144,7 @@ export const KandieEventPage: React.FC = () => {
 
         const transformedEvent: KandieEventData = {
           ...event,
+          slug, // ensure slug is always present
           databaseId: event.databaseId || '0', // fallback if undefined
           eventDetails: event.eventDetails
             ? {
@@ -367,6 +368,7 @@ export const KandieEventPage: React.FC = () => {
     if (!eventData) return;
     const intent: EventSignupIntent = {
       eventId: eventData.databaseId,
+      eventSlug: eventData.slug, // Pass slug for redirect
       eventTitle: eventData.title,
       levelKey: level.levelKey,
       levelLabel: level.label,
