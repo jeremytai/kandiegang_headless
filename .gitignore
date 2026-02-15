@@ -30,3 +30,13 @@ dist-ssr
 
 .vercel
 .env*.local
+
+# Next.js
+.next/
+next-env.d.ts
+
+# Claude Code
+.claude/
+
+# Supabase
+supabase/.temp/
