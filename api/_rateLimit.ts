@@ -12,13 +12,18 @@ type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
 function getClientIp(req: VercelRequest): string {
+  // In Vercel serverless functions, always use x-forwarded-for header
   const forwarded = req.headers['x-forwarded-for'];
   const value = Array.isArray(forwarded) ? forwarded[0] : forwarded;
   if (value && typeof value === 'string') {
     return value.split(',')[0].trim();
   }
-  // req.socket is a NodeJS.Socket, which has remoteAddress
-  return (req.socket as import('net').Socket)?.remoteAddress || 'unknown';
+  // Fallback to x-real-ip if x-forwarded-for not available
+  const realIp = req.headers['x-real-ip'];
+  if (realIp && typeof realIp === 'string') {
+    return realIp;
+  }
+  return 'unknown';
 }
 
 export function checkRateLimit(
