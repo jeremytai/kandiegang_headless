@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 // import { v4 as uuidv4 } from 'uuid'; // Removed unused import
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export type EventSignupIntent = {
   eventId: string;
@@ -55,6 +56,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   // magicLinkSent is unused, removed
   const [signupComplete, setSignupComplete] = useState(false);
   const [waitlisted, setWaitlisted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
 
   // Derived values
   const hasEmail = email.trim().length > 0;
@@ -107,6 +109,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           email: email.trim(),
+          turnstileToken: turnstileToken,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -325,11 +328,21 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
             </label>
           )}
 
+          {/* Cloudflare Turnstile bot protection */}
+          <div className="flex justify-center">
+            <Turnstile
+              siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+              onSuccess={(token) => setTurnstileToken(token)}
+              onError={() => setTurnstileToken('')}
+              onExpire={() => setTurnstileToken('')}
+            />
+          </div>
+
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
-            disabled={isSubmitting || !hasEmail || !hasNames || !canSubmit}
+            disabled={isSubmitting || !hasEmail || !hasNames || !canSubmit || !turnstileToken}
             className={btnPrimary}
           >
             {isSubmitting ? 'Signing up…' : 'Sign up for this event'}

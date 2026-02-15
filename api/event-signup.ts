@@ -3,11 +3,19 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
+import { Redis } from '@upstash/redis';
 
-// Inline rate limiting (avoid module import issues in Vercel)
+// Persistent rate limiting using Upstash Redis (falls back to in-memory for dev)
 type RateLimitOptions = { windowMs: number; max: number; keyPrefix: string };
 type Bucket = { count: number; resetAt: number };
-const buckets = new Map<string, Bucket>();
+const inMemoryBuckets = new Map<string, Bucket>(); // Fallback for development
+
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : null;
 
 function getClientIp(req: VercelRequest): string {
   const forwarded = req.headers['x-forwarded-for'];
@@ -18,13 +26,37 @@ function getClientIp(req: VercelRequest): string {
   return 'unknown';
 }
 
-function checkRateLimit(req: VercelRequest, res: VercelResponse, options: RateLimitOptions): boolean {
-  const now = Date.now();
+async function checkRateLimit(req: VercelRequest, res: VercelResponse, options: RateLimitOptions): Promise<boolean> {
   const ip = getClientIp(req);
-  const key = `${options.keyPrefix}:${ip}`;
-  const current = buckets.get(key);
+  const key = `ratelimit:${options.keyPrefix}:${ip}`;
+
+  // Use Redis if available, otherwise fall back to in-memory (dev only)
+  if (redis) {
+    try {
+      const count = await redis.incr(key);
+
+      // Set expiration on first request
+      if (count === 1) {
+        await redis.pexpire(key, options.windowMs);
+      }
+
+      if (count > options.max) {
+        res.status(429).json({ error: 'Too many requests. Please try again later.' });
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[rate-limit] Redis error, falling back to in-memory:', error);
+      // Fall through to in-memory on Redis error
+    }
+  }
+
+  // In-memory fallback (NOT recommended for production)
+  const now = Date.now();
+  const current = inMemoryBuckets.get(key);
   if (!current || now > current.resetAt) {
-    buckets.set(key, { count: 1, resetAt: now + options.windowMs });
+    inMemoryBuckets.set(key, { count: 1, resetAt: now + options.windowMs });
     return true;
   }
   if (current.count >= options.max) {
@@ -32,8 +64,33 @@ function checkRateLimit(req: VercelRequest, res: VercelResponse, options: RateLi
     return false;
   }
   current.count += 1;
-  buckets.set(key, current);
+  inMemoryBuckets.set(key, current);
   return true;
+}
+
+async function verifyTurnstile(token: string, remoteIp: string): Promise<boolean> {
+  if (!TURNSTILE_SECRET_KEY) {
+    console.warn('[event-signup] Turnstile secret key not configured');
+    return true; // Allow signups if Turnstile not configured (for backward compatibility)
+  }
+
+  try {
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret: TURNSTILE_SECRET_KEY,
+        response: token,
+        remoteip: remoteIp,
+      }),
+    });
+
+    const data = await response.json();
+    return data.success === true;
+  } catch (error) {
+    console.error('[event-signup] Turnstile verification failed:', error);
+    return false;
+  }
 }
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -51,6 +108,7 @@ const WP_GRAPHQL_URL =
 const FLINTA_EARLY_DAYS = Number(process.env.FLINTA_EARLY_DAYS ?? 4);
 const MEMBER_EARLY_DAYS = Number(process.env.MEMBER_EARLY_DAYS ?? 2);
 const PLACES_PER_GUIDE = 7;
+const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 
 type EventSignupBody = {
   eventId?: string | number;
@@ -61,6 +119,7 @@ type EventSignupBody = {
   firstName?: string;
   lastName?: string;
   email?: string; // Required for guest signups
+  turnstileToken?: string; // Cloudflare Turnstile token for bot protection
 };
 
 type EventAccessData = {
@@ -179,7 +238,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   console.log('[event-signup] Incoming request body:', req.body);
 
-  if (!checkRateLimit(req, res, { windowMs: 60_000, max: 20, keyPrefix: 'event-signup' })) {
+  if (!(await checkRateLimit(req, res, { windowMs: 60_000, max: 20, keyPrefix: 'event-signup' }))) {
     return;
   }
 
@@ -197,18 +256,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const eventIdRaw = body?.eventId;
   const rideLevel = typeof body?.rideLevel === 'string' ? body.rideLevel : null;
   const eventType = typeof body?.eventType === 'string' ? body.eventType : null;
-  const eventTitle = typeof body?.eventTitle === 'string' ? body.eventTitle : 'Kandie Gang Event';
+  const eventTitle = typeof body?.eventTitle === 'string' ? body.eventTitle.trim() : 'Kandie Gang Event';
   const flintaAttested = Boolean(body?.flintaAttested);
   const firstName = typeof body?.firstName === 'string' ? body.firstName.trim() : '';
   const lastName = typeof body?.lastName === 'string' ? body.lastName.trim() : '';
   const guestEmail = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const turnstileToken = typeof body?.turnstileToken === 'string' ? body.turnstileToken : '';
   const eventId = typeof eventIdRaw === 'string' ? Number(eventIdRaw) : eventIdRaw;
 
   console.log('[event-signup] Parsed signup payload:', {
     eventId, rideLevel, eventType, eventTitle, flintaAttested, firstName, lastName,
-    isGuest: isGuestSignup, hasEmail: !!guestEmail
+    isGuest: isGuestSignup, hasEmail: !!guestEmail, hasTurnstile: !!turnstileToken
   });
 
+  // Basic validation
   if (!eventId || Number.isNaN(eventId)) {
     return res.status(400).json({ error: 'Missing or invalid eventId' });
   }
@@ -219,9 +280,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing first or last name' });
   }
 
-  // For guest signups, email is required
-  if (isGuestSignup && !guestEmail) {
-    return res.status(400).json({ error: 'Email is required for guest signup' });
+  // Input length limits (prevent abuse and database errors)
+  if (firstName.length > 100) {
+    return res.status(400).json({ error: 'First name is too long (max 100 characters)' });
+  }
+  if (lastName.length > 100) {
+    return res.status(400).json({ error: 'Last name is too long (max 100 characters)' });
+  }
+  if (eventTitle.length > 200) {
+    return res.status(400).json({ error: 'Event title is too long (max 200 characters)' });
+  }
+
+  // For guest signups, email is required and must be valid
+  if (isGuestSignup) {
+    if (!guestEmail) {
+      return res.status(400).json({ error: 'Email is required for guest signup' });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(guestEmail)) {
+      return res.status(400).json({ error: 'Invalid email address format' });
+    }
+
+    if (guestEmail.length > 255) {
+      return res.status(400).json({ error: 'Email is too long (max 255 characters)' });
+    }
+
+    // Verify Turnstile token for guest signups (bot protection)
+    if (TURNSTILE_SECRET_KEY && !turnstileToken) {
+      return res.status(400).json({ error: 'Bot verification required' });
+    }
+
+    if (turnstileToken) {
+      const clientIp = getClientIp(req);
+      const isValidTurnstile = await verifyTurnstile(turnstileToken, clientIp);
+      if (!isValidTurnstile) {
+        console.warn('[event-signup] Turnstile verification failed for IP:', clientIp);
+        return res.status(403).json({ error: 'Bot verification failed. Please try again.' });
+      }
+      console.log('[event-signup] Turnstile verification passed');
+    }
   }
   try {
     const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
