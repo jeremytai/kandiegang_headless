@@ -3,7 +3,38 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
-import { checkRateLimit } from './rateLimit';
+
+// Inline rate limiting (avoid module import issues in Vercel)
+type RateLimitOptions = { windowMs: number; max: number; keyPrefix: string };
+type Bucket = { count: number; resetAt: number };
+const buckets = new Map<string, Bucket>();
+
+function getClientIp(req: VercelRequest): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  const value = Array.isArray(forwarded) ? forwarded[0] : forwarded;
+  if (value && typeof value === 'string') return value.split(',')[0].trim();
+  const realIp = req.headers['x-real-ip'];
+  if (realIp && typeof realIp === 'string') return realIp;
+  return 'unknown';
+}
+
+function checkRateLimit(req: VercelRequest, res: VercelResponse, options: RateLimitOptions): boolean {
+  const now = Date.now();
+  const ip = getClientIp(req);
+  const key = `${options.keyPrefix}:${ip}`;
+  const current = buckets.get(key);
+  if (!current || now > current.resetAt) {
+    buckets.set(key, { count: 1, resetAt: now + options.windowMs });
+    return true;
+  }
+  if (current.count >= options.max) {
+    res.status(429).json({ error: 'Too many requests. Please try again later.' });
+    return false;
+  }
+  current.count += 1;
+  buckets.set(key, current);
+  return true;
+}
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
