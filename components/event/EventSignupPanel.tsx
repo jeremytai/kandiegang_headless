@@ -23,7 +23,7 @@ const inputClass =
   'block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-black focus:ring-1 focus:ring-black';
 const labelClass = 'block text-sm font-medium text-slate-800 mb-1';
 const btnPrimary =
-  'inline-flex items-center justify-center rounded-full bg-black px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:bg-slate-400';
+  'inline-flex items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:bg-slate-400';
 
 const EVENT_SIGNUP_STORAGE_KEY = 'eventSignupIntent';
 const SIGNUP_COMPLETE_EVENT = 'kandiegang:event-signup-complete';
@@ -44,7 +44,7 @@ function splitDisplayName(displayName?: string | null): { first: string; last: s
   return { first: parts[0], last: parts.slice(1).join(' ') };
 }
 
-function buildReturnUrl(): string | undefined {
+function buildReturnUrl(eventId?: string): string | undefined {
   if (typeof window === 'undefined') return undefined;
   const envRedirect = (import.meta as { env?: Record<string, string | undefined> }).env;
   const explicitBase =
@@ -52,12 +52,14 @@ function buildReturnUrl(): string | undefined {
     envRedirect?.VITE_PUBLIC_SITE_URL?.trim() ||
     envRedirect?.VITE_SITE_URL?.trim() ||
     '';
-  const currentUrl = new URL(window.location.href);
-  const url = explicitBase ? new URL(explicitBase, window.location.origin) : currentUrl;
-  if (explicitBase) {
-    url.pathname = currentUrl.pathname;
-    url.search = currentUrl.search;
+  // Redirect to the event page after login
+  let eventPath = '/';
+  if (eventId) {
+    eventPath = `/events/${eventId}`;
   }
+  const url = explicitBase
+    ? new URL(eventPath, explicitBase)
+    : new URL(eventPath, window.location.origin);
   url.searchParams.set('eventSignup', '1');
   return url.toString();
 }
@@ -199,7 +201,11 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       firstName: trimmedFirst,
       lastName: trimmedLast,
     });
-    const { error: magicError } = await signInWithMagicLink(trimmedEmail, buildReturnUrl());
+    // Pass eventId to buildReturnUrl for redirect
+    const { error: magicError } = await signInWithMagicLink(
+      trimmedEmail,
+      buildReturnUrl(intent.eventId)
+    );
     setIsSubmitting(false);
     if (magicError) {
       setError(magicError);
@@ -207,6 +213,83 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     }
     setMagicLinkSent(true);
   };
+  // On mount, if user is authenticated and there is a pending event signup, complete it
+  React.useEffect(() => {
+    if (!user) return;
+    // Check for pending event signup in sessionStorage
+    const stored = sessionStorage.getItem(EVENT_SIGNUP_STORAGE_KEY);
+    if (!stored) return;
+    let pendingIntent = null;
+    try {
+      pendingIntent = JSON.parse(stored);
+    } catch {
+      // Ignore JSON parse errors
+    }
+    if (
+      pendingIntent &&
+      pendingIntent.eventId === intent.eventId &&
+      !signupComplete &&
+      !waitlisted
+    ) {
+      (async () => {
+        setIsSubmitting(true);
+        setError(null);
+        try {
+          if (!supabase) {
+            setError('Signup is not configured yet. Please try again later.');
+            setIsSubmitting(false);
+            return;
+          }
+          const { data: sessionData } = await supabase.auth.getSession();
+          const accessToken = sessionData?.session?.access_token;
+          if (!accessToken) {
+            setError('Please log in again to complete signup.');
+            setIsSubmitting(false);
+            return;
+          }
+          const response = await fetch('/api/event-signup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              eventId: pendingIntent.eventId,
+              eventTitle: pendingIntent.eventTitle,
+              rideLevel: pendingIntent.levelKey,
+              eventType: pendingIntent.eventType,
+              flintaAttested: pendingIntent.requiresFlintaAttestation,
+              firstName: pendingIntent.firstName,
+              lastName: pendingIntent.lastName,
+            }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            if (response.status === 409) {
+              setError('That level is sold out. Please choose another level or check back later.');
+            } else {
+              setError(data?.error || 'Unable to complete signup. Please try again.');
+            }
+            setIsSubmitting(false);
+            return;
+          }
+          emitSignupComplete(pendingIntent.eventId);
+          if (data?.waitlisted) {
+            setWaitlisted(true);
+          } else {
+            setSignupComplete(true);
+          }
+          // Clear the pending intent
+          sessionStorage.removeItem(EVENT_SIGNUP_STORAGE_KEY);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Unable to complete signup.';
+          setError(message);
+        } finally {
+          setIsSubmitting(false);
+        }
+      })();
+    }
+  }, [user, intent.eventId, signupComplete, waitlisted]);
 
   const handleConfirmSignup = async () => {
     const trimmedFirst = firstName.trim();
@@ -286,7 +369,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   if (waitlisted) {
     return (
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-primary-ink">You are on the waitlist</h2>
+        <h2 className="text-xl font-normal text-secondary-purple-rain">You are on the waitlist</h2>
         <p className="text-sm text-slate-600">
           We have added you to the waitlist for <strong>{levelSummary}</strong>. If a spot opens up,
           we will email you right away.
@@ -301,7 +384,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   if (signupComplete) {
     return (
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-primary-ink">You are in!</h2>
+        <h2 className="text-xl font-normal text-secondary-purple-rain">You are in!</h2>
         <p className="text-sm text-slate-600">
           We have saved your spot for <strong>{levelSummary}</strong>. You will receive a
           confirmation email shortly.
@@ -317,7 +400,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     if (magicLinkSent) {
       return (
         <div className="space-y-3">
-          <h2 className="text-xl font-semibold text-primary-ink">Check your email</h2>
+          <h2 className="text-xl font-normal text-secondary-purple-rain">Check your email</h2>
           <p className="text-sm text-slate-600">
             We sent a signup link to <strong>{email}</strong>. Open it to finish registering for{' '}
             <strong>{levelSummary}</strong>.
@@ -332,7 +415,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     return (
       <div className="space-y-4">
         <div>
-          <h2 className="text-xl font-semibold text-primary-ink">Sign up for this event</h2>
+          <h2 className="text-xl font-normal text-secondary-purple-rain">Sign up for this event</h2>
           <p className="text-sm text-slate-600">{levelSummary}</p>
           {intent.accessNote && <p className="text-xs text-slate-500 mt-2">{intent.accessNote}</p>}
         </div>
@@ -411,7 +494,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
             By continuing you agree to our{' '}
             <a
               href="/terms-of-service"
-              className="text-secondary-drift hover:underline"
+              className="text-secondary-purple-rain hover:underline"
               target="_blank"
               rel="noreferrer"
             >
@@ -420,7 +503,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
             , the{' '}
             <a
               href="/waiver"
-              className="text-secondary-drift hover:underline"
+              className="text-secondary-purple-rain hover:underline"
               target="_blank"
               rel="noreferrer"
             >
@@ -429,13 +512,14 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
             , and how we handle your data per our{' '}
             <a
               href="/privacy-policy"
-              className="text-secondary-drift hover:underline"
+              className="text-secondary-purple-rain hover:underline"
               target="_blank"
               rel="noreferrer"
             >
               Privacy Policy
             </a>
-            . You also agree to creating an account on KandieGang.com and agree to receiving emails.
+            . By signing up, you authorize the creation of a KandieGang.com account and consent to
+            receive related emails.
           </p>
         </form>
       </div>
@@ -445,7 +529,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-xl font-normal text-primary-ink">Confirm your spot</h2>
+        <h2 className="text-xl font-normal text-secondary-purple-rain">Confirm your spot</h2>
         <p className="text-sm text-slate-600">{levelSummary}</p>
         {intent.accessNote && <p className="text-xs text-slate-500 mt-2">{intent.accessNote}</p>}
       </div>
@@ -516,7 +600,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         type="button"
         onClick={handleConfirmSignup}
         disabled={isSubmitting || !canSubmit || !hasNames || !hasAuthEmail}
-        className={btnPrimary}
+        className="inline-flex items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary-purple-rain/80 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
         {isSubmitting ? 'Submitting…' : 'Confirm signup'}
       </button>
@@ -524,7 +608,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         By continuing you agree to our{' '}
         <a
           href="/terms-of-service"
-          className="text-secondary-drift hover:underline"
+          className="text-secondary-purple-rain hover:underline"
           target="_blank"
           rel="noreferrer"
         >
@@ -533,7 +617,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         , the{' '}
         <a
           href="/waiver"
-          className="text-secondary-drift hover:underline"
+          className="text-secondary-purple-rain hover:underline"
           target="_blank"
           rel="noreferrer"
         >
@@ -542,7 +626,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         , and how we handle your data per our{' '}
         <a
           href="/privacy-policy"
-          className="text-secondary-drift hover:underline"
+          className="text-secondary-purple-rain hover:underline"
           target="_blank"
           rel="noreferrer"
         >

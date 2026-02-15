@@ -251,7 +251,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                               onClick={() =>
                                 setCancelTarget({ key: level.levelKey, label: level.label })
                               }
-                              className="mt-1 text-xs text-secondary-drift hover:underline"
+                              className="mt-1 text-xs text-secondary-purple-rain hover:underline"
                             >
                               Can't make it? Cancel your spot
                             </button>
@@ -259,7 +259,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                         ) : (
                           <button
                             type="button"
-                            className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full bg-secondary-purple-rain hover:bg-secondary-purple-rain/80 text-white font-semibold py-2 px-4 rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             disabled={
                               (!signupState?.allowWaitlist && level.isSoldOut) ||
                               signupState?.disabled ||
@@ -415,7 +415,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           ) : (
                             <button
                               type="button"
-                              className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                              className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-normal py-2 px-4 rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                               disabled={
                                 (!signupState?.allowWaitlist && level.isSoldOut) ||
                                 signupState?.disabled ||
@@ -541,7 +541,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
         <div>
           <p className={labelClass}>General Registration</p>
           <p className={valueClass}>
-            {isPublic ? 'Yes' : countdownLabel ? `Available in ${countdownLabel}` : 'No'}
+            {isPublic ? 'Open' : countdownLabel ? `Available in ${countdownLabel}` : 'Closed'}
           </p>
         </div>
       </div>
