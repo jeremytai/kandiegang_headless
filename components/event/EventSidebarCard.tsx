@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Link, Info } from 'lucide-react';
+import { ChevronDown, Link, Info, User, Clock, X } from 'lucide-react';
 
 interface EventSidebarCardProps {
   date: string;
@@ -35,7 +35,13 @@ interface EventSidebarCardProps {
     spotsLeft?: number;
   };
   // currentUser?: { email: string; id: string; name?: string };
-  participantsByLevel?: Record<string, Array<{ name: string; id: string }>>;
+  participantsByLevel?: Record<string, Array<{
+    first_name: string;
+    last_name: string;
+    user_id: string | null;
+    is_waitlist: boolean;
+    created_at: string;
+  }>>;
 }
 
 import { useAuth } from '../../context/AuthContext';
@@ -457,25 +463,60 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
               <button
                 type="button"
                 aria-label="Close sidebar"
-                className="absolute top-4 right-4 text-slate-400 hover:text-black focus:outline-none text-2xl"
+                className="absolute top-4 right-4 text-slate-400 hover:text-black focus:outline-none"
                 onClick={() => setParticipantsSidebar(null)}
               >
-                &times;
+                <X className="w-6 h-6" />
               </button>
-              <h3 className="text-lg font-normal mb-4 mt-2">
-                {participantsSidebar.label} Participants
+              <h3 className="text-xl font-bold mb-4 mt-2">
+                Participants - {participantsSidebar.label}
               </h3>
-              <ul className="space-y-2">
-                {(participantsByLevel?.[participantsSidebar.levelKey] ?? []).length === 0 ? (
-                  <li className="text-slate-500">No participants yet.</li>
-                ) : (
-                  participantsByLevel![participantsSidebar.levelKey].map((p, i) => (
-                    <li key={p.id || i} className="text-slate-800">
-                      {p.name}
-                    </li>
-                  ))
-                )}
-              </ul>
+
+              {(participantsByLevel?.[participantsSidebar.levelKey] ?? []).length === 0 ? (
+                <p className="text-gray-500">No participants yet</p>
+              ) : (
+                <>
+                  {/* Confirmed participants */}
+                  {(() => {
+                    const confirmed = participantsByLevel![participantsSidebar.levelKey].filter(p => !p.is_waitlist);
+                    return confirmed.length > 0 ? (
+                      <div className="mb-6">
+                        <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                          Confirmed ({confirmed.length})
+                        </h4>
+                        <ul className="space-y-2">
+                          {confirmed.map((p, i) => (
+                            <li key={p.user_id || i} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                              <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              <span>{p.first_name} {p.last_name}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {/* Waitlisted participants */}
+                  {(() => {
+                    const waitlisted = participantsByLevel![participantsSidebar.levelKey].filter(p => p.is_waitlist);
+                    return waitlisted.length > 0 ? (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                          Waitlist ({waitlisted.length})
+                        </h4>
+                        <ul className="space-y-2">
+                          {waitlisted.map((p, i) => (
+                            <li key={p.user_id || i} className="flex items-center gap-2 p-2 bg-yellow-50 rounded">
+                              <Clock className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                              <span>{p.first_name} {p.last_name}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null;
+                  })()}
+                </>
+              )}
               <button
                 type="button"
                 className="mt-6 rounded bg-black px-4 py-2 text-white"
