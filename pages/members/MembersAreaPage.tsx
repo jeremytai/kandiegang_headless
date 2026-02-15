@@ -39,11 +39,15 @@ function AccountStatusAccordion() {
         aria-expanded={isOpen}
         aria-controls={panelId}
         id={buttonId}
+        title={isOpen ? 'Collapse account status' : 'Expand account status'}
       >
         <span
           className={`inline-flex shrink-0 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
         >
           <ChevronDown className="h-5 w-5 opacity-60 text-secondary-purple-rain group-hover:opacity-100 transition-opacity" />
+        </span>
+        <span className="sr-only">
+          {isOpen ? 'Collapse account status' : 'Expand account status'}
         </span>
       </button>
       <AnimatePresence initial={false}>
@@ -291,17 +295,27 @@ export const MembersAreaPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="flex flex-wrap gap-2 mb-2 justify-center"
+              className="flex flex-col items-center gap-2 mb-2 justify-center"
             >
+              <div className="flex flex-wrap gap-2 justify-center">
+                {guide && (
+                  <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 dark:bg-secondary-purple-rain/25 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30 dark:border-secondary-purple-rain/50">
+                    Kandie Gang Guide
+                  </span>
+                )}
+                {cyclingMember && (
+                  <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 dark:bg-secondary-purple-rain/25 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30 dark:border-secondary-purple-rain/50">
+                    Kandie Gang Cycling Member
+                  </span>
+                )}
+              </div>
               {guide && (
-                <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 dark:bg-secondary-purple-rain/25 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30 dark:border-secondary-purple-rain/50">
-                  Kandie Gang Guide
-                </span>
-              )}
-              {cyclingMember && (
-                <span className="inline-flex items-center rounded-full bg-secondary-purple-rain/15 dark:bg-secondary-purple-rain/25 px-3 py-1 text-xs font-medium text-secondary-purple-rain border border-secondary-purple-rain/30 dark:border-secondary-purple-rain/50">
-                  Kandie Gang Cycling Member
-                </span>
+                <Link
+                  to="/members/guide-access-check"
+                  className="mt-1 text-xs text-blue-700 dark:text-blue-300 underline hover:text-blue-900 dark:hover:text-blue-100"
+                >
+                  Guide Access Checker
+                </Link>
               )}
             </motion.div>
           )}

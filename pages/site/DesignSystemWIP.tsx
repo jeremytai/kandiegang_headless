@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Accordion, AccordionItem } from '../../components/common/Accordion';
+import { Accordion } from '../../components/common/Accordion';
 
 export const DesignSystemWIP: React.FC = () => {
   // Helper function to get font showcase class name
