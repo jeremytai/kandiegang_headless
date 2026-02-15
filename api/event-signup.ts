@@ -266,7 +266,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       isMember = Boolean(profile?.is_member);
-      userEmail = profile?.email ?? null;
+      userEmail = profile?.email ?? user.email ?? null;
     }
 
     const { token: cancelToken, hash: cancelTokenHash } = createCancelToken();
@@ -389,9 +389,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           html,
           text,
         });
+        console.log(`[event-signup] Confirmation email sent to ${userEmail}`);
       } catch (emailErr) {
-        console.warn('Event signup email failed:', emailErr);
+        console.error('[event-signup] Email failed:', emailErr);
       }
+    } else {
+      console.warn('[event-signup] Email not sent:', {
+        hasResendKey: !!RESEND_API_KEY,
+        hasUserEmail: !!userEmail
+      });
     }
     return res.status(200).json({ success: true, waitlisted });
   } catch (err) {
