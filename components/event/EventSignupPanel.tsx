@@ -87,11 +87,15 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   const [_lookupInFlight, _setLookupInFlight] = useState(false);
 
   const isMember = Boolean(profile?.is_member);
-  const displayName =
-    profile?.display_name ??
-    (user?.user_metadata as Record<string, unknown> | undefined)?.full_name ??
-    (user?.user_metadata as Record<string, unknown> | undefined)?.name ??
-    null;
+  const userMeta = (user?.user_metadata ?? {}) as { full_name?: string; name?: string };
+  const displayName: string | null =
+    typeof profile?.display_name === 'string' && profile.display_name.trim()
+      ? profile.display_name.trim()
+      : typeof userMeta.full_name === 'string' && userMeta.full_name.trim()
+        ? userMeta.full_name.trim()
+        : typeof userMeta.name === 'string' && userMeta.name.trim()
+          ? userMeta.name.trim()
+          : null;
   const derivedNames = useMemo(() => splitDisplayName(displayName), [displayName]);
   const lookupNames = useMemo(() => splitDisplayName(lookupDisplayName), [lookupDisplayName]);
   const hasDerivedNames = Boolean(derivedNames.first && derivedNames.last);
@@ -164,12 +168,23 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
 
   const handleSendMagicLink = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!email.trim()) {
-      setError('Enter your email address first.');
+    const trimmedEmail = email.trim();
+    const trimmedFirst = firstName.trim();
+    const trimmedLast = lastName.trim();
+    if (!trimmedFirst) {
+      setError('First name is required.');
       return;
     }
-    if (!hasNames) {
-      setError('Enter your first and last name.');
+    if (!trimmedLast) {
+      setError('Last name is required.');
+      return;
+    }
+    if (!trimmedEmail) {
+      setError('Email address is required.');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      setError('Enter a valid email address.');
       return;
     }
     if (!canSubmit) {
@@ -181,10 +196,10 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     storeIntent({
       ...intent,
       requiresFlintaAttestation: needsFlintaAttestation,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
+      firstName: trimmedFirst,
+      lastName: trimmedLast,
     });
-    const { error: magicError } = await signInWithMagicLink(email.trim(), buildReturnUrl());
+    const { error: magicError } = await signInWithMagicLink(trimmedEmail, buildReturnUrl());
     setIsSubmitting(false);
     if (magicError) {
       setError(magicError);
@@ -194,12 +209,18 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   };
 
   const handleConfirmSignup = async () => {
-    if (!canSubmit) {
-      setError('Please confirm the FLINTA* self-attestation.');
+    const trimmedFirst = firstName.trim();
+    const trimmedLast = lastName.trim();
+    if (!trimmedFirst) {
+      setError('First name is required.');
       return;
     }
-    if (!hasNames) {
-      setError('Enter your first and last name.');
+    if (!trimmedLast) {
+      setError('Last name is required.');
+      return;
+    }
+    if (!canSubmit) {
+      setError('Please confirm the FLINTA* self-attestation.');
       return;
     }
     if (!hasAuthEmail) {

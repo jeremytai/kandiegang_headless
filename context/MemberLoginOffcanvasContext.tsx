@@ -684,7 +684,7 @@ function MemberOffcanvasAccountContent({
             type="button"
             onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
             className="flex w-full cursor-pointer items-start justify-between text-left group px-6 md:px-8"
-            aria-expanded={openIndex === idx ? 'true' : 'false'}
+            aria-expanded={openIndex === idx}
             aria-controls={`settings-accordion-panel-${idx}`}
             id={`settings-accordion-button-${idx}`}
           >
