@@ -43,6 +43,7 @@ export const KandieEventPage: React.FC = () => {
         .eq('event_id', Number(eventData.databaseId))
         .is('cancelled_at', null)
         .eq('is_waitlist', false);
+      console.debug('[KandieEventPage] Supabase participants query result:', { data, error });
       if (error) {
         console.warn('Participant lookup failed:', error);
         return;
@@ -57,6 +58,7 @@ export const KandieEventPage: React.FC = () => {
           id: row.user_id,
         });
       });
+      console.debug('[KandieEventPage] participantsByLevel grouped:', grouped);
       setParticipantsByLevel(grouped);
     } catch (err) {
       console.warn('Participant lookup failed:', err);
@@ -484,6 +486,34 @@ export const KandieEventPage: React.FC = () => {
                       <GuideSection guides={guides} />
                     </section>
                   )}
+
+                {/* Participants List by Ride Level (guides/admins only, with debug) */}
+                {profile?.is_guide && Object.keys(participantsByLevel).length > 0 && (
+                  <section>
+                    <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">
+                      Participants
+                    </h2>
+                    <pre className="bg-slate-100 text-xs p-2 rounded mb-4 overflow-x-auto">
+                      {JSON.stringify(participantsByLevel, null, 2)}
+                    </pre>
+                    <div className="space-y-6">
+                      {Object.entries(participantsByLevel).map(([level, participants]) => (
+                        <div key={level}>
+                          <h3 className="text-lg font-semibold text-secondary-purple-rain mb-2">
+                            {level.charAt(0).toUpperCase() + level.slice(1)}
+                          </h3>
+                          <ul className="list-disc pl-6">
+                            {participants.map((p) => (
+                              <li key={p.id} className="text-slate-700">
+                                {p.name}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
                 {/* Partners or extra info could go here */}
               </article>
