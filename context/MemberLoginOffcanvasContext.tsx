@@ -960,6 +960,61 @@ export const MemberLoginOffcanvasProvider: React.FC<{ children: React.ReactNode 
   const [eventSignupIntent, setEventSignupIntent] = useState<EventSignupIntent | null>(null);
   const { user } = useAuth();
 
+  // Restore eventSignupIntent and panelView from sessionStorage if eventSignup param is present
+  useEffect(() => {
+    // Check both search params and hash fragment for eventSignup=1
+    const search = window.location.search;
+    const hash = window.location.hash;
+    const params = new URLSearchParams(search || '');
+    const hashParams = new URLSearchParams(hash.replace(/^#/, '').replace(/&/g, '&'));
+    const hasEventSignup =
+      params.get('eventSignup') === '1' || hashParams.get('eventSignup') === '1';
+    if (hasEventSignup && !eventSignupIntent) {
+      let intent: EventSignupIntent | null = null;
+      const raw = sessionStorage.getItem('eventSignupIntent');
+      if (raw) {
+        try {
+          intent = JSON.parse(raw);
+        } catch (e) {
+          console.error('[MemberLoginOffcanvasProvider] Failed to parse eventSignupIntent', e);
+        }
+      }
+      // If sessionStorage is empty, reconstruct from URL params
+      if (!intent) {
+        const getParam = (key: string) => params.get(key) || hashParams.get(key);
+        const requiresFlintaAttestation = getParam('requiresFlintaAttestation') === 'true';
+        intent = {
+          eventId: getParam('eventId') || '',
+          eventSlug: getParam('eventSlug') || '',
+          eventTitle: decodeURIComponent(getParam('eventTitle') || ''),
+          levelKey: getParam('levelKey') || '',
+          levelLabel: decodeURIComponent(getParam('levelLabel') || ''),
+          eventType: getParam('eventType') || undefined,
+          accessNote: getParam('accessNote')
+            ? decodeURIComponent(getParam('accessNote') || '')
+            : undefined,
+          requiresFlintaAttestation,
+          firstName: getParam('firstName')
+            ? decodeURIComponent(getParam('firstName') || '')
+            : undefined,
+          lastName: getParam('lastName')
+            ? decodeURIComponent(getParam('lastName') || '')
+            : undefined,
+        };
+        console.debug(
+          '[MemberLoginOffcanvasProvider] Reconstructed eventSignupIntent from URL params',
+          intent
+        );
+      }
+      if (intent && intent.eventId) {
+        setEventSignupIntent(intent);
+        setPanelView('event-signup');
+        setOpen(true);
+        console.debug('[MemberLoginOffcanvasProvider] Restored eventSignupIntent', intent);
+      }
+    }
+  }, [eventSignupIntent]);
+
   const openMemberLogin = useCallback(() => setOpen(true), []);
   const openEventSignup = useCallback((intent: EventSignupIntent) => {
     setEventSignupIntent(intent);

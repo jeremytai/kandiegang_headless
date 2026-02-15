@@ -208,16 +208,20 @@ export const KandieEventPage: React.FC = () => {
     if (url.searchParams.get('eventSignup') !== '1') return;
     const raw = sessionStorage.getItem(EVENT_SIGNUP_STORAGE_KEY);
     if (!raw) return;
-    try {
-      const intent = JSON.parse(raw) as EventSignupIntent;
-      if (intent.eventId === eventData.databaseId) {
-        openEventSignup(intent);
-      }
-    } finally {
-      sessionStorage.removeItem(EVENT_SIGNUP_STORAGE_KEY);
-      url.searchParams.delete('eventSignup');
-      window.history.replaceState(null, '', url.pathname + url.search);
-      setRestoredSignup(true);
+    const intent = JSON.parse(raw) as EventSignupIntent;
+    if (intent.eventId === eventData.databaseId) {
+      // Debug log
+
+      console.log('[KandieEventPage] Restoring signup intent and opening modal', intent);
+      openEventSignup(intent);
+      // After opening modal, clear sessionStorage and URL param
+      setTimeout(() => {
+        console.log('[KandieEventPage] Clearing sessionStorage and eventSignup param');
+        sessionStorage.removeItem(EVENT_SIGNUP_STORAGE_KEY);
+        url.searchParams.delete('eventSignup');
+        window.history.replaceState(null, '', url.pathname + url.search);
+        setRestoredSignup(true);
+      }, 500);
     }
   }, [eventData, user, openEventSignup, restoredSignup]);
 
