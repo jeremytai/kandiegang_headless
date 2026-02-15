@@ -29,6 +29,7 @@ type EventSignupBody = {
   eventTitle?: string;
   firstName?: string;
   lastName?: string;
+  email?: string; // Required for guest signups
 };
 
 type EventAccessData = {
@@ -145,14 +146,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+  console.log('[event-signup] Incoming request body:', req.body);
   if (!checkRateLimit(req, res, { windowMs: 60_000, max: 20, keyPrefix: 'event-signup' })) {
     return;
   }
+
+  // Support both authenticated and guest signups
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token) {
-    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
-  }
+  const isGuestSignup = !token;
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return res.status(500).json({ error: 'Server configuration error' });
   }
@@ -167,7 +169,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const flintaAttested = Boolean(body?.flintaAttested);
   const firstName = typeof body?.firstName === 'string' ? body.firstName.trim() : '';
   const lastName = typeof body?.lastName === 'string' ? body.lastName.trim() : '';
+  const guestEmail = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
   const eventId = typeof eventIdRaw === 'string' ? Number(eventIdRaw) : eventIdRaw;
+
+  console.log('[event-signup] Parsed signup payload:', {
+    eventId, rideLevel, eventType, eventTitle, flintaAttested, firstName, lastName,
+    isGuest: isGuestSignup, hasEmail: !!guestEmail
+  });
+
   if (!eventId || Number.isNaN(eventId)) {
     return res.status(400).json({ error: 'Missing or invalid eventId' });
   }
@@ -177,29 +186,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!firstName || !lastName) {
     return res.status(400).json({ error: 'Missing first or last name' });
   }
+
+  // For guest signups, email is required
+  if (isGuestSignup && !guestEmail) {
+    return res.status(400).json({ error: 'Email is required for guest signup' });
+  }
   try {
     const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const {
-      data: { user },
-      error: userError,
-    } = await anonClient.auth.getUser(token);
-    if (userError || !user) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
-    }
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
-    const { token: cancelToken, hash: cancelTokenHash } = createCancelToken();
-    const { data: profile, error: profileError } = await adminClient
-      .from('profiles')
-      .select('is_member')
-      .eq('id', user.id)
-      .single();
-    if (profileError) {
-      console.error('Event signup profile error:', profileError);
-      return res.status(500).json({ error: 'Failed to verify membership' });
+
+    // Variables to track user info (either from auth or guest)
+    let userId: string | null = null;
+    let userEmail: string | null = null;
+    let isMember = false;
+
+    if (isGuestSignup) {
+      // Guest signup - no authentication required
+      console.log('[event-signup] Processing guest signup with email:', guestEmail);
+      userEmail = guestEmail;
+      isMember = false; // Guests are not members
+    } else {
+      // Authenticated signup - verify token
+      const {
+        data: { user },
+        error: userError,
+      } = await anonClient.auth.getUser(token ?? undefined);
+      console.log('[event-signup] Supabase user lookup:', { userId: user?.id, userError });
+
+      if (userError || !user) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+      }
+
+      userId = user.id;
+
+      // Get profile for membership status
+      const { data: profile, error: profileError } = await adminClient
+        .from('profiles')
+        .select('is_member, email')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Event signup profile error:', profileError);
+        return res.status(500).json({ error: 'Failed to verify membership' });
+      }
+
+      isMember = Boolean(profile?.is_member);
+      userEmail = profile?.email ?? null;
     }
-    const isMember = Boolean(profile?.is_member);
+
+    const { token: cancelToken, hash: cancelTokenHash } = createCancelToken();
     let access: EventAccessData | null = null;
     try {
       access = await fetchEventAccessData(eventId);
@@ -233,15 +271,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
     }
-    const { data: existing } = await adminClient
+    // Check for existing registration (authenticated by user_id, guest by email)
+    let existingQuery = adminClient
       .from('registrations')
       .select('id, is_waitlist')
       .eq('event_id', eventId)
       .eq('ride_level', rideLevel)
-      .eq('user_id', user.id)
-      .is('cancelled_at', null)
-      .limit(1)
-      .maybeSingle();
+      .is('cancelled_at', null);
+
+    if (userId) {
+      existingQuery = existingQuery.eq('user_id', userId);
+    } else {
+      existingQuery = existingQuery.eq('email', userEmail!);
+    }
+
+    const { data: existing } = await existingQuery.limit(1).maybeSingle();
+
     if (existing) {
       return res.status(409).json({
         error: existing.is_waitlist
@@ -249,9 +294,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           : 'You are already registered for this level.',
       });
     }
+
+    // Build insert payload
     const insertPayload: Record<string, unknown> = {
       event_id: eventId,
-      user_id: user.id,
+      user_id: userId, // Will be null for guest signups
+      email: userEmail, // Will be null for authenticated signups with no email in profile
       ride_level: rideLevel,
       event_type: eventType ?? 'ride',
       cancel_token_hash: cancelTokenHash,
@@ -284,35 +332,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       insertPayload.is_waitlist = false;
     }
     const { error: insertError } = await adminClient.from('registrations').insert(insertPayload);
+    console.log('[event-signup] Insert registration payload:', insertPayload);
     if (insertError) {
       console.error('Event signup insert error:', insertError);
       return res.status(500).json({ error: insertError.message || 'Failed to save signup' });
     }
-    if (RESEND_API_KEY) {
+    console.log('[event-signup] Registration insert successful');
+
+    // Send confirmation email if email is available
+    if (RESEND_API_KEY && userEmail) {
       try {
         const resend = new Resend(RESEND_API_KEY);
-        const { data: profile } = await adminClient
-          .from('profiles')
-          .select('email')
-          .eq('id', user.id)
-          .single();
-        const email = profile?.email ?? null;
-        if (email) {
-          const cancelUrl = `${BASE_URL}/event/cancel?token=${encodeURIComponent(cancelToken)}`;
-          const html = waitlisted
-            ? buildWaitlistHtml(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl)
-            : buildConfirmationHtml(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl);
-          const text = waitlisted
-            ? buildWaitlistText(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl)
-            : buildConfirmationText(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl);
-          await resend.emails.send({
-            from: FROM_EMAIL,
-            to: email,
-            subject: waitlisted ? 'You are on the waitlist' : 'Your event spot is saved',
-            html,
-            text,
-          });
-        }
+        const cancelUrl = `${BASE_URL}/event/cancel?token=${encodeURIComponent(cancelToken)}`;
+        const html = waitlisted
+          ? buildWaitlistHtml(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl)
+          : buildConfirmationHtml(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl);
+        const text = waitlisted
+          ? buildWaitlistText(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl)
+          : buildConfirmationText(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl);
+        await resend.emails.send({
+          from: FROM_EMAIL,
+          to: userEmail,
+          subject: waitlisted ? 'You are on the waitlist' : 'Your event spot is saved',
+          html,
+          text,
+        });
       } catch (emailErr) {
         console.warn('Event signup email failed:', emailErr);
       }

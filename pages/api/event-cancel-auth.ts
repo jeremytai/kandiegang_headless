@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import crypto from 'crypto';
 import { checkRateLimit } from './_rateLimit';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -16,6 +17,12 @@ const WP_GRAPHQL_URL =
   process.env.VITE_WP_GRAPHQL_URL ||
   process.env.WP_GRAPHQL_URL ||
   'https://wp-origin.kandiegang.com/graphql';
+
+function createCancelToken(): { token: string; hash: string } {
+  const token = crypto.randomBytes(24).toString('base64url');
+  const hash = crypto.createHash('sha256').update(token).digest('hex');
+  return { token, hash };
+}
 
 async function fetchEventTitle(eventId: number): Promise<string> {
   const query = `query GetRideEventTitle($id: ID!) { rideEvent(id: $id, idType: DATABASE_ID) { title } }`;
@@ -102,7 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (data && data.is_waitlist === false) {
       const { data: nextInLine } = await adminClient
         .from('registrations')
-        .select('id, user_id, ride_level, cancel_token_hash')
+        .select('id, user_id, email, ride_level')
         .eq('event_id', Number(eventId))
         .eq('ride_level', rideLevel)
         .eq('is_waitlist', true)
@@ -111,25 +118,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .limit(1)
         .maybeSingle();
       if (nextInLine) {
+        // Generate a new cancel token for the promoted user
+        const { token: newCancelToken, hash: newCancelTokenHash } = createCancelToken();
+
+        // Update registration: promote from waitlist and issue new cancel token
         await adminClient
           .from('registrations')
-          .update({ is_waitlist: false, waitlist_promoted_at: new Date().toISOString() })
+          .update({
+            is_waitlist: false,
+            waitlist_promoted_at: new Date().toISOString(),
+            cancel_token_hash: newCancelTokenHash,
+            cancel_token_issued_at: new Date().toISOString(),
+          })
           .eq('id', nextInLine.id);
+
         if (RESEND_API_KEY) {
           try {
             const resend = new Resend(RESEND_API_KEY);
-            const { data: profile } = await adminClient
-              .from('profiles')
-              .select('email')
-              .eq('id', nextInLine.user_id)
-              .single();
-            const email = profile?.email ?? null;
-            if (email) {
+
+            // Get email - either from guest signup or user profile
+            let recipientEmail: string | null = null;
+
+            if (nextInLine.email) {
+              // Guest signup - email is in registration
+              recipientEmail = nextInLine.email;
+            } else if (nextInLine.user_id) {
+              // Authenticated user - get email from profile
+              const { data: profile } = await adminClient
+                .from('profiles')
+                .select('email')
+                .eq('id', nextInLine.user_id)
+                .single();
+              recipientEmail = profile?.email ?? null;
+            }
+
+            if (recipientEmail) {
               const eventTitle = await fetchEventTitle(Number(eventId));
-              const cancelUrl = `${BASE_URL}/event/cancel?token=${encodeURIComponent(nextInLine.cancel_token_hash)}`;
+              // Use the actual token (not the hash) in the cancel URL
+              const cancelUrl = `${BASE_URL}/event/cancel?token=${encodeURIComponent(newCancelToken)}`;
               await resend.emails.send({
                 from: FROM_EMAIL,
-                to: email,
+                to: recipientEmail,
                 subject: 'A spot opened up for your event',
                 html: buildPromotedHtml(eventTitle, nextInLine.ride_level, cancelUrl),
                 text: buildPromotedText(eventTitle, nextInLine.ride_level, cancelUrl),
