@@ -312,10 +312,9 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level1',
       label: 'Level 1',
-      guides: (eventDetails?.level1?.guides?.nodes || []).map((guide, idx) => ({
-        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+      guides: (eventDetails?.level1?.guides?.nodes || []).map((guide) => ({
+        id: guide.databaseId,
         name: guide.title,
-        // Add email or other fields if available
       })),
       pace: paceByLevel['Level 1'],
       distanceKm: eventDetails?.level1?.distanceKm ?? null,
@@ -324,8 +323,8 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level2',
       label: 'Level 2',
-      guides: (eventDetails?.level2?.guides?.nodes || []).map((guide, idx) => ({
-        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+      guides: (eventDetails?.level2?.guides?.nodes || []).map((guide) => ({
+        id: guide.databaseId,
         name: guide.title,
       })),
       pace: paceByLevel['Level 2'],
@@ -335,8 +334,8 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level2plus',
       label: 'Level 2+',
-      guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide, idx) => ({
-        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+      guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide) => ({
+        id: guide.databaseId,
         name: guide.title,
       })),
       pace: paceByLevel['Level 2+'],
@@ -346,8 +345,8 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level3',
       label: 'Level 3',
-      guides: (eventDetails?.level3?.guides?.nodes || []).map((guide, idx) => ({
-        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+      guides: (eventDetails?.level3?.guides?.nodes || []).map((guide) => ({
+        id: guide.databaseId,
         name: guide.title,
       })),
       pace: paceByLevel['Level 3'],

@@ -3,6 +3,7 @@
  */
 
 export interface RideGuide {
+  databaseId: number | string;
   title: string;
   featuredImage?: {
     node: {
