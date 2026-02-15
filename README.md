@@ -2,6 +2,7 @@
 
 A high-fidelity replication of the experimental UI and interactions from Kandie Gang, built as a headless WordPress frontend. This project focuses on high-quality animations, smooth scroll-driven effects, and a premium "mundane made magic" aesthetic, powered by a type-safe WordPress GraphQL bridge.
 
+
 ## ✨ Features
 
 - **🎨 Premium UI/UX**: High-fidelity animations with Framer Motion and GSAP, scroll-driven effects, and glassmorphic design elements
@@ -14,6 +15,8 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **🎭 Advanced Animations**: Animated headline (split-type char reveal + color fill), spring physics, scroll progress tracking
 - **🔐 Site password**: Optional full-screen gate after the preloader; unlock persists for the session (sessionStorage)
 - **📊 Analytics (PostHog)**: Consent-gated product analytics (page views, funnels); loads only after user accepts analytics in the cookie banner; supports opt-out on consent revocation
+- **🧑‍🤝‍🧑 Event Participants List**: Each event page now displays a list of participants, grouped by ride level, directly under the event description for guides and admins.
+- **🛠️ Next.js API Handler Migration**: All serverless API handlers have been migrated to Next.js `pages/api/` for improved maintainability and Vercel compatibility.
 
 ## 🚀 Tech Stack
 
@@ -131,11 +134,12 @@ kandiegang_headless/
 │   ├── StickyBottom.tsx
 │   ├── StickyTop.tsx
 │   └── WeatherStatusBackground.tsx   # Weather bar: ipapi.co + Open-Meteo, outfit suggestions
-├── pages/              # Page components
+├── pages/              # Page components and API routes
 │   ├── AboutPage.tsx
 │   ├── CommunityPage.tsx
 │   ├── StoriesPage.tsx
-│   └── FontsPage.tsx   # Typography showcase
+│   ├── FontsPage.tsx   # Typography showcase
+│   └── api/            # Next.js API routes (migrated from root-level api/)
 ├── lib/                # Utility libraries
 │   ├── wordpress.ts    # WordPress GraphQL bridge
 │   └── images.ts       # WebP / responsive image helpers (imageSrc, imageSrcSet)
@@ -565,11 +569,37 @@ Make sure to set environment variables in your hosting platform:
 
 This project is private and proprietary.
 
+
 ## TODO
 
 - Normalize WordPress event descriptions so Markdown lists render correctly (handle en-dash/em-dash, common bullet characters, numbered markers like `)` or `.`, and strip zero-width/non-breaking spaces). Add a regression test or example content and remove dev-only debug UI after verification.
 - Add a guide/admin page to view event registrations (signed-up attendees), not just waitlist entries.
+- [Done] Show event participants on each event page, grouped by ride level, for guides/admins.
+- [Done] Migrate all serverless API handlers to Next.js `pages/api/` directory.
 
 ## 🤝 Contributing
 
 This is a private project. For questions or issues, please contact the project maintainers.
+
+## 👥 Guide/Participant Access Control & ID Sync
+
+To ensure only the correct guides can view participants for an event level, the system matches your Supabase profile's `wp_user_id` to the WordPress guide's `databaseId` for that event level.
+
+### How to verify and update your guide ID
+
+1. **Print all guide IDs and your profile info:**
+   ```bash
+   VITE_SUPABASE_URL=your_url VITE_SUPABASE_SERVICE_ROLE_KEY=your_key node scripts/print-guide-wp-ids.cjs
+   ```
+   This prints all Supabase guide profiles (with `wp_user_id`) and the guide IDs for each event level from WordPress. Compare your profile's `wp_user_id` to the correct WordPress guide `databaseId`.
+
+2. **Update your Supabase profile's `wp_user_id` if needed:**
+   - If your `wp_user_id` does not match your WordPress guide's `databaseId`, update it with:
+   ```bash
+   VITE_SUPABASE_URL=your_url VITE_SUPABASE_SERVICE_ROLE_KEY=your_key node scripts/update-guide-wp-id.cjs
+   ```
+   This will set your profile's `wp_user_id` to the correct value for guide access control.
+
+> **Note:** You must have the correct Supabase service role key and URL in your environment variables or pass them inline as shown above.
+
+---

@@ -4,7 +4,6 @@
  */
 
 import type { User } from '@supabase/supabase-js';
-import { supabase } from './supabaseClient';
 
 export type AuthProviderType = 'email' | 'discord';
 
@@ -50,12 +49,12 @@ function buildAuthProviderRows(
  * Call after login and after link/unlink so the table stays in sync.
  */
 export async function syncAuthProvidersForUser(user: User): Promise<void> {
-  if (!supabase) return;
   const rows = buildAuthProviderRows(user);
   for (const row of rows) {
-    await supabase.from('auth_providers').upsert(row, {
-      onConflict: 'provider_type,provider_user_id',
-      ignoreDuplicates: false,
+    await fetch('/api/auth-providers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(row),
     });
   }
 }

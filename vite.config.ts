@@ -19,6 +19,10 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
       proxy: {
+        '/api': {
+          target: 'http://localhost:3000', // Next.js server
+          changeOrigin: true,
+        },
         '/api/geolocation': {
           target: 'https://ipapi.co',
           changeOrigin: true,

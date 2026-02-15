@@ -136,6 +136,11 @@ const SignUpPage = lazy(() =>
 const MembersAreaPage = lazy(() =>
   import('./pages/members/MembersAreaPage').then((m) => ({ default: m.MembersAreaPage }))
 );
+const GuideAccessCheckPage = lazy(() =>
+  import('./pages/members/GuideAccessCheckPage').then((m) => ({
+    default: m.default || m.GuideAccessCheckPage,
+  }))
+);
 const MembersSettingsPage = lazy(() =>
   import('./pages/members/MembersSettingsPage').then((m) => ({ default: m.MembersSettingsPage }))
 );
@@ -286,6 +291,10 @@ const App: React.FC = () => {
                         <Route path="/signup" element={<SignUpPage />} />
                         <Route path="/members" element={<MembersAreaPage />} />
                         <Route path="/members/settings" element={<MembersSettingsPage />} />
+                        <Route
+                          path="/members/guide-access-check"
+                          element={<GuideAccessCheckPage />}
+                        />
                         <Route path="*" element={<NotFoundPage />} />
                       </Route>
                     </Routes>

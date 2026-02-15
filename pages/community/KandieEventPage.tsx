@@ -30,6 +30,40 @@ export const KandieEventPage: React.FC = () => {
   const [restoredSignup, setRestoredSignup] = useState(false);
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
   const [registrations, setRegistrations] = useState<Record<string, { isWaitlist: boolean }>>({});
+  const [participantsByLevel, setParticipantsByLevel] = useState<
+    Record<string, Array<{ name: string; id: string }>>
+  >({});
+  // Fetch all participants for the event and group by ride_level
+  const refreshParticipantsByLevel = useCallback(async () => {
+    if (!eventData?.databaseId || !supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('ride_level,first_name,last_name,user_id')
+        .eq('event_id', Number(eventData.databaseId))
+        .is('cancelled_at', null)
+        .eq('is_waitlist', false);
+      console.debug('[KandieEventPage] Supabase participants query result:', { data, error });
+      if (error) {
+        console.warn('Participant lookup failed:', error);
+        return;
+      }
+      const grouped: Record<string, Array<{ name: string; id: string }>> = {};
+      (data ?? []).forEach((row) => {
+        const level =
+          typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
+        if (!grouped[level]) grouped[level] = [];
+        grouped[level].push({
+          name: [row.first_name, row.last_name].filter(Boolean).join(' '),
+          id: row.user_id,
+        });
+      });
+      console.debug('[KandieEventPage] participantsByLevel grouped:', grouped);
+      setParticipantsByLevel(grouped);
+    } catch (err) {
+      console.warn('Participant lookup failed:', err);
+    }
+  }, [eventData?.databaseId]);
 
   const refreshCapacity = useCallback(async () => {
     if (!eventData?.databaseId) return;
@@ -89,25 +123,44 @@ export const KandieEventPage: React.FC = () => {
           return;
         }
 
-        // Transform gpxFile from { node: { id } } to string
-        const transformLevel = (level: Record<string, unknown> | undefined) => {
+        // Transform gpxFile from { node: { id } } to string, safely
+        type GpxFileNode = { node?: { id?: string } };
+        const transformLevel = (
+          level: import('../../lib/events').RideLevel | undefined
+        ): import('../../lib/events').RideLevel | undefined => {
           if (!level) return undefined;
+          let gpxFileId: string | undefined = undefined;
+          if (typeof level.gpxFile === 'object' && level.gpxFile !== null) {
+            const node = (level.gpxFile as GpxFileNode).node;
+            if (node && typeof node.id === 'string') {
+              gpxFileId = node.id;
+            }
+          }
           return {
             ...level,
-            gpxFile: level.gpxFile?.node?.id || undefined,
+            gpxFile: gpxFileId,
           };
         };
 
         const transformedEvent: KandieEventData = {
           ...event,
+          slug, // ensure slug is always present
           databaseId: event.databaseId || '0', // fallback if undefined
           eventDetails: event.eventDetails
             ? {
                 ...event.eventDetails,
-                level1: transformLevel(event.eventDetails.level1),
-                level2: transformLevel(event.eventDetails.level2),
-                level2plus: transformLevel(event.eventDetails.level2plus),
-                level3: transformLevel(event.eventDetails.level3),
+                level1: transformLevel(
+                  event.eventDetails.level1 as import('../../lib/events').RideLevel
+                ),
+                level2: transformLevel(
+                  event.eventDetails.level2 as import('../../lib/events').RideLevel
+                ),
+                level2plus: transformLevel(
+                  event.eventDetails.level2plus as import('../../lib/events').RideLevel
+                ),
+                level3: transformLevel(
+                  event.eventDetails.level3 as import('../../lib/events').RideLevel
+                ),
               }
             : undefined,
         };
@@ -132,6 +185,11 @@ export const KandieEventPage: React.FC = () => {
   }, [eventData?.databaseId, user?.id, refreshRegistrations]);
 
   useEffect(() => {
+    if (!eventData?.databaseId) return;
+    refreshParticipantsByLevel();
+  }, [eventData?.databaseId, refreshParticipantsByLevel]);
+
+  useEffect(() => {
     if (!eventData?.databaseId || typeof window === 'undefined') return;
     const handler = (event: Event) => {
       const detail = (event as CustomEvent).detail as { eventId?: string } | undefined;
@@ -150,16 +208,20 @@ export const KandieEventPage: React.FC = () => {
     if (url.searchParams.get('eventSignup') !== '1') return;
     const raw = sessionStorage.getItem(EVENT_SIGNUP_STORAGE_KEY);
     if (!raw) return;
-    try {
-      const intent = JSON.parse(raw) as EventSignupIntent;
-      if (intent.eventId === eventData.databaseId) {
-        openEventSignup(intent);
-      }
-    } finally {
-      sessionStorage.removeItem(EVENT_SIGNUP_STORAGE_KEY);
-      url.searchParams.delete('eventSignup');
-      window.history.replaceState(null, '', url.pathname + url.search);
-      setRestoredSignup(true);
+    const intent = JSON.parse(raw) as EventSignupIntent;
+    if (intent.eventId === eventData.databaseId) {
+      // Debug log
+
+      console.log('[KandieEventPage] Restoring signup intent and opening modal', intent);
+      openEventSignup(intent);
+      // After opening modal, clear sessionStorage and URL param
+      setTimeout(() => {
+        console.log('[KandieEventPage] Clearing sessionStorage and eventSignup param');
+        sessionStorage.removeItem(EVENT_SIGNUP_STORAGE_KEY);
+        url.searchParams.delete('eventSignup');
+        window.history.replaceState(null, '', url.pathname + url.search);
+        setRestoredSignup(true);
+      }, 500);
     }
   }, [eventData, user, openEventSignup, restoredSignup]);
 
@@ -219,7 +281,11 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level1',
       label: 'Level 1',
-      guides: (eventDetails?.level1?.guides?.nodes || []).map((guide) => guide.title),
+      guides: (eventDetails?.level1?.guides?.nodes || []).map((guide, idx) => ({
+        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+        name: guide.title,
+        // Add email or other fields if available
+      })),
       pace: paceByLevel['Level 1'],
       distanceKm: eventDetails?.level1?.distanceKm ?? null,
       routeUrl: eventDetails?.level1?.routeUrl,
@@ -227,7 +293,10 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level2',
       label: 'Level 2',
-      guides: (eventDetails?.level2?.guides?.nodes || []).map((guide) => guide.title),
+      guides: (eventDetails?.level2?.guides?.nodes || []).map((guide, idx) => ({
+        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+        name: guide.title,
+      })),
       pace: paceByLevel['Level 2'],
       distanceKm: eventDetails?.level2?.distanceKm ?? null,
       routeUrl: eventDetails?.level2?.routeUrl,
@@ -235,7 +304,10 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level2plus',
       label: 'Level 2+',
-      guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide) => guide.title),
+      guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide, idx) => ({
+        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+        name: guide.title,
+      })),
       pace: paceByLevel['Level 2+'],
       distanceKm: eventDetails?.level2plus?.distanceKm ?? null,
       routeUrl: eventDetails?.level2plus?.routeUrl,
@@ -243,7 +315,10 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level3',
       label: 'Level 3',
-      guides: (eventDetails?.level3?.guides?.nodes || []).map((guide) => guide.title),
+      guides: (eventDetails?.level3?.guides?.nodes || []).map((guide, idx) => ({
+        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+        name: guide.title,
+      })),
       pace: paceByLevel['Level 3'],
       distanceKm: eventDetails?.level3?.distanceKm ?? null,
       routeUrl: eventDetails?.level3?.routeUrl,
@@ -297,6 +372,7 @@ export const KandieEventPage: React.FC = () => {
     if (!eventData) return;
     const intent: EventSignupIntent = {
       eventId: eventData.databaseId,
+      eventSlug: eventData.slug, // Pass slug for redirect
       eventTitle: eventData.title,
       levelKey: level.levelKey,
       levelLabel: level.label,
@@ -367,148 +443,194 @@ export const KandieEventPage: React.FC = () => {
   const locationLabel = [locationName, locationStreetCity].filter(Boolean).join('\n');
 
   return (
-    <div className="bg-white min-h-screen pt-0 selection:bg-[#f9f100] selection:text-black">
-      <EventHeader
-        title={title}
-        intro={intro}
-        imageUrl={
-          featuredImage?.node?.sourceUrl
-            ? transformMediaUrl(featuredImage.node.sourceUrl)
-            : undefined
-        }
-        onBack={() => navigate('/community')}
-      />
+    <>
+      <div className="bg-white min-h-screen pt-0 selection:bg-[#f9f100] selection:text-black">
+        <EventHeader
+          title={title}
+          intro={intro}
+          imageUrl={
+            featuredImage?.node?.sourceUrl
+              ? transformMediaUrl(featuredImage.node.sourceUrl)
+              : undefined
+          }
+          onBack={() => navigate('/community')}
+        />
 
-      <section>
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="w-full border-t border-black/10 mt-10 mb-10" />
-          <div className="flex flex-col lg:flex-row lg:justify-center lg:items-start gap-20">
-            {/* Main content */}
-            <article className="space-y-12 order-2 lg:order-1 flex-1 min-w-0">
-              <div className="kandieEventPage max-w-none text-slate-600 leading-relaxed [&_h1]:text-4xl [&_h1]:font-heading-thin [&_h1]:tracking-normal [&_h2]:text-3xl [&_h2]:font-heading-thin [&_h2]:tracking-normal [&_h3]:text-3xl [&_h3]:font-heading-thin [&_h3]:tracking-normal [&_h4]:text-2xl [&_h4]:font-heading-thin [&_h4]:tracking-normal [&_h5]:text-xl [&_h5]:font-heading-thin [&_h5]:tracking-normal [&_h6]:font-heading-thin [&_h6]:tracking-normal [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2">
-                <style>{`
-                  .kandieEventPage h1, .kandieEventPage h2, .kandieEventPage h3, .kandieEventPage h4, .kandieEventPage h5, .kandieEventPage h6 {
-                    color: var(--color-secondary-purple-rain);
-                  }
-                `}</style>
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    rehypeRaw as any,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    rehypeSanitize as any,
-                  ]}
-                >
-                  {normalizedDescription}
-                </ReactMarkdown>
-                {/* Dev debug helpers removed after verification */}
-              </div>
+        <section>
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="w-full border-t border-black/10 mt-10 mb-10" />
+            <div className="flex flex-col lg:flex-row lg:justify-center lg:items-start gap-20">
+              {/* Main content */}
+              <article className="space-y-12 order-2 lg:order-1 flex-1 min-w-0">
+                <div className="kandieEventPage max-w-none text-slate-600 leading-relaxed [&_h1]:text-4xl [&_h1]:font-heading-thin [&_h1]:tracking-normal [&_h2]:text-3xl [&_h2]:font-heading-thin [&_h2]:tracking-normal [&_h3]:text-3xl [&_h3]:font-heading-thin [&_h3]:tracking-normal [&_h4]:text-2xl [&_h4]:font-heading-thin [&_h4]:tracking-normal [&_h5]:text-xl [&_h5]:font-heading-thin [&_h5]:tracking-normal [&_h6]:font-heading-thin [&_h6]:tracking-normal [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2">
+                  <style>{`
+                    .kandieEventPage h1, .kandieEventPage h2, .kandieEventPage h3, .kandieEventPage h4, .kandieEventPage h5, .kandieEventPage h6 {
+                      color: var(--color-secondary-purple-rain);
+                    }
+                  `}</style>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      rehypeRaw as any,
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      rehypeSanitize as any,
+                    ]}
+                  >
+                    {normalizedDescription}
+                  </ReactMarkdown>
+                  {/* Dev debug helpers removed after verification */}
+                </div>
 
-              {/* Additional sections that mirror the Vertica layout: Guides / Speakers */}
-              {guides.length > 0 &&
-                eventDetails?.primaryType?.toLowerCase().includes('workshop') && (
+                {/* Additional sections that mirror the Vertica layout: Guides / Speakers */}
+                {guides.length > 0 &&
+                  eventDetails?.primaryType?.toLowerCase().includes('workshop') && (
+                    <section>
+                      <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">
+                        Speakers
+                      </h2>
+                      <GuideSection guides={guides} />
+                    </section>
+                  )}
+
+                {/* Participants List by Ride Level (guides/admins only, with debug) */}
+                {profile?.is_guide && Object.keys(participantsByLevel).length > 0 && (
                   <section>
                     <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">
-                      Speakers
+                      Participants
                     </h2>
-                    <GuideSection guides={guides} />
+                    <pre className="bg-slate-100 text-xs p-2 rounded mb-4 overflow-x-auto">
+                      {JSON.stringify(participantsByLevel, null, 2)}
+                    </pre>
+                    <div className="space-y-6">
+                      {Object.entries(participantsByLevel).map(([level, participants]) => (
+                        <div key={level}>
+                          <h3 className="text-lg font-semibold text-secondary-purple-rain mb-2">
+                            {level.charAt(0).toUpperCase() + level.slice(1)}
+                          </h3>
+                          <ul className="list-disc pl-6">
+                            {participants.map((p) => (
+                              <li key={p.id} className="text-slate-700">
+                                {p.name}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
                   </section>
                 )}
 
-              {/* Partners or extra info could go here */}
-            </article>
+                {/* Partners or extra info could go here */}
+              </article>
 
-            <aside className="order-1 lg:order-2 w-full lg:flex-1 min-w-0 lg:self-start lg:sticky lg:top-28 h-fit">
-              <div>
-                <EventSidebarCard
-                  date={dateLabel}
-                  time={timeLabel}
-                  location={locationLabel}
-                  category={eventDetails?.rideCategory}
-                  type={eventDetails?.primaryType}
-                  levels={levelsWithGuides.map((level) => {
-                    const places = level.guides.length * 7;
-                    const used = capacityCounts[level.levelKey] ?? 0;
-                    const spotsLeft = Math.max(places - used, 0);
-                    return {
-                      ...level,
-                      places,
-                      spotsLeft,
-                      isSoldOut: spotsLeft === 0,
-                    };
-                  })}
-                  isPublic={isPublic}
-                  canSignup={canSignupNow}
-                  publicReleaseDate={publicReleaseDate}
-                  signupState={{
-                    label: signupLabel,
-                    disabled: !canSignupNow,
-                    helper: signupHelper,
-                    allowWaitlist,
-                  }}
-                  onSignup={handleSignup}
-                  registrations={registrations}
-                  onCancelRegistration={handleCancelRegistration}
-                  workshop={
-                    isWorkshop && workshopCapacity
-                      ? {
-                          capacity: workshopCapacity,
-                          spotsLeft: Math.max(workshopCapacity - workshopCount, 0),
-                        }
-                      : undefined
-                  }
-                />
-              </div>
-            </aside>
-          </div>
-        </div>
-      </section>
-
-      {/* Partner CTA (sits above global newsletter section) */}
-      <div className="w-full px-4 md:px-6 mt-20">
-        <section className="relative rounded-xl p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
-          <img
-            src={imageSrc('/images/250923_kandiegangsocialride-10-2048x1539')}
-            alt="Kandie Gang Social Ride"
-            width={1920}
-            height={1539}
-            className="absolute inset-0 w-full h-full object-cover object-top z-0"
-            style={{ left: 0, top: 0, width: '100%', height: '100%' }}
-            aria-hidden
-          />
-          <div className="absolute inset-0 bg-slate-900/70" aria-hidden />
-          <div className="relative z-10 flex flex-col items-center">
-            <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">
-              Become a Kandie Gang Member
-            </h2>
-            <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
-              Members only access, product discounts, and more.
-            </p>
-            <Link
-              to="/shop/kandie-gang-cycling-club-membership"
-              className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-white bg-transparent px-6 py-4 text-sm font-medium text-secondary-blush transition-colors hover:border-secondary-blush hover:bg-secondary-blush hover:text-white active:scale-95 md:gap-2 md:text-base"
-            >
-              <span>Join us</span>
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-blush/20 p-1 transition-colors group-hover:bg-white">
-                <svg
-                  className="h-3 w-3 text-secondary-blush transition-colors"
-                  stroke="currentColor"
-                  fill="none"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  viewBox="0 0 24 24"
-                >
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </span>
-            </Link>
+              <aside className="order-1 lg:order-2 w-full lg:flex-1 min-w-0 lg:self-start lg:sticky lg:top-28 h-fit">
+                <div>
+                  <EventSidebarCard
+                    date={dateLabel}
+                    time={timeLabel}
+                    location={locationLabel}
+                    category={eventDetails?.rideCategory}
+                    type={eventDetails?.primaryType}
+                    levels={levelsWithGuides.map((level) => {
+                      const places = level.guides.length * 7;
+                      const used = capacityCounts[level.levelKey] ?? 0;
+                      const spotsLeft = Math.max(places - used, 0);
+                      return {
+                        ...level,
+                        places,
+                        spotsLeft,
+                        isSoldOut: spotsLeft === 0,
+                      };
+                    })}
+                    isPublic={isPublic}
+                    canSignup={canSignupNow}
+                    publicReleaseDate={publicReleaseDate}
+                    signupState={{
+                      label: signupLabel,
+                      disabled: !canSignupNow,
+                      helper: signupHelper,
+                      allowWaitlist,
+                    }}
+                    onSignup={handleSignup}
+                    registrations={registrations}
+                    onCancelRegistration={handleCancelRegistration}
+                    workshop={
+                      isWorkshop && workshopCapacity
+                        ? {
+                            capacity: workshopCapacity,
+                            spotsLeft: Math.max(workshopCapacity - workshopCount, 0),
+                          }
+                        : undefined
+                    }
+                    participantsByLevel={participantsByLevel}
+                  />
+                </div>
+              </aside>
+            </div>
           </div>
         </section>
+
+        {/* Partner CTA (sits above global newsletter section) */}
+        <div className="w-full px-4 md:px-6 mt-20">
+          <section className="relative rounded-xl p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
+            <img
+              src={imageSrc('/images/250923_kandiegangsocialride-10-2048x1539')}
+              alt="Kandie Gang Social Ride"
+              width={1920}
+              height={1539}
+              className="absolute inset-0 w-full h-full object-cover object-top z-0 kandie-img-full"
+              aria-hidden
+            />
+            <style>{`
+                .kandie-img-full {
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  height: 100% !important;
+                }
+              `}</style>
+            {/* Add this style block to your global CSS or a CSS module instead of inline here:
+              .kandie-img-full {
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+              }
+              */}
+            <div className="absolute inset-0 bg-slate-900/70" aria-hidden />
+            <div className="relative z-10 flex flex-col items-center">
+              <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">
+                Become a Kandie Gang Member
+              </h2>
+              <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
+                Members only access, product discounts, and more.
+              </p>
+              <Link
+                to="/shop/kandie-gang-cycling-club-membership"
+                className="group inline-flex flex-nowrap items-center justify-center gap-2 rounded-full border border-white bg-transparent px-6 py-4 text-sm font-medium text-secondary-blush transition-colors hover:border-secondary-blush hover:bg-secondary-blush hover:text-white active:scale-95 md:gap-2 md:text-base"
+              >
+                <span>Join us</span>
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary-blush/20 p-1 transition-colors group-hover:bg-white">
+                  <svg
+                    className="h-3 w-3 text-secondary-blush transition-colors"
+                    stroke="currentColor"
+                    fill="none"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    viewBox="0 0 24 24"
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </span>
+              </Link>
+            </div>
+          </section>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -10,7 +10,7 @@ interface EventSidebarCardProps {
   levels?: Array<{
     levelKey: string;
     label: string;
-    guides: string[];
+    guides: Array<{ id: string | number; name?: string; email?: string }>;
     pace?: string;
     distanceKm?: number | null;
     routeUrl?: string;
@@ -34,10 +34,11 @@ interface EventSidebarCardProps {
     capacity: number;
     spotsLeft?: number;
   };
-  currentUser?: { email: string; id: string; name?: string };
+  // currentUser?: { email: string; id: string; name?: string };
   participantsByLevel?: Record<string, Array<{ name: string; id: string }>>;
 }
 
+import { useAuth } from '../../context/AuthContext';
 const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   date,
   time,
@@ -53,9 +54,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   registrations,
   onCancelRegistration,
   workshop,
-  currentUser,
   participantsByLevel,
 }) => {
+  const { profile: currentUser } = useAuth();
   const labelClass = 'text-xs tracking-[0.08em] text-secondary-purple-rain';
   const valueClass = 'text-sm text-primary-ink';
   const locationLines = location.split('\n');
@@ -140,13 +141,19 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
             {isWorkshop
               ? levels.map((level) => {
                   const registration = registrations?.[level.levelKey];
-                  const isGuide = currentUser && level.guides.includes(currentUser.email);
+                  const isGuide = !!(
+                    currentUser &&
+                    currentUser.is_guide &&
+                    currentUser.wp_user_id &&
+                    Array.isArray(level.guides) &&
+                    level.guides.some((g) => String(g.id) === String(currentUser.wp_user_id))
+                  );
                   return (
                     <div
                       key={level.label}
                       className="border-t border-black/10 py-3 first:border-t-0"
                     >
-                      <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
+                      <span className="text-sm font-normal text-primary-ink flex items-center gap-2">
                         {level.label}
                         {isGuide && (
                           <button
@@ -173,7 +180,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                       <div className="pt-2 space-y-3">
                         <div>
                           <p className={labelClass}>Guides</p>
-                          <p className={valueClass}>{level.guides.join(', ')}</p>
+                          <p className={valueClass}>
+                            {level.guides.map((g) => g.name || g.email || g.id).join(', ')}
+                          </p>
                         </div>
                         <div>
                           <p className={labelClass}>Spots Available</p>
@@ -242,7 +251,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                               onClick={() =>
                                 setCancelTarget({ key: level.levelKey, label: level.label })
                               }
-                              className="mt-1 text-xs text-secondary-drift hover:underline"
+                              className="mt-1 text-xs text-secondary-purple-rain hover:underline"
                             >
                               Can't make it? Cancel your spot
                             </button>
@@ -250,7 +259,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                         ) : (
                           <button
                             type="button"
-                            className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full bg-secondary-purple-rain hover:bg-secondary-purple-rain/80 text-white font-semibold py-2 px-4 rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             disabled={
                               (!signupState?.allowWaitlist && level.isSoldOut) ||
                               signupState?.disabled ||
@@ -275,7 +284,13 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                   // ...existing code for toggling/accordion UI...
                   const isOpen = openIndex === index;
                   const registration = registrations?.[level.levelKey];
-                  const isGuide = currentUser && level.guides.includes(currentUser.email);
+                  const isGuide = !!(
+                    currentUser &&
+                    currentUser.is_guide &&
+                    currentUser.wp_user_id &&
+                    Array.isArray(level.guides) &&
+                    level.guides.some((g) => String(g.id) === String(currentUser.wp_user_id))
+                  );
                   return (
                     <div
                       key={level.label}
@@ -286,7 +301,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                         onClick={() => toggleIndex(index)}
                         className="flex w-full items-start justify-between text-left group"
                       >
-                        <span className="text-sm font-medium text-primary-ink flex items-center gap-2">
+                        <span className="text-sm font-normal text-primary-ink flex items-center gap-2">
                           {level.label}
                           {/* Guide info icon */}
                           {isGuide && (
@@ -321,7 +336,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                         <div className="pt-2 space-y-3">
                           <div>
                             <p className={labelClass}>Guides</p>
-                            <p className={valueClass}>{level.guides.join(', ')}</p>
+                            <p className={valueClass}>
+                              {level.guides.map((g) => g.name || g.email || g.id).join(', ')}
+                            </p>
                           </div>
                           <div>
                             <p className={labelClass}>Spots Available</p>
@@ -398,7 +415,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           ) : (
                             <button
                               type="button"
-                              className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                              className="w-full bg-secondary-purple-rain hover:bg-secondary-signal text-white font-normal py-2 px-4 rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                               disabled={
                                 (!signupState?.allowWaitlist && level.isSoldOut) ||
                                 signupState?.disabled ||
@@ -433,10 +450,19 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
             onClick={() => setParticipantsSidebar(null)}
           >
             <div
-              className="w-full max-w-md h-full bg-white shadow-lg p-6 overflow-y-auto"
+              className="relative w-full max-w-md h-full bg-white shadow-lg p-6 overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4">
+              {/* X Close Button */}
+              <button
+                type="button"
+                aria-label="Close sidebar"
+                className="absolute top-4 right-4 text-slate-400 hover:text-black focus:outline-none text-2xl"
+                onClick={() => setParticipantsSidebar(null)}
+              >
+                &times;
+              </button>
+              <h3 className="text-lg font-normal mb-4 mt-2">
                 {participantsSidebar.label} Participants
               </h3>
               <ul className="space-y-2">
@@ -513,9 +539,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
         <hr className="border-t border-black/10" />
         {type && <div className="mb-4" />}
         <div>
-          <p className={labelClass}>Open Registration</p>
+          <p className={labelClass}>General Registration</p>
           <p className={valueClass}>
-            {isPublic ? 'Yes' : countdownLabel ? `Available in ${countdownLabel}` : 'No'}
+            {isPublic ? 'Open' : countdownLabel ? `Available in ${countdownLabel}` : 'Closed'}
           </p>
         </div>
       </div>

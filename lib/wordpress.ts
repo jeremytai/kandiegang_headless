@@ -4,19 +4,26 @@
  * Optimized for performance and clean architecture.
  */
 
-import { STORY_BLOCKS_QUERY } from './graphql/storyBlocks';
-import type { StoryBlocksData } from './storyGalleries';
+import { STORY_BLOCKS_QUERY } from './graphql/storyBlocks.ts';
+import type { StoryBlocksData } from './storyGalleries.ts';
 
 // WordPress GraphQL endpoint from environment variable
 // Falls back to demo endpoint if not configured
 const WP_GRAPHQL_URL =
-  import.meta.env.VITE_WP_GRAPHQL_URL || 'https://wp-origin.kandiegang.com/graphql';
+  typeof process !== 'undefined' && process.env && process.env.VITE_WP_GRAPHQL_URL
+    ? process.env.VITE_WP_GRAPHQL_URL
+    : typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WP_GRAPHQL_URL
+      ? import.meta.env.VITE_WP_GRAPHQL_URL
+      : 'https://wp-origin.kandiegang.com/graphql';
 
 // Only rewrite media URLs when a CDN base is explicitly set (e.g. public S3 or CloudFront).
-const MEDIA_CDN_BASE = (import.meta.env.VITE_MEDIA_CDN_URL as string | undefined)?.replace(
-  new RegExp('/$'),
-  ''
-);
+const MEDIA_CDN_BASE = (
+  typeof process !== 'undefined' && process.env && process.env.VITE_MEDIA_CDN_URL
+    ? process.env.VITE_MEDIA_CDN_URL
+    : typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_MEDIA_CDN_URL
+      ? import.meta.env.VITE_MEDIA_CDN_URL
+      : undefined
+)?.replace(new RegExp('/$'), '');
 
 /** Matches kandiegang.com origin (http(s), optional www) for replacement with CDN. */
 const KANDIEGANG_ORIGIN = /^https?:\/\/(www\.)?kandiegang\.com/;
@@ -163,14 +170,22 @@ export async function wpQuery<T>(
         const errorMessages = json.errors.map((e) => e.message).join(', ');
         console.error('[WordPress] GraphQL Errors:', json.errors);
         console.error('[WordPress] Full error details:', JSON.stringify(json.errors, null, 2));
-        if (import.meta.env.DEV) {
+        const isDev =
+          (typeof process !== 'undefined' &&
+            process.env &&
+            process.env.NODE_ENV === 'development') ||
+          (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+        if (isDev) {
           console.error('[WordPress] Query that failed:', query);
           console.error('[WordPress] Variables:', variables);
         }
         throw new Error(`GraphQL Error: ${errorMessages}`);
       }
 
-      if (import.meta.env.DEV && json.data) {
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+        (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+      if (isDev && json.data) {
         console.log('[WordPress] Query successful');
       }
 
@@ -1273,7 +1288,10 @@ export function extractProductImagesFromBlocks(
 export async function getProductBySlug(
   slug: string
 ): Promise<(WPProductDetail & { mediaItems?: ProductMediaItemNode[] }) | null> {
-  if (import.meta.env.DEV) {
+  const isDev =
+    (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+    (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+  if (isDev) {
     console.log('[Product] Fetching product with slug:', slug);
   }
 
@@ -1285,7 +1303,10 @@ export async function getProductBySlug(
       { useCache: true }
     );
     if (data.shopProduct) {
-      if (import.meta.env.DEV) {
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+        (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+      if (isDev) {
         console.log('[Product] ✓ Found via shopProduct query:', slug);
       }
       return {
@@ -1296,13 +1317,19 @@ export async function getProductBySlug(
         mediaItems: data.mediaItems?.nodes,
       };
     } else {
-      if (import.meta.env.DEV) {
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+        (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+      if (isDev) {
         console.warn('[Product] shopProduct query returned null for slug:', slug);
       }
     }
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    if (import.meta.env.DEV) {
+    const isDev =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+    if (isDev) {
       console.warn('[Product] shopProduct query failed:', errorMsg);
       console.warn('[Product] Full error:', error);
     }
@@ -1317,7 +1344,10 @@ export async function getProductBySlug(
     );
     if (fallbackData.shopProducts?.nodes?.length > 0) {
       const node = fallbackData.shopProducts.nodes[0];
-      if (import.meta.env.DEV) {
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+        (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+      if (isDev) {
         console.log('[Product] ✓ Found via shopProducts filter query:', slug);
       }
       return {
@@ -1327,13 +1357,19 @@ export async function getProductBySlug(
         mediaItems: fallbackData.mediaItems?.nodes,
       };
     } else {
-      if (import.meta.env.DEV) {
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+        (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+      if (isDev) {
         console.warn('[Product] shopProducts filter query returned no results for slug:', slug);
       }
     }
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    if (import.meta.env.DEV) {
+    const isDev =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+    if (isDev) {
       console.warn('[Product] shopProducts filter query also failed:', errorMsg);
       console.warn('[Product] Full error:', error);
     }
@@ -1354,7 +1390,10 @@ export async function getProductBySlug(
             .endsWith(slugLower))
     );
     if (match) {
-      if (import.meta.env.DEV) {
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+        (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+      if (isDev) {
         console.log('[Product] ✓ Found via products list fallback:', slug);
       }
       return {
@@ -1364,7 +1403,10 @@ export async function getProductBySlug(
       } as WPProductDetail & { mediaItems?: ProductMediaItemNode[] };
     }
   } catch (error) {
-    if (import.meta.env.DEV) {
+    const isDev =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+    if (isDev) {
       console.warn('[Product] List fallback failed:', error);
     }
   }
@@ -1493,7 +1535,7 @@ export interface GetKandieEventsResponse {
  */
 export async function getKandieEvents(first: number = 20): Promise<WPRideEvent[] | null> {
   try {
-    const { GET_KANDIE_EVENTS_QUERY } = await import('./graphql/communityEvents');
+    const { GET_KANDIE_EVENTS_QUERY } = await import('./graphql/communityEvents.ts');
     const data = await wpQuery<GetKandieEventsResponse>(
       GET_KANDIE_EVENTS_QUERY,
       { first },
@@ -1525,14 +1567,17 @@ export async function getKandieEvents(first: number = 20): Promise<WPRideEvent[]
  */
 export async function getKandieEventBySlug(slug: string): Promise<WPRideEvent | null> {
   try {
-    const { GET_KANDIE_EVENT_QUERY } = await import('./graphql/communityEvents');
+    const { GET_KANDIE_EVENT_QUERY } = await import('./graphql/communityEvents.ts');
     const data = await wpQuery<{ rideEvent: WPRideEvent | null }>(
       GET_KANDIE_EVENT_QUERY,
       { slug },
       { useCache: true }
     );
 
-    if (import.meta.env.DEV) {
+    const isDev =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+    if (isDev) {
       console.log('[Event] Fetched event:', data.rideEvent);
     }
 
