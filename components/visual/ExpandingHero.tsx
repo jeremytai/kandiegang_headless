@@ -50,7 +50,7 @@ export const ExpandingHero: React.FC<ExpandingHeroProps> = ({
   const srcSet = imageUrl ? undefined : imageSrcSet(defaultPath);
 
   return (
-    <section ref={containerRef} className="relative h-[102vh] md:h-[104vh] bg-primary-breath">
+    <section ref={containerRef} className="relative h-[100vh] md:h-[100vh] bg-primary-breath">
       <div className="h-screen w-full flex flex-col items-center overflow-hidden">
         <motion.div
           style={{
