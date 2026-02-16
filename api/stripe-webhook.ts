@@ -131,8 +131,8 @@ async function handleSubscriptionEvent(event: Stripe.Event, res: NextApiResponse
   const updates: any = {
     stripe_subscription_id: subscription.id,
     stripe_subscription_status: subscription.status,
-    subscription_current_period_end: subscription.current_period_end
-      ? new Date((subscription.current_period_end as number) * 1000).toISOString()
+    subscription_current_period_end: (subscription as any).current_period_end
+      ? new Date((subscription as any).current_period_end * 1000).toISOString()
       : null,
     subscription_cancel_at_period_end: (subscription as any).cancel_at_period_end ?? null,
     is_member: isMember,
@@ -140,8 +140,8 @@ async function handleSubscriptionEvent(event: Stripe.Event, res: NextApiResponse
   };
 
   // Update expiration date
-  if (isMember && subscription.current_period_end) {
-    updates.membership_expiration = new Date((subscription.current_period_end as number) * 1000)
+  if (isMember && (subscription as any).current_period_end) {
+    updates.membership_expiration = new Date((subscription as any).current_period_end * 1000)
       .toISOString()
       .split('T')[0];
   }
