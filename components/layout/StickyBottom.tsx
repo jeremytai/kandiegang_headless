@@ -31,9 +31,7 @@ export const StickyBottom: React.FC = () => {
   const isCyclingClubPage = location.pathname === '/kandiegangcyclingclub';
 
   // Call all hooks unconditionally to satisfy Rules of Hooks (avoids React #300 on auth change, e.g. Discord OAuth return).
-  const { scrollY } = useScroll({
-    layoutEffect: false,
-  });
+  const { scrollY } = useScroll();
   const bottomYOffset = useTransform(scrollY, [1200, 1800], [0, 150]);
   const bottomOpacity = useTransform(scrollY, [1200, 1800], [1, 0]);
 
@@ -89,7 +87,7 @@ export const StickyBottom: React.FC = () => {
               </span>
               <div className="flex items-center gap-2">
                 {isCyclingClubPage ? (
-                  <span className="text-[11px] font-medium text-black/60">€60.00/year</span>
+                  <span className="text-[11px] font-medium text-black/60">€80.00/year</span>
                 ) : (
                   <>
                     <span className="text-[11px] font-medium text-black/60">
