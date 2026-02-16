@@ -211,7 +211,7 @@ const App: React.FC = () => {
                   {/* Main Content */}
                   <motion.div
                     className={[
-                      'relative z-10 w-full bg-white overflow-hidden min-h-screen',
+                      'relative z-10 w-full bg-pink-50 overflow-hidden min-h-screen',
                       // Rounded corners temporarily removed to debug vignette
                       // 'rounded-b-[24px] rounded-t-none',
                     ].join(' ')}
