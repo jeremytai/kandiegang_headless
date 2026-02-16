@@ -191,7 +191,7 @@ const App: React.FC = () => {
   // Frame: keep rounded corners visible from the start.
   // Keep spacing aligned with commit 37f4691 by NOT adding extra frame padding.
   const scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
-  const opacity = useTransform(smoothProgress, [0, 0.9], [1, 0.95]);
+  // Opacity removed to eliminate vignette effect
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
   return (
@@ -212,10 +212,9 @@ const App: React.FC = () => {
                   <motion.div
                     style={{
                       scale,
-                      opacity,
                       y,
                       transformOrigin: 'bottom center',
-                      willChange: 'transform, opacity',
+                      willChange: 'transform',
                     }}
                     className={[
                       'relative z-10 bg-white overflow-clip min-h-screen',
