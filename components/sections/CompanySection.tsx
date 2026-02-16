@@ -5,13 +5,13 @@
  * - A high-fidelity, interactive team list.
  * - TeamLink component: Uses spring-based physics to make profile images follow the user's cursor on hover.
  * - Responsive grid that highlights the international presence of the team.
- * - Guide names and images are derived from public/images/guides (first name = part before underscore).
+ * - Guide data fetched from WordPress via GraphQL.
  */
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useSpring, AnimatePresence } from 'framer-motion';
-import { imageSrc } from '../../lib/images';
+import { getRideGuides, type RideGuide, transformMediaUrl } from '../../lib/wordpress';
 
 /** Fisher–Yates shuffle; returns a new array so the original order is unchanged. */
 function shuffle<T>(arr: readonly T[]): T[] {
@@ -23,53 +23,13 @@ function shuffle<T>(arr: readonly T[]): T[] {
   return out;
 }
 
-/** Derive display name from filename: part before first underscore, capitalized. No underscore = whole name. */
-function firstNameFromFilename(filename: string): string {
-  const base = filename.replace(/\.[^.]+$/, '');
-  const first = base.includes('_') ? base.split('_')[0] : base;
-  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+/** Guide data structure from WordPress */
+interface Guide {
+  name: string;
+  url?: string;
+  image: string;
+  slug: string;
 }
-
-/** Guide image base paths (no extension) under public/images/guides. Names are derived from filename. */
-const GUIDE_IMAGES = [
-  'bjoern_h',
-  'christian_m',
-  'emma_b',
-  'jeremy',
-  'kathi_s',
-  'katrin_h',
-  'kucki',
-  'michael_m',
-  'rilana_s',
-  'ruth_p',
-  'saskia_s',
-  'sebastian_w',
-  'silvi_b_',
-  'tanja_d',
-  'wiepke_h',
-] as const;
-
-/**
- * Optional URL for each guide (key = base path from GUIDE_IMAGES).
- * Add Strava, Instagram, personal site, or internal path (e.g. /guides/jeremy).
- * Omit or leave empty to show the pill without a link.
- */
-const GUIDE_LINKS: Partial<Record<(typeof GUIDE_IMAGES)[number], string>> = {
-  jeremy: 'https://www.strava.com/athletes/4653468',
-  emma_b: 'https://www.instagram.com/kandie_gang/',
-  rilana_s: 'https://www.strava.com/athletes/50138380',
-  silvi_b_: 'https://www.instagram.com/kandie_gang/',
-  tanja_d: 'https://www.strava.com/athletes/103874645',
-  wiepke_h: 'https://www.strava.com/athletes/93143903',
-  bjoern_h: 'https://www.instagram.com/kandie_gang/',
-  christian_m: 'https://www.strava.com/athletes/25770175',
-  katrin_h: 'https://www.strava.com/athletes/41164599',
-  michael_m: 'https://www.strava.com/athletes/18695419',
-  ruth_p: 'https://www.instagram.com/kandie_gang/',
-  saskia_s: 'https://www.instagram.com/kandie_gang/',
-  kathi_s: 'https://www.strava.com/athletes/5526439',
-  kucki: 'https://www.strava.com/athletes/41399643',
-};
 
 /** Secondary pill styles: background + text. White text on dark/secondary; Signal (yellow) uses current or purple-rain text. */
 const PILL_STYLES = [
@@ -188,7 +148,65 @@ const TeamLink: React.FC<{
 };
 
 export const CompanySection: React.FC = () => {
-  const shuffledGuides = useMemo(() => shuffle(GUIDE_IMAGES), []);
+  const [guides, setGuides] = useState<Guide[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch guides from WordPress on mount
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchGuides = async () => {
+      try {
+        const wpGuides = await getRideGuides();
+        if (cancelled) return;
+
+        // Transform WordPress data to component format
+        const transformedGuides: Guide[] = wpGuides.map((guide) => ({
+          name: guide.title || 'Guide',
+          url: guide.guideDetails?.link || undefined,
+          image: guide.featuredImage?.node?.sourceUrl
+            ? transformMediaUrl(guide.featuredImage.node.sourceUrl)
+            : '/images/guides/placeholder.jpg',
+          slug: guide.slug || '',
+        }));
+
+        setGuides(transformedGuides);
+      } catch (error) {
+        console.error('[CompanySection] Failed to fetch guides:', error);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchGuides();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Shuffle guides once after loading
+  const shuffledGuides = useMemo(() => {
+    return loading ? [] : shuffle(guides);
+  }, [guides, loading]);
+
+  if (loading) {
+    return (
+      <section className="py-40 px-6 bg-breath flex flex-col items-center">
+        <div className="max-w-4xl w-full text-center">
+          <h2 className="text-3xl md:text-7xl font-light tracking-tight text-secondary-current text-balance mb-12 md:mb-16">
+            Kandie Gang Guides
+          </h2>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-6">
+            <p className="text-slate-400">Loading guides...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-40 px-6 bg-breath flex flex-col items-center">
       <div className="max-w-4xl w-full text-center">
@@ -196,12 +214,12 @@ export const CompanySection: React.FC = () => {
           Kandie Gang Guides
         </h2>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-6">
-          {shuffledGuides.map((basePath, i) => (
+          {shuffledGuides.map((guide, i) => (
             <TeamLink
-              key={basePath}
-              name={firstNameFromFilename(basePath)}
-              url={GUIDE_LINKS[basePath]}
-              image={imageSrc(`/images/guides/${basePath}`, 400)}
+              key={guide.slug || guide.name}
+              name={guide.name}
+              url={guide.url}
+              image={guide.image}
               pillClassName={PILL_STYLES[i % PILL_STYLES.length]}
             />
           ))}

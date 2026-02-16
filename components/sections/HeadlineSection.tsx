@@ -4,25 +4,13 @@
  * Features:
  * - High-impact, geometric typography that defines the brand's aesthetic.
  * - Responsive: Adjusted font sizing and text balancing for all screen widths.
+ * - Guide photos fetched from WordPress via GraphQL.
  */
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { AnimatedHeadline } from '../visual/AnimatedHeadline';
-import { imageSrc } from '../../lib/images';
-
-/** Guide photos from public/images/guides (base path without extension). */
-const HEADLINE_IMAGE_BASES = [
-  '/images/guides/emma_b',
-  '/images/guides/jeremy',
-  '/images/guides/katrin_h',
-  '/images/guides/rilana_s',
-  '/images/guides/ruth_p',
-  '/images/guides/saskia_s',
-  '/images/guides/sebastian_w',
-  '/images/guides/silvi_b_',
-  '/images/guides/tanja_d',
-];
+import { getRideGuides, transformMediaUrl } from '../../lib/wordpress';
 
 function shuffle<T>(arr: readonly T[]): T[] {
   const out = [...arr];
@@ -38,18 +26,53 @@ const ROTATE_INTERVAL_MS = 3000;
 export const HeadlineSection: React.FC = () => {
   const ref = useRef<HTMLDivElement>(null);
   const [imageIndex, setImageIndex] = useState(0);
-  const shuffledBases = useMemo(() => shuffle(HEADLINE_IMAGE_BASES), []);
+  const [guideImages, setGuideImages] = useState<string[]>([]);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end end'],
   });
 
+  // Fetch guide images from WordPress on mount
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchGuideImages = async () => {
+      try {
+        const guides = await getRideGuides();
+        if (cancelled) return;
+
+        // Extract image URLs and filter out any without images
+        const imageUrls = guides
+          .filter((guide) => guide.featuredImage?.node?.sourceUrl)
+          .map((guide) => transformMediaUrl(guide.featuredImage!.node.sourceUrl));
+
+        setGuideImages(imageUrls);
+      } catch (error) {
+        console.error('[HeadlineSection] Failed to fetch guide images:', error);
+      }
+    };
+
+    fetchGuideImages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Shuffle images once after loading
+  const shuffledImages = useMemo(() => {
+    return guideImages.length > 0 ? shuffle(guideImages) : [];
+  }, [guideImages]);
+
+  // Rotate through images
+  useEffect(() => {
+    if (shuffledImages.length === 0) return;
+
     const id = setInterval(() => {
-      setImageIndex((i) => (i + 1) % shuffledBases.length);
+      setImageIndex((i) => (i + 1) % shuffledImages.length);
     }, ROTATE_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [shuffledBases.length]);
+  }, [shuffledImages.length]);
 
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
@@ -62,13 +85,15 @@ export const HeadlineSection: React.FC = () => {
       >
         <h1 className="text-5xl md:text-8xl lg:text-[8.5vw] font-heading-thin tracking-normal leading-[0.85] text-secondary-purple-rain mb-2 md:mb-4 text-balance inline-flex flex-wrap items-center justify-center gap-x-[0.15em]">
           <AnimatedHeadline text="You found us " as="span" />
-          <img
-            key={imageIndex}
-            src={imageSrc(shuffledBases[imageIndex], 400)}
-            alt=""
-            className="inline-block w-[0.85em] h-[0.85em] min-w-[2.5rem] min-h-[2.5rem] md:min-w-[3.5rem] md:min-h-[3.5rem] rounded-full object-cover align-middle mx-0.5"
-            aria-hidden
-          />
+          {shuffledImages.length > 0 && (
+            <img
+              key={imageIndex}
+              src={shuffledImages[imageIndex]}
+              alt=""
+              className="inline-block w-[0.85em] h-[0.85em] min-w-[2.5rem] min-h-[2.5rem] md:min-w-[3.5rem] md:min-h-[3.5rem] rounded-full object-cover align-middle mx-0.5"
+              aria-hidden
+            />
+          )}
           <AnimatedHeadline text="!" as="span" />
         </h1>
 

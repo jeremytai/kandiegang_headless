@@ -1466,11 +1466,16 @@ export async function getProductVariants(parentId: string): Promise<WPProductVar
 
 export interface RideGuide {
   title: string;
+  slug?: string;
   featuredImage?: {
     node: {
       sourceUrl: string;
       altText?: string;
     };
+  };
+  guideDetails?: {
+    bio?: string;
+    link?: string;
   };
 }
 
@@ -1585,5 +1590,67 @@ export async function getKandieEventBySlug(slug: string): Promise<WPRideEvent | 
   } catch (error) {
     console.error(`[Event] Failed to fetch event with slug "${slug}":`, error);
     return null;
+  }
+}
+
+/**
+ * Query to fetch all ride guides with their details.
+ */
+export const GET_RIDE_GUIDES_QUERY = `
+  query GetRideGuides($first: Int!) {
+    rideGuides(first: $first, where: { status: PUBLISH }) {
+      nodes {
+        id
+        databaseId
+        title
+        slug
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        guideDetails {
+          bio
+          link
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Response shape for GET_RIDE_GUIDES_QUERY.
+ */
+export interface GetRideGuidesResponse {
+  rideGuides: {
+    nodes: RideGuide[];
+  };
+}
+
+/**
+ * Helper function to fetch all ride guides from WordPress.
+ * @param first - Number of guides to fetch (default 100)
+ * @returns Array of ride guides or empty array if query fails
+ */
+export async function getRideGuides(first: number = 100): Promise<RideGuide[]> {
+  try {
+    const data = await wpQuery<GetRideGuidesResponse>(
+      GET_RIDE_GUIDES_QUERY,
+      { first },
+      { useCache: true }
+    );
+
+    const isDev =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+      (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+    if (isDev) {
+      console.log('[Guides] Fetched guides:', data.rideGuides?.nodes?.length);
+    }
+
+    return data.rideGuides?.nodes ?? [];
+  } catch (error) {
+    console.error('[Guides] Failed to fetch guides from WordPress:', error);
+    return [];
   }
 }
