@@ -133,7 +133,8 @@ export const HorizontalScrollSection: React.FC<HorizontalScrollSectionProps> = (
   }, [handleScroll]);
 
   // Use Tailwind for dynamic height and will-change, avoid inline styles
-  const sectionHeightClass = dimensions.containerHeight > 0 ? `!h-[${dimensions.containerHeight}px]` : 'min-h-screen';
+  const sectionHeightClass =
+    dimensions.containerHeight > 0 ? `!h-[${dimensions.containerHeight}px]` : 'min-h-screen';
   return (
     <section ref={containerRef} className={`relative ${className} ${sectionHeightClass}`}>
       <div ref={stickyRef} className="sticky top-0 h-screen overflow-hidden will-change-transform">
