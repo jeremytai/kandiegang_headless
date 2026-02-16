@@ -76,7 +76,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const stripe =
   stripeSecretKey && webhookSecret
-    ? new Stripe(stripeSecretKey, { apiVersion: '2024-12-18.acacia' })
+    ? new Stripe(stripeSecretKey, { apiVersion: '2026-01-28.clover' })
     : null;
 
 function isClubMembershipPurchase(productSlugs: string | null | undefined): boolean {
