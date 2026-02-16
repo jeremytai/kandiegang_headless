@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     const { data, error } = await adminClient
       .from('auth_providers')
-      .upsert([body], { onConflict: ['provider_type', 'provider_user_id'] });
+      .upsert([body], { onConflict: 'provider_type,provider_user_id' });
     if (error) {
       console.error('auth-providers error:', error);
       return res.status(500).json({ error: error.message || 'Failed to insert auth provider' });

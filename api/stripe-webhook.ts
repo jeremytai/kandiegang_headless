@@ -131,22 +131,24 @@ async function handleSubscriptionEvent(event: Stripe.Event, res: NextApiResponse
   const updates: any = {
     stripe_subscription_id: subscription.id,
     stripe_subscription_status: subscription.status,
-    subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-    subscription_cancel_at_period_end: subscription.cancel_at_period_end,
+    subscription_current_period_end: (subscription as any).current_period_end
+      ? new Date((subscription as any).current_period_end * 1000).toISOString()
+      : null,
+    subscription_cancel_at_period_end: (subscription as any).cancel_at_period_end ?? null,
     is_member: isMember,
     membership_source: 'supabase',
   };
 
   // Update expiration date
-  if (isMember) {
-    updates.membership_expiration = new Date(subscription.current_period_end * 1000)
+  if (isMember && (subscription as any).current_period_end) {
+    updates.membership_expiration = new Date((subscription as any).current_period_end * 1000)
       .toISOString()
       .split('T')[0];
   }
 
   // Update billing cycle anchor if present
-  if (subscription.billing_cycle_anchor) {
-    updates.billing_cycle_anchor = new Date(subscription.billing_cycle_anchor * 1000).toISOString();
+  if ((subscription as any).billing_cycle_anchor) {
+    updates.billing_cycle_anchor = new Date((subscription as any).billing_cycle_anchor * 1000).toISOString();
   }
 
   // Handle subscription deletion
@@ -188,23 +190,25 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
   });
 
   // Get subscription details
-  const subscriptionId =
-    typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+  const subscriptionId = typeof (invoice as any).subscription === 'string' ? (invoice as any).subscription : null;
 
   if (subscriptionId) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+    const currentPeriodEnd = (subscription as any).current_period_end;
+    const status = (subscription as any).status;
 
     const { error } = await supabase
       .from('profiles')
       .update({
         is_member: true,
-        membership_expiration: new Date(subscription.current_period_end * 1000)
-          .toISOString()
-          .split('T')[0],
-        subscription_current_period_end: new Date(
-          subscription.current_period_end * 1000
-        ).toISOString(),
-        stripe_subscription_status: subscription.status,
+        membership_expiration: currentPeriodEnd
+          ? new Date(currentPeriodEnd * 1000).toISOString().split('T')[0]
+          : null,
+        subscription_current_period_end: currentPeriodEnd
+          ? new Date(currentPeriodEnd * 1000).toISOString()
+          : null,
+        stripe_subscription_status: status,
       })
       .eq('stripe_customer_id', customerId);
 

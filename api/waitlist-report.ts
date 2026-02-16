@@ -1,7 +1,7 @@
 // Migrated from /api/waitlist-report.ts to Next.js API route
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import { checkRateLimit } from './_rateLimit';
+import { checkRateLimit } from '../lib/rateLimit';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;

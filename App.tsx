@@ -15,8 +15,8 @@ import { Preloader } from './components/layout/Preloader';
 import { WeatherStatusBackground } from './components/visual/WeatherStatusBackground';
 import { ExpandingHero } from './components/visual/ExpandingHero';
 import { ScrollingHeadline } from './components/visual/ScrollingHeadline';
-import { HorizontalScrollSectionFramer } from './components/visual/HorizontalScrollSectionFramer';
 import { HomepageRotatingHeadline } from './components/visual/HomepageRotatingHeadline';
+import { HorizontalRevealSection } from './components/visual/HorizontalRevealSection';
 import { CompanySection } from './components/sections/CompanySection';
 import { FAQSection } from './components/sections/FAQSection';
 import { StickyTop } from './components/layout/StickyTop';
@@ -99,6 +99,9 @@ const EventCancelPage = lazy(() =>
 );
 const WaitlistAdminPage = lazy(() =>
   import('./pages/members/WaitlistAdminPage').then((m) => ({ default: m.WaitlistAdminPage }))
+);
+const AnalyticsDashboardPage = lazy(() =>
+  import('./pages/admin/AnalyticsDashboardPage').then((m) => ({ default: m.AnalyticsDashboardPage }))
 );
 const SignUpPage = lazy(() =>
   import('./pages/members/SignUpPage').then((m) => ({ default: m.SignUpPage }))
@@ -264,6 +267,7 @@ const App: React.FC = () => {
                           <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
                           <Route path="/event/cancel" element={<EventCancelPage />} />
                           <Route path="/admin/waitlist" element={<WaitlistAdminPage />} />
+                          <Route path="/admin/analytics" element={<AnalyticsDashboardPage />} />
                           <Route path="/signup" element={<SignUpPage />} />
                           <Route path="/members" element={<MembersAreaPage />} />
                           <Route path="/members/settings" element={<MembersSettingsPage />} />

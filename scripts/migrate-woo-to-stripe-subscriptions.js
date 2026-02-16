@@ -39,6 +39,42 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 
+// Load address data if available
+let addressData = {};
+const addressDataPath = join(root, 'address-data.json');
+if (existsSync(addressDataPath)) {
+  try {
+    addressData = JSON.parse(readFileSync(addressDataPath, 'utf8'));
+    console.log(`📍 Loaded address data for ${Object.keys(addressData).length} members`);
+  } catch (err) {
+    console.warn('⚠️  Could not load address-data.json:', err.message);
+  }
+}
+
+// Load WordPress user data if available
+let wordpressUsers = {};
+const wordpressUsersPath = join(root, 'wordpress-users.json');
+if (existsSync(wordpressUsersPath)) {
+  try {
+    wordpressUsers = JSON.parse(readFileSync(wordpressUsersPath, 'utf8'));
+    console.log(`🔑 Loaded WordPress user data for ${Object.keys(wordpressUsers).length} members`);
+  } catch (err) {
+    console.warn('⚠️  Could not load wordpress-users.json:', err.message);
+  }
+}
+
+// Load customer profile data if available
+let customerProfiles = {};
+const customerProfilesPath = join(root, 'customer-profiles.json');
+if (existsSync(customerProfilesPath)) {
+  try {
+    customerProfiles = JSON.parse(readFileSync(customerProfilesPath, 'utf8'));
+    console.log(`📊 Loaded customer profile data for ${Object.keys(customerProfiles).length} customers`);
+  } catch (err) {
+    console.warn('⚠️  Could not load customer-profiles.json:', err.message);
+  }
+}
+
 // ==================== CONFIGURATION ====================
 
 const DRY_RUN = process.env.DRY_RUN === 'true'; // Set to true for testing
@@ -148,6 +184,8 @@ function loadMembersFromCsv(csvPath) {
   const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase().trim());
   const emailIdx = headers.findIndex((h) => h === 'member_email' || h === 'email');
   const wpUserIdIdx = headers.findIndex((h) => h === 'user_id' || h === 'wp_user_id');
+  const firstNameIdx = headers.findIndex((h) => h === 'member_first_name' || h === 'first_name');
+  const lastNameIdx = headers.findIndex((h) => h === 'member_last_name' || h === 'last_name');
   const planIdx = headers.findIndex((h) => h === 'membership_plan' || h === 'plan');
   const statusIdx = headers.findIndex((h) => h === 'membership_status' || h === 'status');
   const sinceIdx = headers.findIndex((h) => h === 'member_since' || h === 'start_date');
@@ -172,6 +210,8 @@ function loadMembersFromCsv(csvPath) {
     const member = {
       email,
       wpUserId: wpUserIdIdx !== -1 ? fields[wpUserIdIdx] : null,
+      firstName: firstNameIdx !== -1 ? fields[firstNameIdx]?.trim() : null,
+      lastName: lastNameIdx !== -1 ? fields[lastNameIdx]?.trim() : null,
       membershipPlan: planIdx !== -1 ? fields[planIdx] : 'Kandie Gang Cycling Club Membership',
       membershipStatus: statusIdx !== -1 ? fields[statusIdx]?.toLowerCase() : 'active',
       memberSince: sinceIdx !== -1 ? parseDate(fields[sinceIdx]) : null,
@@ -221,15 +261,74 @@ async function getOrCreateStripeCustomer(member, existingCustomerId = null) {
     return { id: 'cus_dry_run_' + Date.now(), email: member.email };
   }
 
-  const customer = await stripe.customers.create({
+  // Build full name from first/last name if available
+  const fullName =
+    member.firstName && member.lastName
+      ? `${member.firstName} ${member.lastName}`.trim()
+      : member.firstName || member.lastName || member.email.split('@')[0];
+
+  // Get address data if available
+  const addressInfo = addressData[member.email];
+
+  // Get WordPress user data if available
+  const wpUserInfo = wordpressUsers[member.email];
+
+  // Get customer profile data if available
+  const profileInfo = customerProfiles[member.email];
+
+  // Build customer creation payload
+  const customerData = {
     email: member.email,
-    name: member.email.split('@')[0], // Use email prefix as name
+    name: fullName,
     metadata: {
-      wp_user_id: member.wpUserId || '',
+      // WordPress data
+      wp_user_id: member.wpUserId || wpUserInfo?.wp_user_id || '',
+      wp_username: wpUserInfo?.user_login || '',
+      wp_registered: wpUserInfo?.user_registered || '',
+
+      // Order history metrics
+      order_count: profileInfo?.order_count?.toString() || '0',
+      lifetime_value: profileInfo?.total_spent?.toFixed(2) || '0.00',
+      last_order_date: profileInfo?.last_order_date || '',
+      customer_since: profileInfo?.customer_since || wpUserInfo?.user_registered || '',
+
+      // Marketing & segments
+      accepts_marketing: profileInfo?.accepts_marketing ? 'true' : 'false',
+      member_areas: profileInfo?.member_areas || '',
+      tags: profileInfo?.tags || '',
+
+      // Migration metadata
       migrated_from: 'woocommerce',
       migration_date: new Date().toISOString(),
     },
-  });
+  };
+
+  // Add phone if available (prefer shipping phone from profiles, fallback to billing phone)
+  const phone =
+    profileInfo?.shipping_phone ||
+    profileInfo?.billing_phone ||
+    addressInfo?.phone;
+
+  if (phone) {
+    customerData.phone = phone;
+  }
+
+  // Add address if available (prefer shipping address from profiles, fallback to billing address)
+  const hasShippingAddress = profileInfo?.shipping_address1 || profileInfo?.shipping_city;
+  const hasBillingAddress = addressInfo?.address1 || addressInfo?.city;
+
+  if (hasShippingAddress || hasBillingAddress) {
+    customerData.address = {
+      line1: profileInfo?.shipping_address1 || addressInfo?.address1 || null,
+      line2: profileInfo?.shipping_address2 || addressInfo?.address2 || null,
+      city: profileInfo?.shipping_city || addressInfo?.city || null,
+      state: profileInfo?.shipping_state || addressInfo?.state || null,
+      postal_code: profileInfo?.shipping_zip || addressInfo?.postcode || null,
+      country: profileInfo?.shipping_country || addressInfo?.country || null,
+    };
+  }
+
+  const customer = await stripe.customers.create(customerData);
 
   console.log(`  ✓ Created Stripe Customer: ${customer.id}`);
   return customer;
@@ -245,6 +344,18 @@ async function createStripeSubscription(customer, member, priceId) {
   const expirationDate = member.membershipExpiration;
   const isExpired = !expirationDate || expirationDate < now;
 
+  if (DRY_RUN) {
+    console.log(`  [DRY RUN] Would create subscription for ${member.email}`);
+    console.log(`    - Price: ${priceId}`);
+    console.log(`    - Status: ${isExpired ? 'canceled' : 'trialing'}`);
+    console.log(`    - Expiration: ${expirationDate?.toISOString() || 'N/A'}`);
+    return {
+      id: 'sub_dry_run_' + Date.now(),
+      status: isExpired ? 'canceled' : 'trialing',
+      current_period_end: expirationDate ? Math.floor(expirationDate.getTime() / 1000) : null,
+    };
+  }
+
   // Check if subscription already exists
   const existingSubs = await stripe.subscriptions.list({
     customer: customer.id,
@@ -256,18 +367,6 @@ async function createStripeSubscription(customer, member, priceId) {
     const existing = existingSubs.data[0];
     console.log(`  ✓ Subscription already exists: ${existing.id} (${existing.status})`);
     return existing;
-  }
-
-  if (DRY_RUN) {
-    console.log(`  [DRY RUN] Would create subscription for ${member.email}`);
-    console.log(`    - Price: ${priceId}`);
-    console.log(`    - Status: ${isExpired ? 'canceled' : 'trialing'}`);
-    console.log(`    - Expiration: ${expirationDate?.toISOString() || 'N/A'}`);
-    return {
-      id: 'sub_dry_run_' + Date.now(),
-      status: isExpired ? 'canceled' : 'trialing',
-      current_period_end: expirationDate ? Math.floor(expirationDate.getTime() / 1000) : null,
-    };
   }
 
   if (isExpired) {
@@ -320,7 +419,7 @@ async function createStripeSubscription(customer, member, priceId) {
 
 // ==================== SUPABASE OPERATIONS ====================
 
-async function updateSupabaseProfile(member, customer, subscription) {
+async function updateSupabaseProfile(member, customer, subscription, isGuide = false) {
   if (DRY_RUN) {
     console.log(`  [DRY RUN] Would update Supabase profile for ${member.email}`);
     return { success: true };
@@ -337,7 +436,18 @@ async function updateSupabaseProfile(member, customer, subscription) {
     return { success: false, error: lookupError };
   }
 
+  // Build full name for display
+  const displayName =
+    member.firstName && member.lastName
+      ? `${member.firstName} ${member.lastName}`.trim()
+      : member.firstName || member.lastName || null;
+
+  // Get enriched customer data
+  const wpUserInfo = wordpressUsers[member.email];
+  const profileInfo = customerProfiles[member.email];
+
   const updates = {
+    // Stripe subscription fields
     stripe_customer_id: customer.id,
     stripe_subscription_id: subscription.id,
     stripe_subscription_status: subscription.status,
@@ -345,6 +455,20 @@ async function updateSupabaseProfile(member, customer, subscription) {
     membership_source: 'supabase', // Now managed by Stripe/Supabase
   };
 
+  // Basic profile fields
+  if (displayName) {
+    updates.display_name = displayName;
+  }
+
+  if (member.memberSince) {
+    updates.member_since = member.memberSince.toISOString().split('T')[0];
+  }
+
+  if (member.membershipExpiration) {
+    updates.membership_expiration = member.membershipExpiration.toISOString().split('T')[0];
+  }
+
+  // Subscription timing fields
   if (subscription.current_period_end) {
     updates.subscription_current_period_end = new Date(
       subscription.current_period_end * 1000
@@ -353,6 +477,65 @@ async function updateSupabaseProfile(member, customer, subscription) {
 
   if (subscription.billing_cycle_anchor) {
     updates.billing_cycle_anchor = new Date(subscription.billing_cycle_anchor * 1000).toISOString();
+  }
+
+  // Order metrics (for dashboard analytics)
+  if (profileInfo) {
+    updates.order_count = profileInfo.order_count || 0;
+    updates.lifetime_value = profileInfo.total_spent || 0;
+
+    if (profileInfo.last_order_date) {
+      updates.last_order_date = profileInfo.last_order_date;
+    }
+
+    if (profileInfo.customer_since) {
+      updates.customer_since = profileInfo.customer_since;
+    }
+
+    if (profileInfo.order_count > 0 && profileInfo.total_spent > 0) {
+      updates.avg_order_value = (profileInfo.total_spent / profileInfo.order_count).toFixed(2);
+    }
+
+    // Marketing & preferences
+    updates.accepts_marketing = profileInfo.accepts_marketing || false;
+    updates.subscriber_source = profileInfo.subscriber_source || null;
+
+    // Member areas as array
+    if (profileInfo.member_areas) {
+      const areas = profileInfo.member_areas.split(',').map(a => a.trim()).filter(Boolean);
+      if (areas.length > 0) {
+        updates.member_areas = areas;
+      }
+    }
+
+    // Tags as array
+    if (profileInfo.tags) {
+      const tagsList = profileInfo.tags.split(',').map(t => t.trim()).filter(Boolean);
+      if (tagsList.length > 0) {
+        updates.tags = tagsList;
+      }
+    }
+
+    // Phone numbers
+    if (profileInfo.shipping_phone) {
+      updates.shipping_phone = profileInfo.shipping_phone;
+    }
+    if (profileInfo.billing_phone) {
+      updates.billing_phone = profileInfo.billing_phone;
+    }
+  }
+
+  // WordPress data
+  if (wpUserInfo) {
+    updates.wp_username = wpUserInfo.user_login;
+    if (wpUserInfo.user_registered) {
+      updates.wp_registered = wpUserInfo.user_registered;
+    }
+  }
+
+  // Guide status
+  if (isGuide) {
+    updates.is_guide = true;
   }
 
   const { error: updateError } = await supabase
@@ -481,6 +664,45 @@ async function migrateMember(member, logPath) {
   console.log(`\n[${member.email}]`);
 
   try {
+    // Determine if this is a paying Club member or volunteer Guide
+    const isClubMember = member.membershipPlan?.toLowerCase().includes('cycling') &&
+                        (member.membershipPlan?.toLowerCase().includes('club') ||
+                         member.membershipPlan?.toLowerCase().includes('membership'));
+    const isGuide = member.membershipPlan?.toLowerCase().includes('guide');
+    const isGuideOnly = isGuide && !isClubMember;
+
+    if (isGuideOnly) {
+      console.log(`  ℹ️  Guide volunteer (no subscription needed)`);
+
+      // For Guide-only: Just update Supabase, no Stripe subscription
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('email', member.email)
+        .maybeSingle();
+
+      if (profile) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ is_guide: true })
+          .eq('id', profile.id);
+
+        if (error) {
+          throw new Error(`Failed to update Guide status: ${error.message}`);
+        }
+        console.log(`  ✓ Updated Supabase: is_guide = true`);
+      } else {
+        console.log(`  ⚠️  Profile not found in Supabase`);
+      }
+
+      logEntry.success = true;
+      logEntry.guide_only = true;
+      console.log(`  ✅ Guide volunteer updated (no billing)`);
+      appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
+      return logEntry;
+    }
+
+    // For Club members: Full migration with Stripe subscription
     // Step 1: Get existing Stripe customer ID from Supabase (if any)
     const { data: profile } = await supabase
       .from('profiles')
@@ -497,8 +719,8 @@ async function migrateMember(member, logPath) {
     logEntry.stripe_subscription_id = subscription.id;
     logEntry.subscription_status = subscription.status;
 
-    // Step 4: Update Supabase
-    const updateResult = await updateSupabaseProfile(member, customer, subscription);
+    // Step 4: Update Supabase (including is_guide if they're also a Guide)
+    const updateResult = await updateSupabaseProfile(member, customer, subscription, isGuide);
     if (!updateResult.success) {
       logEntry.errors.push('Failed to update Supabase');
     }
@@ -540,19 +762,20 @@ async function runMigration(csvPath) {
   const members = loadMembersFromCsv(csvPath);
   console.log(`Loaded ${members.length} members from CSV\n`);
 
-  // Filter for active "Kandie Gang Cycling Club Membership" members
+  // Filter for "Kandie Gang Cycling Club Membership" or "Kandie Gang Guide" members
   const clubMembers = members.filter(
     (m) =>
       m.membershipPlan &&
-      m.membershipPlan.toLowerCase().includes('cycling') &&
-      (m.membershipPlan.toLowerCase().includes('club') ||
-        m.membershipPlan.toLowerCase().includes('membership'))
+      ((m.membershipPlan.toLowerCase().includes('cycling') &&
+        (m.membershipPlan.toLowerCase().includes('club') ||
+          m.membershipPlan.toLowerCase().includes('membership'))) ||
+       m.membershipPlan.toLowerCase().includes('guide'))
   );
 
-  console.log(`Filtering to ${clubMembers.length} Cycling Club memberships\n`);
+  console.log(`Filtering to ${clubMembers.length} Kandie Gang memberships (Club + Guide)\n`);
 
   if (clubMembers.length === 0) {
-    console.error('No club memberships found in CSV. Check the membership_plan column.');
+    console.error('No Kandie Gang memberships found in CSV. Check the membership_plan column.');
     process.exit(1);
   }
 
