@@ -190,7 +190,7 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
   });
 
   // Get subscription details
-  const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : null;
+  const subscriptionId = typeof (invoice as any).subscription === 'string' ? (invoice as any).subscription : null;
 
   if (subscriptionId) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
