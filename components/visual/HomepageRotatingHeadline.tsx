@@ -9,6 +9,7 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { AnimatedHeadline } from './AnimatedHeadline';
+// Removed SectionHeader import; will be used in App.tsx instead
 import { imageSrc } from '../../lib/images';
 
 /** Guide photos from public/images/guides (base path without extension). */
@@ -93,6 +94,7 @@ export const HomepageRotatingHeadline: React.FC<HomepageRotatingHeadlineProps> =
           />
           <AnimatedHeadline text="!" as="span" />
         </h1>
+        {/* SectionHeader moved to App.tsx after ScrollingHeadline */}
 
         {/* <button className="bg-black text-white px-6 md:px-8 py-3.5 md:py-4 rounded-full font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-black/10 active:scale-95 text-sm md:text-base group">
           Reserve Kandie Gang <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

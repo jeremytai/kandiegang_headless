@@ -16,6 +16,7 @@ import { WeatherStatusBackground } from './components/visual/WeatherStatusBackgr
 import { ExpandingHero } from './components/visual/ExpandingHero';
 import { ScrollingHeadline } from './components/visual/ScrollingHeadline';
 import { HomepageRotatingHeadline } from './components/visual/HomepageRotatingHeadline';
+import { SectionHeader } from './components/visual/SectionHeader';
 import { HorizontalRevealSection } from './components/visual/HorizontalRevealSection';
 import { CompanySection } from './components/sections/CompanySection';
 import { FAQSection } from './components/sections/FAQSection';
@@ -238,6 +239,7 @@ const App: React.FC = () => {
                             element={
                               <>
                                 <LandingPage />
+                                <SectionHeader title="Explore Kandie Gang" />
                                 <CompanySection />
                                 <FAQSection />
                               </>
