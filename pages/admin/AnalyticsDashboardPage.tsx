@@ -7,6 +7,7 @@ import { LTVDistributionChart } from '../../components/admin/charts/LTVDistribut
 import { MemberGrowthChart } from '../../components/admin/charts/MemberGrowthChart';
 import { MemberAreasChart } from '../../components/admin/charts/MemberAreasChart';
 import { MarketingOptInCard } from '../../components/admin/MarketingOptInCard';
+import { ChurnRiskCard } from '../../components/admin/ChurnRiskCard';
 import { MemberTable } from '../../components/admin/MemberTable';
 
 export const AnalyticsDashboardPage: React.FC = () => {
@@ -72,7 +73,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
         ) : (
           <div className="space-y-8">
             {/* Section 1: Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <MetricCard
                 title="Total Members"
                 value={metrics?.totalMembers || 0}
@@ -84,6 +85,11 @@ export const AnalyticsDashboardPage: React.FC = () => {
                 subtitle="Paying members"
               />
               <MetricCard
+                title="At Risk"
+                value={metrics?.atRiskCount || 0}
+                subtitle="Expiring within 30 days"
+              />
+              <MetricCard
                 title="Total LTV"
                 value={`€${(metrics?.totalLTV || 0).toFixed(2)}`}
                 subtitle="Lifetime revenue"
@@ -93,6 +99,11 @@ export const AnalyticsDashboardPage: React.FC = () => {
                 value={`€${(metrics?.avgLTV || 0).toFixed(2)}`}
                 subtitle="Per member"
               />
+              <MetricCard
+                title="Event Participation"
+                value={metrics?.totalEventParticipation || 0}
+                subtitle="Total event signups"
+              />
             </div>
 
             {/* Section 2: Charts */}
@@ -101,10 +112,11 @@ export const AnalyticsDashboardPage: React.FC = () => {
               <MemberGrowthChart data={memberGrowth} />
             </div>
 
-            {/* Section 3: Segmentation */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Section 3: Segmentation & Risk */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <MemberAreasChart data={memberAreas} />
               <MarketingOptInCard data={marketingOptIn} />
+              <ChurnRiskCard members={members} />
             </div>
 
             {/* Section 4: Member Table */}

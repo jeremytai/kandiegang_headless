@@ -11,6 +11,10 @@ export interface MemberAnalytics {
   customer_since: string | null;
   member_areas: string[] | null;
   tags: string[] | null;
+  last_login: string | null;
+  event_participation_count?: number;
+  days_until_expiration?: number;
+  is_at_risk?: boolean;
 }
 
 export interface KeyMetrics {
@@ -18,6 +22,8 @@ export interface KeyMetrics {
   activeSubs: number;
   totalLTV: number;
   avgLTV: number;
+  atRiskCount: number;
+  totalEventParticipation: number;
 }
 
 export interface LTVBucket {

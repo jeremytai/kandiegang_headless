@@ -109,14 +109,20 @@ export function MemberTable({ members }: MemberTableProps) {
               >
                 Orders <SortIcon column="order_count" />
               </th>
+              <th
+                className="text-right py-3 px-4 text-[#8899a6] font-medium cursor-pointer hover:text-[#ff611a] transition-colors"
+                onClick={() => handleSort('event_participation_count')}
+              >
+                Events <SortIcon column="event_participation_count" />
+              </th>
               <th className="text-left py-3 px-4 text-[#8899a6] font-medium">
                 Status
               </th>
               <th
                 className="text-left py-3 px-4 text-[#8899a6] font-medium cursor-pointer hover:text-[#ff611a] transition-colors"
-                onClick={() => handleSort('last_order_date')}
+                onClick={() => handleSort('last_login')}
               >
-                Last Order <SortIcon column="last_order_date" />
+                Last Login <SortIcon column="last_login" />
               </th>
             </tr>
           </thead>
@@ -137,6 +143,15 @@ export function MemberTable({ members }: MemberTableProps) {
                 </td>
                 <td className="py-3 px-4 text-white text-right">
                   {member.order_count || 0}
+                </td>
+                <td className="py-3 px-4 text-right">
+                  {member.event_participation_count ? (
+                    <span className="inline-block px-2 py-1 bg-[#2A3577] bg-opacity-20 text-[#5063B8] rounded text-xs font-medium">
+                      {member.event_participation_count} events
+                    </span>
+                  ) : (
+                    <span className="text-[#8899a6]">—</span>
+                  )}
                 </td>
                 <td className="py-3 px-4">
                   {member.stripe_subscription_status === 'active' && (
@@ -159,11 +174,16 @@ export function MemberTable({ members }: MemberTableProps) {
                       No Sub
                     </span>
                   )}
+                  {member.is_at_risk && (
+                    <span className="ml-2 inline-block px-2 py-1 bg-[#ef4444] bg-opacity-20 text-[#ef4444] rounded text-xs font-medium">
+                      ⚠ {member.days_until_expiration}d
+                    </span>
+                  )}
                 </td>
                 <td className="py-3 px-4 text-[#8899a6]">
-                  {member.last_order_date
-                    ? new Date(member.last_order_date).toLocaleDateString()
-                    : 'N/A'}
+                  {member.last_login
+                    ? new Date(member.last_login).toLocaleDateString()
+                    : <span className="text-[#8899a6]/50">Never</span>}
                 </td>
               </tr>
             ))}
