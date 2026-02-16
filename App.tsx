@@ -100,6 +100,9 @@ const EventCancelPage = lazy(() =>
 const WaitlistAdminPage = lazy(() =>
   import('./pages/members/WaitlistAdminPage').then((m) => ({ default: m.WaitlistAdminPage }))
 );
+const AnalyticsDashboardPage = lazy(() =>
+  import('./pages/admin/AnalyticsDashboardPage').then((m) => ({ default: m.AnalyticsDashboardPage }))
+);
 const SignUpPage = lazy(() =>
   import('./pages/members/SignUpPage').then((m) => ({ default: m.SignUpPage }))
 );
@@ -265,6 +268,7 @@ const App: React.FC = () => {
                           <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
                           <Route path="/event/cancel" element={<EventCancelPage />} />
                           <Route path="/admin/waitlist" element={<WaitlistAdminPage />} />
+                          <Route path="/admin/analytics" element={<AnalyticsDashboardPage />} />
                           <Route path="/signup" element={<SignUpPage />} />
                           <Route path="/members" element={<MembersAreaPage />} />
                           <Route path="/members/settings" element={<MembersSettingsPage />} />
