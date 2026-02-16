@@ -34,7 +34,7 @@ export const ScrollingHeadline: React.FC = () => {
   const magicOpacity = useTransform(smoothProgress, [0.4, 0.6], [0, 1]);
 
   return (
-    <section ref={containerRef} className="relative h-[250vh]">
+    <section ref={containerRef} className="relative h-[100vh]">
       <div className="sticky top-0 h-screen w-full relative overflow-hidden">
         <AnimatedBlob contained />
         <div className="relative z-10 flex flex-col items-center justify-center h-full px-6">
