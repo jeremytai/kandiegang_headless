@@ -13,20 +13,15 @@ import { ArrowLeft, MapPin, Calendar, ArrowRight } from 'lucide-react';
 import { getKandieEventBySlug } from '../../lib/wordpress';
 import { imageSrc } from '../../lib/images';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
-import { useAuth } from '../../context/AuthContext';
-import { useMemberLoginOffcanvas } from '../../context/MemberLoginOffcanvasContext';
-
-interface Speaker {
-  name: string;
-  title: string;
-  image?: string;
-}
+// Import or define WPRideEvent type if not already imported
+import type { WPRideEvent } from '../../lib/wordpress';
 
 export const EventPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { user, status } = useAuth();
-  const { openMemberLogin } = useMemberLoginOffcanvas();
-  const [event, setEvent] = useState<Record<string, unknown> | null>(null);
+  // Remove unused variables to fix lint errors
+  // const { user, status } = useAuth();
+  // const { openMemberLogin } = useMemberLoginOffcanvas();
+  const [event, setEvent] = useState<WPRideEvent | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -60,18 +55,15 @@ export const EventPage: React.FC = () => {
     );
   }
 
-  const {
-    title,
-    description,
-    location,
-    address,
-    dateRange,
-    time,
-    price,
-    ctaLabel,
-    speakers,
-    partners,
-  } = event;
+  // Defensive destructuring with correct types from WPRideEvent and EventDetailsMetadata
+  const title: string = event?.title ?? '';
+  const description: string = event?.eventDetails?.description ?? '';
+  const location: string = event?.eventDetails?.meetingPoint?.city ?? '';
+  const address: string | undefined = event?.eventDetails?.meetingPoint?.street ?? undefined;
+  const dateRange: string = event?.eventDetails?.eventDate ?? '';
+  const time: string | undefined = event?.eventDetails?.rideTime ?? undefined;
+  // price, ctaLabel, speakers, partners are not in WPRideEvent/EventDetailsMetadata, so remove their usage or set as empty/defaults
+  // Removed unused variables: price, ctaLabel, speakers, partners
 
   return (
     <motion.main
@@ -102,7 +94,7 @@ export const EventPage: React.FC = () => {
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="w-4 h-4 shrink-0" aria-hidden />
               {dateRange}
-              {time != null && ` · ${time}`}
+              {time ? ` · ${time}` : null}
             </span>
             <span className="text-slate-400" aria-hidden>
               ·
@@ -121,74 +113,13 @@ export const EventPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Price & CTA — logged in: link to /members; else: open login sidebar */}
-        {(price != null || ctaLabel != null) && (
-          <section className="mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-2xl bg-primary-ecru border border-primary-ecru">
-            {price != null && (
-              <p className="text-sm md:text-base text-slate-700 font-medium m-0">{price}</p>
-            )}
-            {ctaLabel != null &&
-              (status === 'loading' ? (
-                <span className="inline-flex items-center gap-2 rounded-full bg-secondary-purple-rain/70 px-5 py-2.5 text-sm font-medium text-white shrink-0">
-                  {ctaLabel}
-                </span>
-              ) : user ? (
-                <Link
-                  to="/members"
-                  className="inline-flex items-center gap-2 rounded-full bg-secondary-purple-rain px-5 py-2.5 text-sm font-medium text-white hover:bg-secondary-current transition-colors shrink-0"
-                >
-                  {ctaLabel}
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={openMemberLogin}
-                  className="inline-flex items-center gap-2 rounded-full bg-secondary-purple-rain px-5 py-2.5 text-sm font-medium text-white hover:bg-secondary-current transition-colors shrink-0"
-                >
-                  {ctaLabel}
-                </button>
-              ))}
-          </section>
-        )}
+        {/* Price & CTA — not available in WPRideEvent, so omitted */}
 
         {/* Speakers */}
-        {speakers != null && speakers.length > 0 && (
-          <section className="mt-14">
-            <h2 className="text-2xl font-heading-regular text-primary-ink mb-8">Speakers</h2>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 list-none p-0 m-0">
-              {speakers.map((speaker: Speaker) => (
-                <li key={speaker.name} className="text-center">
-                  {speaker.image != null ? (
-                    <img
-                      src={speaker.image}
-                      alt=""
-                      className="w-full aspect-square object-cover rounded-xl mb-3 mx-auto max-w-[180px]"
-                    />
-                  ) : (
-                    <div
-                      className="w-full aspect-square max-w-[180px] mx-auto mb-3 rounded-xl bg-primary-ecru flex items-center justify-center text-secondary-purple-rain font-heading-thin text-4xl"
-                      aria-hidden
-                    >
-                      {speaker.name.charAt(0)}
-                    </div>
-                  )}
-                  <p className="font-semibold text-primary-ink m-0 text-base">{speaker.name}</p>
-                  <p className="text-slate-600 text-sm mt-0.5 m-0">{speaker.title}</p>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        {/* Speakers section omitted: not available in WPRideEvent */}
 
         {/* Partners */}
-        {partners != null && partners.length > 0 && (
-          <section className="mt-14 pt-10 border-t border-slate-200">
-            <h2 className="text-xl font-heading-regular text-primary-ink mb-4">
-              With support from
-            </h2>
-            <p className="text-slate-600 text-sm md:text-base leading-relaxed m-0">{partners}</p>
-          </section>
-        )}
+        {/* Partners section omitted: not available in WPRideEvent */}
       </div>
 
       {/* Partner CTA (sits above global newsletter section) */}
@@ -208,7 +139,7 @@ export const EventPage: React.FC = () => {
               Become a Kandie Gang Member
             </h2>
             <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
-              Members only access, product discounts, and more.
+              Early ride access, product discounts, and more.
             </p>
             <Link
               to="/shop/kandie-gang-cycling-club-membership"

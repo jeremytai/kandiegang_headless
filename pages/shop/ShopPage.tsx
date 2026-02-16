@@ -107,7 +107,7 @@ export const ShopPage: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
             >
-              Kandie Gang product drops.
+              Kandie Gang product drops
             </motion.p>
 
             {error && (
