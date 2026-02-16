@@ -42,7 +42,7 @@ export const HorizontalScrollSection: React.FC<HorizontalScrollSectionProps> = (
     maxTranslateX: 0,
   });
 
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | null>(null);
 
   /**
    * Calculate dimensions for scroll math
@@ -132,29 +132,12 @@ export const HorizontalScrollSection: React.FC<HorizontalScrollSectionProps> = (
     };
   }, [handleScroll]);
 
+  // Use Tailwind for dynamic height and will-change, avoid inline styles
+  const sectionHeightClass = dimensions.containerHeight > 0 ? `!h-[${dimensions.containerHeight}px]` : 'min-h-screen';
   return (
-    <section
-      ref={containerRef}
-      className={`relative ${className}`}
-      style={{
-        height: dimensions.containerHeight > 0 ? `${dimensions.containerHeight}px` : '100vh',
-      }}
-    >
-      <div
-        ref={stickyRef}
-        className="sticky top-0 h-screen overflow-hidden"
-        style={{
-          willChange: 'transform',
-        }}
-      >
-        <div
-          ref={trackRef}
-          className="flex h-full gap-6 px-6"
-          style={{
-            width: 'max-content',
-            willChange: 'transform',
-          }}
-        >
+    <section ref={containerRef} className={`relative ${className} ${sectionHeightClass}`}>
+      <div ref={stickyRef} className="sticky top-0 h-screen overflow-hidden will-change-transform">
+        <div ref={trackRef} className="flex h-full gap-6 px-6 w-max will-change-transform">
           {panels.map((panel) => (
             <article
               key={panel.id}
