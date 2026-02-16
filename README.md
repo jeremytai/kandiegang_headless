@@ -336,6 +336,102 @@ Products must have:
 - `inStock`: Boolean flag to enable/disable checkout button
 - `membersOnly`: Boolean flag to restrict checkout to authenticated members
 
+## 🔄 Stripe Subscription Migration (WooCommerce → Stripe Billing)
+
+The project includes a complete migration system to move from WooCommerce subscriptions to Stripe Billing with recurring subscriptions. This enables automated renewals, self-service member management via Stripe Customer Portal, and removes dependency on WordPress for subscription management.
+
+### Migration Components
+
+The migration system includes:
+
+1. **Database Schema** ([supabase/migrations/20260215200000_add_stripe_subscription_fields.sql](supabase/migrations/20260215200000_add_stripe_subscription_fields.sql))
+   - Adds Stripe tracking fields to profiles table
+   - Stores customer IDs, subscription IDs, status, and billing dates
+
+2. **Setup Scripts**
+   - [scripts/setup-stripe-products.js](scripts/setup-stripe-products.js) - Create Stripe Products and Prices
+   - [scripts/migrate-woo-to-stripe-subscriptions.js](scripts/migrate-woo-to-stripe-subscriptions.js) - Main migration script
+   - [scripts/send-customer-portal-links.js](scripts/send-customer-portal-links.js) - Email portal links to members
+
+3. **Webhook Updates** ([pages/api/stripe-webhook.ts](pages/api/stripe-webhook.ts))
+   - Handles subscription lifecycle events (created, updated, deleted)
+   - Processes renewal payments and payment failures
+   - Keeps Supabase profiles in sync with Stripe subscription status
+
+4. **Customer Portal** ([pages/api/create-portal-session.ts](pages/api/create-portal-session.ts))
+   - API endpoint for members to manage subscriptions
+   - Allows payment method updates, cancellations, and billing history
+
+### Migration Features
+
+- **Preserves existing billing dates**: No immediate charges - members continue on their current renewal schedule
+- **Handles expired memberships**: Migrated as canceled subscriptions for history preservation
+- **Idempotent**: Can be re-run safely without creating duplicates
+- **DRY_RUN mode**: Test the migration without making changes
+- **Detailed logging**: JSONL logs for audit and troubleshooting
+
+### Quick Start
+
+1. **Apply database migration:**
+   ```bash
+   # Connect to Supabase and run the migration
+   # Or use Supabase CLI: supabase db push
+   ```
+
+2. **Set up Stripe products (test mode first):**
+   ```bash
+   # Make sure STRIPE_SECRET_KEY uses test keys in .env.local
+   node scripts/setup-stripe-products.js
+   # Copy the CLUB_MEMBERSHIP_PRICE_ID to .env.local
+   ```
+
+3. **Test migration with sample data:**
+   ```bash
+   # Create test-members.csv with 5-10 sample records
+   DRY_RUN=true node scripts/migrate-woo-to-stripe-subscriptions.js test-members.csv
+   ```
+
+4. **Run real migration (test mode):**
+   ```bash
+   node scripts/migrate-woo-to-stripe-subscriptions.js members.csv
+   ```
+
+5. **Configure webhooks in Stripe Dashboard:**
+   - Add endpoint: `https://yourdomain.com/api/stripe-webhook`
+   - Enable events: `customer.subscription.*`, `invoice.payment_*`
+   - Copy webhook secret to `STRIPE_WEBHOOK_SECRET`
+
+6. **Send portal links to members:**
+   ```bash
+   node scripts/send-customer-portal-links.js
+   ```
+
+### Environment Variables
+
+Add to `.env.local`:
+```env
+# Stripe subscription migration
+CLUB_MEMBERSHIP_PRICE_ID=price_...  # From setup-stripe-products.js
+STRIPE_SECRET_KEY=sk_test_...       # Use test keys first!
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Existing variables
+VITE_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=...
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=Kandie Gang <members@yourdomain.com>
+NEXT_PUBLIC_SITE_URL=https://kandiegang.com
+```
+
+### Detailed Documentation
+
+For the complete migration plan with testing strategy, rollback procedures, and verification steps, see:
+- Migration plan: [.claude/plans/idempotent-honking-breeze.md](.claude/plans/idempotent-honking-breeze.md)
+
+**Important:** Always test with Stripe test keys first, create database backups, and use DRY_RUN mode for initial tests.
+
+---
+
 ## 👤 Members area & Supabase profiles
 
 The **Members area** (`/members`) and member login (StickyTop, offcanvas) use **Supabase Auth** and a **`profiles`** table. Profiles store membership status, plan names, and whether the user is a **Kandie Gang Guide**.

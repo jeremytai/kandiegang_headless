@@ -8,6 +8,7 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 // ...existing code (removed unused Link import)
 import { AnimatedBlob } from '../../components/visual/AnimatedBlob';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
@@ -154,6 +155,15 @@ export const CommunityPage: React.FC = () => {
 
   return (
     <div className="relative selection:bg-[#f9f100] selection:text-black overflow-x-hidden">
+      <Helmet>
+        <title>Community Events – Kandie Gang Cycling Club</title>
+        <meta name="description" content="Join our upcoming rides and events in Berlin. From social rides to workshops, discover what's happening in the Kandie Gang cycling community." />
+        <meta property="og:title" content="Community Events – Kandie Gang Cycling Club" />
+        <meta property="og:description" content="Join our upcoming rides and events in Berlin. Social rides, workshops, and community meetups." />
+        <meta property="og:url" content="https://kandiegang.com/community" />
+        <link rel="canonical" href="https://kandiegang.com/community" />
+      </Helmet>
+
       {/* Blob behind hero + events (no section bg so blob shows through) */}
       <div className="absolute inset-0 min-h-full pointer-events-none" aria-hidden>
         <AnimatedBlob contained />

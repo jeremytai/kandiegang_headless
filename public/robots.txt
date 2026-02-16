@@ -1,4 +1,7 @@
+# robots.txt for Kandie Gang Cycling Club
 User-agent: *
 Allow: /
+Disallow: /members/
+Disallow: /checkout/
 
-Sitemap: https://kandiegang.vercel.app/sitemap.xml
+Sitemap: https://kandiegang.com/sitemap.xml

@@ -65,6 +65,7 @@ import { AuthProvider } from './context/AuthContext';
 import { MemberLoginOffcanvasProvider } from './context/MemberLoginOffcanvasContext';
 import { CartProvider } from './context/CartContext';
 import { CartOffcanvas } from './components/shop/CartOffcanvas';
+import { HelmetProvider } from 'react-helmet-async';
 
 // Lazy-loaded pages (code-split by route to keep main bundle under 600 kB)
 const AboutPage = lazy(() =>
@@ -224,11 +225,12 @@ const App: React.FC = () => {
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
   return (
-    <CookieConsentProvider>
-      <AuthProvider>
-        <ContactModalProvider>
-          <MemberLoginOffcanvasProvider>
-            <CartProvider>
+    <HelmetProvider>
+      <CookieConsentProvider>
+        <AuthProvider>
+          <ContactModalProvider>
+            <MemberLoginOffcanvasProvider>
+              <CartProvider>
               <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
                 {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
                 {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
@@ -324,8 +326,9 @@ const App: React.FC = () => {
             <CookiePreferencesModalWrapper />
           </>
         )}
-      </AuthProvider>
-    </CookieConsentProvider>
+        </AuthProvider>
+      </CookieConsentProvider>
+    </HelmetProvider>
   );
 };
 

@@ -109,6 +109,151 @@ async function getRawBodyAndSignature(
   });
 }
 
+// ==================== SUBSCRIPTION EVENT HANDLERS ====================
+
+async function handleSubscriptionEvent(event: Stripe.Event, res: NextApiResponse) {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('[stripe-webhook] Supabase not configured');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  const subscription = event.data.object as Stripe.Subscription;
+  const customerId = typeof subscription.customer === 'string'
+    ? subscription.customer
+    : subscription.customer.id;
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // Determine membership status
+  const isMember = ['active', 'trialing'].includes(subscription.status);
+
+  const updates: any = {
+    stripe_subscription_id: subscription.id,
+    stripe_subscription_status: subscription.status,
+    subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    subscription_cancel_at_period_end: subscription.cancel_at_period_end,
+    is_member: isMember,
+    membership_source: 'supabase',
+  };
+
+  // Update expiration date
+  if (isMember) {
+    updates.membership_expiration = new Date(subscription.current_period_end * 1000).toISOString().split('T')[0];
+  }
+
+  // Update billing cycle anchor if present
+  if (subscription.billing_cycle_anchor) {
+    updates.billing_cycle_anchor = new Date(subscription.billing_cycle_anchor * 1000).toISOString();
+  }
+
+  // Handle subscription deletion
+  if (event.type === 'customer.subscription.deleted') {
+    updates.stripe_subscription_status = 'canceled';
+    updates.is_member = false;
+    updates.subscription_cancel_at_period_end = false;
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('stripe_customer_id', customerId);
+
+  if (error) {
+    console.error(`[stripe-webhook] Failed to update profile for ${event.type}:`, error);
+    return res.status(500).json({ error: 'Failed to update profile' });
+  }
+
+  console.log(`[stripe-webhook] ${event.type}: ${subscription.id} (${subscription.status})`);
+  return res.status(200).json({ received: true });
+}
+
+async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiResponse) {
+  if (!supabaseUrl || !supabaseServiceKey || !stripe) {
+    console.error('[stripe-webhook] Supabase or Stripe not configured');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  const invoice = event.data.object as Stripe.Invoice;
+  const customerId = typeof invoice.customer === 'string'
+    ? invoice.customer
+    : invoice.customer?.id;
+
+  if (!customerId) {
+    return res.status(200).json({ received: true });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // Get subscription details
+  const subscriptionId = typeof invoice.subscription === 'string'
+    ? invoice.subscription
+    : invoice.subscription?.id;
+
+  if (subscriptionId) {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        is_member: true,
+        membership_expiration: new Date(subscription.current_period_end * 1000).toISOString().split('T')[0],
+        subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        stripe_subscription_status: subscription.status,
+      })
+      .eq('stripe_customer_id', customerId);
+
+    if (error) {
+      console.error('[stripe-webhook] Failed to update profile on invoice.payment_succeeded:', error);
+      return res.status(500).json({ error: 'Failed to update profile' });
+    }
+
+    console.log(`[stripe-webhook] invoice.payment_succeeded: Membership renewed for customer ${customerId}`);
+  }
+
+  return res.status(200).json({ received: true });
+}
+
+async function handleInvoicePaymentFailed(event: Stripe.Event, res: NextApiResponse) {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('[stripe-webhook] Supabase not configured');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  const invoice = event.data.object as Stripe.Invoice;
+  const customerId = typeof invoice.customer === 'string'
+    ? invoice.customer
+    : invoice.customer?.id;
+
+  if (!customerId) {
+    return res.status(200).json({ received: true });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      stripe_subscription_status: 'past_due',
+    })
+    .eq('stripe_customer_id', customerId);
+
+  if (error) {
+    console.error('[stripe-webhook] Failed to update profile on invoice.payment_failed:', error);
+    return res.status(500).json({ error: 'Failed to update profile' });
+  }
+
+  console.log(`[stripe-webhook] invoice.payment_failed: Payment failed for customer ${customerId}`);
+  return res.status(200).json({ received: true });
+}
+
+// ==================== MAIN WEBHOOK HANDLER ====================
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -139,6 +284,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('[stripe-webhook] Signature verification failed:', message);
     return res.status(400).json({ error: `Webhook signature verification failed: ${message}` });
   }
+  // Handle subscription lifecycle events
+  if (event.type === 'customer.subscription.created' ||
+      event.type === 'customer.subscription.updated' ||
+      event.type === 'customer.subscription.deleted') {
+    return handleSubscriptionEvent(event, res);
+  }
+
+  if (event.type === 'invoice.payment_succeeded') {
+    return handleInvoicePaymentSucceeded(event, res);
+  }
+
+  if (event.type === 'invoice.payment_failed') {
+    return handleInvoicePaymentFailed(event, res);
+  }
+
   if (event.type !== 'checkout.session.completed') {
     return res.status(200).json({ received: true });
   }
