@@ -1,8 +1,5 @@
 # Kandie Gang Headless WordPress
-
 A high-fidelity replication of the experimental UI and interactions from Kandie Gang, built as a headless WordPress frontend. This project focuses on high-quality animations, smooth scroll-driven effects, and a premium "mundane made magic" aesthetic, powered by a type-safe WordPress GraphQL bridge.
-
-
 ## ✨ Features
 
 - **🎨 Premium UI/UX**: High-fidelity animations with Framer Motion and GSAP, scroll-driven effects, and glassmorphic design elements
@@ -40,7 +37,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - Node.js 18+ and npm
 - A WordPress site with WPGraphQL plugin installed (optional - demo endpoint available)
 
-### Setup
+### PostHog Setup
 
 1. **Clone the repository**
    ```bash
@@ -62,19 +59,15 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
    ```env
    # WordPress GraphQL Endpoint
    VITE_WP_GRAPHQL_URL=https://your-wordpress-site.com/graphql
-   
    # Substack newsletter publication URL (optional)
    # Your Substack publication base URL (e.g. https://yoursubstack.substack.com)
    VITE_SUBSTACK_PUBLICATION=https://yoursubstack.substack.com
-   
    # Formspree contact form ID (optional – for /contact and Contact modal)
    VITE_FORMSPREE_CONTACT_FORM_ID=your_formspree_form_id
-   
    # Stripe Secret Key (required for checkout - NEVER commit this!)
    # Get from https://dashboard.stripe.com/apikeys
    # Use sk_test_... for development, sk_live_... for production
    STRIPE_SECRET_KEY=sk_test_...
-
    # PostHog (optional – analytics only load after user accepts analytics cookies)
    # VITE_POSTHOG_KEY=phc_...
    # VITE_POSTHOG_HOST=https://eu.i.posthog.com   # optional; default is US
@@ -86,8 +79,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
    ```
 
    The app will be available at `http://localhost:3000`
-
-
+  
 ## 🔗 Discord Account Linking & Membership Unification
 
 ### How Discord Linking Works
@@ -441,7 +433,7 @@ The **Members area** (`/members`) and member login (StickyTop, offcanvas) use **
 - **Auth**: Email/password, magic link, or Discord OAuth. Session and user come from Supabase Auth.
 - **Profile** (table `public.profiles`): One row per user (`profiles.id = auth.users.id`). The app reads:
   - `is_member`, `membership_source`, `membership_plans` (array, e.g. `["Kandie Gang Cycling Club Membership"]`), `member_since`, `membership_expiration`
-   - **`is_guide`**: Boolean; marks the user as a Kandie Gang Guide (can be set manually).
+         - **`is_guide`**: Boolean; marks the user as a Kandie Gang Guide (can be set manually).
   - **`is_substack_subscriber`**: Boolean; set by syncing from a Substack or Mailchimp CSV export (see below).
   - **`newsletter_opted_in_at`**: Date (YYYY-MM-DD) when the user opted in to the newsletter, when the CSV includes an opt-in date column.
 - **Display**: Users can be both **Kandie Gang Cycling Member** (from a plan name containing "cycling" + "member"/"membership") and **Kandie Gang Guide** (from `is_guide` or a plan name containing "guide"). The Members page and account panel show both when applicable.
@@ -469,16 +461,14 @@ Service role key is only for scripts (e.g. subscriber CSV sync), not the fronten
 To set someone as a member or Guide in Supabase (e.g. manual grant or no CSV): use the **Table Editor** or SQL in the Supabase Dashboard. Set `is_member`, `membership_plans`, and/or **`is_guide`** as needed; when you want Supabase to be the source of truth, set **`membership_source = 'supabase'`**. Full steps and field descriptions: **`supabase/MANUAL_PROFILE_UPDATES.md`**.
 
 ### Linked accounts (email + Discord)
-
-
+  
 Users can sign in with **email** (password or magic link) or **Discord** and link both to the same account so they don’t end up with duplicate profiles.
-
-- **Table**: `public.auth_providers` stores `(user_id, provider_type, provider_user_id)` with a unique constraint on `(provider_type, provider_user_id)` so each email or Discord ID can only be linked to one user. Migration: `supabase/migrations/20250208100000_create_auth_providers.sql`.
-- **Sync**: After each login (and after link/unlink), the app syncs the current user’s email and Discord identity into `auth_providers` via a secure API route (`/api/auth-providers`). This uses the Supabase service role key server-side, resolving previous 403 errors and keeping credentials safe.
-- **Settings**: **Account & security** (`/members/settings`) lists connected methods and lets users:
-   - **Connect Discord** — links Discord to the current account (redirects to Discord; on return, the new identity is linked). Requires **manual linking** to be enabled in Supabase: Dashboard → Authentication → Providers → (e.g. Discord) or set `GOTRUE_SECURITY_MANUAL_LINKING_ENABLED: true` when self-hosting.
-   - **Unlink** — remove a login method, with a confirmation step. At least one method must remain.
-- **Edge cases**: If a user tries to link a Discord (or email) that is already linked to another account, Supabase returns an error and the app shows a message. The unique constraint on `auth_providers` prevents duplicate links in the app’s own table.
+**Table**: `public.auth_providers` stores `(user_id, provider_type, provider_user_id)` with a unique constraint on `(provider_type, provider_user_id)` so each email or Discord ID can only be linked to one user. Migration: `supabase/migrations/20250208100000_create_auth_providers.sql`.
+**Sync**: After each login (and after link/unlink), the app syncs the current user’s email and Discord identity into `auth_providers` via a secure API route (`/api/auth-providers`). This uses the Supabase service role key server-side, resolving previous 403 errors and keeping credentials safe.
+**Settings**: **Account & security** (`/members/settings`) lists connected methods and lets users:
+      - **Connect Discord** — links Discord to the current account (redirects to Discord; on return, the new identity is linked). Requires **manual linking** to be enabled in Supabase: Dashboard → Authentication → Providers → (e.g. Discord) or set `GOTRUE_SECURITY_MANUAL_LINKING_ENABLED: true` when self-hosting.
+      - **Unlink** — remove a login method, with a confirmation step. At least one method must remain.
+**Edge cases**: If a user tries to link a Discord (or email) that is already linked to another account, Supabase returns an error and the app shows a message. The unique constraint on `auth_providers` prevents duplicate links in the app’s own table.
 
 Hooks: `hooks/useAuthProviders.ts` (list providers, link Discord, unlink). Auth context exposes `linkDiscord` and `unlinkIdentity` for use by the settings page.
 
@@ -519,8 +509,7 @@ You can send each contact form submission to a Discord channel using [Formspree�
 Submissions will appear as messages in that channel. The contact form already sends a hidden `_subject` field (“New contact form submission”), which Formspree uses to set the subject/title of the Discord message. To change the channel later, disconnect the plugin and reconnect with a different webhook.
 
 ## 🛠️ Development
-
-
+  
 ### Available Scripts
 
 - `npm run dev`: Start Vite dev server (port 3000) - **Use this for all front-end development**
@@ -551,9 +540,9 @@ npm run dev:vercel
 
 **Why two modes?** Vercel's dev proxy interferes with Vite's dev server, causing 404s for `/@vite/client` and `@react-refresh`. So we use pure Vite for development, and only use `vercel dev` with a production build when testing API routes.
 
-5. **WordPress Queries**: Always use the caching mechanism for WordPress queries unless you need fresh data. The cache automatically expires after 5 minutes.
+1. **WordPress Queries**: Always use the caching mechanism for WordPress queries unless you need fresh data. The cache automatically expires after 5 minutes.
 
-6. **Error Handling**: Implement graceful fallbacks when WordPress content is unavailable. The app includes fallback content for all WordPress-dependent pages.
+2. **Error Handling**: Implement graceful fallbacks when WordPress content is unavailable. The app includes fallback content for all WordPress-dependent pages.
 
 ## 🎨 Design System
 
@@ -649,7 +638,7 @@ The app can be deployed to any static hosting service:
 - **Cloudflare Pages**: Similar setup to Netlify
 - **Traditional Hosting**: Upload the `dist/` folder to your web server
 
-### Environment Variables
+### Hosting Environment Variables
 
 Make sure to set environment variables in your hosting platform:
 - `VITE_WP_GRAPHQL_URL`: Your WordPress GraphQL endpoint
@@ -664,7 +653,6 @@ Make sure to set environment variables in your hosting platform:
 ## 📝 License
 
 This project is private and proprietary.
-
 
 ## TODO
 
