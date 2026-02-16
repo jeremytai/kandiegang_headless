@@ -1,0 +1,5 @@
+{"email":"test.active1@example.com","timestamp":"2026-02-16T14:26:13.822Z","success":false,"errors":["No such customer: 'cus_dry_run_1771251975067'"],"stripe_customer_id":"cus_dry_run_1771251975067"}
+{"email":"test.active2@example.com","timestamp":"2026-02-16T14:26:15.339Z","success":false,"errors":["No such customer: 'cus_dry_run_1771251975700'"],"stripe_customer_id":"cus_dry_run_1771251975700"}
+{"email":"test.expiringsoon@example.com","timestamp":"2026-02-16T14:26:15.946Z","success":false,"errors":["No such customer: 'cus_dry_run_1771251976314'"],"stripe_customer_id":"cus_dry_run_1771251976314"}
+{"email":"test.expired@example.com","timestamp":"2026-02-16T14:26:16.591Z","success":false,"errors":["No such customer: 'cus_dry_run_1771251977064'"],"stripe_customer_id":"cus_dry_run_1771251977064"}
+{"email":"test.cancelled@example.com","timestamp":"2026-02-16T14:26:17.340Z","success":false,"errors":["No such customer: 'cus_dry_run_1771251977728'"],"stripe_customer_id":"cus_dry_run_1771251977728"}
