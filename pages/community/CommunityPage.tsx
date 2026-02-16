@@ -6,6 +6,7 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, AlertCircle } from 'lucide-react';
 // ...existing code (removed unused Link import)
 import { AnimatedBlob } from '../../components/visual/AnimatedBlob';
@@ -162,12 +163,22 @@ export const CommunityPage: React.FC = () => {
         <div className="mx-auto grid max-w-site grid-cols-12 gap-x-4 px-6 lg:gap-x-6">
           <div className="col-span-12">
             <AnimatedHeadline
-              text="Community is the heart of Kandie Gang"
+              text="Community "
               as="h1"
               lineHeight={1.5}
               fullWidth
               className="text-4xl md:text-6xl lg:text-[6.5vw] font-heading-light tracking-normal text-secondary-purple-rain mb-2 md:mb-4 text-balance w-full"
             />
+          </div>
+          <div className="col-span-8 flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
+            >
+              Join us for upcoming events, workshops, and social rides.
+            </motion.p>
           </div>
         </div>
       </section>
