@@ -217,7 +217,7 @@ const App: React.FC = () => {
                       willChange: 'transform',
                     }}
                     className={[
-                      'relative z-10 bg-white overflow-clip min-h-screen',
+                      'relative z-10 w-full bg-white overflow-hidden min-h-screen',
                       // Keep a flat edge at the top on all pages, while keeping the bottom corners rounded.
                       'rounded-b-[24px] rounded-t-none',
                       '[backface-visibility:hidden]',
