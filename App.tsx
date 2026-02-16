@@ -190,9 +190,9 @@ const App: React.FC = () => {
 
   // Frame: keep rounded corners visible from the start.
   // Keep spacing aligned with commit 37f4691 by NOT adding extra frame padding.
-  const scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
-  // Opacity removed to eliminate vignette effect
-  const y = useTransform(smoothProgress, [0, 1], [0, -20]);
+  // Transforms temporarily disabled to debug right-edge vignette
+  // const scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
+  // const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
   return (
     <HelmetProvider>
@@ -210,17 +210,10 @@ const App: React.FC = () => {
 
                   {/* Main Content */}
                   <motion.div
-                    style={{
-                      scale,
-                      y,
-                      transformOrigin: 'bottom center',
-                      willChange: 'transform',
-                    }}
                     className={[
                       'relative z-10 w-full bg-white overflow-hidden min-h-screen',
-                      // Keep a flat edge at the top on all pages, while keeping the bottom corners rounded.
-                      'rounded-b-[24px] rounded-t-none',
-                      '[backface-visibility:hidden]',
+                      // Rounded corners temporarily removed to debug vignette
+                      // 'rounded-b-[24px] rounded-t-none',
                     ].join(' ')}
                   >
                     <AnnouncementBar
