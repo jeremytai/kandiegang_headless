@@ -13,7 +13,7 @@ if (!stripeSecretKey) {
 }
 
 const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, { apiVersion: '2026-01-28.clover' })
+  ? new Stripe(stripeSecretKey, { apiVersion: '2024-12-18.acacia' })
   : null;
 
 type LineItemInput = {

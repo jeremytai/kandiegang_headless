@@ -8,7 +8,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kandiegang.com';
 
 const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, { apiVersion: '2026-01-28.clover' })
+  ? new Stripe(stripeSecretKey, { apiVersion: '2024-12-18.acacia' })
   : null;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
