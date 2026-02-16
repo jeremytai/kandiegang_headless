@@ -116,10 +116,12 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
   };
 }
 
+
 export const CommunityPage: React.FC = () => {
   const [events, setEvents] = useState<EventsLayoutEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     const fetchEvents = async () => {

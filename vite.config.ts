@@ -70,6 +70,9 @@ export default defineConfig(({ mode }) => {
         },
       },
       chunkSizeWarningLimit: 600,
+      modulePreload: {
+        polyfill: false,
+      },
     },
   };
 });

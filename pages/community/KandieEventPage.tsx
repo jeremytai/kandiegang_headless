@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { imageSrc } from '../../lib/images';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 import EventHeader from '../../components/event/EventHeader';
 import GuideSection from '../../components/sections/GuideSection';
 import EventSidebarCard from '../../components/event/EventSidebarCard';
@@ -31,7 +32,13 @@ export const KandieEventPage: React.FC = () => {
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
   const [registrations, setRegistrations] = useState<Record<string, { isWaitlist: boolean }>>({});
   const [participantsByLevel, setParticipantsByLevel] = useState<
-    Record<string, Array<{ name: string; id: string }>>
+    Record<string, Array<{
+      first_name: string;
+      last_name: string;
+      user_id: string | null;
+      is_waitlist: boolean;
+      created_at: string;
+    }>>
   >({});
   // Fetch all participants for the event and group by ride_level
   const refreshParticipantsByLevel = useCallback(async () => {
@@ -39,31 +46,47 @@ export const KandieEventPage: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('registrations')
-        .select('ride_level,first_name,last_name,user_id')
+        .select('ride_level,first_name,last_name,user_id,is_waitlist,created_at')
         .eq('event_id', Number(eventData.databaseId))
-        .is('cancelled_at', null)
-        .eq('is_waitlist', false);
+        .is('cancelled_at', null);
       console.debug('[KandieEventPage] Supabase participants query result:', { data, error });
       if (error) {
         console.warn('Participant lookup failed:', error);
         return;
       }
-      const grouped: Record<string, Array<{ name: string; id: string }>> = {};
+      const grouped: Record<string, Array<{
+        first_name: string;
+        last_name: string;
+        user_id: string | null;
+        is_waitlist: boolean;
+        created_at: string;
+      }>> = {};
       (data ?? []).forEach((row) => {
         const level =
           typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
         if (!grouped[level]) grouped[level] = [];
         grouped[level].push({
-          name: [row.first_name, row.last_name].filter(Boolean).join(' '),
-          id: row.user_id,
+          first_name: row.first_name,
+          last_name: row.last_name,
+          user_id: row.user_id,
+          is_waitlist: row.is_waitlist ?? false,
+          created_at: row.created_at,
         });
       });
+
+      // Sort each level's participants by signup time (earliest first)
+      Object.keys(grouped).forEach(level => {
+        grouped[level].sort((a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      });
+
       console.debug('[KandieEventPage] participantsByLevel grouped:', grouped);
       setParticipantsByLevel(grouped);
     } catch (err) {
       console.warn('Participant lookup failed:', err);
     }
-  }, [eventData?.databaseId]);
+  }, [eventData?.databaseId, supabase]);
 
   const refreshCapacity = useCallback(async () => {
     if (!eventData?.databaseId) return;
@@ -194,12 +217,20 @@ export const KandieEventPage: React.FC = () => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent).detail as { eventId?: string } | undefined;
       if (detail?.eventId !== eventData.databaseId) return;
+      console.log('[KandieEventPage] Signup complete event received');
       refreshCapacity();
       refreshRegistrations();
+      refreshParticipantsByLevel();
+
+      // Show success toast
+      toast.success('Signup successful! Spots updated.', {
+        duration: 3000,
+        position: 'bottom-center',
+      });
     };
     window.addEventListener('kandiegang:event-signup-complete', handler);
     return () => window.removeEventListener('kandiegang:event-signup-complete', handler);
-  }, [eventData?.databaseId, refreshCapacity, refreshRegistrations]);
+  }, [eventData?.databaseId, refreshCapacity, refreshRegistrations, refreshParticipantsByLevel]);
 
   useEffect(() => {
     if (!eventData || !user || restoredSignup) return;
@@ -281,10 +312,9 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level1',
       label: 'Level 1',
-      guides: (eventDetails?.level1?.guides?.nodes || []).map((guide, idx) => ({
-        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+      guides: (eventDetails?.level1?.guides?.nodes || []).map((guide) => ({
+        id: guide.databaseId,
         name: guide.title,
-        // Add email or other fields if available
       })),
       pace: paceByLevel['Level 1'],
       distanceKm: eventDetails?.level1?.distanceKm ?? null,
@@ -293,8 +323,8 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level2',
       label: 'Level 2',
-      guides: (eventDetails?.level2?.guides?.nodes || []).map((guide, idx) => ({
-        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+      guides: (eventDetails?.level2?.guides?.nodes || []).map((guide) => ({
+        id: guide.databaseId,
         name: guide.title,
       })),
       pace: paceByLevel['Level 2'],
@@ -304,8 +334,8 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level2plus',
       label: 'Level 2+',
-      guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide, idx) => ({
-        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+      guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide) => ({
+        id: guide.databaseId,
         name: guide.title,
       })),
       pace: paceByLevel['Level 2+'],
@@ -315,8 +345,8 @@ export const KandieEventPage: React.FC = () => {
     {
       levelKey: 'level3',
       label: 'Level 3',
-      guides: (eventDetails?.level3?.guides?.nodes || []).map((guide, idx) => ({
-        id: `${guide.title.replace(/\s+/g, '_').toLowerCase()}_${idx}`,
+      guides: (eventDetails?.level3?.guides?.nodes || []).map((guide) => ({
+        id: guide.databaseId,
         name: guide.title,
       })),
       pace: paceByLevel['Level 3'],
@@ -444,6 +474,7 @@ export const KandieEventPage: React.FC = () => {
 
   return (
     <>
+      <Toaster />
       <div className="bg-white min-h-screen pt-0 selection:bg-[#f9f100] selection:text-black">
         <EventHeader
           title={title}
@@ -493,8 +524,8 @@ export const KandieEventPage: React.FC = () => {
                     </section>
                   )}
 
-                {/* Participants List by Ride Level (guides/admins only, with debug) */}
-                {profile?.is_guide && Object.keys(participantsByLevel).length > 0 && (
+                {/* Debug: Participant display - Commented out, now using sidebar in EventSidebarCard */}
+                {/* {profile?.is_guide && Object.keys(participantsByLevel).length > 0 && (
                   <section>
                     <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">
                       Participants
@@ -510,8 +541,8 @@ export const KandieEventPage: React.FC = () => {
                           </h3>
                           <ul className="list-disc pl-6">
                             {participants.map((p) => (
-                              <li key={p.id} className="text-slate-700">
-                                {p.name}
+                              <li key={p.user_id} className="text-slate-700">
+                                {p.first_name} {p.last_name}
                               </li>
                             ))}
                           </ul>
@@ -519,7 +550,7 @@ export const KandieEventPage: React.FC = () => {
                       ))}
                     </div>
                   </section>
-                )}
+                )} */}
 
                 {/* Partners or extra info could go here */}
               </article>

@@ -204,6 +204,7 @@ export const GET_KANDIE_EVENT_QUERY = `
           guides {
             nodes {
               ... on RideGuide {
+                databaseId
                 title
                 featuredImage {
                   node {
@@ -226,6 +227,7 @@ export const GET_KANDIE_EVENT_QUERY = `
           guides {
             nodes {
               ... on RideGuide {
+                databaseId
                 title
                 featuredImage {
                   node {
@@ -248,6 +250,7 @@ export const GET_KANDIE_EVENT_QUERY = `
           guides {
             nodes {
               ... on RideGuide {
+                databaseId
                 title
                 featuredImage {
                   node {
