@@ -7,7 +7,7 @@ interface ChurnRiskCardProps {
 
 export function ChurnRiskCard({ members }: ChurnRiskCardProps) {
   const atRiskMembers = members
-    .filter(m => m.is_at_risk)
+    .filter((m) => m.is_at_risk)
     .sort((a, b) => (a.days_until_expiration || 0) - (b.days_until_expiration || 0))
     .slice(0, 5); // Show top 5 at-risk members
 
@@ -33,9 +33,7 @@ export function ChurnRiskCard({ members }: ChurnRiskCardProps) {
                 <div className="text-white text-sm font-medium truncate">
                   {member.display_name || member.email}
                 </div>
-                <div className="text-[#8899a6] text-xs truncate">
-                  {member.email}
-                </div>
+                <div className="text-[#8899a6] text-xs truncate">{member.email}</div>
               </div>
               <div className="flex items-center gap-3 ml-4">
                 <div className="text-right">
@@ -50,9 +48,9 @@ export function ChurnRiskCard({ members }: ChurnRiskCardProps) {
             </div>
           ))}
 
-          {members.filter(m => m.is_at_risk).length > 5 && (
+          {members.filter((m) => m.is_at_risk).length > 5 && (
             <div className="text-center text-[#8899a6] text-xs pt-2">
-              + {members.filter(m => m.is_at_risk).length - 5} more at risk
+              + {members.filter((m) => m.is_at_risk).length - 5} more at risk
             </div>
           )}
         </div>

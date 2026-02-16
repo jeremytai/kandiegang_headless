@@ -139,7 +139,9 @@ for (const user of users) {
 const outputPath = join(root, 'wordpress-users.json');
 writeFileSync(outputPath, JSON.stringify(usersByEmail, null, 2));
 
-console.log(`📝 Wrote WordPress user data for ${Object.keys(usersByEmail).length} users to wordpress-users.json\n`);
+console.log(
+  `📝 Wrote WordPress user data for ${Object.keys(usersByEmail).length} users to wordpress-users.json\n`
+);
 
 // Show some sample entries
 console.log('Sample entries:');

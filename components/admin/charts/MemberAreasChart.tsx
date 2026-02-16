@@ -35,13 +35,13 @@ export function MemberAreasChart({ data }: MemberAreasChartProps) {
               backgroundColor: '#0f1419',
               border: '1px solid #2a3840',
               borderRadius: '8px',
-              color: '#fff'
+              color: '#fff',
             }}
           />
           <Legend
             wrapperStyle={{
               fontSize: '12px',
-              color: '#8899a6'
+              color: '#8899a6',
             }}
           />
         </PieChart>

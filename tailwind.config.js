@@ -23,6 +23,19 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        heading: [
+          'IvyOra Disp Reg',
+          'IvyOra Disp Lt',
+          'IvyOra Disp Thi',
+          'sans-serif',
+        ],
+        body: [
+          'GTPlanar',
+          'GTPlanar Fallback',
+          'sans-serif',
+        ],
+      },
       maxWidth: {
         '7xl': '88rem',
         '8xl': '88rem',

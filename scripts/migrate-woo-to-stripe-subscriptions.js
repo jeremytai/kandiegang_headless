@@ -69,7 +69,9 @@ const customerProfilesPath = join(root, 'customer-profiles.json');
 if (existsSync(customerProfilesPath)) {
   try {
     customerProfiles = JSON.parse(readFileSync(customerProfilesPath, 'utf8'));
-    console.log(`📊 Loaded customer profile data for ${Object.keys(customerProfiles).length} customers`);
+    console.log(
+      `📊 Loaded customer profile data for ${Object.keys(customerProfiles).length} customers`
+    );
   } catch (err) {
     console.warn('⚠️  Could not load customer-profiles.json:', err.message);
   }
@@ -304,10 +306,7 @@ async function getOrCreateStripeCustomer(member, existingCustomerId = null) {
   };
 
   // Add phone if available (prefer shipping phone from profiles, fallback to billing phone)
-  const phone =
-    profileInfo?.shipping_phone ||
-    profileInfo?.billing_phone ||
-    addressInfo?.phone;
+  const phone = profileInfo?.shipping_phone || profileInfo?.billing_phone || addressInfo?.phone;
 
   if (phone) {
     customerData.phone = phone;
@@ -502,7 +501,10 @@ async function updateSupabaseProfile(member, customer, subscription, isGuide = f
 
     // Member areas as array
     if (profileInfo.member_areas) {
-      const areas = profileInfo.member_areas.split(',').map(a => a.trim()).filter(Boolean);
+      const areas = profileInfo.member_areas
+        .split(',')
+        .map((a) => a.trim())
+        .filter(Boolean);
       if (areas.length > 0) {
         updates.member_areas = areas;
       }
@@ -510,7 +512,10 @@ async function updateSupabaseProfile(member, customer, subscription, isGuide = f
 
     // Tags as array
     if (profileInfo.tags) {
-      const tagsList = profileInfo.tags.split(',').map(t => t.trim()).filter(Boolean);
+      const tagsList = profileInfo.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
       if (tagsList.length > 0) {
         updates.tags = tagsList;
       }
@@ -665,9 +670,10 @@ async function migrateMember(member, logPath) {
 
   try {
     // Determine if this is a paying Club member or volunteer Guide
-    const isClubMember = member.membershipPlan?.toLowerCase().includes('cycling') &&
-                        (member.membershipPlan?.toLowerCase().includes('club') ||
-                         member.membershipPlan?.toLowerCase().includes('membership'));
+    const isClubMember =
+      member.membershipPlan?.toLowerCase().includes('cycling') &&
+      (member.membershipPlan?.toLowerCase().includes('club') ||
+        member.membershipPlan?.toLowerCase().includes('membership'));
     const isGuide = member.membershipPlan?.toLowerCase().includes('guide');
     const isGuideOnly = isGuide && !isClubMember;
 
@@ -769,7 +775,7 @@ async function runMigration(csvPath) {
       ((m.membershipPlan.toLowerCase().includes('cycling') &&
         (m.membershipPlan.toLowerCase().includes('club') ||
           m.membershipPlan.toLowerCase().includes('membership'))) ||
-       m.membershipPlan.toLowerCase().includes('guide'))
+        m.membershipPlan.toLowerCase().includes('guide'))
   );
 
   console.log(`Filtering to ${clubMembers.length} Kandie Gang memberships (Club + Guide)\n`);

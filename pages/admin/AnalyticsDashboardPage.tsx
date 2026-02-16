@@ -13,7 +13,16 @@ import { MemberTable } from '../../components/admin/MemberTable';
 export const AnalyticsDashboardPage: React.FC = () => {
   usePageMeta('Analytics | Kandie Gang', 'Member analytics dashboard');
   const { user, profile, status } = useAuth();
-  const { metrics, ltvDistribution, memberGrowth, memberAreas, marketingOptIn, members, loading, error } = useAnalyticsData();
+  const {
+    metrics,
+    ltvDistribution,
+    memberGrowth,
+    memberAreas,
+    marketingOptIn,
+    members,
+    loading,
+    error,
+  } = useAnalyticsData();
 
   const hasAccess = Boolean(user && profile?.is_guide);
 
@@ -29,9 +38,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#0f1419] pt-32 md:pt-40 pb-40">
         <div className="max-w-7xl mx-auto px-6">
-          <h1 className="text-3xl font-light text-white mb-4">
-            Member Analytics
-          </h1>
+          <h1 className="text-3xl font-light text-white mb-4">Member Analytics</h1>
           <p className="text-[#8899a6] text-sm">
             Please sign in with a guide account to view the analytics dashboard.
           </p>
@@ -44,9 +51,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#0f1419] pt-32 md:pt-40 pb-40">
         <div className="max-w-7xl mx-auto px-6">
-          <h1 className="text-3xl font-light text-white mb-4">
-            Member Analytics
-          </h1>
+          <h1 className="text-3xl font-light text-white mb-4">Member Analytics</h1>
           <div className="bg-[#1a2730] border border-[#ef4444] rounded-lg p-6 text-[#ef4444]">
             {error}
           </div>
@@ -60,9 +65,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-light text-white mb-2">
-            Member Analytics
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-light text-white mb-2">Member Analytics</h1>
           <p className="text-[#8899a6] text-sm uppercase tracking-wider">
             Kandie Gang Cycling Club
           </p>

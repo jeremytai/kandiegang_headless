@@ -12,14 +12,8 @@ export function MetricCard({ title, value, subtitle }: MetricCardProps) {
       <div className="text-[#8899a6] text-sm font-medium mb-2 uppercase tracking-wider">
         {title}
       </div>
-      <div className="text-white text-4xl font-light mb-1">
-        {value}
-      </div>
-      {subtitle && (
-        <div className="text-[#8899a6] text-sm">
-          {subtitle}
-        </div>
-      )}
+      <div className="text-white text-4xl font-light mb-1">{value}</div>
+      {subtitle && <div className="text-[#8899a6] text-sm">{subtitle}</div>}
     </div>
   );
 }

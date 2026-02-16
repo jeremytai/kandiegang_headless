@@ -1,10 +1,33 @@
-
+/* CSS @import must be first - before any other rules */
 @import url('/fonts/fonts.css');
 
 /* Tailwind CSS directives - valid and required for Tailwind to work */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* MarketingOptInCard progress bar */
+.marketing-progress-bar {
+  width: 0%;
+  transition: width 0.5s;
+}
+.marketing-progress-bar[data-progress-width] {
+  width: attr(data-progress-width %);
+}
+/* HorizontalScrollSection styles */
+.horizontal-scroll-section {
+  height: 100vh;
+}
+.horizontal-scroll-section.dynamic-height {
+  height: var(--container-height, 100vh);
+}
+.horizontal-scroll-sticky {
+  will-change: transform;
+}
+.horizontal-scroll-track {
+  width: max-content;
+  will-change: transform;
+}
 
 :root {
   /* 

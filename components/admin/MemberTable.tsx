@@ -23,7 +23,7 @@ export function MemberTable({ members }: MemberTableProps) {
   };
 
   const filteredAndSortedMembers = useMemo(() => {
-    let filtered = members.filter(member => {
+    const filtered = members.filter((member) => {
       if (!searchQuery) return true;
       const query = searchQuery.toLowerCase();
       return (
@@ -45,9 +45,7 @@ export function MemberTable({ members }: MemberTableProps) {
         }
 
         if (typeof aVal === 'string' && typeof bVal === 'string') {
-          return sortDirection === 'asc'
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal);
+          return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
         }
 
         return 0;
@@ -59,19 +57,13 @@ export function MemberTable({ members }: MemberTableProps) {
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (column !== sortColumn) return null;
-    return (
-      <span className="ml-1 text-[#ff611a]">
-        {sortDirection === 'asc' ? '↑' : '↓'}
-      </span>
-    );
+    return <span className="ml-1 text-[#ff611a]">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
   };
 
   return (
     <div className="bg-[#1a2730] border border-[#2a3840] rounded-lg p-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-[#8899a6] text-sm font-medium uppercase tracking-wider">
-          Members
-        </h3>
+        <h3 className="text-[#8899a6] text-sm font-medium uppercase tracking-wider">Members</h3>
         <input
           type="text"
           placeholder="Search members..."
@@ -115,9 +107,7 @@ export function MemberTable({ members }: MemberTableProps) {
               >
                 Events <SortIcon column="event_participation_count" />
               </th>
-              <th className="text-left py-3 px-4 text-[#8899a6] font-medium">
-                Status
-              </th>
+              <th className="text-left py-3 px-4 text-[#8899a6] font-medium">Status</th>
               <th
                 className="text-left py-3 px-4 text-[#8899a6] font-medium cursor-pointer hover:text-[#ff611a] transition-colors"
                 onClick={() => handleSort('last_login')}
@@ -132,18 +122,12 @@ export function MemberTable({ members }: MemberTableProps) {
                 key={member.id}
                 className="border-b border-[#2a3840] hover:bg-[#0f1419] transition-colors"
               >
-                <td className="py-3 px-4 text-white">
-                  {member.display_name || 'N/A'}
-                </td>
-                <td className="py-3 px-4 text-[#8899a6]">
-                  {member.email}
-                </td>
+                <td className="py-3 px-4 text-white">{member.display_name || 'N/A'}</td>
+                <td className="py-3 px-4 text-[#8899a6]">{member.email}</td>
                 <td className="py-3 px-4 text-white text-right font-mono">
                   €{(member.lifetime_value || 0).toFixed(2)}
                 </td>
-                <td className="py-3 px-4 text-white text-right">
-                  {member.order_count || 0}
-                </td>
+                <td className="py-3 px-4 text-white text-right">{member.order_count || 0}</td>
                 <td className="py-3 px-4 text-right">
                   {member.event_participation_count ? (
                     <span className="inline-block px-2 py-1 bg-[#2A3577] bg-opacity-20 text-[#5063B8] rounded text-xs font-medium">
@@ -181,9 +165,11 @@ export function MemberTable({ members }: MemberTableProps) {
                   )}
                 </td>
                 <td className="py-3 px-4 text-[#8899a6]">
-                  {member.last_login
-                    ? new Date(member.last_login).toLocaleDateString()
-                    : <span className="text-[#8899a6]/50">Never</span>}
+                  {member.last_login ? (
+                    new Date(member.last_login).toLocaleDateString()
+                  ) : (
+                    <span className="text-[#8899a6]/50">Never</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -191,9 +177,7 @@ export function MemberTable({ members }: MemberTableProps) {
         </table>
 
         {filteredAndSortedMembers.length === 0 && (
-          <div className="text-center py-8 text-[#8899a6]">
-            No members found
-          </div>
+          <div className="text-center py-8 text-[#8899a6]">No members found</div>
         )}
       </div>
 

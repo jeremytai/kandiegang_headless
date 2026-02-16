@@ -11,10 +11,7 @@ const root = join(__dirname, '..');
 dotenv.config({ path: join(root, '.env.local') });
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 const CORRECT_MEMBER_PRICE_ID = 'price_1SxpImDrD9kD3TjHqDYwfmyY';
 const OLD_PRICE_ID = 'price_1T1TpADrD9kD3TjH2el8Sw9D';

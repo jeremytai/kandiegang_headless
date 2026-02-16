@@ -71,7 +71,7 @@ export const AboutPage: React.FC = () => {
         <title>About Us – Kandie Gang Cycling Club</title>
         <meta
           name="description"
-          content="Learn about our mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture. Meet our guides and discover our vision for inclusive cycling in Berlin."
+          content="Learn about our mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture. Meet our guides and discover our vision for inclusive cycling in Hamburg."
         />
         <meta property="og:title" content="About Us – Kandie Gang Cycling Club" />
         <meta

@@ -37,12 +37,12 @@ export const HorizontalScrollSection: React.FC<HorizontalScrollSectionProps> = (
   const stickyRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  const [dimensions, setDimensions] = useState({
+  const [dimensions, setDimensions] = useState(() => ({
     containerHeight: 0,
     maxTranslateX: 0,
-  });
+  }));
 
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | null>(null);
 
   /**
    * Calculate dimensions for scroll math
@@ -135,25 +135,31 @@ export const HorizontalScrollSection: React.FC<HorizontalScrollSectionProps> = (
   return (
     <section
       ref={containerRef}
-      className={`relative ${className}`}
-      style={{
-        height: dimensions.containerHeight > 0 ? `${dimensions.containerHeight}px` : '100vh',
-      }}
+      className={`relative horizontal-scroll-section${dimensions.containerHeight > 0 ? ' dynamic-height' : ''} ${className}`}
+      data-container-height={
+        dimensions.containerHeight > 0 ? dimensions.containerHeight : undefined
+      }
     >
       <div
         ref={stickyRef}
-        className="sticky top-0 h-screen overflow-hidden"
-        style={{
-          willChange: 'transform',
-        }}
+        /*
+          Add to CSS:
+          .horizontal-scroll-sticky {
+            will-change: transform;
+          }
+        */
+        className="sticky top-0 h-screen overflow-hidden horizontal-scroll-sticky"
       >
         <div
           ref={trackRef}
-          className="flex h-full gap-6 px-6"
-          style={{
-            width: 'max-content',
-            willChange: 'transform',
-          }}
+          /*
+            Add to CSS:
+            .horizontal-scroll-track {
+              width: max-content;
+              will-change: transform;
+            }
+          */
+          className="flex h-full gap-6 px-6 horizontal-scroll-track"
         >
           {panels.map((panel) => (
             <article

@@ -6,10 +6,10 @@ export function bucketize(
   for (let i = 0; i < buckets.length; i++) {
     const min = buckets[i];
     const max = buckets[i + 1] || Infinity;
-    const count = data.filter(d => d.lifetime_value >= min && d.lifetime_value < max).length;
+    const count = data.filter((d) => d.lifetime_value >= min && d.lifetime_value < max).length;
     result.push({
       range: max === Infinity ? `€${min}+` : `€${min}-€${max}`,
-      count
+      count,
     });
   }
   return result;
@@ -19,14 +19,14 @@ export function aggregateByMonth(
   data: Array<{ customer_since: string }>
 ): Array<{ month: string; count: number }> {
   // Group by YYYY-MM, cumulative count
-  const sorted = data.sort((a, b) =>
-    new Date(a.customer_since).getTime() - new Date(b.customer_since).getTime()
+  const sorted = data.sort(
+    (a, b) => new Date(a.customer_since).getTime() - new Date(b.customer_since).getTime()
   );
 
   const monthCounts: Record<string, number> = {};
   let cumulative = 0;
 
-  sorted.forEach(item => {
+  sorted.forEach((item) => {
     const month = item.customer_since.substring(0, 7); // YYYY-MM
     cumulative++;
     monthCounts[month] = cumulative;
@@ -40,9 +40,9 @@ export function countByArea(
 ): Array<{ area: string; count: number }> {
   const areaCounts: Record<string, number> = {};
 
-  data.forEach(member => {
+  data.forEach((member) => {
     if (member.member_areas) {
-      member.member_areas.forEach(area => {
+      member.member_areas.forEach((area) => {
         areaCounts[area] = (areaCounts[area] || 0) + 1;
       });
     }

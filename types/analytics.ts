@@ -48,12 +48,12 @@ export interface MarketingOptIn {
 }
 
 export const CHART_COLORS = {
-  primary: '#2A3577',      // User's selected color
-  secondary: '#3D4A8F',    // Lighter variant
-  tertiary: '#1E2555',     // Darker variant
-  accent: '#5063B8',       // Bright accent
-  success: '#10B981',      // Green for positive metrics
-  warning: '#F59E0B',      // Orange for warnings
-  danger: '#EF4444',       // Red for negative metrics
-  neutral: '#6B7280',      // Gray for neutral
+  primary: '#2A3577', // User's selected color
+  secondary: '#3D4A8F', // Lighter variant
+  tertiary: '#1E2555', // Darker variant
+  accent: '#5063B8', // Bright accent
+  success: '#10B981', // Green for positive metrics
+  warning: '#F59E0B', // Orange for warnings
+  danger: '#EF4444', // Red for negative metrics
+  neutral: '#6B7280', // Gray for neutral
 };

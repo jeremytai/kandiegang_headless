@@ -1,5 +1,13 @@
 import React from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from 'recharts';
 import { GrowthDataPoint } from '../../../types/analytics';
 
 interface MemberGrowthChartProps {
@@ -16,26 +24,19 @@ export function MemberGrowthChart({ data }: MemberGrowthChartProps) {
         <AreaChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <defs>
             <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2A3577" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#2A3577" stopOpacity={0}/>
+              <stop offset="5%" stopColor="#2A3577" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#2A3577" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#2a3840" />
-          <XAxis
-            dataKey="month"
-            stroke="#8899a6"
-            style={{ fontSize: '12px' }}
-          />
-          <YAxis
-            stroke="#8899a6"
-            style={{ fontSize: '12px' }}
-          />
+          <XAxis dataKey="month" stroke="#8899a6" style={{ fontSize: '12px' }} />
+          <YAxis stroke="#8899a6" style={{ fontSize: '12px' }} />
           <Tooltip
             contentStyle={{
               backgroundColor: '#0f1419',
               border: '1px solid #2a3840',
               borderRadius: '8px',
-              color: '#fff'
+              color: '#fff',
             }}
           />
           <Area

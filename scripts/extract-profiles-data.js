@@ -146,7 +146,9 @@ const samplesWithOrders = Object.entries(profilesByEmail)
 for (const [email, data] of samplesWithOrders) {
   console.log(`  ${email}:`);
   console.log(`    Orders: ${data.order_count}, Total: €${data.total_spent.toFixed(2)}`);
-  console.log(`    Last order: ${data.last_order_date ? new Date(data.last_order_date).toISOString().split('T')[0] : 'N/A'}`);
+  console.log(
+    `    Last order: ${data.last_order_date ? new Date(data.last_order_date).toISOString().split('T')[0] : 'N/A'}`
+  );
   console.log(`    Member areas: ${data.member_areas || 'None'}`);
   console.log(`    Accepts marketing: ${data.accepts_marketing}`);
 }

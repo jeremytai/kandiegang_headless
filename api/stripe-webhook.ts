@@ -148,7 +148,9 @@ async function handleSubscriptionEvent(event: Stripe.Event, res: NextApiResponse
 
   // Update billing cycle anchor if present
   if ((subscription as any).billing_cycle_anchor) {
-    updates.billing_cycle_anchor = new Date((subscription as any).billing_cycle_anchor * 1000).toISOString();
+    updates.billing_cycle_anchor = new Date(
+      (subscription as any).billing_cycle_anchor * 1000
+    ).toISOString();
   }
 
   // Handle subscription deletion
@@ -190,7 +192,8 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
   });
 
   // Get subscription details
-  const subscriptionId = typeof (invoice as any).subscription === 'string' ? (invoice as any).subscription : null;
+  const subscriptionId =
+    typeof (invoice as any).subscription === 'string' ? (invoice as any).subscription : null;
 
   if (subscriptionId) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);

@@ -24,9 +24,7 @@ export function MarketingOptInCard({ data }: MarketingOptInCardProps) {
       </h3>
 
       <div className="mb-4">
-        <div className="text-white text-4xl font-light mb-2">
-          {data.percentage.toFixed(1)}%
-        </div>
+        <div className="text-white text-4xl font-light mb-2">{data.percentage.toFixed(1)}%</div>
         <div className="text-[#8899a6] text-sm">
           {data.optedIn} of {data.total} members
         </div>
@@ -34,8 +32,8 @@ export function MarketingOptInCard({ data }: MarketingOptInCardProps) {
 
       <div className="w-full bg-[#0f1419] rounded-full h-2 overflow-hidden">
         <div
-          className="bg-[#ff611a] h-full rounded-full transition-all duration-500"
-          style={{ width: `${data.percentage}%` }}
+          className="bg-[#ff611a] h-full rounded-full transition-all duration-500 marketing-progress-bar"
+          data-progress-width={data.percentage}
         />
       </div>
     </div>

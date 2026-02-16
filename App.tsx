@@ -101,7 +101,9 @@ const WaitlistAdminPage = lazy(() =>
   import('./pages/members/WaitlistAdminPage').then((m) => ({ default: m.WaitlistAdminPage }))
 );
 const AnalyticsDashboardPage = lazy(() =>
-  import('./pages/admin/AnalyticsDashboardPage').then((m) => ({ default: m.AnalyticsDashboardPage }))
+  import('./pages/admin/AnalyticsDashboardPage').then((m) => ({
+    default: m.AnalyticsDashboardPage,
+  }))
 );
 const SignUpPage = lazy(() =>
   import('./pages/members/SignUpPage').then((m) => ({ default: m.SignUpPage }))

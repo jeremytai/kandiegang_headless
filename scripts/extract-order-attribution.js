@@ -13,7 +13,9 @@ const sqlPath = '/Users/jeremytai/Desktop/wp_kandi_db1 (2).sql';
 const sqlContent = readFileSync(sqlPath, 'utf8');
 
 // Find the wp_uv3hmh_wc_orders_meta INSERT INTO statement
-const ordersMetaMatch = sqlContent.match(/INSERT INTO `wp_uv3hmh_wc_orders_meta`[^V]+VALUES\s+(.*?);(?=\n\n|$)/s);
+const ordersMetaMatch = sqlContent.match(
+  /INSERT INTO `wp_uv3hmh_wc_orders_meta`[^V]+VALUES\s+(.*?);(?=\n\n|$)/s
+);
 if (!ordersMetaMatch) {
   console.error('❌ Could not find wp_uv3hmh_wc_orders_meta INSERT INTO statement');
   process.exit(1);
@@ -276,8 +278,10 @@ for (const [email, data] of Object.entries(attributionByEmail)) {
     primary_device: primaryDevice || 'unknown',
 
     // Engagement metrics
-    avg_session_pages: data.order_count > 0 ? (data.total_session_pages / data.order_count).toFixed(1) : '0',
-    avg_session_count: data.order_count > 0 ? (data.total_session_count / data.order_count).toFixed(1) : '0',
+    avg_session_pages:
+      data.order_count > 0 ? (data.total_session_pages / data.order_count).toFixed(1) : '0',
+    avg_session_count:
+      data.order_count > 0 ? (data.total_session_count / data.order_count).toFixed(1) : '0',
 
     // Source breakdown (all sources used)
     sources: data.sources,

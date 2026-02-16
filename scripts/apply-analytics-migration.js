@@ -34,8 +34,8 @@ async function applyMigration() {
     // Split by semicolons and execute each statement
     const statements = migrationSQL
       .split(';')
-      .map(s => s.trim())
-      .filter(s => s && !s.startsWith('--'));
+      .map((s) => s.trim())
+      .filter((s) => s && !s.startsWith('--'));
 
     console.log(`Executing ${statements.length} SQL statements...\n`);
 
@@ -49,10 +49,13 @@ async function applyMigration() {
 
       if (error) {
         // Check if error is "already exists" - these are safe to ignore
-        if (error.message?.includes('already exists') ||
-            error.message?.includes('does not exist') ||
-            error.code === '42701' || // duplicate column
-            error.code === '42710') { // duplicate policy/object
+        if (
+          error.message?.includes('already exists') ||
+          error.message?.includes('does not exist') ||
+          error.code === '42701' || // duplicate column
+          error.code === '42710'
+        ) {
+          // duplicate policy/object
           console.log(`  ⚠️  Skipped (already exists): ${error.message}`);
         } else {
           console.error(`  ❌ Error: ${error.message}`);

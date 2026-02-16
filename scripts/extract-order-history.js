@@ -263,7 +263,9 @@ console.log(`  Total customers: ${allOrders.length}`);
 console.log(`  Total orders: ${allOrders.reduce((sum, c) => sum + c.order_count, 0)}`);
 console.log(`  Total revenue: €${totalRevenue.toFixed(2)}`);
 console.log(`  Avg lifetime value: €${avgLifetimeValue.toFixed(2)}`);
-console.log(`  Highest spender: €${maxSpender.total_spent.toFixed(2)} (${maxSpender.order_count} orders)\n`);
+console.log(
+  `  Highest spender: €${maxSpender.total_spent.toFixed(2)} (${maxSpender.order_count} orders)\n`
+);
 
 // Show sample customers with multiple orders
 console.log('Sample customers with multiple orders:');
@@ -273,9 +275,16 @@ const multiOrderCustomers = Object.entries(orderHistoryByEmail)
 
 for (const [email, data] of multiOrderCustomers) {
   console.log(`  ${email}:`);
-  console.log(`    Orders: ${data.order_count}, Total: €${data.total_spent.toFixed(2)}, Avg: €${data.avg_order_value.toFixed(2)}`);
+  console.log(
+    `    Orders: ${data.order_count}, Total: €${data.total_spent.toFixed(2)}, Avg: €${data.avg_order_value.toFixed(2)}`
+  );
   console.log(`    First: ${data.first_order_date}, Last: ${data.last_order_date}`);
-  console.log(`    Recent orders: ${data.orders.slice(0, 2).map(o => `€${o.total} on ${o.date}`).join(', ')}`);
+  console.log(
+    `    Recent orders: ${data.orders
+      .slice(0, 2)
+      .map((o) => `€${o.total} on ${o.date}`)
+      .join(', ')}`
+  );
 }
 
 console.log('\n✅ Done!\n');

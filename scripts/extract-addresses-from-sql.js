@@ -142,5 +142,6 @@ for (const email of sampleEmails) {
   const addr = addressMap[email];
   console.log(`\n${addr.firstName} ${addr.lastName} <${email}>`);
   if (addr.phone) console.log(`  📞 ${addr.phone}`);
-  if (addr.address1) console.log(`  📍 ${addr.address1}, ${addr.city} ${addr.postcode}, ${addr.country}`);
+  if (addr.address1)
+    console.log(`  📍 ${addr.address1}, ${addr.city} ${addr.postcode}, ${addr.country}`);
 }
