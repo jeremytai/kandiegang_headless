@@ -6,7 +6,19 @@ import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 
 export default [
-  { ignores: ['dist/**', 'node_modules/**', 'scripts/archive/**'] },
+  {
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'scripts/archive/**',
+      '.next/**',
+      '.vercel/**',
+      '.claude/**',
+      'supabase/.temp/**',
+      'coverage/**',
+      'build/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

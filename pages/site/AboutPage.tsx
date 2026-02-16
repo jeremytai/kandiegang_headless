@@ -69,9 +69,15 @@ export const AboutPage: React.FC = () => {
     <div className="bg-white overflow-x-hidden">
       <Helmet>
         <title>About Us – Kandie Gang Cycling Club</title>
-        <meta name="description" content="Learn about our mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture. Meet our guides and discover our vision for inclusive cycling in Berlin." />
+        <meta
+          name="description"
+          content="Learn about our mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture. Meet our guides and discover our vision for inclusive cycling in Berlin."
+        />
         <meta property="og:title" content="About Us – Kandie Gang Cycling Club" />
-        <meta property="og:description" content="Learn about our mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture." />
+        <meta
+          property="og:description"
+          content="Learn about our mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture."
+        />
         <meta property="og:url" content="https://kandiegang.com/about" />
         <link rel="canonical" href="https://kandiegang.com/about" />
       </Helmet>

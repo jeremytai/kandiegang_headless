@@ -7,12 +7,13 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Persistent rate limiting using Upstash Redis
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
 
 function getClientIp(req: VercelRequest): string {
   const forwarded = req.headers['x-forwarded-for'];
@@ -23,7 +24,12 @@ function getClientIp(req: VercelRequest): string {
   return 'unknown';
 }
 
-async function checkRateLimit(req: VercelRequest, res: VercelResponse, limit: number, windowMs: number): Promise<boolean> {
+async function checkRateLimit(
+  req: VercelRequest,
+  res: VercelResponse,
+  limit: number,
+  windowMs: number
+): Promise<boolean> {
   if (!redis) {
     return true; // Allow if Redis not configured (dev environment)
   }
@@ -98,7 +104,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       counts[level] = (counts[level] ?? 0) + 1;
     });
 
-    console.log(`[event-capacity] Event ${eventIdNumber}: ${rows.length} total signups, counts:`, counts);
+    console.log(
+      `[event-capacity] Event ${eventIdNumber}: ${rows.length} total signups, counts:`,
+      counts
+    );
 
     return res.status(200).json({
       eventId: eventIdNumber,

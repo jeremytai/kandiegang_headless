@@ -116,12 +116,10 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
   };
 }
 
-
 export const CommunityPage: React.FC = () => {
   const [events, setEvents] = useState<EventsLayoutEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -159,9 +157,15 @@ export const CommunityPage: React.FC = () => {
     <div className="relative selection:bg-[#f9f100] selection:text-black overflow-x-hidden">
       <Helmet>
         <title>Community Events – Kandie Gang Cycling Club</title>
-        <meta name="description" content="Join our upcoming rides and events in Berlin. From social rides to workshops, discover what's happening in the Kandie Gang cycling community." />
+        <meta
+          name="description"
+          content="Join our upcoming rides and events in Berlin. From social rides to workshops, discover what's happening in the Kandie Gang cycling community."
+        />
         <meta property="og:title" content="Community Events – Kandie Gang Cycling Club" />
-        <meta property="og:description" content="Join our upcoming rides and events in Berlin. Social rides, workshops, and community meetups." />
+        <meta
+          property="og:description"
+          content="Join our upcoming rides and events in Berlin. Social rides, workshops, and community meetups."
+        />
         <meta property="og:url" content="https://kandiegang.com/community" />
         <link rel="canonical" href="https://kandiegang.com/community" />
       </Helmet>

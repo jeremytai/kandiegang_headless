@@ -118,9 +118,8 @@ async function handleSubscriptionEvent(event: Stripe.Event, res: NextApiResponse
   }
 
   const subscription = event.data.object as Stripe.Subscription;
-  const customerId = typeof subscription.customer === 'string'
-    ? subscription.customer
-    : subscription.customer.id;
+  const customerId =
+    typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -140,7 +139,9 @@ async function handleSubscriptionEvent(event: Stripe.Event, res: NextApiResponse
 
   // Update expiration date
   if (isMember) {
-    updates.membership_expiration = new Date(subscription.current_period_end * 1000).toISOString().split('T')[0];
+    updates.membership_expiration = new Date(subscription.current_period_end * 1000)
+      .toISOString()
+      .split('T')[0];
   }
 
   // Update billing cycle anchor if present
@@ -176,9 +177,7 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
   }
 
   const invoice = event.data.object as Stripe.Invoice;
-  const customerId = typeof invoice.customer === 'string'
-    ? invoice.customer
-    : invoice.customer?.id;
+  const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
 
   if (!customerId) {
     return res.status(200).json({ received: true });
@@ -189,9 +188,8 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
   });
 
   // Get subscription details
-  const subscriptionId = typeof invoice.subscription === 'string'
-    ? invoice.subscription
-    : invoice.subscription?.id;
+  const subscriptionId =
+    typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
 
   if (subscriptionId) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -200,18 +198,27 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
       .from('profiles')
       .update({
         is_member: true,
-        membership_expiration: new Date(subscription.current_period_end * 1000).toISOString().split('T')[0],
-        subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        membership_expiration: new Date(subscription.current_period_end * 1000)
+          .toISOString()
+          .split('T')[0],
+        subscription_current_period_end: new Date(
+          subscription.current_period_end * 1000
+        ).toISOString(),
         stripe_subscription_status: subscription.status,
       })
       .eq('stripe_customer_id', customerId);
 
     if (error) {
-      console.error('[stripe-webhook] Failed to update profile on invoice.payment_succeeded:', error);
+      console.error(
+        '[stripe-webhook] Failed to update profile on invoice.payment_succeeded:',
+        error
+      );
       return res.status(500).json({ error: 'Failed to update profile' });
     }
 
-    console.log(`[stripe-webhook] invoice.payment_succeeded: Membership renewed for customer ${customerId}`);
+    console.log(
+      `[stripe-webhook] invoice.payment_succeeded: Membership renewed for customer ${customerId}`
+    );
   }
 
   return res.status(200).json({ received: true });
@@ -224,9 +231,7 @@ async function handleInvoicePaymentFailed(event: Stripe.Event, res: NextApiRespo
   }
 
   const invoice = event.data.object as Stripe.Invoice;
-  const customerId = typeof invoice.customer === 'string'
-    ? invoice.customer
-    : invoice.customer?.id;
+  const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
 
   if (!customerId) {
     return res.status(200).json({ received: true });
@@ -285,9 +290,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: `Webhook signature verification failed: ${message}` });
   }
   // Handle subscription lifecycle events
-  if (event.type === 'customer.subscription.created' ||
-      event.type === 'customer.subscription.updated' ||
-      event.type === 'customer.subscription.deleted') {
+  if (
+    event.type === 'customer.subscription.created' ||
+    event.type === 'customer.subscription.updated' ||
+    event.type === 'customer.subscription.deleted'
+  ) {
     return handleSubscriptionEvent(event, res);
   }
 

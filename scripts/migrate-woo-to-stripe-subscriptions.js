@@ -83,7 +83,7 @@ if (!stripeSecretKey || !supabaseUrl || !supabaseServiceKey || !clubPriceId) {
 
 const stripe = new Stripe(stripeSecretKey, { apiVersion: '2026-01-28.clover' });
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
+  auth: { autoRefreshToken: false, persistSession: false },
 });
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
@@ -138,20 +138,22 @@ function loadMembersFromCsv(csvPath) {
   }
 
   const raw = readFileSync(csvPath, 'utf8');
-  const lines = raw.split(/\r?\n/).filter(l => l.trim());
+  const lines = raw.split(/\r?\n/).filter((l) => l.trim());
 
   if (lines.length < 2) {
     console.error('CSV is empty or has no data rows');
     process.exit(1);
   }
 
-  const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase().trim());
-  const emailIdx = headers.findIndex(h => h === 'member_email' || h === 'email');
-  const wpUserIdIdx = headers.findIndex(h => h === 'user_id' || h === 'wp_user_id');
-  const planIdx = headers.findIndex(h => h === 'membership_plan' || h === 'plan');
-  const statusIdx = headers.findIndex(h => h === 'membership_status' || h === 'status');
-  const sinceIdx = headers.findIndex(h => h === 'member_since' || h === 'start_date');
-  const expIdx = headers.findIndex(h => h === 'membership_expiration' || h === 'expiration' || h === 'end_date');
+  const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase().trim());
+  const emailIdx = headers.findIndex((h) => h === 'member_email' || h === 'email');
+  const wpUserIdIdx = headers.findIndex((h) => h === 'user_id' || h === 'wp_user_id');
+  const planIdx = headers.findIndex((h) => h === 'membership_plan' || h === 'plan');
+  const statusIdx = headers.findIndex((h) => h === 'membership_status' || h === 'status');
+  const sinceIdx = headers.findIndex((h) => h === 'member_since' || h === 'start_date');
+  const expIdx = headers.findIndex(
+    (h) => h === 'membership_expiration' || h === 'expiration' || h === 'end_date'
+  );
 
   if (emailIdx === -1) {
     console.error('CSV must have an "email" or "member_email" column');
@@ -205,7 +207,7 @@ async function getOrCreateStripeCustomer(member, existingCustomerId = null) {
   // Search for existing customer by email
   const existingCustomers = await stripe.customers.list({
     email: member.email,
-    limit: 1
+    limit: 1,
   });
 
   if (existingCustomers.data.length > 0) {
@@ -225,8 +227,8 @@ async function getOrCreateStripeCustomer(member, existingCustomerId = null) {
     metadata: {
       wp_user_id: member.wpUserId || '',
       migrated_from: 'woocommerce',
-      migration_date: new Date().toISOString()
-    }
+      migration_date: new Date().toISOString(),
+    },
   });
 
   console.log(`  ✓ Created Stripe Customer: ${customer.id}`);
@@ -247,7 +249,7 @@ async function createStripeSubscription(customer, member, priceId) {
   const existingSubs = await stripe.subscriptions.list({
     customer: customer.id,
     price: priceId,
-    limit: 1
+    limit: 1,
   });
 
   if (existingSubs.data.length > 0) {
@@ -264,7 +266,7 @@ async function createStripeSubscription(customer, member, priceId) {
     return {
       id: 'sub_dry_run_' + Date.now(),
       status: isExpired ? 'canceled' : 'trialing',
-      current_period_end: expirationDate ? Math.floor(expirationDate.getTime() / 1000) : null
+      current_period_end: expirationDate ? Math.floor(expirationDate.getTime() / 1000) : null,
     };
   }
 
@@ -279,14 +281,14 @@ async function createStripeSubscription(customer, member, priceId) {
         migrated_from: 'woocommerce',
         original_expiration: expirationDate?.toISOString() || 'unknown',
         migration_date: new Date().toISOString(),
-        original_status: member.membershipStatus
-      }
+        original_status: member.membershipStatus,
+      },
     });
 
     // Immediately cancel
     await stripe.subscriptions.update(subscription.id, {
       cancel_at_period_end: false,
-      cancel_at: Math.floor(expirationDate ? expirationDate.getTime() / 1000 : Date.now() / 1000)
+      cancel_at: Math.floor(expirationDate ? expirationDate.getTime() / 1000 : Date.now() / 1000),
     });
 
     console.log(`  ✓ Created CANCELED subscription (expired): ${subscription.id}`);
@@ -306,11 +308,13 @@ async function createStripeSubscription(customer, member, priceId) {
       original_member_since: member.memberSince?.toISOString() || 'unknown',
       original_expiration: expirationDate.toISOString(),
       migration_date: new Date().toISOString(),
-      original_status: member.membershipStatus
-    }
+      original_status: member.membershipStatus,
+    },
   });
 
-  console.log(`  ✓ Created subscription: ${subscription.id} (trialing until ${expirationDate.toISOString().split('T')[0]})`);
+  console.log(
+    `  ✓ Created subscription: ${subscription.id} (trialing until ${expirationDate.toISOString().split('T')[0]})`
+  );
   return subscription;
 }
 
@@ -342,7 +346,9 @@ async function updateSupabaseProfile(member, customer, subscription) {
   };
 
   if (subscription.current_period_end) {
-    updates.subscription_current_period_end = new Date(subscription.current_period_end * 1000).toISOString();
+    updates.subscription_current_period_end = new Date(
+      subscription.current_period_end * 1000
+    ).toISOString();
   }
 
   if (subscription.billing_cycle_anchor) {
@@ -373,7 +379,7 @@ async function sendOnboardingEmail(member, customer) {
 
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: customer.id,
-    return_url: `${siteUrl}/members`
+    return_url: `${siteUrl}/members`,
   });
 
   const htmlBody = `
@@ -454,7 +460,7 @@ Kandie Gang Cycling Club
       to: member.email,
       subject: 'Action Required: Add Payment Method for Your Membership',
       html: htmlBody,
-      text: textBody
+      text: textBody,
     });
     console.log(`  ✓ Sent onboarding email to ${member.email}`);
   } catch (err) {
@@ -469,7 +475,7 @@ async function migrateMember(member, logPath) {
     email: member.email,
     timestamp: new Date().toISOString(),
     success: false,
-    errors: []
+    errors: [],
   };
 
   console.log(`\n[${member.email}]`);
@@ -504,7 +510,6 @@ async function migrateMember(member, logPath) {
 
     logEntry.success = true;
     console.log(`  ✅ Migration complete for ${member.email}`);
-
   } catch (err) {
     console.error(`  ✗ Migration failed for ${member.email}:`, err.message);
     logEntry.errors.push(err.message);
@@ -536,10 +541,12 @@ async function runMigration(csvPath) {
   console.log(`Loaded ${members.length} members from CSV\n`);
 
   // Filter for active "Kandie Gang Cycling Club Membership" members
-  const clubMembers = members.filter(m =>
-    m.membershipPlan &&
-    m.membershipPlan.toLowerCase().includes('cycling') &&
-    (m.membershipPlan.toLowerCase().includes('club') || m.membershipPlan.toLowerCase().includes('membership'))
+  const clubMembers = members.filter(
+    (m) =>
+      m.membershipPlan &&
+      m.membershipPlan.toLowerCase().includes('cycling') &&
+      (m.membershipPlan.toLowerCase().includes('club') ||
+        m.membershipPlan.toLowerCase().includes('membership'))
   );
 
   console.log(`Filtering to ${clubMembers.length} Cycling Club memberships\n`);
@@ -559,7 +566,9 @@ async function runMigration(csvPath) {
   const results = [];
   for (let i = 0; i < clubMembers.length; i += BATCH_SIZE) {
     const batch = clubMembers.slice(i, i + BATCH_SIZE);
-    console.log(`\n--- Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(clubMembers.length / BATCH_SIZE)} ---`);
+    console.log(
+      `\n--- Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(clubMembers.length / BATCH_SIZE)} ---`
+    );
 
     for (const member of batch) {
       const result = await migrateMember(member, logPath);
@@ -569,7 +578,7 @@ async function runMigration(csvPath) {
     // Rate limiting
     if (i + BATCH_SIZE < clubMembers.length) {
       console.log(`\n⏸  Waiting ${RATE_LIMIT_DELAY_MS}ms before next batch...`);
-      await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY_MS));
+      await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY_MS));
     }
   }
 
@@ -577,8 +586,8 @@ async function runMigration(csvPath) {
   console.log('\n\n===========================================');
   console.log('MIGRATION SUMMARY');
   console.log('===========================================');
-  const successful = results.filter(r => r.success).length;
-  const failed = results.filter(r => !r.success).length;
+  const successful = results.filter((r) => r.success).length;
+  const failed = results.filter((r) => !r.success).length;
   console.log(`✅ Successful: ${successful}/${clubMembers.length}`);
   console.log(`✗ Failed: ${failed}/${clubMembers.length}`);
   console.log(`\nDetailed log: ${logPath}`);
@@ -591,14 +600,16 @@ const csvPath = process.argv[2];
 
 if (!csvPath) {
   console.error('Usage: node scripts/migrate-woo-to-stripe-subscriptions.js <path-to-csv>');
-  console.error('\nCSV should have columns: email (or member_email), membership_plan, membership_status, member_since, membership_expiration');
+  console.error(
+    '\nCSV should have columns: email (or member_email), membership_plan, membership_status, member_since, membership_expiration'
+  );
   console.error('\nSet DRY_RUN=true to test without making changes');
   console.error('\nExample:');
   console.error('  DRY_RUN=true node scripts/migrate-woo-to-stripe-subscriptions.js members.csv');
   process.exit(1);
 }
 
-runMigration(csvPath).catch(err => {
+runMigration(csvPath).catch((err) => {
   console.error('Migration failed:', err);
   process.exit(1);
 });

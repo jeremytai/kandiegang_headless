@@ -10,12 +10,13 @@ type RateLimitOptions = { windowMs: number; max: number; keyPrefix: string };
 type Bucket = { count: number; resetAt: number };
 const inMemoryBuckets = new Map<string, Bucket>(); // Fallback for development
 
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
 
 function getClientIp(req: VercelRequest): string {
   const forwarded = req.headers['x-forwarded-for'];
@@ -26,7 +27,11 @@ function getClientIp(req: VercelRequest): string {
   return 'unknown';
 }
 
-async function checkRateLimit(req: VercelRequest, res: VercelResponse, options: RateLimitOptions): Promise<boolean> {
+async function checkRateLimit(
+  req: VercelRequest,
+  res: VercelResponse,
+  options: RateLimitOptions
+): Promise<boolean> {
   const ip = getClientIp(req);
   const key = `ratelimit:${options.keyPrefix}:${ip}`;
 
@@ -256,7 +261,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const eventIdRaw = body?.eventId;
   const rideLevel = typeof body?.rideLevel === 'string' ? body.rideLevel : null;
   const eventType = typeof body?.eventType === 'string' ? body.eventType : null;
-  const eventTitle = typeof body?.eventTitle === 'string' ? body.eventTitle.trim() : 'Kandie Gang Event';
+  const eventTitle =
+    typeof body?.eventTitle === 'string' ? body.eventTitle.trim() : 'Kandie Gang Event';
   const flintaAttested = Boolean(body?.flintaAttested);
   const firstName = typeof body?.firstName === 'string' ? body.firstName.trim() : '';
   const lastName = typeof body?.lastName === 'string' ? body.lastName.trim() : '';
@@ -265,8 +271,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const eventId = typeof eventIdRaw === 'string' ? Number(eventIdRaw) : eventIdRaw;
 
   console.log('[event-signup] Parsed signup payload:', {
-    eventId, rideLevel, eventType, eventTitle, flintaAttested, firstName, lastName,
-    isGuest: isGuestSignup, hasEmail: !!guestEmail, hasTurnstile: !!turnstileToken
+    eventId,
+    rideLevel,
+    eventType,
+    eventTitle,
+    flintaAttested,
+    firstName,
+    lastName,
+    isGuest: isGuestSignup,
+    hasEmail: !!guestEmail,
+    hasTurnstile: !!turnstileToken,
   });
 
   // Basic validation
@@ -495,7 +509,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else {
       console.warn('[event-signup] Email not sent:', {
         hasResendKey: !!RESEND_API_KEY,
-        hasUserEmail: !!userEmail
+        hasUserEmail: !!userEmail,
       });
     }
     return res.status(200).json({ success: true, waitlisted });

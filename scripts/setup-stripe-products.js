@@ -60,11 +60,12 @@ async function setupProducts() {
 
   const clubProduct = await stripe.products.create({
     name: 'Kandie Gang Cycling Club Membership',
-    description: 'Annual membership to Kandie Gang Cycling Club with access to exclusive events, content, and community',
+    description:
+      'Annual membership to Kandie Gang Cycling Club with access to exclusive events, content, and community',
     metadata: {
       product_slug: 'kandie-gang-cycling-club-membership',
-      type: 'membership'
-    }
+      type: 'membership',
+    },
   });
 
   const clubPrice = await stripe.prices.create({
@@ -73,11 +74,11 @@ async function setupProducts() {
     unit_amount: 9900, // €99.00 - ADJUST THIS TO YOUR ACTUAL PRICE
     recurring: {
       interval: 'year',
-      interval_count: 1
+      interval_count: 1,
     },
     metadata: {
-      product_slug: 'kandie-gang-cycling-club-membership'
-    }
+      product_slug: 'kandie-gang-cycling-club-membership',
+    },
   });
 
   console.log('✅ Club Membership Product Created:');
@@ -130,7 +131,7 @@ async function setupProducts() {
   console.log('3. Run the migration script to migrate members\n');
 }
 
-setupProducts().catch(err => {
+setupProducts().catch((err) => {
   console.error('\n❌ Error setting up products:', err.message);
   if (err.type === 'StripeAuthenticationError') {
     console.error('\nInvalid Stripe API key. Please check your STRIPE_SECRET_KEY');

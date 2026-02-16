@@ -59,6 +59,7 @@ export const Footer: React.FC = () => {
               <FooterLink to="/kandiecode" label="Kandie Code" />
               <FooterLink to="/ridelevels" label="Ride Levels" />
               <FooterLink to="/waiver" label="Ride Waiver" />
+              <FooterLink to="/terms-of-use" label="Terms of Use" />
             </ul>
 
             <ul className="col-span-3 flex flex-col gap-2 pb-4 md:col-span-2 md:gap-3">

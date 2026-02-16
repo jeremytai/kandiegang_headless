@@ -32,13 +32,16 @@ export const KandieEventPage: React.FC = () => {
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
   const [registrations, setRegistrations] = useState<Record<string, { isWaitlist: boolean }>>({});
   const [participantsByLevel, setParticipantsByLevel] = useState<
-    Record<string, Array<{
-      first_name: string;
-      last_name: string;
-      user_id: string | null;
-      is_waitlist: boolean;
-      created_at: string;
-    }>>
+    Record<
+      string,
+      Array<{
+        first_name: string;
+        last_name: string;
+        user_id: string | null;
+        is_waitlist: boolean;
+        created_at: string;
+      }>
+    >
   >({});
   // Fetch all participants for the event and group by ride_level
   const refreshParticipantsByLevel = useCallback(async () => {
@@ -54,13 +57,16 @@ export const KandieEventPage: React.FC = () => {
         console.warn('Participant lookup failed:', error);
         return;
       }
-      const grouped: Record<string, Array<{
-        first_name: string;
-        last_name: string;
-        user_id: string | null;
-        is_waitlist: boolean;
-        created_at: string;
-      }>> = {};
+      const grouped: Record<
+        string,
+        Array<{
+          first_name: string;
+          last_name: string;
+          user_id: string | null;
+          is_waitlist: boolean;
+          created_at: string;
+        }>
+      > = {};
       (data ?? []).forEach((row) => {
         const level =
           typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
@@ -75,9 +81,9 @@ export const KandieEventPage: React.FC = () => {
       });
 
       // Sort each level's participants by signup time (earliest first)
-      Object.keys(grouped).forEach(level => {
-        grouped[level].sort((a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      Object.keys(grouped).forEach((level) => {
+        grouped[level].sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
       });
 
