@@ -210,11 +210,18 @@ const App: React.FC = () => {
 
                   {/* Main Content */}
                   <motion.div
-                    style={{ scale, opacity, y, transformOrigin: 'bottom center' }}
+                    style={{
+                      scale,
+                      opacity,
+                      y,
+                      transformOrigin: 'bottom center',
+                      willChange: 'transform, opacity',
+                    }}
                     className={[
                       'relative z-10 bg-white overflow-clip min-h-screen',
                       // Keep a flat edge at the top on all pages, while keeping the bottom corners rounded.
                       'rounded-b-[24px] rounded-t-none',
+                      '[backface-visibility:hidden]',
                     ].join(' ')}
                   >
                     <AnnouncementBar

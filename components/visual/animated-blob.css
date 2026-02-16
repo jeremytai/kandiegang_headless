@@ -22,20 +22,7 @@
   z-index: 0;
 }
 
-/* Edge fade – blobs soften to background, no hard edge */
-.animated-blob-wrapper::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 100% 100% at 50% 50%,
-    transparent 0%,
-    transparent 30%,
-    var(--color-primary-breath) 75%,
-    var(--color-primary-breath) 100%
-  );
-}
+/* Edge fade removed per user request */
 
 /* Noise overlay – subtle */
 .animated-blob-noise {
