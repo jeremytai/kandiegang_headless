@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/((?!api|assets|fonts|images|logos|robots.txt|_redirects).*)", "destination": "/index.html" }
   ]
