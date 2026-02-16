@@ -15,7 +15,7 @@ import { Preloader } from './components/layout/Preloader';
 import { WeatherStatusBackground } from './components/visual/WeatherStatusBackground';
 import { ExpandingHero } from './components/visual/ExpandingHero';
 import { ScrollingHeadline } from './components/visual/ScrollingHeadline';
-import { HorizontalRevealSection } from './components/visual/HorizontalRevealSection';
+import { HorizontalScrollSectionFramer } from './components/visual/HorizontalScrollSectionFramer';
 import { HomepageRotatingHeadline } from './components/visual/HomepageRotatingHeadline';
 import { CompanySection } from './components/sections/CompanySection';
 import { FAQSection } from './components/sections/FAQSection';
@@ -233,7 +233,6 @@ const App: React.FC = () => {
                             element={
                               <>
                                 <LandingPage />
-                                <HorizontalRevealSection />
                                 <CompanySection />
                                 <FAQSection />
                               </>

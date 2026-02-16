@@ -35,7 +35,7 @@ export const ScrollingHeadline: React.FC = () => {
 
   return (
     <section ref={containerRef} className="relative h-[100vh]">
-      <div className="sticky top-0 h-screen w-full relative overflow-hidden">
+      <div className="sticky top-0 h-screen w-full overflow-hidden">
         <AnimatedBlob contained />
         <div className="relative z-10 flex flex-col items-center justify-center h-full px-6">
           <div className="relative flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-6 w-full text-center font-heading-light text-secondary-blush">
