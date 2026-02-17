@@ -1,3 +1,4 @@
+// File removed. Logic moved to stripe-session.ts
 // Migrated from /api/create-checkout-session.ts to Next.js API route
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';

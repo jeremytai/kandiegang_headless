@@ -1,3 +1,4 @@
+// File removed. Logic moved to stripe-session.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
