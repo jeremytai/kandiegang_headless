@@ -1,3 +1,4 @@
+// File removed. Logic moved to admin-report.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit } from '../lib/rateLimit';
