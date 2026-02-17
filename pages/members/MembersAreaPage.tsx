@@ -19,7 +19,6 @@ import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { MembersConfetti } from '../../components/common/MembersConfetti';
 import { MemberMetaCard } from '../../components/member/MemberMetaCard';
 import { KandieGangCyclingClubPage } from '../site/KandieGangCyclingClubPage';
-
 const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
 const MEMBERS_ONLY_POSTS_FIRST = 20;
 
@@ -150,6 +149,9 @@ export const MembersAreaPage: React.FC = () => {
   const cyclingMember = Boolean(profile?.is_member);
   const canSeeMembersOnlyPosts = cyclingMember || guide;
 
+  // Temp: find correct UUID for admin check
+  console.log('AUTH USER ID:', user?.id);
+
   useEffect(() => {
     if (status === 'loading') return;
     if (
@@ -234,7 +236,7 @@ export const MembersAreaPage: React.FC = () => {
     return (
       <main className="bg-white dark:bg-slate-900 min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
         <div className="max-w-7xl mx-auto px-6">
-          <p className="text-slate-600 dark:text-slate-400">Checking your membership…</p>
+          <p className="text-slate-600 dark:text-slate-400">ivy</p>
         </div>
       </main>
     );
@@ -309,14 +311,6 @@ export const MembersAreaPage: React.FC = () => {
                   </span>
                 )}
               </div>
-              {guide && (
-                <Link
-                  to="/members/guide-access-check"
-                  className="mt-1 text-xs text-blue-700 dark:text-blue-300 underline hover:text-blue-900 dark:hover:text-blue-100"
-                >
-                  Guide Access Checker
-                </Link>
-              )}
             </motion.div>
           )}
 
@@ -330,7 +324,6 @@ export const MembersAreaPage: React.FC = () => {
         {(cyclingMember || guide) && (
           <MembersConfetti originRef={pillRef} enabled={initialMembershipCheckDone} />
         )}
-
         {/* Begin members-only products */}
         {initialMembershipCheckDone && canSeeMembersOnlyPosts && (
           <>

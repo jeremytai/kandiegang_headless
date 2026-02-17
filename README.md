@@ -279,7 +279,7 @@ The contact form on the **Contact** page (`/contact`) and in the **Contact modal
    ```env
    VITE_FORMSPREE_CONTACT_FORM_ID=your_formspree_form_id
    ```
-3. __Enable AJAX submissions__: This app submits the form via JavaScript (no redirect). In your [Formspree form settings](https://formspree.io/forms), either __disable reCAPTCHA__ for that form, or add your own __reCAPTCHA keys__ (v3). Otherwise submissions will return 403 with: _"In order to submit via AJAX, you need to set a custom key or reCAPTCHA must be disabled."_
+3. **Enable AJAX submissions**: This app submits the form via JavaScript (no redirect). In your [Formspree form settings](https://formspree.io/forms), either **disable reCAPTCHA** for that form, or add your own **reCAPTCHA keys** (v3). Otherwise submissions will return 403 with: _"In order to submit via AJAX, you need to set a custom key or reCAPTCHA must be disabled."_
 4. Restart the dev server so the new env var is picked up.
 
 The shared `ContactForm` component (`components/ContactForm.tsx`) is used on both the Contact page and inside `ContactModal`. If `VITE_FORMSPREE_CONTACT_FORM_ID` is not set, the form area shows instructions to set the env var. On submit errors, the form displays Formspree’s error message when available. For stronger spam protection after enabling AJAX, you can add reCAPTCHA v3 or Turnstile in your Formspree dashboard.

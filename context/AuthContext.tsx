@@ -166,6 +166,15 @@ async function loadUserAndProfile(): Promise<{
 
   if (!raw) return { user, profile: null };
 
+  // Update last_login timestamp (fire-and-forget)
+  supabase
+    .from('profiles')
+    .update({ last_login: new Date().toISOString() })
+    .eq('id', user.id)
+    .then(({ error: updateErr }) => {
+      if (updateErr) console.warn('[AuthContext] Failed to update last_login', updateErr);
+    });
+
   const isMemberRaw = raw.is_member;
   const isMember =
     isMemberRaw === true || isMemberRaw === 'true' || isMemberRaw === 1 || isMemberRaw === '1';

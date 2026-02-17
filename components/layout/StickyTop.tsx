@@ -324,9 +324,6 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                           onClick={handleToggle}
                         />
                       )}
-                      {isGuide && (
-                        <NavLink label="Analytics" to="/admin/analytics" onClick={handleToggle} />
-                      )}
                       <NavLink label="Shop" to="/shop" onClick={handleToggle} />
                       <NavLink label="About" to="/about" onClick={handleToggle} />
                     </nav>
@@ -357,7 +354,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
   );
 };
 
-const NavLink = ({ label, to, onClick }: { label: string; to: string; onClick: () => void }) => (
+export const NavLink = ({ label, to, onClick }: { label: string; to: string; onClick: () => void }) => (
   <Link
     to={to}
     onClick={onClick}
