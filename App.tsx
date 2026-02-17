@@ -199,6 +199,11 @@ const App: React.FC = () => {
   const scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
   const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
+  // Isolated test route — renders only the component, no layout chrome
+  if (location.pathname === '/test-horizontal') {
+    return <HorizontalRevealSection />;
+  }
+
   return (
     <HelmetProvider>
       <CookieConsentProvider>
@@ -222,7 +227,7 @@ const App: React.FC = () => {
                       willChange: 'transform',
                     }}
                     className={[
-                      'relative z-10 w-full bg-white overflow-hidden min-h-screen',
+                      'relative z-10 w-full bg-white overflow-clip min-h-screen',
                       'rounded-b-[24px] rounded-t-none',
                       '[backface-visibility:hidden]',
                     ].join(' ')}
@@ -239,7 +244,8 @@ const App: React.FC = () => {
                             element={
                               <>
                                 <LandingPage />
-                                <SectionHeader title="Explore Kandie Gang" />
+                                <SectionHeader title="Community is the Catalyst" />
+                                <HorizontalRevealSection />
                                 <CompanySection />
                                 <FAQSection />
                               </>

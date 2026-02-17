@@ -9,24 +9,9 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { AnimatedHeadline } from './AnimatedHeadline';
-// Removed SectionHeader import; will be used in App.tsx instead
-import { imageSrc } from '../../lib/images';
+import { getRideGuides, transformMediaUrl } from '../../lib/wordpress';
 
-/** Guide photos from public/images/guides (base path without extension). */
-const HEADLINE_IMAGE_BASES = [
-  '/images/guides/bjoern_h',
-  '/images/guides/christian_m',
-  '/images/guides/emma_b',
-  '/images/guides/jeremy',
-  '/images/guides/katrin_h',
-  '/images/guides/michael_m',
-  '/images/guides/rilana_s',
-  '/images/guides/ruth_p',
-  '/images/guides/saskia_s',
-  '/images/guides/sebastian_w',
-  '/images/guides/silvi_b_',
-  '/images/guides/tanja_d',
-];
+const PLACEHOLDER_IMAGE = '/images/guides/placeholder.jpg';
 
 function shuffle<T>(arr: readonly T[]): T[] {
   const out = [...arr];
@@ -49,21 +34,48 @@ export const HomepageRotatingHeadline: React.FC<HomepageRotatingHeadlineProps> =
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [imageIndex, setImageIndex] = useState(0);
-  const shuffledBases = useMemo(() => shuffle(HEADLINE_IMAGE_BASES), []);
+  const [guideImages, setGuideImages] = useState<string[]>([]);
+  const shuffledImages = useMemo(() => (guideImages.length ? shuffle(guideImages) : []), [guideImages]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchGuides = async () => {
+      try {
+        const wpGuides = await getRideGuides();
+        if (cancelled) return;
+        const images = wpGuides
+          .map((g) =>
+            g.featuredImage?.node?.sourceUrl
+              ? transformMediaUrl(g.featuredImage.node.sourceUrl)
+              : null
+          )
+          .filter((url): url is string => url !== null);
+        setGuideImages(images.length ? images : [PLACEHOLDER_IMAGE]);
+      } catch {
+        setGuideImages([PLACEHOLDER_IMAGE]);
+      }
+    };
+    fetchGuides();
+    return () => { cancelled = true; };
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end end'],
   });
 
   useEffect(() => {
+    if (shuffledImages.length <= 1) return;
     const id = setInterval(() => {
-      setImageIndex((i) => (i + 1) % shuffledBases.length);
+      setImageIndex((i) => (i + 1) % shuffledImages.length);
     }, ROTATE_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [shuffledBases.length]);
+  }, [shuffledImages.length]);
 
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
+
+  const currentImage = shuffledImages.length > 0 ? shuffledImages[imageIndex % shuffledImages.length] : PLACEHOLDER_IMAGE;
 
   return (
     <section
@@ -85,7 +97,7 @@ export const HomepageRotatingHeadline: React.FC<HomepageRotatingHeadlineProps> =
           <AnimatedHeadline text="You found us " as="span" />
           <img
             key={imageIndex}
-            src={imageSrc(shuffledBases[imageIndex], 400)}
+            src={currentImage}
             alt=""
             width={400}
             height={400}
@@ -94,11 +106,6 @@ export const HomepageRotatingHeadline: React.FC<HomepageRotatingHeadlineProps> =
           />
           <AnimatedHeadline text="!" as="span" />
         </h1>
-        {/* SectionHeader moved to App.tsx after ScrollingHeadline */}
-
-        {/* <button className="bg-black text-white px-6 md:px-8 py-3.5 md:py-4 rounded-full font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-black/10 active:scale-95 text-sm md:text-base group">
-          Reserve Kandie Gang <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </button> */}
       </motion.div>
     </section>
   );
