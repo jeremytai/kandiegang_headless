@@ -248,7 +248,7 @@ export const MembersAreaPage: React.FC = () => {
     return (
       <main className="bg-white dark:bg-slate-900 min-h-screen pt-32 md:pt-40 pb-40 selection:bg-[#f9f100] selection:text-black">
         <div className="max-w-7xl mx-auto px-6">
-          <p className="text-slate-600 dark:text-slate-400">Checking your membership…</p>
+          <p className="text-slate-600 dark:text-slate-400 font-ivy">Kurzer!</p>
         </div>
       </main>
     );
