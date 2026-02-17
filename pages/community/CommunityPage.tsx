@@ -159,12 +159,12 @@ export const CommunityPage: React.FC = () => {
         <title>Community Events – Kandie Gang Cycling Club</title>
         <meta
           name="description"
-          content="Join our upcoming rides and events in Berlin. From social rides to workshops, discover what's happening in the Kandie Gang cycling community."
+          content="Join our upcoming rides and events in Hamburg. From social rides to workshops, discover what's happening in the Kandie Gang cycling community."
         />
         <meta property="og:title" content="Community Events – Kandie Gang Cycling Club" />
         <meta
           property="og:description"
-          content="Join our upcoming rides and events in Berlin. Social rides, workshops, and community meetups."
+          content="Join our upcoming rides and events in Hamburg. Social rides, workshops, and community meetups."
         />
         <meta property="og:url" content="https://kandiegang.com/community" />
         <link rel="canonical" href="https://kandiegang.com/community" />
@@ -175,7 +175,7 @@ export const CommunityPage: React.FC = () => {
         <AnimatedBlob contained />
       </div>
 
-      <section className="relative z-10 min-h-[28rem] pt-32 md:pt-40 pb-8 md:pb-10">
+      <section className="relative z-10 min-h-[18rem] md:min-h-[28rem] pt-32 md:pt-40 pb-1 md:pb-10">
         <div className="mx-auto grid max-w-site grid-cols-12 gap-x-4 px-6 lg:gap-x-6">
           <div className="col-span-12">
             <AnimatedHeadline
@@ -186,14 +186,14 @@ export const CommunityPage: React.FC = () => {
               className="text-4xl md:text-6xl lg:text-[6.5vw] font-heading-light tracking-normal text-secondary-purple-rain mb-2 md:mb-4 text-balance w-full"
             />
           </div>
-          <div className="col-span-8 flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="col-span-12 md:col-span-8 flex flex-col md:flex-row md:items-end justify-between gap-8">
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
             >
-              Join us for upcoming events, workshops, and social rides.
+              Join us for upcoming events, workshops, and social rides in Hamburg.
             </motion.p>
           </div>
         </div>

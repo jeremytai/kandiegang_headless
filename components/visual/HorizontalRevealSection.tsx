@@ -44,7 +44,7 @@ const CARDS: CardData[] = [
 
 /* ─── HorizontalCard ─── */
 const HorizontalCard: React.FC<CardData> = ({ title, desc, img, to }) => (
-  <div className="relative flex-none w-[90vw] md:w-[60vw] aspect-[4/5] md:aspect-[16/10] rounded-xl overflow-hidden p-8 md:p-20 flex flex-col justify-end bg-slate-900 text-white shadow-2xl group snap-start">
+  <div className="relative flex-none w-[90vw] md:w-[60vw] aspect-[4/5] md:aspect-[16/10] rounded-xl overflow-hidden p-8 md:p-20 flex flex-col justify-end bg-slate-900 text-white group snap-start">
     <div className="relative z-10 max-w-xl">
       <Link
         className="block text-white no-underline hover:text-white focus:text-white focus:outline-none"

@@ -223,7 +223,7 @@ export const WeatherStatusBackground: React.FC = () => {
   }, [location.timezone]);
 
   return (
-    <div className="fixed inset-0 z-0 flex flex-col items-center overflow-hidden rounded-none bg-secondary-signal px-6 pt-16 pb-[max(2rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] md:px-12 md:pt-24 md:pb-12">
+    <div className="fixed inset-0 z-0 flex flex-col items-center overflow-hidden bg-secondary-signal px-6 pt-16 pb-[max(2rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] md:px-12 md:pt-24 md:pb-12">
       <div className="flex min-h-0 flex-1 flex-col items-center justify-end pb-6 space-y-10 text-center md:justify-center md:pb-0 md:space-y-16">
         <p className="font-heading max-w-[280px] text-balance text-xl font-light tracking-normal text-slate-900 md:max-w-none md:text-3xl">
           {(weather.condition === 'Loading...'

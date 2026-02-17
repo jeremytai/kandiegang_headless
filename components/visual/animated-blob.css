@@ -3,18 +3,20 @@
  * Use .animated-blob-contained on wrapper when inside a section (absolute fill).
  */
 
+
+/* Hide animated blob background on mobile only */
+@media (max-width: 767px) {
+  .animated-blob-wrapper {
+    display: none !important;
+  }
+}
+
 .animated-blob-wrapper {
   position: fixed;
   inset: 0;
   overflow: hidden;
   z-index: -1;
   background: var(--color-primary-breath);
-}
-
-@media (max-width: 767px) {
-  .animated-blob-wrapper {
-    display: none;
-  }
 }
 
 .animated-blob-wrapper.animated-blob-contained {

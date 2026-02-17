@@ -8,7 +8,7 @@
 
 import React, { useRef, useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 
 // Reusable Components
 import { Preloader } from './components/layout/Preloader';
@@ -183,22 +183,41 @@ const App: React.FC = () => {
     }
   }, [location.pathname]);
 
-  const { scrollYProgress } = useScroll({
-    target: sentinelRef,
-    offset: ['start end', 'end end'],
-  });
 
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
+  // Only use Framer Motion scroll hooks for non-test-blank routes
+  let scale, y;
+  if (location.pathname !== '/test-blank') {
+    // Use framer-motion hooks directly (must be top-level imports)
+    const { scrollYProgress } = useScroll({
+      target: sentinelRef,
+      offset: ['start end', 'end end'],
+    });
+    const smoothProgress = useSpring(scrollYProgress, {
+      stiffness: 100,
+      damping: 30,
+      restDelta: 0.001,
+    });
+    scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
+    y = useTransform(smoothProgress, [0, 1], [0, -20]);
+  }
 
-  // Frame: keep rounded corners visible from the start.
-  // Keep spacing aligned with commit 37f4691 by NOT adding extra frame padding.
-  const scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
-  const y = useTransform(smoothProgress, [0, 1], [0, -20]);
 
+  // Minimal blank test route — renders only the App shell, no content
+  if (location.pathname === '/test-blank') {
+    // Minimal blank test route — no Framer Motion hooks, no refs, just a div
+    return (
+      <div style={{ minHeight: '100vh', background: '#fff' }}>
+        <WeatherStatusBackground />
+        <AnnouncementBar message="Test announcement" onDismiss={() => {}} />
+        <NewsletterSection />
+        <Preloader onComplete={() => {}} />
+        <CartProvider>
+          <CartOffcanvas />
+        </CartProvider>
+        {/* Add components one by one to isolate vignette source */}
+      </div>
+    );
+  }
   // Isolated test route — renders only the component, no layout chrome
   if (location.pathname === '/test-horizontal') {
     return <HorizontalRevealSection />;
@@ -211,7 +230,7 @@ const App: React.FC = () => {
           <ContactModalProvider>
             <MemberLoginOffcanvasProvider>
               <CartProvider>
-                <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white">
+                <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white rounded-b-[24px] rounded-t-none">
                   {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
                   {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
 
@@ -227,8 +246,8 @@ const App: React.FC = () => {
                       willChange: 'transform',
                     }}
                     className={[
-                      'relative z-10 w-full bg-white overflow-clip min-h-screen',
-                      'rounded-b-[24px] rounded-t-none',
+                      'relative z-10 w-full min-h-screen bg-white rounded-b-[24px] rounded-t-none',
+                      // 'overflow-hidden', // removed for vignette test
                       '[backface-visibility:hidden]',
                     ].join(' ')}
                   >

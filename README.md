@@ -1,4 +1,28 @@
 # Kandie Gang Headless WordPress
+
+## 🕵️ Vignette/Shadow Investigation Findings
+
+**Issue:** Persistent right-side vignette or shadow visible on all screens, especially with certain context providers enabled (e.g., AuthProvider).
+
+**Investigation Steps:**
+- Systematically removed and tested layout classes (`overflow-hidden`, `rounded-b-[24px]`, `bg-white`) from the main content wrapper in App.tsx.
+- Searched for any `box-shadow`, `linear-gradient`, `filter`, `::after`, `::before`, or z-index/stacking context issues in all global and component-level CSS/TSX files.
+- Confirmed no global or component-level overlays, gradients, or shadows were present.
+- Verified that the main content wrapper and background layers use only solid colors (no gradients or shadows).
+- Confirmed the effect is not caused by the WeatherStatusBackground, Footer, or OffCanvas components.
+- The issue persists even after removing all obvious suspects, suggesting a possible browser rendering artifact or subtle stacking context interaction.
+
+**Current Status:**
+- No explicit shadow, gradient, or overlay found in the codebase.
+- The vignette/shadow is not caused by any Tailwind utility, custom CSS, or React component logic.
+- Removing `overflow-hidden`, `rounded-b-[24px]`, and `bg-white` from the main content wrapper did not resolve the issue.
+- The effect may be a browser rendering artifact or related to stacking context/z-index, but no code-based cause has been identified.
+
+**Recommendation:**
+- If the vignette/shadow persists, test in a different browser or device to rule out rendering artifacts.
+- Continue to check for any subtle stacking context or compositing issues if new layout changes are made.
+
+_Documented: Feb 2026_
 A high-fidelity replication of the experimental UI and interactions from Kandie Gang, built as a headless WordPress frontend. This project focuses on high-quality animations, smooth scroll-driven effects, and a premium "mundane made magic" aesthetic, powered by a type-safe WordPress GraphQL bridge.
 ## ✨ Features
 
@@ -255,7 +279,7 @@ The contact form on the **Contact** page (`/contact`) and in the **Contact modal
    ```env
    VITE_FORMSPREE_CONTACT_FORM_ID=your_formspree_form_id
    ```
-3. **Enable AJAX submissions**: This app submits the form via JavaScript (no redirect). In your [Formspree form settings](https://formspree.io/forms), either **disable reCAPTCHA** for that form, or add your own **reCAPTCHA keys** (v3). Otherwise submissions will return 403 with: *"In order to submit via AJAX, you need to set a custom key or reCAPTCHA must be disabled."*
+3. __Enable AJAX submissions__: This app submits the form via JavaScript (no redirect). In your [Formspree form settings](https://formspree.io/forms), either __disable reCAPTCHA__ for that form, or add your own __reCAPTCHA keys__ (v3). Otherwise submissions will return 403 with: _"In order to submit via AJAX, you need to set a custom key or reCAPTCHA must be disabled."_
 4. Restart the dev server so the new env var is picked up.
 
 The shared `ContactForm` component (`components/ContactForm.tsx`) is used on both the Contact page and inside `ContactModal`. If `VITE_FORMSPREE_CONTACT_FORM_ID` is not set, the form area shows instructions to set the env var. On submit errors, the form displays Formspree’s error message when available. For stronger spam protection after enabling AJAX, you can add reCAPTCHA v3 or Turnstile in your Formspree dashboard.

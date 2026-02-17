@@ -59,7 +59,17 @@ const GlyphLogo = () => (
   <div
     role="img"
     aria-label="Kandie Gang"
-    className="h-full w-full bg-secondary-current mask-[url('/logos/kandiegang_logo.svg')] mask-no-repeat mask-contain mask-center"
+    className="h-full w-full bg-secondary-current"
+    style={{
+      maskImage: "url('/logos/kandiegang_logo.svg')",
+      WebkitMaskImage: "url('/logos/kandiegang_logo.svg')",
+      maskRepeat: 'no-repeat',
+      WebkitMaskRepeat: 'no-repeat',
+      maskSize: 'contain',
+      WebkitMaskSize: 'contain',
+      maskPosition: 'center',
+      WebkitMaskPosition: 'center',
+    }}
   />
 );
 
