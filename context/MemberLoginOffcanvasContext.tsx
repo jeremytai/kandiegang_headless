@@ -1,4 +1,3 @@
-import { NavLink } from '../components/layout/StickyTop';
 /**
  * MemberLoginOffcanvasContext.tsx
  * Global member login offcanvas: open from Footer "Members", event CTA, or StickyTop user icon.
