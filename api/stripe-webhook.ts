@@ -384,6 +384,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const existingExp = existing?.membership_expiration ?? null;
   const newExpiration =
     existingExp && existingExp > membershipExpiration ? existingExp : membershipExpiration;
+  const stripeCustomerId =
+    typeof session.customer === 'string' ? session.customer : null;
+
   const { error: updateError } = await supabase
     .from('profiles')
     .update({
@@ -392,6 +395,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       membership_plans: plans,
       member_since: today,
       membership_expiration: newExpiration,
+      ...(stripeCustomerId && { stripe_customer_id: stripeCustomerId }),
     })
     .eq('id', profileId);
   if (updateError) {
