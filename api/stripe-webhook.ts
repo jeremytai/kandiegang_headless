@@ -207,6 +207,52 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
       firstItem?.current_period_end ?? (subscription as any).current_period_end ?? null;
     const status = (subscription as any).status;
 
+    // ── Order history tracking ──────────────────────────────────────────────
+    const amountPaid = ((invoice as any).amount_paid ?? 0) / 100;
+    const orderDate = new Date((invoice as any).created * 1000).toISOString().split('T')[0];
+    const productNames: string[] = ((invoice as any).lines?.data ?? [])
+      .map((l: any) => l.description)
+      .filter((d: any): d is string => typeof d === 'string' && d.length > 0);
+
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('order_history, customer_since')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle();
+
+    const existingHistory: any[] = Array.isArray(profileData?.order_history)
+      ? profileData.order_history
+      : [];
+    const alreadyTracked = existingHistory.some((e) => e.order_id === (invoice as any).id);
+    const mergedHistory =
+      alreadyTracked || amountPaid <= 0
+        ? existingHistory
+        : [
+            ...existingHistory,
+            {
+              order_id: (invoice as any).id,
+              date: orderDate,
+              total: amountPaid,
+              products:
+                productNames.length > 0 ? productNames : ['Kandie Gang Cycling Club Membership'],
+              status: 'completed',
+            },
+          ];
+
+    const orderCount = mergedHistory.length;
+    const lifetimeValue =
+      Math.round(
+        mergedHistory.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0) * 100
+      ) / 100;
+    const avgOrderValue =
+      orderCount > 0 ? Math.round((lifetimeValue / orderCount) * 100) / 100 : 0;
+    const lastOrderDate = mergedHistory.reduce<string | null>(
+      (latest, o) => (!o.date ? latest : !latest || o.date > latest ? o.date : latest),
+      null
+    );
+    const customerSince: string | null = profileData?.customer_since ?? orderDate;
+    // ────────────────────────────────────────────────────────────────────────
+
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -218,6 +264,12 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
           ? new Date(currentPeriodEnd * 1000).toISOString()
           : null,
         stripe_subscription_status: status,
+        order_history: mergedHistory,
+        order_count: orderCount,
+        lifetime_value: lifetimeValue,
+        avg_order_value: avgOrderValue,
+        last_order_date: lastOrderDate,
+        customer_since: customerSince,
       })
       .eq('stripe_customer_id', customerId);
 
@@ -230,7 +282,7 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
     }
 
     console.log(
-      `[stripe-webhook] invoice.payment_succeeded: Membership renewed for customer ${customerId}`
+      `[stripe-webhook] invoice.payment_succeeded: customer ${customerId}, LTV €${lifetimeValue}`
     );
   }
 
