@@ -587,7 +587,7 @@ export const DesignSystemWIP: React.FC = () => {
                               <tr>
                                 <td align="center" style={{ padding: '24px 0 16px', background: '#fafafc' }}>
                                   <a href="https://kandiegang.com?supabase-magiclink" target="_blank" rel="noopener noreferrer">
-                                    <img src="https://www.kandiegang.com/logos/kandiegang_logo_sunshine_pill.png" alt="Kandie Gang" style={{ display: 'block', width: 138, maxWidth: 138, margin: '0 auto' }} width="138" />
+                                    <img src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" alt="Kandie Gang" style={{ display: 'block', width: 138, maxWidth: 138, margin: '0 auto' }} width="138" />
                                   </a>
                                 </td>
                               </tr>
@@ -703,7 +703,7 @@ export const DesignSystemWIP: React.FC = () => {
                               <tr>
                                 <td align="center" style={{ padding: '0 40px 24px 40px', background: '#fafafc' }}>
                                   <a href="https://kandiegang.com" target="_blank" rel="noopener noreferrer">
-                                    <img src="https://www.kandiegang.com/logos/kandiegang_logo_sunshine_pill.png" alt="Kandie Gang" style={{ display: 'block', width: 138, maxWidth: 138, margin: '0 auto' }} width="138" />
+                                    <img src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" alt="Kandie Gang" style={{ display: 'block', width: 138, maxWidth: 138, margin: '0 auto' }} width="138" />
                                   </a>
                                 </td>
                               </tr>
