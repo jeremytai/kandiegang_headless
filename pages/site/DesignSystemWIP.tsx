@@ -627,6 +627,11 @@ export const DesignSystemWIP: React.FC = () => {
                                       </tr>
                                     </tbody>
                                   </table>
+                                  {/* Horizontal divider after body table */}
+                                  <table border={0} cellPadding="0" cellSpacing="0" width="100%" align="center" style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse' }}>
+                                    <tbody>
+                                    </tbody>
+                                  </table>
                                   <table
                                     border={0}
                                     cellPadding="0"
@@ -715,7 +720,7 @@ export const DesignSystemWIP: React.FC = () => {
                               </tr>
                               <tr>
                                 <td align="center" style={{ padding: '0 40px', fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 14, lineHeight: '20px', color: '#1c1c1e', textDecoration: 'none' }}>
-                                  <span>Kandie Gang<br />Hamburg, Germany</span><br />
+                                  <span>Kandie Gang<br />It's a love story 💜</span><br /><br />
                                 </td>
                               </tr>
                               <tr>
@@ -775,7 +780,7 @@ export const DesignSystemWIP: React.FC = () => {
                                 </td>
                               </tr>
                               <tr>
-                                <td align="center" style={{ padding: '0 0 16px', background: '#fafafc' }}>
+                                <td align="center" style={{ padding: '0', background: '#fafafc' }}>
                                   <a href="https://www.kandiegang.com/members?kandiegangcyclingclub-welcome" target="_blank" rel="noopener noreferrer">
                                     <img src="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2026/02/18182453/kandiegangcyclingclub_welcome.jpg" alt="Kandie Gang Welcome" style={{ display: 'block', width: '100%', maxWidth: 602, margin: '0 auto' }} />
                                   </a>
@@ -784,7 +789,7 @@ export const DesignSystemWIP: React.FC = () => {
                             </tbody>
                           </table>
                           {/* Card */}
-                          <table border={0} cellPadding="0" cellSpacing="0" align="center" style={{ width: '100%', maxWidth: 602, borderCollapse: 'separate', background: '#fffffe', borderRadius: 16, border: '1px solid #ddd', margin: '0 auto' }}>
+                          <table border={0} cellPadding="0" cellSpacing="0" align="center" style={{ width: '100%', maxWidth: 602, borderCollapse: 'separate', background: '#fffffe', margin: '0 auto' }}>
                             <tbody>
                               <tr>
                                 <td align="center" style={{ padding: '40px 0', borderRadius: 16, background: '#fffffe' }}>
@@ -814,12 +819,34 @@ export const DesignSystemWIP: React.FC = () => {
                                     </tbody>
                                   </table>
                                   {/* Body */}
-                                  <table border={0} cellPadding="0" cellSpacing="0" width="100%" align="center" style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse' }}>
+                                  <table border={0} cellPadding="0" cellSpacing="0" width="100%" align="center" style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
                                     <tbody>
                                       <tr>
-                                        <td align="center" style={{ padding: '0 40px 24px', background: '#fffffe' }}>
+                                        <td align="left" style={{ padding: '0 40px 24px', background: '#fffffe' }}>
                                           <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#1c1c1e', margin: 0 }}>
-                                            Your membership is now active. We're so excited to have you riding with us. Get ready for unforgettable routes, great vibes, and an amazing community.
+                                            We are pleased to welcome you to the Kandie Gang Cycling Club and will do everthing in our power to make it an exciting year.
+                                          </p>
+                                          <br />
+                                          <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#1c1c1e', margin: 0 }}>
+                                            If you have any questions, concerns or feedback, don't hesitate to contact us. We hope you enjoy your rides this year and look forward to your experience as a member of the club.
+                                          </p>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td align="center" style={{ padding: '0 0 16px', background: '#fafafc' }}>
+                                          <a href="https://www.kandiegang.com/members?kandiegangcyclingclub-welcome" target="_blank" rel="noopener noreferrer">
+                                            <img src="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2026/02/18200520/kandegangcyclingclub_members.jpg" alt="Kandie Gang Welcome" style={{ display: 'block', width: '100%', maxWidth: 602, margin: '0 auto' }} />
+                                          </a>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td align="left" style={{ padding: '0 40px 24px', background: '#fffffe' }}>
+                                          <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#1c1c1e', margin: 0 }}>
+                                            Parallel to supporting our mission, you have access to exclusive <a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://www.kandiegang.com/community?kandiegangcyclingclub-welcomeemail" target="_blank" rel="noopener noreferrer">member benefits</a>, including early access to events, special discounts on <a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://www.kandiegang.com/shop?kandiegangcyclingclub-welcomeemail" target="_blank" rel="noopener noreferrer">products</a>, and the opportunity to <a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://discord.gg/zddt89Q4hm?kandiegangcyclingclub-welcomeemail" target="_blank" rel="noopener noreferrer">connect on Discord</a> and in real-life with fellow cycling enthusiasts in our community.
+                                          </p>
+                                          <br />
+                                          <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#1c1c1e', margin: 0 }}>
+                                            If you have any questions, concerns or feedback, don't hesitate to contact us. We hope you enjoy your rides this year and look forward to your experience as a member of the club.
                                           </p>
                                         </td>
                                       </tr>
@@ -835,12 +862,12 @@ export const DesignSystemWIP: React.FC = () => {
                                               <tr>
                                                 <td align="center">
                                                   <a
-                                                    href="https://kandiegang.com/events"
+                                                    href="https://kandiegang.com/members?kandiegangcyclingclub-welcomeemail"
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     style={{ display: 'inline-block', fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#fffefe', backgroundColor: 'rgb(72, 81, 151)', textDecoration: 'none', padding: '11px 24px 13px', borderRadius: '9999px', textAlign: 'center', fontWeight: 'bold' }}
                                                   >
-                                                    <span>See upcoming rides</span>
+                                                    <span>Visit the Members Area</span>
                                                   </a>
                                                 </td>
                                               </tr>
@@ -879,7 +906,7 @@ export const DesignSystemWIP: React.FC = () => {
                               </tr>
                               <tr>
                                 <td align="center" style={{ padding: '0 40px', fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 14, lineHeight: '20px', color: '#1c1c1e', textDecoration: 'none' }}>
-                                  <span>Kandie Gang<br />Hamburg, Germany</span><br />
+                                  <span>Kandie Gang<br />It's a love story 💜</span><br /><br />
                                 </td>
                               </tr>
                               <tr>
