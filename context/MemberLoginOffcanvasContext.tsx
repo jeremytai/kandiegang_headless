@@ -624,6 +624,16 @@ function MemberOffcanvasAccountContent({
                 >
                   Analytics Dashboard
                 </Link>
+                {/* Show Design System link if user is a guide */}
+                {profile?.is_guide === true && (
+                  <Link
+                    to="/design-system"
+                    onClick={onClose}
+                    className="inline-flex items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary-purple-rain/90 transition"
+                  >
+                    Design System
+                  </Link>
+                )}
               </div>
             ),
           },
