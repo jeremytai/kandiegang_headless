@@ -776,8 +776,8 @@ export const DesignSystemWIP: React.FC = () => {
                               </tr>
                               <tr>
                                 <td align="center" style={{ padding: '0 0 16px', background: '#fafafc' }}>
-                                  <a href="https://github.com/jeremytai/kandiegang_headless/blob/main/public/images/kandiegangcyclingclub_welcome.jpg" target="_blank" rel="noopener noreferrer">
-                                    <img src="https://github.com/jeremytai/kandiegang_headless/blob/main/public/images/kandiegangcyclingclub_welcome.jpg" alt="Kandie Gang Welcome" style={{ display: 'block', width: '100%', maxWidth: 602, margin: '0 auto' }} />
+                                  <a href="https://www.kandiegang.com/members?kandiegangcyclingclub-welcome" target="_blank" rel="noopener noreferrer">
+                                    <img src="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2026/02/18182453/kandiegangcyclingclub_welcome.jpg" alt="Kandie Gang Welcome" style={{ display: 'block', width: '100%', maxWidth: 602, margin: '0 auto' }} />
                                   </a>
                                 </td>
                               </tr>
@@ -793,8 +793,21 @@ export const DesignSystemWIP: React.FC = () => {
                                     <tbody>
                                       <tr>
                                         <td align="center" style={{ padding: '0 40px 20px', background: '#fffffe' }}>
-                                          <h2 style={{ fontFamily: 'RoobertPRO, Helvetica, Arial, sans-serif', fontSize: 32, lineHeight: '40px', fontWeight: 'normal', margin: 0, color: '#1c1c1e' }}>
-                                            Welcome to Kandie Gang! 🎉
+                                          {/* Embed IvyOra Light font for email preview only */}
+                                          <style>
+                                            {`
+                                              @font-face {
+                                                font-family: 'IvyOra Disp Lt';
+                                                src: url('https://www.kandiegang.com/fonts/IvyOraDispLt.woff2') format('woff2'),
+                                                     url('https://www.kandiegang.com/fonts/IvyOraDispLt.woff') format('woff');
+                                                font-weight: 300;
+                                                font-style: normal;
+                                                font-display: swap;
+                                              }
+                                            `}
+                                          </style>
+                                          <h2 style={{ fontFamily: 'IvyOra Disp Lt, RoobertPRO, Helvetica, Arial, sans-serif', fontSize: 32, lineHeight: '40px', fontWeight: 300, margin: 0, color: '#1c1c1e' }}>
+                                            Welcome to the Kandie Gang Cycling Club
                                           </h2>
                                         </td>
                                       </tr>
