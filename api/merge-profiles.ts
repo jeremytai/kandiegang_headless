@@ -104,13 +104,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Merge order_history (deduplicate by order_id)
     const targetHistory = Array.isArray(target.order_history) ? target.order_history : [];
     const sourceHistory = Array.isArray(source.order_history) ? source.order_history : [];
-    const existingOrderIds = new Set(targetHistory.map((o: { order_id?: string }) => String(o.order_id)));
+    const existingOrderIds = new Set(
+      targetHistory.map((o: { order_id?: string }) => String(o.order_id))
+    );
     const newOrders = sourceHistory.filter(
       (o: { order_id?: string }) => !existingOrderIds.has(String(o.order_id))
     );
     const mergedHistory = [...targetHistory, ...newOrders].sort(
-      (a: { date?: string }, b: { date?: string }) =>
-        (b.date || '').localeCompare(a.date || '')
+      (a: { date?: string }, b: { date?: string }) => (b.date || '').localeCompare(a.date || '')
     );
 
     // Recalculate metrics
@@ -123,14 +124,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ) * 100
       ) / 100;
     const avgOrderValue = orderCount > 0 ? Math.round((lifetimeValue / orderCount) * 100) / 100 : 0;
-    const lastOrderDate = mergedHistory.reduce(
-      (latest: string | null, o: { date?: string }) => {
-        if (!o.date) return latest;
-        const d = String(o.date).substring(0, 10);
-        return !latest || d > latest ? d : latest;
-      },
-      target.last_order_date || null
-    );
+    const lastOrderDate = mergedHistory.reduce((latest: string | null, o: { date?: string }) => {
+      if (!o.date) return latest;
+      const d = String(o.date).substring(0, 10);
+      return !latest || d > latest ? d : latest;
+    }, target.last_order_date || null);
 
     // Fill in missing fields from source
     const fillableFields = [
@@ -192,10 +190,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Delete source profile
-    const { error: deleteError } = await adminClient
-      .from('profiles')
-      .delete()
-      .eq('id', sourceId);
+    const { error: deleteError } = await adminClient.from('profiles').delete().eq('id', sourceId);
 
     if (deleteError) {
       console.error('Source profile delete error:', deleteError);

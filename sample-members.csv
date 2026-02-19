@@ -1,6 +1,0 @@
-email,user_id,membership_plan,membership_status,member_since,membership_expiration
-test.active1@example.com,1001,Kandie Gang Cycling Club Membership,active,2025-01-01,2026-12-31
-test.active2@example.com,1002,Kandie Gang Cycling Club Membership,active,2024-06-15,2026-06-15
-test.expiringsoon@example.com,1003,Kandie Gang Cycling Club Membership,active,2025-01-01,2026-03-15
-test.expired@example.com,1004,Kandie Gang Cycling Club Membership,expired,2023-01-01,2024-01-01
-test.cancelled@example.com,1005,Kandie Gang Cycling Club Membership,cancelled,2024-01-01,2025-01-01

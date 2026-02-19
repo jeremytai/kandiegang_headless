@@ -32,7 +32,9 @@ console.log('🔄 Fetching profiles with order_history...\n');
 
 const { data: profiles, error } = await supabase
   .from('profiles')
-  .select('id, email, order_history, lifetime_value, avg_order_value, last_order_date, order_count');
+  .select(
+    'id, email, order_history, lifetime_value, avg_order_value, last_order_date, order_count'
+  );
 
 if (error) {
   console.error('Failed to fetch profiles:', error);

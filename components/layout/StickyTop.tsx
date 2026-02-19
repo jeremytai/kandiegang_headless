@@ -354,7 +354,15 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
   );
 };
 
-export const NavLink = ({ label, to, onClick }: { label: string; to: string; onClick: () => void }) => (
+export const NavLink = ({
+  label,
+  to,
+  onClick,
+}: {
+  label: string;
+  to: string;
+  onClick: () => void;
+}) => (
   <Link
     to={to}
     onClick={onClick}

@@ -178,7 +178,8 @@ for (const file of CSV_FILES) {
     const name = (row[col['Name']] || '').trim();
 
     // Skip payments to external services (Squarespace fees, DHL, etc.)
-    if (toEmail.includes('squarespace') || toEmail.includes('dhl') || toEmail.includes('paypal')) continue;
+    if (toEmail.includes('squarespace') || toEmail.includes('dhl') || toEmail.includes('paypal'))
+      continue;
 
     // Extract WooCommerce order ID from invoice number (e.g. "kg-7964" → "7964")
     let wooOrderId = null;
@@ -227,7 +228,9 @@ console.log('🔄 Fetching profiles from Supabase...\n');
 
 const { data: profiles, error: profilesError } = await supabase
   .from('profiles')
-  .select('id, email, order_history, lifetime_value, avg_order_value, last_order_date, order_count');
+  .select(
+    'id, email, order_history, lifetime_value, avg_order_value, last_order_date, order_count'
+  );
 
 if (profilesError) {
   console.error('Failed to fetch profiles:', profilesError);
@@ -301,8 +304,8 @@ for (const profile of profiles) {
   totalNewOrders += newOrders.length;
 
   // Merge and sort by date (newest first)
-  const mergedHistory = [...existingHistory, ...newOrders].sort(
-    (a, b) => (b.date || '').localeCompare(a.date || '')
+  const mergedHistory = [...existingHistory, ...newOrders].sort((a, b) =>
+    (b.date || '').localeCompare(a.date || '')
   );
 
   // Recalculate aggregate metrics
@@ -329,7 +332,9 @@ for (const profile of profiles) {
       `  [dry] ${email}: +${newOrders.length} new orders (${existingHistory.length} existing → ${mergedHistory.length} total)`
     );
     for (const o of newOrders) {
-      console.log(`         ${o.date?.substring(0, 10) || '?'} — €${o.total.toFixed(2)} — ${o.products.join(', ') || 'no product name'}`);
+      console.log(
+        `         ${o.date?.substring(0, 10) || '?'} — €${o.total.toFixed(2)} — ${o.products.join(', ') || 'no product name'}`
+      );
     }
     console.log(`         LTV: €${lifetimeValue}, AOV: €${avgOrderValue}, last: ${lastOrderDate}`);
     profilesUpdated++;
@@ -342,7 +347,9 @@ for (const profile of profiles) {
     console.error(`  ❌ ${email}: ${error.message}`);
     profilesFailed++;
   } else {
-    console.log(`  ✅ ${email}: +${newOrders.length} orders → ${mergedHistory.length} total, LTV €${lifetimeValue}`);
+    console.log(
+      `  ✅ ${email}: +${newOrders.length} orders → ${mergedHistory.length} total, LTV €${lifetimeValue}`
+    );
     profilesUpdated++;
   }
 }

@@ -117,7 +117,9 @@ for (const file of CSV_FILES) {
   const rows = parseCSV(raw);
   const header = rows[0];
   const col = {};
-  header.forEach((h, idx) => { col[h.trim()] = idx; });
+  header.forEach((h, idx) => {
+    col[h.trim()] = idx;
+  });
 
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
@@ -143,7 +145,8 @@ for (const file of CSV_FILES) {
     const itemTitle = (row[col['Item Title']] || '').trim();
     const name = (row[col['Name']] || '').trim();
 
-    if (toEmail.includes('squarespace') || toEmail.includes('dhl') || toEmail.includes('paypal')) continue;
+    if (toEmail.includes('squarespace') || toEmail.includes('dhl') || toEmail.includes('paypal'))
+      continue;
     if (!fromEmail) continue;
 
     let wooOrderId = null;
@@ -217,8 +220,11 @@ for (const existingProfile of profilesToUpdate) {
   const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null;
 
   // Check if any order was a membership
-  const hasMembership = orders.some(
-    (o) => o.products?.some((p) => p && (p.toLowerCase().includes('membership') || p.toLowerCase().includes('cycling club')))
+  const hasMembership = orders.some((o) =>
+    o.products?.some(
+      (p) =>
+        p && (p.toLowerCase().includes('membership') || p.toLowerCase().includes('cycling club'))
+    )
   );
 
   if (DRY_RUN) {
@@ -226,7 +232,9 @@ for (const existingProfile of profilesToUpdate) {
       `  [dry] ${email} (${name || '?'}): ${orderCount} orders, €${lifetimeValue}, member=${hasMembership}`
     );
     for (const o of orders.slice(0, 3)) {
-      console.log(`         ${o.date?.substring(0, 10) || '?'} — €${o.total.toFixed(2)} — ${o.products.join(', ') || '—'}`);
+      console.log(
+        `         ${o.date?.substring(0, 10) || '?'} — €${o.total.toFixed(2)} — ${o.products.join(', ') || '—'}`
+      );
     }
     if (orders.length > 3) console.log(`         ... +${orders.length - 3} more`);
     created++;

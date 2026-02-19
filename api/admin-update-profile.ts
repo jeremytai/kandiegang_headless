@@ -10,11 +10,13 @@ const SUPABASE_SERVICE_ROLE_KEY =
 const EDITABLE_FIELDS = new Set([
   'is_guide',
   'is_member',
+  'is_team',
   'display_name',
   'tags',
   'accepts_marketing',
   'member_since',
   'membership_expiration',
+  'stripe_subscription_status',
   'order_history',
   'order_count',
   'lifetime_value',
@@ -92,7 +94,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from('profiles')
       .update(safeUpdates)
       .eq('id', memberId)
-      .select('id, display_name, is_guide, is_member, tags, accepts_marketing, member_since, membership_expiration')
+      .select(
+        'id, display_name, is_guide, is_member, is_team, tags, accepts_marketing, member_since, membership_expiration, stripe_subscription_status'
+      )
       .single();
 
     if (error) {

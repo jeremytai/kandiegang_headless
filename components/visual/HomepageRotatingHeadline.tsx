@@ -35,7 +35,10 @@ export const HomepageRotatingHeadline: React.FC<HomepageRotatingHeadlineProps> =
   const ref = useRef<HTMLDivElement>(null);
   const [imageIndex, setImageIndex] = useState(0);
   const [guideImages, setGuideImages] = useState<string[]>([]);
-  const shuffledImages = useMemo(() => (guideImages.length ? shuffle(guideImages) : []), [guideImages]);
+  const shuffledImages = useMemo(
+    () => (guideImages.length ? shuffle(guideImages) : []),
+    [guideImages]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -56,7 +59,9 @@ export const HomepageRotatingHeadline: React.FC<HomepageRotatingHeadlineProps> =
       }
     };
     fetchGuides();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const { scrollYProgress } = useScroll({
@@ -75,7 +80,10 @@ export const HomepageRotatingHeadline: React.FC<HomepageRotatingHeadlineProps> =
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
 
-  const currentImage = shuffledImages.length > 0 ? shuffledImages[imageIndex % shuffledImages.length] : PLACEHOLDER_IMAGE;
+  const currentImage =
+    shuffledImages.length > 0
+      ? shuffledImages[imageIndex % shuffledImages.length]
+      : PLACEHOLDER_IMAGE;
 
   return (
     <section

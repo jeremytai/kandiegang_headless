@@ -180,7 +180,6 @@ const App: React.FC = () => {
     }
   }, [location.pathname]);
 
-
   // Only use Framer Motion scroll hooks for non-test-blank routes
   let scale, y;
   if (location.pathname !== '/test-blank') {
@@ -197,7 +196,6 @@ const App: React.FC = () => {
     scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
     y = useTransform(smoothProgress, [0, 1], [0, -20]);
   }
-
 
   // Minimal blank test route — renders only the App shell, no content
   if (location.pathname === '/test-blank') {
@@ -297,8 +295,7 @@ const App: React.FC = () => {
                           <Route path="/signup" element={<SignUpPage />} />
                           <Route path="/members" element={<MembersAreaPage />} />
                           <Route path="/members/settings" element={<MembersSettingsPage />} />
-                          <Route
-                          />
+                          <Route />
                           <Route path="*" element={<NotFoundPage />} />
                         </Route>
                       </Routes>

@@ -1,5 +1,12 @@
 # Kandie Gang Headless WordPress
 
+## TO DO
+- remove vignette
+- Events
+  - add join waitlist CTA to event pages
+  - check email notifications (cancelled event, cancelled participation, new event, etc.)
+  - add event participation to the dashboard
+
 ## 🕵️ Vignette/Shadow Investigation Findings
 
 **Issue:** Persistent right-side vignette or shadow visible on all screens, especially with certain context providers enabled (e.g., AuthProvider).

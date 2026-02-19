@@ -163,10 +163,22 @@ let ordersEndIdx = -1;
   let esc = false;
   for (let i = ordersValuesIdx; i < sql2.length; i++) {
     const c = sql2[i];
-    if (esc) { esc = false; continue; }
-    if (c === '\\' && inStr) { esc = true; continue; }
-    if (c === "'") { inStr = !inStr; continue; }
-    if (!inStr && c === ';') { ordersEndIdx = i; break; }
+    if (esc) {
+      esc = false;
+      continue;
+    }
+    if (c === '\\' && inStr) {
+      esc = true;
+      continue;
+    }
+    if (c === "'") {
+      inStr = !inStr;
+      continue;
+    }
+    if (!inStr && c === ';') {
+      ordersEndIdx = i;
+      break;
+    }
   }
 }
 if (ordersEndIdx === -1) {
@@ -209,7 +221,10 @@ const historyByEmail = {};
 
 for (const order of Object.values(ordersById)) {
   // Only include completed/processing orders
-  if (!order.status || (!order.status.includes('completed') && !order.status.includes('processing'))) {
+  if (
+    !order.status ||
+    (!order.status.includes('completed') && !order.status.includes('processing'))
+  ) {
     continue;
   }
 
@@ -241,7 +256,9 @@ for (const email of sampleEmails) {
   const orders = historyByEmail[email];
   console.log(`  ${email}: ${orders.length} orders`);
   for (const o of orders.slice(0, 2)) {
-    console.log(`    ${o.date} — €${o.total.toFixed(2)} — ${o.products.join(', ') || 'no products'}`);
+    console.log(
+      `    ${o.date} — €${o.total.toFixed(2)} — ${o.products.join(', ') || 'no products'}`
+    );
   }
 }
 console.log();
@@ -279,7 +296,9 @@ for (const profile of profiles) {
   matched++;
 
   if (DRY_RUN) {
-    console.log(`  [dry] ${email}: ${orderHistory.length} orders → ${orderHistory.flatMap(o => o.products).join(', ')}`);
+    console.log(
+      `  [dry] ${email}: ${orderHistory.length} orders → ${orderHistory.flatMap((o) => o.products).join(', ')}`
+    );
     updated++;
     continue;
   }
@@ -294,7 +313,9 @@ for (const profile of profiles) {
     failed++;
   } else {
     updated++;
-    console.log(`  ✅ ${email}: ${orderHistory.length} orders (${orderHistory.flatMap(o => o.products).join(', ')})`);
+    console.log(
+      `  ✅ ${email}: ${orderHistory.length} orders (${orderHistory.flatMap((o) => o.products).join(', ')})`
+    );
   }
 }
 

@@ -127,7 +127,9 @@ function MergeSearch({
       }
 
       const { merged } = await res.json();
-      setMergeMsg(`Merged! +${merged.newOrders} orders, ${merged.alternateEmails.length} alt emails`);
+      setMergeMsg(
+        `Merged! +${merged.newOrders} orders, ${merged.alternateEmails.length} alt emails`
+      );
       setQuery('');
       setConfirmId(null);
       onMerged(currentMember.id, sourceId);
@@ -147,7 +149,10 @@ function MergeSearch({
         type="text"
         placeholder="Search by name or email..."
         value={query}
-        onChange={(e) => { setQuery(e.target.value); setConfirmId(null); }}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setConfirmId(null);
+        }}
         className="w-full bg-white border border-neutral-200 text-neutral-900 px-3 py-1.5 rounded text-sm focus:outline-none focus:border-[#ff611a] transition-colors"
       />
       {results.length > 0 && (
@@ -219,25 +224,27 @@ function MemberDetailPanel({
 }) {
   const [editState, setEditState] = useState({
     is_guide: member.is_guide,
-    is_member: member.is_member,
+    is_team: member.is_team ?? false,
     display_name: member.display_name || '',
     accepts_marketing: member.accepts_marketing,
     member_since: member.member_since ? member.member_since.slice(0, 10) : '',
     membership_expiration: member.membership_expiration
       ? member.membership_expiration.slice(0, 10)
       : '',
+    stripe_subscription_status: member.stripe_subscription_status ?? '',
   });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   const isDirty =
     editState.is_guide !== member.is_guide ||
-    editState.is_member !== member.is_member ||
+    editState.is_team !== (member.is_team ?? false) ||
     editState.display_name !== (member.display_name || '') ||
     editState.accepts_marketing !== member.accepts_marketing ||
     editState.member_since !== (member.member_since ? member.member_since.slice(0, 10) : '') ||
     editState.membership_expiration !==
-      (member.membership_expiration ? member.membership_expiration.slice(0, 10) : '');
+      (member.membership_expiration ? member.membership_expiration.slice(0, 10) : '') ||
+    editState.stripe_subscription_status !== (member.stripe_subscription_status ?? '');
 
   const handleSave = async () => {
     setSaving(true);
@@ -258,11 +265,12 @@ function MemberDetailPanel({
           memberId: member.id,
           updates: {
             is_guide: editState.is_guide,
-            is_member: editState.is_member,
+            is_team: editState.is_team,
             display_name: editState.display_name || null,
             accepts_marketing: editState.accepts_marketing,
             member_since: editState.member_since || null,
             membership_expiration: editState.membership_expiration || null,
+            stripe_subscription_status: editState.stripe_subscription_status || null,
           },
         }),
       });
@@ -274,11 +282,12 @@ function MemberDetailPanel({
 
       onUpdate(member.id, {
         is_guide: editState.is_guide,
-        is_member: editState.is_member,
+        is_team: editState.is_team,
         display_name: editState.display_name || '',
         accepts_marketing: editState.accepts_marketing,
         member_since: editState.member_since || null,
         membership_expiration: editState.membership_expiration || null,
+        stripe_subscription_status: editState.stripe_subscription_status || null,
       });
       setSaveMsg('Saved');
       setTimeout(() => setSaveMsg(null), 2000);
@@ -398,7 +407,10 @@ function MemberDetailPanel({
                 {member.alternate_emails && member.alternate_emails.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-0.5">
                     {member.alternate_emails.map((alt) => (
-                      <span key={alt} className="text-[10px] text-neutral-400 bg-neutral-50 border border-neutral-100 px-1.5 py-0.5 rounded">
+                      <span
+                        key={alt}
+                        className="text-[10px] text-neutral-400 bg-neutral-50 border border-neutral-100 px-1.5 py-0.5 rounded"
+                      >
                         {alt}
                       </span>
                     ))}
@@ -473,10 +485,7 @@ function MemberDetailPanel({
               }
             />
             <DetailField label="Source" value={member.newsletter_source} />
-            <DetailField
-              label="Emails Sent"
-              value={member.email_count || 0}
-            />
+            <DetailField label="Emails Sent" value={member.email_count || 0} />
             <DetailField
               label="Last Opened"
               value={
@@ -496,9 +505,7 @@ function MemberDetailPanel({
             <DetailField
               label="Last Page View"
               value={
-                member.last_page_view
-                  ? new Date(member.last_page_view).toLocaleDateString()
-                  : null
+                member.last_page_view ? new Date(member.last_page_view).toLocaleDateString() : null
               }
             />
           </div>
@@ -537,7 +544,9 @@ function MemberDetailPanel({
                       {savingOrders ? 'Saving…' : 'Save Changes'}
                     </button>
                     {orderSaveMsg && (
-                      <span className={`text-xs ${orderSaveMsg === 'Saved' ? 'text-emerald-500' : 'text-red-500'}`}>
+                      <span
+                        className={`text-xs ${orderSaveMsg === 'Saved' ? 'text-emerald-500' : 'text-red-500'}`}
+                      >
                         {orderSaveMsg}
                       </span>
                     )}
@@ -616,10 +625,31 @@ function MemberDetailPanel({
               onChange={(v) => setEditState((s) => ({ ...s, is_guide: v }))}
             />
             <Toggle
-              label="Member"
-              checked={editState.is_member}
-              onChange={(v) => setEditState((s) => ({ ...s, is_member: v }))}
+              label="Team"
+              checked={editState.is_team}
+              onChange={(v) => setEditState((s) => ({ ...s, is_team: v }))}
             />
+            <div>
+              <label
+                htmlFor={`member-status-${member.id}`}
+                className="block text-neutral-400 text-xs mb-1"
+              >
+                Member Status
+              </label>
+              <select
+                id={`member-status-${member.id}`}
+                value={editState.stripe_subscription_status}
+                onChange={(e) =>
+                  setEditState((s) => ({ ...s, stripe_subscription_status: e.target.value }))
+                }
+                className="w-full bg-white border border-neutral-200 text-neutral-900 px-3 py-1.5 rounded text-sm focus:outline-none focus:border-[#ff611a] transition-colors"
+              >
+                <option value="">— No Subscription —</option>
+                <option value="active">Active</option>
+                <option value="trialing">Trial</option>
+                <option value="canceled">Canceled</option>
+              </select>
+            </div>
             <Toggle
               label="Accepts Marketing"
               checked={editState.accepts_marketing}
@@ -681,11 +711,7 @@ function MemberDetailPanel({
 
             <div className="border-t border-neutral-200 pt-4 mt-4">
               <SectionLabel>Merge Profile</SectionLabel>
-              <MergeSearch
-                currentMember={member}
-                allMembers={allMembers}
-                onMerged={onMerged}
-              />
+              <MergeSearch currentMember={member} allMembers={allMembers} onMerged={onMerged} />
             </div>
           </div>
         </div>
@@ -807,10 +833,7 @@ export function MemberTable({ members }: MemberTableProps) {
               <th className={thClass} onClick={() => handleSort('email')}>
                 Email <SortIcon column="email" />
               </th>
-              <th
-                className={`${thClass} !text-right`}
-                onClick={() => handleSort('lifetime_value')}
-              >
+              <th className={`${thClass} !text-right`} onClick={() => handleSort('lifetime_value')}>
                 LTV <SortIcon column="lifetime_value" />
               </th>
               <th className={`${thClass} !text-right`} onClick={() => handleSort('order_count')}>
@@ -826,7 +849,7 @@ export function MemberTable({ members }: MemberTableProps) {
                 Role
               </th>
               <th className="text-left py-3 px-4 text-neutral-400 text-xs font-medium uppercase tracking-[0.1em]">
-                Status
+                Member
               </th>
               <th className={thClass} onClick={() => handleSort('last_login')}>
                 Last Login <SortIcon column="last_login" />
@@ -862,8 +885,8 @@ export function MemberTable({ members }: MemberTableProps) {
                   <td className="py-3 px-4">
                     <div className="flex flex-wrap gap-1">
                       {member.is_guide && <Badge color="#ff611a">Guide</Badge>}
-                      {member.is_member && <Badge color="#171717">Member</Badge>}
-                      {!member.is_guide && !member.is_member && (
+                      {member.is_team && <Badge color="#46519C">Team</Badge>}
+                      {!member.is_guide && !member.is_team && (
                         <span className="text-neutral-300">—</span>
                       )}
                     </div>

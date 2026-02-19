@@ -47,12 +47,34 @@ const parseRows = (block) => {
 
   for (let i = 0; i < block.length; i++) {
     const char = block[i];
-    if (escaped) { current += char; escaped = false; continue; }
-    if (char === '\\' && inString) { escaped = true; current += char; continue; }
-    if (char === "'" && !escaped) { inString = !inString; current += char; continue; }
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
+    }
+    if (char === '\\' && inString) {
+      escaped = true;
+      current += char;
+      continue;
+    }
+    if (char === "'" && !escaped) {
+      inString = !inString;
+      current += char;
+      continue;
+    }
     if (!inString) {
-      if (char === '(') { if (depth === 0) current = ''; depth++; if (depth === 1) continue; }
-      else if (char === ')') { depth--; if (depth === 0) { rows.push(current); current = ''; continue; } }
+      if (char === '(') {
+        if (depth === 0) current = '';
+        depth++;
+        if (depth === 1) continue;
+      } else if (char === ')') {
+        depth--;
+        if (depth === 0) {
+          rows.push(current);
+          current = '';
+          continue;
+        }
+      }
     }
     if (depth > 0) current += char;
   }
@@ -67,10 +89,26 @@ const parseFields = (rowStr) => {
 
   for (let i = 0; i < rowStr.length; i++) {
     const char = rowStr[i];
-    if (escaped) { current += char; escaped = false; continue; }
-    if (char === '\\') { escaped = true; current += char; continue; }
-    if (char === "'") { inQuotes = !inQuotes; current += char; continue; }
-    if (char === ',' && !inQuotes) { fields.push(current.trim()); current = ''; continue; }
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
+    }
+    if (char === '\\') {
+      escaped = true;
+      current += char;
+      continue;
+    }
+    if (char === "'") {
+      inQuotes = !inQuotes;
+      current += char;
+      continue;
+    }
+    if (char === ',' && !inQuotes) {
+      fields.push(current.trim());
+      current = '';
+      continue;
+    }
     current += char;
   }
   if (current.trim()) fields.push(current.trim());
@@ -83,9 +121,18 @@ const findInsertEnd = (sql, startIdx) => {
   let esc = false;
   for (let i = startIdx; i < sql.length; i++) {
     const c = sql[i];
-    if (esc) { esc = false; continue; }
-    if (c === '\\' && inStr) { esc = true; continue; }
-    if (c === "'") { inStr = !inStr; continue; }
+    if (esc) {
+      esc = false;
+      continue;
+    }
+    if (c === '\\' && inStr) {
+      esc = true;
+      continue;
+    }
+    if (c === "'") {
+      inStr = !inStr;
+      continue;
+    }
     if (!inStr && c === ';') return i;
   }
   return -1;
@@ -282,7 +329,9 @@ for (const profile of profiles) {
   if (DRY_RUN) {
     console.log(`  [dry] ${email}: ${changes.join(', ')}`);
     if (mp) {
-      console.log(`         status=${mp.newsletter_status}, score=${mp.engagement_score}, opens=${mp.last_email_open || '—'}, clicks=${mp.last_email_click || '—'}`);
+      console.log(
+        `         status=${mp.newsletter_status}, score=${mp.engagement_score}, opens=${mp.last_email_open || '—'}, clicks=${mp.last_email_click || '—'}`
+      );
     }
     updated++;
     continue;
