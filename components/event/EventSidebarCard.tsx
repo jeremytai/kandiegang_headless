@@ -48,6 +48,7 @@ interface EventSidebarCardProps {
 }
 
 import { useAuth } from '../../context/AuthContext';
+import { type } from 'os';
 const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   date,
   time,
@@ -122,8 +123,11 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
           <div>
             <p className={labelClass}>Location</p>
             <p className={valueClass}>
-              {locationLines.map((line, index) => (
-                <span key={`${line}-${index}`}>
+              {locationLines.map((line, index) => (                  
+                <span
+                key={`${line}-${index}`}
+                className={index === 0 ? 'font-semibold' : undefined}
+                >
                   {line}
                   {index < locationLines.length - 1 && <br />}
                 </span>
@@ -134,12 +138,14 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
             <div>
               <p className={labelClass}>Category</p>
               <p className={valueClass}>{category}</p>
+                {category?.charAt(0).toUpperCase() + category?.slice(1)}
             </div>
           )}
           {type && (
             <div>
               <p className={labelClass}>Type</p>
               <p className={valueClass}>{type}</p>
+                {type?.charAt(0).toUpperCase() + type?.slice(1)}
             </div>
           )}
           {type && <div className="mb-2" />}

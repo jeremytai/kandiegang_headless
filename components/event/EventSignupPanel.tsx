@@ -351,7 +351,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
           <p className="text-xs text-slate-500">
             By continuing you agree to our{' '}
             <a
-              href="/terms-of-service"
+              href="/terms-of-use"
               className="text-secondary-purple-rain hover:underline"
               target="_blank"
               rel="noreferrer"
@@ -465,21 +465,21 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       <p className="text-xs text-slate-500">
         By continuing you agree to our{' '}
         <a
-          href="/terms-of-service"
-          className="text-secondary-purple-rain hover:underline"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Terms
-        </a>
-        , the{' '}
-        <a
           href="/waiver"
           className="text-secondary-purple-rain hover:underline"
           target="_blank"
           rel="noreferrer"
         >
           Waiver
+        </a>
+        , {' '}
+        <a
+          href="/terms-of-use"
+          className="text-secondary-purple-rain hover:underline"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Terms
         </a>
         , and how we handle your data per our{' '}
         <a
@@ -490,7 +490,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         >
           Privacy Policy
         </a>
-        . You also agree to creating an account on KandieGang.com and agree to receiving emails.
+        . You also agree to creating an account on kandiegang.com and agree to receiving emails.
       </p>
     </div>
   );
