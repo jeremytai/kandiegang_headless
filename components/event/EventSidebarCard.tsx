@@ -136,13 +136,13 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
           {category && (
             <div>
               <p className={labelClass}>Category</p>
-              <p className={valueClass}>{category}</p>
+              <p className={valueClass}>{typeof category === 'string' ? category.charAt(0).toUpperCase() + category.slice(1) : category}</p>
             </div>
           )}
           {type && (
             <div>
               <p className={labelClass}>Type</p>
-              <p className={valueClass}>{type}</p>
+              <p className={valueClass}>{typeof type === 'string' ? type.charAt(0).toUpperCase() + type.slice(1) : type}</p>
             </div>
           )}
           {type && <div className="mb-2" />}
@@ -452,23 +452,23 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
           </div>
         )}
 
-        {/* Participants sidebar/modal for guides */}
+        {/* Participants modal for guides */}
         {participantsSidebar && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-end bg-black/60"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
             role="dialog"
             aria-modal="true"
             aria-label="Participants"
             onClick={() => setParticipantsSidebar(null)}
           >
             <div
-              className="relative w-full max-w-md h-full bg-white shadow-lg p-6 overflow-y-auto"
+              className="w-full max-w-md rounded-xl bg-white shadow-lg p-6 overflow-y-auto relative"
               onClick={(e) => e.stopPropagation()}
             >
               {/* X Close Button */}
               <button
                 type="button"
-                aria-label="Close sidebar"
+                aria-label="Close modal"
                 className="absolute top-4 right-4 text-slate-400 hover:text-black focus:outline-none"
                 onClick={() => setParticipantsSidebar(null)}
               >
