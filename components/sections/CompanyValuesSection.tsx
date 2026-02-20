@@ -24,7 +24,7 @@ const VALUES: { title: string; description: string }[] = [
       'Connections are at the heart of Kandie Gang. We create rides, events, and initiatives where participants feel supported and heard. A strong community fuels culture, participation, and growth.',
   },
   {
-    title: 'Openness',
+    title: 'Open',
     description:
       'Spaces are intentionally welcoming and barrier-free. We listen, adapt, and make room for new voices, ensuring every rider can participate and help shape the culture. Openness keeps the community vibrant and evolving.',
   },
