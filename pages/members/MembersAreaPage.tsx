@@ -149,9 +149,6 @@ export const MembersAreaPage: React.FC = () => {
   const cyclingMember = Boolean(profile?.is_member);
   const canSeeMembersOnlyPosts = cyclingMember || guide;
 
-  // Temp: find correct UUID for admin check
-  console.log('AUTH USER ID:', user?.id);
-
   useEffect(() => {
     if (status === 'loading') return;
     if (

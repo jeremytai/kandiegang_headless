@@ -9,7 +9,7 @@
  * - Usage examples
  */
 
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Accordion } from '../../components/common/Accordion';
 
@@ -169,6 +169,21 @@ export const DesignSystemWIP: React.FC = () => {
       text: 'This is a warning alert.',
     },
   ];
+  const magicLinkPreviewRef = useRef<HTMLDivElement>(null);
+  const [magicLinkHtml, setMagicLinkHtml] = useState('');
+  const welcomeEmailPreviewRef = useRef<HTMLDivElement>(null);
+  const [welcomeEmailHtml, setWelcomeEmailHtml] = useState('');
+  useEffect(() => {
+    if (magicLinkPreviewRef.current) {
+      const html = magicLinkPreviewRef.current.innerHTML;
+      setMagicLinkHtml((prev) => (prev === html ? prev : html));
+    }
+    if (welcomeEmailPreviewRef.current) {
+      const html = welcomeEmailPreviewRef.current.innerHTML;
+      setWelcomeEmailHtml((prev) => (prev === html ? prev : html));
+    }
+  });
+
   return (
     <div className="bg-white min-h-screen py-20 px-6">
       <div className="max-w-7xl mx-auto">
@@ -247,7 +262,7 @@ export const DesignSystemWIP: React.FC = () => {
           <h2 className="text-4xl font-normal mb-8 text-primary-ink">Sample Buttons</h2>
           <div className="flex flex-wrap gap-8">
             {sampleButtons.map((btn) => (
-              <button key={btn.label} className={btn.className}>
+              <button key={btn.label} type="button" className={btn.className}>
                 {btn.label}
               </button>
             ))}
@@ -548,6 +563,383 @@ export const DesignSystemWIP: React.FC = () => {
                   Every aspect is designed to blend into your living space while providing maximum
                   utility.
                 </p>
+              </div>
+            </div>
+            {/* Emails Section */}
+            <div className="space-y-4 mt-20">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">Emails</h3>
+              {/* Magic Link Email Example */}
+              <div className="border border-slate-200 rounded-2xl p-8 bg-slate-50">
+                <h4 className="text-lg font-bold mb-4 text-primary-ink">Magic Link Email</h4>
+                <div className="overflow-x-auto mb-6" ref={magicLinkPreviewRef}>
+                  <table
+                    border={0}
+                    cellPadding="0"
+                    cellSpacing="0"
+                    width="100%"
+                    style={{ minWidth: '100%', borderCollapse: 'collapse', margin: 0, padding: 0, textAlign: 'center', tableLayout: 'fixed', background: '#fafafc' }}
+                  >
+                    <tbody>
+                      <tr>
+                        <td align="center" style={{ padding: 0, background: '#fafafc' }}>
+                          <table
+                            border={0}
+                            cellPadding="0"
+                            cellSpacing="0"
+                            width="100%"
+                            style={{ minWidth: '100%', borderCollapse: 'collapse', margin: 0, padding: 0, textAlign: 'center', tableLayout: 'fixed', background: '#fafafc' }}
+                          >
+                            <tbody>
+                              <tr>
+                                <td align="center" style={{ padding: '24px 0 16px', background: '#fafafc' }}>
+                                  <a href="https://kandiegang.com?supabase-magiclink" target="_blank" rel="noopener noreferrer">
+                                    <img src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" alt="Kandie Gang" style={{ display: 'block', width: 138, maxWidth: 138, margin: '0 auto' }} width="138" />
+                                  </a>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <table
+                            border={0}
+                            cellPadding="0"
+                            cellSpacing="0"
+                            align="center"
+                            style={{ width: '100%', maxWidth: 602, borderCollapse: 'separate', background: '#fffffe', borderRadius: 16, border: '1px solid #ddd', margin: '0 auto' }}
+                          >
+                            <tbody>
+                              <tr>
+                                <td align="center" style={{ padding: '40px 0', borderRadius: 16, background: '#fffffe' }}>
+                                  <table
+                                    border={0}
+                                    cellPadding="0"
+                                    cellSpacing="0"
+                                    width="100%"
+                                    align="center"
+                                    style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse' }}
+                                  >
+                                    <tbody>
+                                      <tr>
+                                        <td align="center" style={{ padding: '0 40px 20px', background: '#fffffe' }}>
+                                          <h2 style={{ fontFamily: 'RoobertPRO, Helvetica, Arial, sans-serif', fontSize: 32, lineHeight: '40px', fontWeight: 'normal', margin: 0, color: 'rgb(72, 81, 151)' }}>
+                                            Here’s your unique sign-in link to Kandie Gang
+                                          </h2>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  {/* Horizontal divider after body table */}
+                                  <table border={0} cellPadding="0" cellSpacing="0" width="100%" align="center" style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse' }}>
+                                    <tbody>
+                                    </tbody>
+                                  </table>
+                                  <table
+                                    border={0}
+                                    cellPadding="0"
+                                    cellSpacing="0"
+                                    width="100%"
+                                    align="center"
+                                    style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse' }}
+                                  >
+                                    <tbody>
+                                      <tr>
+                                        <td align="center" style={{ padding: '0 40px', background: '#fffffe' }}>
+                                          <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#1c1c1e', margin: 0 }}>
+                                            You’re almost there! To access your Kandie Gang account, simply click on the button below.
+                                          </p>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td align="center" style={{ padding: '20px 0 0 0', background: '#fffffe' }}></td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  <table
+                                    border={0}
+                                    cellPadding="0"
+                                    cellSpacing="0"
+                                    width="100%"
+                                    align="center"
+                                    style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse' }}
+                                  >
+                                    <tbody>
+                                      <tr>
+                                        <td align="center" style={{ padding: '0 40px', background: '#fffffe' }}>
+                                          <table border={0} cellPadding="0" cellSpacing="0" align="center" style={{ borderCollapse: 'collapse' }}>
+                                            <tbody>
+                                              <tr>
+                                                <td align="center">
+                                                  <a style={{ display: 'inline-block', fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#fffefe', backgroundColor: 'rgb(72, 81, 151)', textDecoration: 'none', padding: '11px 16px 13px', borderRadius: 9999, textAlign: 'center', fontWeight: 'bold' }} href="{{ .ConfirmationURL }}" target="_blank" rel="noopener noreferrer">
+                                                    <span>Login to my Kandie Gang account</span>
+                                                  </a>
+                                                </td>
+                                              </tr>
+                                            </tbody>
+                                          </table>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td align="center" style={{ padding: '20px 0 0 0', background: '#fffffe' }}></td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <table
+                            border={0}
+                            cellPadding="0"
+                            cellSpacing="0"
+                            align="center"
+                            style={{ width: '100%', maxWidth: 600, borderCollapse: 'collapse', margin: '0 auto' }}
+                          >
+                            <tbody>
+                              <tr>
+                                <td align="center" style={{ padding: '60px 0 0 0', background: '#fafafc' }}></td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0 40px 24px 40px', background: '#fafafc' }}>
+                                  <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 14, lineHeight: '20px', margin: 0, color: '#1c1c1e', textDecoration: 'none' }}>
+                                    If you didn’t try to login via password-less authentication, simply ignore this message. In case of any concerns, please contact our support.
+                                  </p>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0 40px 40px 40px', background: '#fafafc' }}>
+                                  <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 14, lineHeight: '20px', margin: 0, color: '#1c1c1e', textDecoration: 'none' }}>
+                                    This email was sent to <a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="mailto:your@email.com" target="_blank" rel="noopener noreferrer">your@email.com</a>.
+                                  </p>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0 40px 24px 40px', background: '#fafafc' }}>
+                                  <a href="https://kandiegang.com" target="_blank" rel="noopener noreferrer">
+                                    <img src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" alt="Kandie Gang" style={{ display: 'block', width: 138, maxWidth: 138, margin: '0 auto' }} width="138" />
+                                  </a>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0 40px', fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 14, lineHeight: '20px', color: '#1c1c1e', textDecoration: 'none' }}>
+                                  <span>Kandie Gang<br />It's a love story 💜</span><br /><br />
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0 40px', fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 14, lineHeight: '20px', color: '#1c1c1e!important', textDecoration: 'none' }}>
+                                  <span><a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://www.kandiegang.com/privacy-policy?supabase-magiclink" target="_blank" rel="noopener noreferrer">Privacy Policy</a> | <a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://www.kandiegang.com/about?supabase-magiclink" target="_blank" rel="noopener noreferrer">About Us</a></span>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                {/* Copyable Code Block */}
+                <div className="mt-6 relative w-full max-w-none">
+                  <button
+                    type="button"
+                    aria-label="Copy code"
+                    className="absolute top-2 right-2 p-1 rounded hover:bg-slate-800 transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(magicLinkHtml);
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="5" y="7" width="9" height="9" rx="2" stroke="#fff" strokeWidth="1.5" fill="none"/>
+                      <rect x="7.5" y="4" width="7.5" height="7.5" rx="2" stroke="#fff" strokeWidth="1.5" fill="none"/>
+                    </svg>
+                  </button>
+                  <pre className="bg-slate-900 text-white text-xs rounded-lg p-4 overflow-x-auto select-all max-h-64 text-[11px] leading-snug w-full">
+{magicLinkHtml}
+                  </pre>
+                </div>
+              </div>
+              {/* Member Welcome Email */}
+              <div className="border border-slate-200 rounded-2xl p-8 bg-slate-50">
+                <h4 className="text-lg font-bold mb-4 text-primary-ink">Member Welcome Email</h4>
+                <div className="overflow-x-auto mb-6" ref={welcomeEmailPreviewRef}>
+                  <table
+                    border={0}
+                    cellPadding="0"
+                    cellSpacing="0"
+                    width="100%"
+                    style={{ minWidth: '100%', borderCollapse: 'collapse', margin: 0, padding: 0, textAlign: 'center', tableLayout: 'fixed', background: '#ffffff' }}
+                  >
+                    <tbody>
+                      <tr>
+                        <td align="center" style={{ padding: 0, background: '#fafafc' }}>
+                          {/* Header logo */}
+                          <table border={0} cellPadding="0" cellSpacing="0" width="100%" style={{ minWidth: '100%', borderCollapse: 'collapse', margin: 0, padding: 0, textAlign: 'center', tableLayout: 'fixed', background: '#fafafc' }}>
+                            <tbody>
+                              <tr>
+                                <td align="center" style={{ padding: '24px 0 16px', background: '#fafafc' }}>
+                                  <a href="https://kandiegang.com?kandiegangcyclingclub-welcome" target="_blank" rel="noopener noreferrer">
+                                    <img src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" alt="Kandie Gang" style={{ display: 'block', width: 138, maxWidth: 138, margin: '0 auto' }} width="138" />
+                                  </a>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0', background: '#fafafc' }}>
+                                  <a href="https://www.kandiegang.com/members?kandiegangcyclingclub-welcome" target="_blank" rel="noopener noreferrer">
+                                    <img src="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2026/02/18182453/kandiegangcyclingclub_welcome.jpg" alt="Kandie Gang Welcome" style={{ display: 'block', width: '100%', maxWidth: 602, margin: '0 auto' }} />
+                                  </a>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          {/* Card */}
+                          <table border={0} cellPadding="0" cellSpacing="0" align="center" style={{ width: '100%', maxWidth: 602, borderCollapse: 'separate', background: '#fffffe', margin: '0 auto' }}>
+                            <tbody>
+                              <tr>
+                                <td align="center" style={{ padding: '40px 0', borderRadius: 16, background: '#fffffe' }}>
+                                  {/* Heading */}
+                                  <table border={0} cellPadding="0" cellSpacing="0" width="100%" align="center" style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse' }}>
+                                    <tbody>
+                                      <tr>
+                                        <td align="center" style={{ padding: '0 40px 20px', background: '#fffffe' }}>
+                                          {/* Embed IvyOra Light font for email preview only */}
+                                          <style>
+                                            {`
+                                              @font-face {
+                                                font-family: 'IvyOra Disp Lt';
+                                                src: url('https://www.kandiegang.com/fonts/IvyOraDispLt.woff2') format('woff2'),
+                                                     url('https://www.kandiegang.com/fonts/IvyOraDispLt.woff') format('woff');
+                                                font-weight: 300;
+                                                font-style: normal;
+                                                font-display: swap;
+                                              }
+                                            `}
+                                          </style>
+                                          <h2 style={{ fontFamily: 'IvyOra Disp Lt, RoobertPRO, Helvetica, Arial, sans-serif', fontSize: 32, lineHeight: '40px', fontWeight: 300, margin: 0, color: '#1c1c1e' }}>
+                                            Welcome to the Kandie Gang Cycling Club
+                                          </h2>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  {/* Body */}
+                                  <table border={0} cellPadding="0" cellSpacing="0" width="100%" align="center" style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
+                                    <tbody>
+                                      <tr>
+                                        <td align="left" style={{ padding: '0 40px 24px', background: '#fffffe' }}>
+                                          <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#1c1c1e', margin: 0 }}>
+                                            We are pleased to welcome you to the Kandie Gang Cycling Club and will do everthing in our power to make it an exciting year.
+                                          </p>
+                                          <br />
+                                          <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#1c1c1e', margin: 0 }}>
+                                            If you have any questions, concerns or feedback, don't hesitate to contact us. We hope you enjoy your rides this year and look forward to your experience as a member of the club.
+                                          </p>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td align="center" style={{ padding: '0 0 16px', background: '#fafafc' }}>
+                                          <a href="https://www.kandiegang.com/members?kandiegangcyclingclub-welcome" target="_blank" rel="noopener noreferrer">
+                                            <img src="https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2026/02/18200520/kandegangcyclingclub_members.jpg" alt="Kandie Gang Welcome" style={{ display: 'block', width: '100%', maxWidth: 602, margin: '0 auto' }} />
+                                          </a>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td align="left" style={{ padding: '0 40px 24px', background: '#fffffe' }}>
+                                          <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#1c1c1e', margin: 0 }}>
+                                            Parallel to supporting our mission, you have access to exclusive <a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://www.kandiegang.com/community?kandiegangcyclingclub-welcomeemail" target="_blank" rel="noopener noreferrer">member benefits</a>, including early access to events, special discounts on <a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://www.kandiegang.com/shop?kandiegangcyclingclub-welcomeemail" target="_blank" rel="noopener noreferrer">products</a>, and the opportunity to <a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://discord.gg/zddt89Q4hm?kandiegangcyclingclub-welcomeemail" target="_blank" rel="noopener noreferrer">connect on Discord</a> and in real-life with fellow cycling enthusiasts in our community.
+                                          </p>
+                                          <br />
+                                          <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#1c1c1e', margin: 0 }}>
+                                            If you have any questions, concerns or feedback, don't hesitate to contact us. We hope you enjoy your rides this year and look forward to your experience as a member of the club.
+                                          </p>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  {/* CTA */}
+                                  <table border={0} cellPadding="0" cellSpacing="0" width="100%" align="center" style={{ maxWidth: 600, margin: '0 auto', borderCollapse: 'collapse' }}>
+                                    <tbody>
+                                      <tr>
+                                        <td align="center" style={{ padding: '0 40px', background: '#fffffe' }}>
+                                          <table border={0} cellPadding="0" cellSpacing="0" align="center" style={{ borderCollapse: 'collapse' }}>
+                                            <tbody>
+                                              <tr>
+                                                <td align="center">
+                                                  <a
+                                                    href="https://kandiegang.com/members?kandiegangcyclingclub-welcomeemail"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ display: 'inline-block', fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 16, lineHeight: '24px', color: '#fffefe', backgroundColor: 'rgb(72, 81, 151)', textDecoration: 'none', padding: '11px 24px 13px', borderRadius: '9999px', textAlign: 'center', fontWeight: 'bold' }}
+                                                  >
+                                                    <span>Visit the Members Area</span>
+                                                  </a>
+                                                </td>
+                                              </tr>
+                                            </tbody>
+                                          </table>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td align="center" style={{ padding: '20px 0 0 0', background: '#fffffe' }}></td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          {/* Footer */}
+                          <table border={0} cellPadding="0" cellSpacing="0" align="center" style={{ width: '100%', maxWidth: 600, borderCollapse: 'collapse', margin: '0 auto' }}>
+                            <tbody>
+                              <tr>
+                                <td align="center" style={{ padding: '60px 0 0 0', background: '#fafafc' }}></td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0 40px 24px 40px', background: '#fafafc' }}>
+                                  <p style={{ fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 14, lineHeight: '20px', margin: 0, color: '#1c1c1e', textDecoration: 'none' }}>
+                                    If you have any questions, just reply to this email — we're always happy to help.
+                                  </p>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0 40px 24px 40px', background: '#fafafc' }}>
+                                  <a href="https://kandiegang.com" target="_blank" rel="noopener noreferrer">
+                                    <img src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" alt="Kandie Gang" style={{ display: 'block', width: 138, maxWidth: 138, margin: '0 auto' }} width="138" />
+                                  </a>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0 40px', fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 14, lineHeight: '20px', color: '#1c1c1e', textDecoration: 'none' }}>
+                                  <span>Kandie Gang<br />It's a love story 💜</span><br /><br />
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style={{ padding: '0 40px 40px', fontFamily: 'NotoSans, Helvetica, Arial, sans-serif', fontSize: 14, lineHeight: '20px', color: '#1c1c1e', textDecoration: 'none' }}>
+                                  <span><a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://www.kandiegang.com/privacy-policy?supabase-magiclink" target="_blank" rel="noopener noreferrer">Privacy Policy</a> | <a style={{ fontWeight: 'bold', textDecoration: 'none', color: 'rgb(72, 81, 151)' }} href="https://www.kandiegang.com/about?supabase-magiclink" target="_blank" rel="noopener noreferrer">About Us</a></span>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                {/* Copyable Code Block */}
+                <div className="mt-6 relative w-full max-w-none">
+                  <button
+                    type="button"
+                    aria-label="Copy code"
+                    className="absolute top-2 right-2 p-1 rounded hover:bg-slate-800 transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(welcomeEmailHtml);
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="5" y="7" width="9" height="9" rx="2" stroke="#fff" strokeWidth="1.5" fill="none"/>
+                      <rect x="7.5" y="4" width="7.5" height="7.5" rx="2" stroke="#fff" strokeWidth="1.5" fill="none"/>
+                    </svg>
+                  </button>
+                  <pre className="bg-slate-900 text-white text-xs rounded-lg p-4 overflow-x-auto select-all max-h-64 text-[11px] leading-snug w-full">
+{welcomeEmailHtml}
+                  </pre>
+                </div>
               </div>
             </div>
           </div>

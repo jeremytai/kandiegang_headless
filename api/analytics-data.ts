@@ -1,7 +1,8 @@
+// File removed. Logic moved to admin-report.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import { checkRateLimit } from '../lib/rateLimit';
-import { bucketize, aggregateByMonth, countByArea } from '../utils/dataTransformations';
+import { checkRateLimit } from '../lib/rateLimit.js';
+import { bucketize, aggregateByMonth, countByArea } from '../utils/dataTransformations.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY =

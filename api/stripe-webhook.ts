@@ -2,72 +2,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
+import { sendMemberWelcomeEmail } from '../lib/memberWelcomeEmail.js';
 
 const CLUB_MEMBERSHIP_SLUG = 'kandie-gang-cycling-club-membership';
 const CLUB_PLAN_NAME = 'Kandie Gang Cycling Club Membership';
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'Kandie Gang <onboarding@resend.dev>';
-const SITE_BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://kandiegang.com');
-
-function buildWelcomeHtml(params: {
-  to: string;
-  memberSince: string;
-  membershipExpiration: string;
-}): string {
-  const membersUrl = `${SITE_BASE_URL}/members`;
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1F2223; max-width: 560px; margin: 0 auto; padding: 24px;"><h1 style="font-size: 1.5rem; color: #46519C; font-weight: 600;">Welcome to the Kandie Gang Cycling Club</h1><p>Thank you for becoming a member. You're in.</p><p>Your membership is active for one year:</p><ul style="margin: 16px 0;"><li><strong>Start:</strong> ${params.memberSince}</li><li><strong>Expires:</strong> ${params.membershipExpiration}</li></ul><p><a href="${membersUrl}" style="display: inline-block; background: #46519C; color: white; text-decoration: none; padding: 12px 24px; border-radius: 9999px; font-weight: 600;">Go to Members Area</a></p><p style="margin-top: 32px; font-size: 0.875rem; color: #5f6264;">Kandie Gang Cycling Club</p></body></html>`;
-}
-
-function buildWelcomeText(params: {
-  to: string;
-  memberSince: string;
-  membershipExpiration: string;
-}): string {
-  const membersUrl = `${SITE_BASE_URL}/members`;
-  return [
-    'Welcome to the Kandie Gang Cycling Club',
-    '',
-    "Thank you for becoming a member. You're in.",
-    '',
-    'Your membership is active for one year:',
-    `Start: ${params.memberSince}`,
-    `Expires: ${params.membershipExpiration}`,
-    '',
-    `Go to Members Area: ${membersUrl}`,
-    '',
-    'Kandie Gang Cycling Club',
-  ].join('\n');
-}
-
-async function sendMemberWelcomeEmail(params: {
-  to: string;
-  memberSince: string;
-  membershipExpiration: string;
-}): Promise<{ success: boolean; error?: string }> {
-  if (!RESEND_API_KEY) return { success: false, error: 'RESEND_API_KEY is not set' };
-  const resend = new Resend(RESEND_API_KEY);
-  try {
-    const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: params.to,
-      subject: 'Welcome to the Kandie Gang Cycling Club',
-      html: buildWelcomeHtml(params),
-      text: buildWelcomeText(params),
-    });
-    if (error) {
-      console.error('[memberWelcomeEmail] Resend error:', error);
-      return { success: false, error: error.message };
-    }
-    return { success: true };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[memberWelcomeEmail] Send failed:', message);
-    return { success: false, error: message };
-  }
-}
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -128,11 +66,16 @@ async function handleSubscriptionEvent(event: Stripe.Event, res: NextApiResponse
   // Determine membership status
   const isMember = ['active', 'trialing'].includes(subscription.status);
 
+  // In Stripe API 2026-01-28+, current_period_end lives on the subscription item
+  const firstItem = (subscription as any).items?.data?.[0];
+  const currentPeriodEnd =
+    firstItem?.current_period_end ?? (subscription as any).current_period_end ?? null;
+
   const updates: any = {
     stripe_subscription_id: subscription.id,
     stripe_subscription_status: subscription.status,
-    subscription_current_period_end: (subscription as any).current_period_end
-      ? new Date((subscription as any).current_period_end * 1000).toISOString()
+    subscription_current_period_end: currentPeriodEnd
+      ? new Date(currentPeriodEnd * 1000).toISOString()
       : null,
     subscription_cancel_at_period_end: (subscription as any).cancel_at_period_end ?? null,
     is_member: isMember,
@@ -140,10 +83,8 @@ async function handleSubscriptionEvent(event: Stripe.Event, res: NextApiResponse
   };
 
   // Update expiration date
-  if (isMember && (subscription as any).current_period_end) {
-    updates.membership_expiration = new Date((subscription as any).current_period_end * 1000)
-      .toISOString()
-      .split('T')[0];
+  if (isMember && currentPeriodEnd) {
+    updates.membership_expiration = new Date(currentPeriodEnd * 1000).toISOString().split('T')[0];
   }
 
   // Update billing cycle anchor if present
@@ -198,8 +139,57 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
   if (subscriptionId) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
-    const currentPeriodEnd = (subscription as any).current_period_end;
+    // In Stripe API 2026-01-28+, current_period_end lives on the subscription item
+    const firstItem = (subscription as any).items?.data?.[0];
+    const currentPeriodEnd =
+      firstItem?.current_period_end ?? (subscription as any).current_period_end ?? null;
     const status = (subscription as any).status;
+
+    // ── Order history tracking ──────────────────────────────────────────────
+    const amountPaid = ((invoice as any).amount_paid ?? 0) / 100;
+    const orderDate = new Date((invoice as any).created * 1000).toISOString().split('T')[0];
+    const productNames: string[] = ((invoice as any).lines?.data ?? [])
+      .map((l: any) => l.description)
+      .filter((d: any): d is string => typeof d === 'string' && d.length > 0);
+
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('order_history, customer_since')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle();
+
+    const existingHistory: any[] = Array.isArray(profileData?.order_history)
+      ? profileData.order_history
+      : [];
+    const alreadyTracked = existingHistory.some((e) => e.order_id === (invoice as any).id);
+    const mergedHistory =
+      alreadyTracked || amountPaid <= 0
+        ? existingHistory
+        : [
+            ...existingHistory,
+            {
+              order_id: (invoice as any).id,
+              date: orderDate,
+              total: amountPaid,
+              products:
+                productNames.length > 0 ? productNames : ['Kandie Gang Cycling Club Membership'],
+              status: 'completed',
+            },
+          ];
+
+    const orderCount = mergedHistory.length;
+    const lifetimeValue =
+      Math.round(
+        mergedHistory.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0) * 100
+      ) / 100;
+    const avgOrderValue =
+      orderCount > 0 ? Math.round((lifetimeValue / orderCount) * 100) / 100 : 0;
+    const lastOrderDate = mergedHistory.reduce<string | null>(
+      (latest, o) => (!o.date ? latest : !latest || o.date > latest ? o.date : latest),
+      null
+    );
+    const customerSince: string | null = profileData?.customer_since ?? orderDate;
+    // ────────────────────────────────────────────────────────────────────────
 
     const { error } = await supabase
       .from('profiles')
@@ -212,6 +202,12 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
           ? new Date(currentPeriodEnd * 1000).toISOString()
           : null,
         stripe_subscription_status: status,
+        order_history: mergedHistory,
+        order_count: orderCount,
+        lifetime_value: lifetimeValue,
+        avg_order_value: avgOrderValue,
+        last_order_date: lastOrderDate,
+        customer_since: customerSince,
       })
       .eq('stripe_customer_id', customerId);
 
@@ -224,7 +220,7 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
     }
 
     console.log(
-      `[stripe-webhook] invoice.payment_succeeded: Membership renewed for customer ${customerId}`
+      `[stripe-webhook] invoice.payment_succeeded: customer ${customerId}, LTV €${lifetimeValue}`
     );
   }
 
@@ -384,6 +380,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const existingExp = existing?.membership_expiration ?? null;
   const newExpiration =
     existingExp && existingExp > membershipExpiration ? existingExp : membershipExpiration;
+  const stripeCustomerId =
+    typeof session.customer === 'string' ? session.customer : null;
+
   const { error: updateError } = await supabase
     .from('profiles')
     .update({
@@ -392,6 +391,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       membership_plans: plans,
       member_since: today,
       membership_expiration: newExpiration,
+      ...(stripeCustomerId && { stripe_customer_id: stripeCustomerId }),
     })
     .eq('id', profileId);
   if (updateError) {

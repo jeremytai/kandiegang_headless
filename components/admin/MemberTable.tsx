@@ -112,13 +112,13 @@ function MergeSearch({
       } = (await supabase?.auth.getSession()) ?? { data: { session: null } };
       if (!session?.access_token) throw new Error('Not authenticated');
 
-      const res = await fetch('/api/merge-profiles', {
+      const res = await fetch('/api/admin-update-profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ targetId: currentMember.id, sourceId }),
+        body: JSON.stringify({ action: 'merge', targetId: currentMember.id, sourceId }),
       });
 
       if (!res.ok) {
