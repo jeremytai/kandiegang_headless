@@ -313,7 +313,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div className="space-y-6">
                     <nav className="flex flex-col gap-2">
-                      <NavLink label="Community" to="/community" onClick={handleToggle} />
+                      <NavLink label="Community Rides" to="/community" onClick={handleToggle} />
                       <NavLink label="Stories" to="/stories" onClick={handleToggle} />
                       {showMemberAreaLink ? (
                         <NavLink label="Member Area" to="/members" onClick={handleToggle} />
