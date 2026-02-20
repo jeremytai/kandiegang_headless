@@ -19,10 +19,10 @@ export const EventCancelPage: React.FC = () => {
 
     const cancel = async () => {
       try {
-        const response = await fetch('/api/event-cancel', {
+        const response = await fetch('/api/event', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
+          body: JSON.stringify({ action: 'cancel', token }),
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {

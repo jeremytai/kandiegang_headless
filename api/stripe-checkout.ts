@@ -1,20 +1,21 @@
-// Migrated from /api/create-checkout-session.ts to Next.js API route
-import type { NextApiRequest, NextApiResponse } from 'next';
+// Combined Stripe API: checkout session (POST action=checkout), portal session (POST action=portal)
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
+
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kandiegang.com';
+
+const stripe = stripeSecretKey
+  ? new Stripe(stripeSecretKey, { apiVersion: '2026-01-28.clover' })
+  : null;
 
 const CLUB_MEMBERSHIP_SLUG = 'kandie-gang-cycling-club-membership';
 function isClubMembershipOnly<T extends { productSlug: string }>(items: T[]): boolean {
   return items.length > 0 && items.every((i) => i.productSlug === CLUB_MEMBERSHIP_SLUG);
 }
-
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-if (!stripeSecretKey) {
-  console.warn('STRIPE_SECRET_KEY is not set. Stripe checkout will not work.');
-}
-
-const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, { apiVersion: '2026-01-28.clover' })
-  : null;
 
 type LineItemInput = {
   priceId: string;
@@ -53,37 +54,26 @@ function stripeErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : 'Unknown error';
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+// ─── Checkout session handler ─────────────────────────────────────────────────
+async function handleCheckout(req: VercelRequest, res: VercelResponse) {
   const sendResponse = (status: number, data: Record<string, unknown>) => {
-    if (!res.headersSent) {
-      return res.status(status).json(data);
-    }
+    if (!res.headersSent) return res.status(status).json(data);
   };
-  try {
-    const stripeConfigured = !!stripe;
-    console.log('Checkout session request received:', {
-      method: req.method,
-      hasBody: !!req.body,
-      stripeConfigured,
+
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (!stripe) {
+    return sendResponse(500, {
+      error:
+        'Stripe is not configured. Set STRIPE_SECRET_KEY in .env (or Vercel env). Use `vercel dev` for local checkout.',
+      hint: 'When using vercel dev, ensure STRIPE_SECRET_KEY is in your .env file.',
     });
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
-    }
-    if (req.method !== 'POST') {
-      res.setHeader('Allow', 'POST');
-      return sendResponse(405, { error: 'Method not allowed' });
-    }
-    if (!stripe) {
-      return sendResponse(500, {
-        error:
-          'Stripe is not configured. Set STRIPE_SECRET_KEY in .env (or Vercel env). Use `vercel dev` for local checkout.',
-        hint: 'When using vercel dev, ensure STRIPE_SECRET_KEY is in your .env file.',
-      });
-    }
+  }
+
+  try {
     const body = req.body as Record<string, unknown>;
     const { userId, userEmail } = body;
     const lineItemsRaw = body.lineItems as unknown;
@@ -91,6 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const legacyProductId = body.productId as string | undefined;
     const legacyProductTitle = body.productTitle as string | undefined;
     const legacyProductSlug = body.productSlug as string | undefined;
+
     let lineItems: LineItemInput[];
     if (Array.isArray(lineItemsRaw) && lineItemsRaw.length > 0) {
       if (!lineItemsRaw.every(isLineItemInput)) {
@@ -122,6 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'Either lineItems array or single priceId + productId + productTitle + productSlug is required',
       });
     }
+
     let mode: 'payment' | 'subscription' = 'payment';
     const priceIds = Array.from(new Set(lineItems.map((i) => i.priceId)));
     for (let i = 0; i < priceIds.length; i++) {
@@ -137,17 +129,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
     }
+
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
     const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/shop`;
+
     const FREE_SHIPPING_THRESHOLD = 99;
     const SHIPPING_DE_CENTS = 590;
     const SHIPPING_EU_CENTS = 990;
     const shippingOption = (body.shippingOption as string) || 'de';
     const subtotal = typeof body.subtotal === 'number' ? body.subtotal : undefined;
     const cartIsMembershipOnly = isClubMembershipOnly(lineItems);
+
     let shippingAmountCents = 0;
     if (subtotal != null && subtotal > 0 && !cartIsMembershipOnly) {
       if (shippingOption === 'pickup' || subtotal >= FREE_SHIPPING_THRESHOLD) {
@@ -158,12 +153,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         shippingAmountCents = SHIPPING_DE_CENTS;
       }
     }
+
     const shippingLabels: Record<string, string> = {
       de: 'Shipping (Standard – Germany)',
       eu: 'Shipping (Standard – EU)',
       pickup: 'Shipping (Local pickup)',
     };
     const shippingLabel = shippingLabels[shippingOption] || shippingLabels.de;
+
     const lineItemsForSession: Stripe.Checkout.SessionCreateParams.LineItem[] = lineItems.map(
       ({ priceId, quantity }) => ({ price: priceId, quantity })
     );
@@ -179,6 +176,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         quantity: 1,
       });
     }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItemsForSession,
@@ -195,6 +193,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       customer_email: (userEmail as string) || undefined,
       allow_promotion_codes: true,
     });
+
     return sendResponse(200, { sessionId: session.id, url: session.url });
   } catch (err) {
     console.error('Stripe checkout session creation error:', err);
@@ -208,4 +207,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
   }
+}
+
+// ─── Portal session handler ───────────────────────────────────────────────────
+async function handlePortal(req: VercelRequest, res: VercelResponse) {
+  if (!stripe || !supabaseUrl || !supabaseServiceKey) {
+    console.error('[stripe-checkout] Missing required configuration for portal');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  const { userId } = req.body;
+  if (!userId) return res.status(401).json({ error: 'Unauthorized - userId required' });
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('stripe_customer_id, email')
+    .eq('id', userId)
+    .single();
+
+  if (error || !profile) {
+    console.error('[stripe-checkout] Profile not found:', error);
+    return res.status(404).json({ error: 'Profile not found' });
+  }
+  if (!profile.stripe_customer_id) {
+    return res.status(404).json({ error: 'No Stripe customer found. Please contact support.' });
+  }
+
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: profile.stripe_customer_id,
+      return_url: `${siteUrl}/members`,
+    });
+    return res.status(200).json({ url: session.url });
+  } catch (err) {
+    console.error('[stripe-checkout] Failed to create portal session:', err);
+    return res.status(500).json({ error: 'Failed to create portal session' });
+  }
+}
+
+// ─── Main handler ─────────────────────────────────────────────────────────────
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const action = (req.body as Record<string, unknown>)?.action;
+  if (action === 'checkout') return handleCheckout(req, res);
+  if (action === 'portal') return handlePortal(req, res);
+  return res.status(400).json({ error: 'Invalid or missing action' });
 }

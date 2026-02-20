@@ -97,10 +97,11 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         return;
       }
       // Write registration directly to Supabase
-      const response = await fetch('/api/event-signup', {
+      const response = await fetch('/api/event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'signup',
           eventId: intent.eventId,
           eventTitle: intent.eventTitle,
           rideLevel: intent.levelKey,
@@ -178,13 +179,13 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         lastName: trimmedLast,
       };
       console.log('[EventSignupPanel] Sending signup request:', signupPayload);
-      const response = await fetch('/api/event-signup', {
+      const response = await fetch('/api/event', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(signupPayload),
+        body: JSON.stringify({ action: 'signup', ...signupPayload }),
       });
       console.log('[EventSignupPanel] Signup response:', response);
       const data = await response.json().catch(() => ({}));

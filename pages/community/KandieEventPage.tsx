@@ -98,7 +98,7 @@ export const KandieEventPage: React.FC = () => {
     if (!eventData?.databaseId) return;
     const controller = new AbortController();
     try {
-      const response = await fetch(`/api/event-capacity?eventId=${eventData.databaseId}`, {
+      const response = await fetch(`/api/event?eventId=${eventData.databaseId}`, {
         signal: controller.signal,
       });
       if (!response.ok) return;
@@ -425,13 +425,13 @@ export const KandieEventPage: React.FC = () => {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
       if (!accessToken) return;
-      const response = await fetch('/api/event-cancel-auth', {
+      const response = await fetch('/api/event', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ eventId: eventData.databaseId, rideLevel: levelKey }),
+        body: JSON.stringify({ action: 'cancel', eventId: eventData.databaseId, rideLevel: levelKey }),
       });
       if (!response.ok) return;
       refreshCapacity();

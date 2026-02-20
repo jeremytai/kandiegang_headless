@@ -121,10 +121,11 @@ export const CartOffcanvas: React.FC = () => {
         productTitle: i.productTitle,
         productSlug: i.productSlug,
       }));
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch('/api/stripe-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'checkout',
           lineItems,
           subtotal,
           shippingOption,

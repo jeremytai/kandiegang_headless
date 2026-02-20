@@ -47,12 +47,13 @@ export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
     setError(null);
 
     try {
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch('/api/stripe-checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          action: 'checkout',
           priceId,
           productId,
           productTitle,
