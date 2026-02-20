@@ -281,7 +281,7 @@ const App: React.FC = () => {
                             path="/kandiegangcyclingclub"
                             element={<KandieGangCyclingClubPage />}
                           />
-                          <Route path="/event/:slug" element={<KandieEventPage />} />
+                          <Route path="/event/:yy/:mm/:dd/:slug" element={<KandieEventPage />} />
                           <Route path="/design-system" element={<DesignSystemWIP />} />
                           <Route path="/login/member" element={<MemberLoginPage />} />
                           <Route path="/login/shop" element={<ShopLoginPage />} />

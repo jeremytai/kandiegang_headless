@@ -90,6 +90,9 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
   const details = event.eventDetails;
   const eventDate = details?.eventDate ? new Date(details.eventDate) : new Date();
   const slug = generateSlug(event.title);
+  const yy = eventDate.getFullYear().toString().slice(2);
+  const mm = (eventDate.getMonth() + 1).toString().padStart(2, '0');
+  const dd = eventDate.getDate().toString().padStart(2, '0');
 
   // Truncate description to 200 characters
   const fullDescription = stripHtml(event.excerpt || details?.description || '');
@@ -100,7 +103,7 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
 
   return {
     id: event.databaseId || `event-${Date.now()}`,
-    href: `/event/${slug}`,
+    href: `/event/${yy}/${mm}/${dd}/${slug}`,
     imageUrl: event.featuredImage?.node?.sourceUrl
       ? transformMediaUrl(event.featuredImage.node.sourceUrl)
       : undefined,

@@ -22,7 +22,7 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 
 export const KandieEventPage: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams<{ yy: string; mm: string; dd: string; slug: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { openEventSignup } = useMemberLoginOffcanvas();

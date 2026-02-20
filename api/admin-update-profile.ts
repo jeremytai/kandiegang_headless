@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { checkRateLimit } from '../lib/rateLimit.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -87,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 async function handleUpdate(
   req: NextApiRequest,
   res: NextApiResponse,
-  adminClient: ReturnType<typeof createClient>
+  adminClient: SupabaseClient<any>
 ) {
   const { memberId, updates } = req.body as {
     memberId?: string;
@@ -139,7 +140,7 @@ async function handleUpdate(
 async function handleMerge(
   req: NextApiRequest,
   res: NextApiResponse,
-  adminClient: ReturnType<typeof createClient>
+  adminClient: SupabaseClient<any>
 ) {
   const { targetId, sourceId } = req.body as { targetId?: string; sourceId?: string };
 
