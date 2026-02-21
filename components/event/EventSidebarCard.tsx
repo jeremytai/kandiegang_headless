@@ -454,12 +454,12 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
 
         {/* Participants modal for guides */}
         {participantsSidebar && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop with blur and lighter darkening */}
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={() => setParticipantsSidebar(null)} />
-            {/* Modal content */}
+          <div className="fixed inset-0 z-[100] flex items-center justify-center">
+            {/* Backdrop with blur and darkening, always below modal */}
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-[101]" onClick={() => setParticipantsSidebar(null)} />
+            {/* Modal content, always above backdrop */}
             <div
-              className="relative z-50 w-full max-w-md rounded-xl bg-white shadow-lg p-6 overflow-y-auto mt-24"
+              className="relative z-[110] w-full max-w-md rounded-xl bg-white shadow-lg p-6 overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* X Close Button */}
