@@ -11,7 +11,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { AnimatedHeadline } from './AnimatedHeadline';
 import { getRideGuides, transformMediaUrl } from '../../lib/wordpress';
 
-const PLACEHOLDER_IMAGE = '/images/guides/placeholder.jpg';
+const PLACEHOLDER_IMAGE = '/images/guides/jeremy.jpg';
 
 function shuffle<T>(arr: readonly T[]): T[] {
   const out = [...arr];

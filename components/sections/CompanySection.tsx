@@ -166,7 +166,7 @@ export const CompanySection: React.FC = () => {
           url: guide.guideDetails?.link || undefined,
           image: guide.featuredImage?.node?.sourceUrl
             ? transformMediaUrl(guide.featuredImage.node.sourceUrl)
-            : '/images/guides/placeholder.jpg',
+            : '/images/guides/jeremy.jpg',
           slug: guide.slug || '',
         }));
 

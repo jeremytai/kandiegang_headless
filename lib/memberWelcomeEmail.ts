@@ -26,8 +26,7 @@ function buildWelcomeHtml(_params: WelcomeEmailParams): string {
   <style>
     @font-face {
       font-family: 'IvyOra Disp Lt';
-      src: url('https://www.kandiegang.com/fonts/IvyOraDispLt.woff2') format('woff2'),
-           url('https://www.kandiegang.com/fonts/IvyOraDispLt.woff') format('woff');
+      src: url('https://www.kandiegang.com/fonts/ivy-ora/IvyOraDispLight.woff2') format('woff2')
       font-weight: 300;
       font-style: normal;
       font-display: swap;
