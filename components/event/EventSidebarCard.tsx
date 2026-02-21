@@ -454,7 +454,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
 
         {/* Participants modal for guides */}
         {participantsSidebar && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center">
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop with blur and lighter darkening */}
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={() => setParticipantsSidebar(null)} />
             {/* Modal content */}
