@@ -62,19 +62,19 @@ export const EventCancelPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full">
-            <Link
-              to="/community"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary-purple-rain px-6 py-3 text-base font-medium text-white transition-colors hover:bg-secondary-current"
-            >
-              Browse Community Events
-            </Link>
+          <div className="flex flex-col gap-4 w-full">
             <Link
               to="/"
               className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-secondary-purple-rain px-6 py-3 text-base font-medium text-secondary-purple-rain transition-colors hover:bg-secondary-purple-rain hover:text-white"
             >
               <ArrowLeft className="w-5 h-5" />
               Back to Home
+            </Link>
+            <Link
+              to="/community"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-secondary-purple-rain px-6 py-3 text-base font-medium text-white transition-colors hover:bg-secondary-current"
+            >
+              Browse Community Events
             </Link>
           </div>
         </div>

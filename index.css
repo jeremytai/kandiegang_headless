@@ -11,9 +11,16 @@
   width: 0%;
   transition: width 0.5s;
 }
+/* 
+ * The attr() function for width is not supported in CSS. 
+ * Use JavaScript to set the width based on data-progress-width attribute.
+ * This rule is commented out to prevent CSS errors.
+ */
+/*
 .marketing-progress-bar[data-progress-width] {
   width: attr(data-progress-width %);
 }
+*/
 /* HorizontalScrollSection styles */
 .horizontal-scroll-section {
   height: 100vh;

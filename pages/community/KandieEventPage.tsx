@@ -22,7 +22,7 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 
 export const KandieEventPage: React.FC = () => {
-  const { slug } = useParams<{ yy: string; mm: string; dd: string; slug: string }>();
+  const { yy, mm, dd, slug } = useParams<{ yy: string; mm: string; dd: string; slug: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { openEventSignup } = useMemberLoginOffcanvas();
@@ -408,7 +408,8 @@ export const KandieEventPage: React.FC = () => {
     if (!eventData) return;
     const intent: EventSignupIntent = {
       eventId: eventData.databaseId,
-      eventSlug: eventData.slug, // Pass slug for redirect
+      eventSlug: eventData.slug,
+      eventUrl: yy && mm && dd && slug ? `https://www.kandiegang.com/event/${yy}/${mm}/${dd}/${slug}` : undefined,
       eventTitle: eventData.title,
       levelKey: level.levelKey,
       levelLabel: level.label,

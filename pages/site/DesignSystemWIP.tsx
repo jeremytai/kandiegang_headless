@@ -97,14 +97,14 @@ export const DesignSystemWIP: React.FC = () => {
 
   // Tailwind theme showcase additions
   const tailwindColors = [
-    { name: 'primary-breath', value: 'bg-primary-breath text-primary-ink' },
-    { name: 'primary-ecru', value: 'bg-primary-ecru text-primary-ink' },
-    { name: 'primary-ink', value: 'bg-primary-ink text-white' },
-    { name: 'secondary-purple-rain', value: 'bg-secondary-purple-rain text-white' },
-    { name: 'secondary-current', value: 'bg-secondary-current text-white' },
-    { name: 'secondary-blush', value: 'bg-secondary-blush text-primary-ink' },
-    { name: 'secondary-drift', value: 'bg-secondary-drift text-white' },
-    { name: 'secondary-signal', value: 'bg-secondary-signal text-primary-ink' },
+    { name: 'primary-breath', value: 'bg-primary-breath text-primary-ink', hex: '#FDF9F0' },
+    { name: 'primary-ecru', value: 'bg-primary-ecru text-primary-ink', hex: '#F6F1E7' },
+    { name: 'primary-ink', value: 'bg-primary-ink text-white', hex: '#1F2223' },
+    { name: 'secondary-purple-rain', value: 'bg-secondary-purple-rain text-white', hex: '#46519C' },
+    { name: 'secondary-current', value: 'bg-secondary-current text-white', hex: '#2A3577' },
+    { name: 'secondary-blush', value: 'bg-secondary-blush text-primary-ink', hex: '#F2ADAA' },
+    { name: 'secondary-drift', value: 'bg-secondary-drift text-white', hex: '#09B7BB' },
+    { name: 'secondary-signal', value: 'bg-secondary-signal text-primary-ink', hex: '#FFF200' },
   ];
   const spacings = ['p-2', 'p-4', 'p-8', 'm-2', 'm-4', 'm-8', 'gap-2', 'gap-4', 'gap-8'];
   const borderRadius = [
@@ -206,7 +206,7 @@ export const DesignSystemWIP: React.FC = () => {
               <div key={color.name} className={`rounded-xl p-6 border shadow-md ${color.value}`}>
                 <div className="text-lg font-bold mb-2">{color.name}</div>
                 <div className="text-sm font-mono">{color.value.replace(/bg-|text-/g, '')}</div>
-                <div className="mt-4 text-lg font-bold">Sample</div>
+                <div className="mt-4 text-lg font-bold">{color.hex}</div>
               </div>
             ))}
           </div>

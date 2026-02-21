@@ -7,6 +7,7 @@ import { Turnstile } from '@marsidev/react-turnstile';
 export type EventSignupIntent = {
   eventId: string;
   eventSlug: string;
+  eventUrl?: string;
   eventTitle: string;
   levelKey: string;
   levelLabel: string;
@@ -104,6 +105,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
           action: 'signup',
           eventId: intent.eventId,
           eventTitle: intent.eventTitle,
+          eventUrl: intent.eventUrl,
           rideLevel: intent.levelKey,
           eventType: intent.eventType,
           flintaAttested: intent.requiresFlintaAttestation,
@@ -172,6 +174,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       const signupPayload = {
         eventId: intent.eventId,
         eventTitle: intent.eventTitle,
+        eventUrl: intent.eventUrl,
         rideLevel: intent.levelKey,
         eventType: intent.eventType,
         flintaAttested,
