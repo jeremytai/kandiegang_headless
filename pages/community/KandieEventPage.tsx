@@ -368,6 +368,12 @@ export const KandieEventPage: React.FC = () => {
   const hasValidPublicRelease = Boolean(publicRelease && !Number.isNaN(publicRelease.getTime()));
   const isPublic = !hasValidPublicRelease || now >= (publicRelease as Date);
   const isMember = Boolean(profile?.is_member);
+  const guidedLevels =
+    profile?.is_guide && profile?.wp_user_id
+      ? levelsWithGuides.filter((level) =>
+          level.guides.some((g) => String(g.id) === String(profile.wp_user_id))
+        )
+      : [];
   const isFlintaOnly = Boolean(eventDetails?.isFlintaOnly);
   const dayMs = 24 * 60 * 60 * 1000;
   const memberEarlyDays = Number(import.meta.env.VITE_MEMBER_EARLY_DAYS ?? 2);
@@ -518,6 +524,61 @@ export const KandieEventPage: React.FC = () => {
                   </ReactMarkdown>
                   {/* Dev debug helpers removed after verification */}
                 </div>
+                {/* Participants by guided level — visible to guides only */}
+                {guidedLevels.length > 0 && (
+                  <section>
+                    <hr className="border-t border-black/10 mb-10" />
+                    <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">
+                      Your Riders
+                    </h2>
+                    <div className="space-y-8">
+                      {guidedLevels.map((level) => {
+                        const allParticipants = participantsByLevel[level.levelKey] ?? [];
+                        const confirmed = allParticipants.filter((p) => !p.is_waitlist);
+                        const waitlisted = allParticipants.filter((p) => p.is_waitlist);
+                        return (
+                          <div key={level.levelKey}>
+                            <h3 className="text-lg font-medium text-primary-ink mb-3">{level.label}</h3>
+                            {allParticipants.length === 0 ? (
+                              <p className="text-sm text-slate-500">No riders yet.</p>
+                            ) : (
+                              <div className="space-y-4">
+                                {confirmed.length > 0 && (
+                                  <div>
+                                    <p className="text-xs tracking-[0.08em] text-secondary-purple-rain mb-2">
+                                      Confirmed ({confirmed.length})
+                                    </p>
+                                    <ul className="space-y-1">
+                                      {confirmed.map((p, i) => (
+                                        <li key={p.user_id || i} className="text-sm text-primary-ink">
+                                          {p.first_name} {p.last_name}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {waitlisted.length > 0 && (
+                                  <div>
+                                    <p className="text-xs tracking-[0.08em] text-secondary-purple-rain mb-2">
+                                      Waitlist ({waitlisted.length})
+                                    </p>
+                                    <ul className="space-y-1">
+                                      {waitlisted.map((p, i) => (
+                                        <li key={p.user_id || i} className="text-sm text-slate-500">
+                                          {p.first_name} {p.last_name}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
                 {/* Additional sections that mirror the Vertica layout: Guides / Speakers */}
                 {guides.length > 0 &&
                   eventDetails?.primaryType?.toLowerCase().includes('workshop') && (
