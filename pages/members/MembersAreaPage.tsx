@@ -9,6 +9,7 @@ import {
   GET_PRODUCTS_QUERY,
   GetProductsResponse,
   transformMediaUrl,
+  getProductImageUrl,
   type WPPost,
   type WPProduct,
 } from '../../lib/wordpress';
@@ -381,11 +382,12 @@ export const MembersAreaPage: React.FC = () => {
                         >
                           <div className="overflow-hidden rounded-xl aspect-[4/3] bg-slate-100 dark:bg-slate-800 mb-4 relative">
                             <img
-                              src={
-                                product.featuredImage?.node?.sourceUrl
-                                  ? transformMediaUrl(product.featuredImage.node.sourceUrl)
-                                  : '/images/231112_stevenscup_neuduvenstedt-10.jpg?q=80&w=800'
-                              }
+                              src={(() => {
+                                const url = getProductImageUrl(product);
+                                return url
+                                  ? transformMediaUrl(url)
+                                  : '/images/231112_stevenscup_neuduvenstedt-10.jpg?q=80&w=800';
+                              })()}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                               alt={product.featuredImage?.node?.altText || product.title}
                               loading="lazy"

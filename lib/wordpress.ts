@@ -574,12 +574,21 @@ export interface WPProduct {
       }>;
     };
     variantLabel?: string;
+    imageUrl?: string;
     membersOnly?: boolean;
     sku?: string;
     inventory?: number;
     inStock?: boolean;
     variants?: WPProductVariantShape[];
   };
+}
+
+/**
+ * Returns the best available image URL for a product.
+ * Prefers featuredImage (WordPress post thumbnail), falls back to productFields.imageUrl.
+ */
+export function getProductImageUrl(product: WPProduct): string | undefined {
+  return product.featuredImage?.node?.sourceUrl || product.productFields?.imageUrl || undefined;
 }
 
 /**
@@ -610,6 +619,7 @@ export const GET_PRODUCTS_QUERY = `
           }
         }
         productFields {
+          imageUrl
           sku
           inventory
           inStock
@@ -669,6 +679,7 @@ export const GET_PRODUCT_QUERY = `
         }
       }
       productFields {
+        imageUrl
         membersOnly
         sku
         inventory
@@ -717,6 +728,7 @@ export const GET_PRODUCT_VARIANTS_QUERY = `
         }
         productFields {
           variantLabel
+          imageUrl
           inStock
           sku
           variants {
@@ -761,6 +773,7 @@ export const GET_ALL_PRODUCTS_FOR_VARIANTS_QUERY = `
             }
           }
           variantLabel
+          imageUrl
           inStock
           sku
           variants {
@@ -826,6 +839,7 @@ export const GET_PRODUCT_BY_SLUG_QUERY = `
             }
           }
           variantLabel
+          imageUrl
           membersOnly
           sku
           inventory

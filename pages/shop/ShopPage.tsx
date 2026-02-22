@@ -15,6 +15,7 @@ import {
   WPProduct,
   clearWPCache,
   transformMediaUrl,
+  getProductImageUrl,
 } from '../../lib/wordpress';
 import { canPurchase, ShopProduct } from '../../lib/products';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
@@ -185,11 +186,12 @@ export const ShopPage: React.FC = () => {
                         >
                           <div className="overflow-hidden rounded-xl aspect-[3/4] bg-slate-100 mb-4 relative">
                             <img
-                              src={
-                                product.featuredImage?.node?.sourceUrl
-                                  ? transformMediaUrl(product.featuredImage.node.sourceUrl)
-                                  : 'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?q=80&w=800'
-                              }
+                              src={(() => {
+                                const url = getProductImageUrl(product);
+                                return url
+                                  ? transformMediaUrl(url)
+                                  : 'https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2025/09/06220158/250923_kandiegangsocialride-24-scaled.jpg?q=80&w=800';
+                              })()}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                               alt={product.featuredImage?.node?.altText || product.title}
                               loading="lazy"

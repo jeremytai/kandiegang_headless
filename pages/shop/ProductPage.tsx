@@ -12,6 +12,7 @@ import {
   getProductBySlug,
   transformMediaUrl,
   extractProductImagesFromBlocks,
+  getProductImageUrl,
 } from '../../lib/wordpress';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { AddToCartButton } from '../../components/shop/AddToCartButton';
@@ -189,18 +190,19 @@ export const ProductPage: React.FC = () => {
 
     const images: Array<{ id: string; sourceUrl: string; altText?: string }> = [];
 
-    // Add featured image first
-    if (product.featuredImage?.node?.sourceUrl) {
+    // Add featured image (or imageUrl fallback) first
+    const primaryImageUrl = getProductImageUrl(product);
+    if (primaryImageUrl) {
       images.push({
         id: 'featured',
-        sourceUrl: product.featuredImage.node.sourceUrl,
-        altText: product.featuredImage.node.altText,
+        sourceUrl: primaryImageUrl,
+        altText: product.featuredImage?.node?.altText,
       });
     }
 
     // Priority 1: Extract images from Gallery blocks (if available)
     if (product.editorBlocks && product.editorBlocks.length > 0) {
-      const referenceImageUrl = product.featuredImage?.node?.sourceUrl;
+      const referenceImageUrl = primaryImageUrl;
       const galleryImages = extractProductImagesFromBlocks(
         product.editorBlocks,
         product.mediaItems,

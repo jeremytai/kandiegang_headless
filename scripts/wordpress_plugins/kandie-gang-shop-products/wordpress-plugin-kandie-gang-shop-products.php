@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kandie Gang Shop Products
  * Description: Shop Products CPT with 10 Variants + WPGraphQL + Stripe Support + Featured Images
- * Version: 6.2
+ * Version: 6.3
  */
 
 if (!defined('ABSPATH')) exit;
@@ -54,6 +54,13 @@ add_action('acf/init', function () {
     if (!function_exists('acf_add_local_field_group')) return;
 
     $fields = [
+        [
+            'key' => 'field_image_url',
+            'label' => 'Image URL (fallback if no Featured Image)',
+            'name' => 'image_url',
+            'type' => 'text',
+            'show_in_graphql' => true
+        ],
         [
             'key' => 'field_inventory',
             'label' => 'Inventory',
