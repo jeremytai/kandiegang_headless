@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kandie Gang Shop Products
  * Description: Shop Products CPT with 10 Variants + WPGraphQL + Stripe Support + Featured Images
- * Version: 6.5
+ * Version: 7.0
  */
 
 if (!defined('ABSPATH')) exit;
@@ -186,22 +186,30 @@ add_action('graphql_register_types', function () {
         ],
     ]);
 
-    $acf_type = 'ProductFields';
+    // Helper to extract post ID from various $source shapes WPGraphQL may pass.
+    // Confirmed shape: array with 'node' => WPGraphQL\Model\Post (databaseId) + 'acf_field_group'.
+    $get_post_id = function ($source) {
+        if (is_array($source)) {
+            if (isset($source['node']) && is_object($source['node'])) {
+                return $source['node']->databaseId ?? $source['node']->ID ?? null;
+            }
+            return $source['ID'] ?? $source['id'] ?? $source['post_id'] ?? null;
+        }
+        if (is_numeric($source)) return (int) $source;
+        if (is_object($source)) {
+            return $source->databaseId ?? $source->ID ?? $source->post_id ?? null;
+        }
+        return null;
+    };
 
-    register_graphql_field($acf_type, 'variants', [
+    register_graphql_field('ProductFields', 'variants', [
         'type' => ['list_of' => 'ShopProductVariant'],
-        'resolve' => function ($source) {
-
-            $post_id = $source->databaseId ?? $source->ID ?? null;
-
+        'resolve' => function ($source) use ($get_post_id) {
+            $post_id = $get_post_id($source);
             if (!$post_id) return null;
-
             $variants = [];
-
             for ($i = 1; $i <= 10; $i++) {
-
                 $label = get_post_meta($post_id, "variant{$i}Label", true);
-
                 if ($label) {
                     $variants[] = [
                         'label' => $label,
@@ -216,25 +224,19 @@ add_action('graphql_register_types', function () {
                     ];
                 }
             }
-
             return !empty($variants) ? $variants : null;
         }
     ]);
 
-    register_graphql_field($acf_type, 'inStock', [
+    register_graphql_field('ProductFields', 'inStock', [
         'type' => 'Boolean',
-        'resolve' => function ($source) {
-            $post_id = $source->databaseId ?? $source->ID ?? null;
+        'resolve' => function ($source) use ($get_post_id) {
+            $post_id = $get_post_id($source);
             if (!$post_id) return false;
-            // Debug output
-            error_log("KG inStock resolver: post_id=$post_id");
             $main_inventory = (int) get_post_meta($post_id, 'inventory', true);
-            error_log("KG inStock resolver: main_inventory=$main_inventory");
             if ($main_inventory > 0) return true;
             for ($i = 1; $i <= 10; $i++) {
-                $variant_inventory = (int) get_post_meta($post_id, "variant{$i}Inventory", true);
-                error_log("KG inStock resolver: variant{$i}Inventory=$variant_inventory");
-                if ($variant_inventory > 0) return true;
+                if ((int) get_post_meta($post_id, "variant{$i}Inventory", true) > 0) return true;
             }
             return false;
         }
