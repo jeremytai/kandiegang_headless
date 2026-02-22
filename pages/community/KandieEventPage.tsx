@@ -482,31 +482,6 @@ export const KandieEventPage: React.FC = () => {
   return (
     <>
       <Toaster />
-      {/* Modal overlay for participantsByLevel, always on top */}
-      {participantsByLevel && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center">
-          {/* Backdrop with blur and darkening */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-[1001]" onClick={() => setParticipantsByLevel({})} />
-          {/* Modal content */}
-          <div className="relative z-[1010] w-full max-w-md rounded-xl bg-white shadow-lg p-6 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            {/* X Close Button */}
-            <button
-              type="button"
-              aria-label="Close modal"
-              className="absolute top-4 right-4 text-slate-400 hover:text-black focus:outline-none"
-              onClick={() => setParticipantsByLevel({})}
-            >
-              {/* Replace with your close icon */}
-              ×
-            </button>
-            <h3 className="text-xl font-bold mb-4 mt-2">
-              Participants
-            </h3>
-            {/* Modal content here, e.g. participant list */}
-            {/* ...existing modal content... */}
-          </div>
-        </div>
-      )}
       <div className="bg-white min-h-screen pt-0 selection:bg-[#f9f100] selection:text-black">
         <EventHeader
           title={title}
