@@ -662,7 +662,7 @@ export const KandieEventPage: React.FC = () => {
                 Become a Kandie Gang Member
               </h2>
               <p className="text-xl text-white/90 mb-12 max-w-xl font-light">
-                Members only access, product discounts, and more.
+                Early event access, product discounts, and more.
               </p>
               <Link
                 to="/shop/kandie-gang-cycling-club-membership"
