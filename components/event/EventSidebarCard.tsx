@@ -308,21 +308,6 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           )}
                         </button>
                         <div className="flex items-center shrink-0">
-                          {isGuide && (
-                            <button
-                              type="button"
-                              className="p-1 rounded hover:bg-slate-100"
-                              onClick={() =>
-                                setParticipantsSidebar({
-                                  levelKey: level.levelKey,
-                                  label: level.label,
-                                })
-                              }
-                              aria-label="View participants"
-                            >
-                              <Info className="h-4 w-4 text-slate-500" />
-                            </button>
-                          )}
                           <button
                             type="button"
                             onClick={() => toggleIndex(index)}
