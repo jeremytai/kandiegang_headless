@@ -528,7 +528,7 @@ export const KandieEventPage: React.FC = () => {
                 {guidedLevels.length > 0 && (
                   <section>
                     <hr className="border-t border-black/10 mb-10" />
-                    <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">
+                    <h2 className="text-2xl font-heading-light tracking-normal text-secondary-purple-rain mb-6">
                       Your Riders
                     </h2>
                     <div className="space-y-8">
