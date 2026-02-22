@@ -308,42 +308,49 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                       key={level.label}
                       className="overflow-hidden border-t border-black/10 py-3 first:border-t-0"
                     >
-                      <button
-                        type="button"
-                        onClick={() => toggleIndex(index)}
-                        className="flex w-full items-start justify-between text-left group"
-                      >
-                        <span className="text-sm font-normal text-primary-ink flex items-center gap-2">
-                          {level.label}
-                          {/* Guide info icon */}
-                          {isGuide && (
-                            <button
-                              type="button"
-                              className="ml-1 p-1 rounded hover:bg-slate-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setParticipantsSidebar({
-                                  levelKey: level.levelKey,
-                                  label: level.label,
-                                });
-                              }}
-                              aria-label="View participants"
-                            >
-                              <Info className="h-4 w-4 text-slate-500" />
-                            </button>
-                          )}
+                      <div className="flex w-full items-start justify-between text-left group">
+                        <button
+                          type="button"
+                          onClick={() => toggleIndex(index)}
+                          className="flex flex-1 items-center gap-2 text-left min-w-0"
+                        >
+                          <span className="text-sm font-normal text-primary-ink">{level.label}</span>
                           {!isOpen && level.spotsLeft != null && level.places != null && (
                             <span className="text-xs font-normal text-slate-500">
                               {`${level.spotsLeft} of ${level.places} Spots available`}
                             </span>
                           )}
-                        </span>
-                        <span
-                          className={`inline-flex shrink-0 pt-0.5 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
-                        >
-                          <ChevronDown className="h-4 w-4 text-slate-500 group-hover:text-slate-700 transition-colors" />
-                        </span>
-                      </button>
+                        </button>
+                        <div className="flex items-center shrink-0">
+                          {isGuide && (
+                            <button
+                              type="button"
+                              className="p-1 rounded hover:bg-slate-100"
+                              onClick={() =>
+                                setParticipantsSidebar({
+                                  levelKey: level.levelKey,
+                                  label: level.label,
+                                })
+                              }
+                              aria-label="View participants"
+                            >
+                              <Info className="h-4 w-4 text-slate-500" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => toggleIndex(index)}
+                            className="p-1"
+                            aria-label={isOpen ? 'Collapse section' : 'Expand section'}
+                          >
+                            <span
+                              className={`inline-flex shrink-0 pt-0.5 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
+                            >
+                              <ChevronDown className="h-4 w-4 text-slate-500 group-hover:text-slate-700 transition-colors" />
+                            </span>
+                          </button>
+                        </div>
+                      </div>
                       {isOpen && (
                         <div className="pt-2 space-y-3">
                           <div>
