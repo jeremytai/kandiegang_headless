@@ -15,7 +15,6 @@ import {
   WPProduct,
   clearWPCache,
   transformMediaUrl,
-  normalizeProductFields,
 } from '../../lib/wordpress';
 import { canPurchase, ShopProduct } from '../../lib/products';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
@@ -54,12 +53,7 @@ export const ShopPage: React.FC = () => {
       }
 
       if (data.shopProducts?.nodes && data.shopProducts.nodes.length > 0) {
-        setProducts(
-          data.shopProducts.nodes.map((p) => ({
-            ...p,
-            productFields: normalizeProductFields(p.productFields) ?? p.productFields,
-          }))
-        );
+        setProducts(data.shopProducts.nodes);
       } else {
         const errorMsg = data.shopProducts ? 'No products found' : 'Invalid response structure';
         console.warn('[Shop]', errorMsg, data);
@@ -154,10 +148,12 @@ export const ShopPage: React.FC = () => {
                 {shopProducts.length > 0 ? (
                   shopProducts.map((product, i) => {
                     const isMember = !!user;
-                    const displayPrice =
-                      isMember && product.productFields?.priceMember
-                        ? product.productFields.priceMember
-                        : product.productFields?.pricePublic;
+                    const firstVariant = product.productFields?.variants?.[0];
+                    const displayPrice = firstVariant
+                      ? isMember && firstVariant.priceMember
+                        ? firstVariant.priceMember
+                        : firstVariant.pricePublic
+                      : undefined;
 
                     // Convert to ShopProduct format for canPurchase
                     const shopProduct: ShopProduct = {
@@ -167,26 +163,9 @@ export const ShopPage: React.FC = () => {
                       excerpt: product.excerpt || '',
                       featuredImage: product.featuredImage,
                       productFields: {
-                        hasVariants: product.productFields?.hasVariants ?? false,
-                        pricePublic: product.productFields?.pricePublic
-                          ? parseFloat(product.productFields.pricePublic)
-                          : undefined,
-                        priceMember: product.productFields?.priceMember
-                          ? parseFloat(product.productFields.priceMember)
-                          : undefined,
-                        stripePriceIdPublic: product.productFields?.stripePriceIdPublic,
-                        stripePriceIdMember: product.productFields?.stripePriceIdMember,
                         inventory: product.productFields?.inventory,
                         sku: product.productFields?.sku,
-                        variants: product.productFields?.variants?.map((v) => ({
-                          label: v.label,
-                          pricePublic: v.pricePublic,
-                          priceMember: v.priceMember,
-                          stripePriceIdPublic: v.stripePriceIdPublic,
-                          stripePriceIdMember: v.stripePriceIdMember,
-                          sku: v.sku,
-                          inventory: v.inventory,
-                        })),
+                        variants: product.productFields?.variants,
                         membersOnly: false,
                         inStock: product.productFields?.inStock ?? true,
                       },
@@ -233,10 +212,10 @@ export const ShopPage: React.FC = () => {
                             <p className="text-secondary-purple-rain font-gtplanar font-medium text-base md:text-lg mt-4 mb-8">
                               € {displayPrice}
                               {isMember &&
-                                product.productFields?.priceMember &&
-                                product.productFields?.pricePublic && (
+                                firstVariant?.priceMember &&
+                                firstVariant?.pricePublic && (
                                   <span className="text-slate-500 text-sm font-normal ml-2 line-through">
-                                    {product.productFields.pricePublic}
+                                    {firstVariant.pricePublic}
                                   </span>
                                 )}
                             </p>

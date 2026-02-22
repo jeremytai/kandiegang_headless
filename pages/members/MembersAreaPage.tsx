@@ -9,7 +9,6 @@ import {
   GET_PRODUCTS_QUERY,
   GetProductsResponse,
   transformMediaUrl,
-  normalizeProductFields,
   type WPPost,
   type WPProduct,
 } from '../../lib/wordpress';
@@ -208,12 +207,8 @@ export const MembersAreaPage: React.FC = () => {
     wpQuery<GetProductsResponse>(GET_PRODUCTS_QUERY, {}, { useCache: true })
       .then((data) => {
         if (cancelled) return;
-        const normalized =
-          data?.shopProducts?.nodes?.map((p) => ({
-            ...p,
-            productFields: normalizeProductFields(p.productFields) ?? p.productFields,
-          })) ?? [];
-        setMemberOnlyProducts(normalized.filter((p) => p.productFields?.membersOnly));
+        const nodes = data?.shopProducts?.nodes ?? [];
+        setMemberOnlyProducts(nodes.filter((p) => p.productFields?.membersOnly));
       })
       .catch((err) => {
         if (!cancelled) {
@@ -350,8 +345,10 @@ export const MembersAreaPage: React.FC = () => {
               ) : (
                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
                   {memberOnlyProducts.map((product, i) => {
-                    const displayPrice =
-                      product.productFields?.priceMember ?? product.productFields?.pricePublic;
+                    const firstVariant = product.productFields?.variants?.[0];
+                    const displayPrice = firstVariant
+                      ? firstVariant.priceMember ?? firstVariant.pricePublic
+                      : undefined;
                     const shopProduct: ShopProduct = {
                       id: product.id,
                       title: product.title,
@@ -359,26 +356,9 @@ export const MembersAreaPage: React.FC = () => {
                       excerpt: product.excerpt || '',
                       featuredImage: product.featuredImage,
                       productFields: {
-                        hasVariants: product.productFields?.hasVariants ?? false,
-                        pricePublic: product.productFields?.pricePublic
-                          ? parseFloat(String(product.productFields.pricePublic))
-                          : undefined,
-                        priceMember: product.productFields?.priceMember
-                          ? parseFloat(String(product.productFields.priceMember))
-                          : undefined,
-                        stripePriceIdPublic: product.productFields?.stripePriceIdPublic,
-                        stripePriceIdMember: product.productFields?.stripePriceIdMember,
                         inventory: product.productFields?.inventory,
                         sku: product.productFields?.sku,
-                        variants: product.productFields?.variants?.map((v) => ({
-                          label: v.label,
-                          pricePublic: v.pricePublic,
-                          priceMember: v.priceMember,
-                          stripePriceIdPublic: v.stripePriceIdPublic,
-                          stripePriceIdMember: v.stripePriceIdMember,
-                          sku: v.sku,
-                          inventory: v.inventory,
-                        })),
+                        variants: product.productFields?.variants,
                         membersOnly: true,
                         inStock: product.productFields?.inStock ?? true,
                       },

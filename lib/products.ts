@@ -25,17 +25,9 @@ export interface ShopProduct {
     };
   };
   productFields: {
-    hasVariants: boolean;
-    // Simple product fields
-    pricePublic?: number;
-    priceMember?: number;
-    stripePriceIdPublic?: string;
-    stripePriceIdMember?: string;
     inventory?: number;
     sku?: string;
-    // Variant product fields
     variants?: ProductVariant[];
-    // Common fields
     membersOnly: boolean;
     inStock: boolean;
   };
@@ -49,9 +41,10 @@ export function getProductPrice(
   isMember: boolean,
   variantIndex?: number
 ): number {
-  if (product.productFields.hasVariants && product.productFields.variants?.length) {
-    const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : -1;
-    const variant = idx >= 0 ? product.productFields.variants?.[idx] : undefined;
+  const variants = product.productFields.variants;
+  if (variants?.length) {
+    const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : 0;
+    const variant = variants[idx];
     if (variant) {
       if (isMember && variant.priceMember != null) {
         return variant.priceMember;
@@ -59,11 +52,7 @@ export function getProductPrice(
       return variant.pricePublic ?? 0;
     }
   }
-
-  if (isMember && product.productFields.priceMember != null) {
-    return product.productFields.priceMember;
-  }
-  return product.productFields.pricePublic ?? 0;
+  return 0;
 }
 
 /**
@@ -74,9 +63,10 @@ export function getStripePriceId(
   isMember: boolean,
   variantIndex?: number
 ): string {
-  if (product.productFields.hasVariants && product.productFields.variants?.length) {
-    const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : -1;
-    const variant = idx >= 0 ? product.productFields.variants?.[idx] : undefined;
+  const variants = product.productFields.variants;
+  if (variants?.length) {
+    const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : 0;
+    const variant = variants[idx];
     if (variant) {
       if (isMember && variant.stripePriceIdMember) {
         return variant.stripePriceIdMember;
@@ -84,11 +74,7 @@ export function getStripePriceId(
       return variant.stripePriceIdPublic ?? '';
     }
   }
-
-  if (isMember && product.productFields.stripePriceIdMember) {
-    return product.productFields.stripePriceIdMember;
-  }
-  return product.productFields.stripePriceIdPublic ?? '';
+  return '';
 }
 
 /**
@@ -105,19 +91,17 @@ export function canPurchase(
     return false;
   }
 
-  // For products with variants, check variant inventory
-  if (product.productFields.hasVariants && product.productFields.variants?.length) {
+  // Check variant inventory
+  const variants = product.productFields.variants;
+  if (variants?.length) {
     const idx = variantIndex != null && variantIndex >= 0 ? variantIndex : -1;
-    const variant = idx >= 0 ? product.productFields.variants?.[idx] : undefined;
-    if (variant) {
-      // Specific variant selected: check its inventory
-      return variant.inventory > 0;
+    if (idx >= 0) {
+      return (variants[idx]?.inventory ?? 0) > 0;
     }
     // No variant selected (e.g. shop listing): in stock if any variant has inventory
-    return product.productFields.variants.some((v) => (v.inventory ?? 0) > 0);
+    return variants.some((v) => (v.inventory ?? 0) > 0);
   }
 
-  // For simple products without variants, check product-level inventory directly
-  // inStock is computed from inventory in WordPress, so we check inventory here too
+  // Fallback to product-level inventory
   return (product.productFields.inventory ?? 0) > 0;
 }

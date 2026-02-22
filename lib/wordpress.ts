@@ -536,7 +536,7 @@ export type ProductEditorBlock =
     } // CoreImage
   | { name: string; attributes?: { ids: (string | number)[]; columns?: number } }; // CoreGallery
 
-/** Variant shape used after normalization (built from flat ACF fields). */
+/** Variant shape returned directly from GraphQL (updated plugin). */
 export interface WPProductVariantShape {
   label: string;
   pricePublic: number;
@@ -547,61 +547,9 @@ export interface WPProductVariantShape {
   inventory: number;
 }
 
-/** Raw productFields from GraphQL (flat variant fields; no nested variants array). */
-export type FlatProductFields = Record<string, unknown>;
-
-/**
- * Build variants array from flat ACF productFields (variant1Label, variant1PricePublic, ...).
- * Only slots with a non-empty label are included.
- */
-export function buildVariantsFromProductFields(
-  pf: FlatProductFields | null | undefined
-): WPProductVariantShape[] {
-  if (!pf || typeof pf !== 'object') return [];
-  const variants: WPProductVariantShape[] = [];
-  for (let i = 1; i <= 10; i++) {
-    const label = pf[`variant${i}Label`];
-    if (label == null || String(label).trim() === '') continue;
-    const pricePublic = pf[`variant${i}PricePublic`];
-    const priceMember = pf[`variant${i}PriceMember`];
-    const stripePriceIdPublic = pf[`variant${i}StripePriceIdPublic`];
-    const stripePriceIdMember = pf[`variant${i}StripePriceIdMember`];
-    const sku = pf[`variant${i}Sku`];
-    const inventory = pf[`variant${i}Inventory`];
-    variants.push({
-      label: String(label),
-      pricePublic: typeof pricePublic === 'number' ? pricePublic : Number(pricePublic) || 0,
-      priceMember: priceMember != null && priceMember !== '' ? Number(priceMember) : undefined,
-      stripePriceIdPublic: stripePriceIdPublic != null ? String(stripePriceIdPublic) : '',
-      stripePriceIdMember:
-        stripePriceIdMember != null && stripePriceIdMember !== ''
-          ? String(stripePriceIdMember)
-          : undefined,
-      sku: sku != null && sku !== '' ? String(sku) : undefined,
-      inventory: typeof inventory === 'number' ? inventory : Number(inventory) || 0,
-    });
-  }
-  return variants;
-}
-
-/**
- * Normalize productFields from flat ACF variant fields to include a variants array.
- * Use after fetching so the rest of the app can keep using productFields.variants.
- */
-export function normalizeProductFields(
-  pf: FlatProductFields | null | undefined
-): WPProduct['productFields'] {
-  if (!pf) return undefined;
-  const variants = buildVariantsFromProductFields(pf);
-  return {
-    ...pf,
-    variants: variants.length > 0 ? variants : undefined,
-  } as WPProduct['productFields'];
-}
-
 /**
  * Product interface for shop products.
- * productFields.variants is populated by normalizeProductFields() from flat ACF fields after fetch.
+ * productFields.variants is returned directly from the WordPress plugin GraphQL API.
  */
 export interface WPProduct {
   id: string;
@@ -626,11 +574,6 @@ export interface WPProduct {
       }>;
     };
     variantLabel?: string;
-    hasVariants?: boolean;
-    pricePublic?: string;
-    priceMember?: string;
-    stripePriceIdPublic?: string;
-    stripePriceIdMember?: string;
     membersOnly?: boolean;
     sku?: string;
     inventory?: number;
@@ -650,7 +593,7 @@ export type GetProductsResponse = {
 
 /**
  * Query to fetch shop products.
- * Uses flat ACF variant fields (variant1Label, variant1PricePublic, ...); variants array is built client-side via buildVariantsFromProductFields.
+ * Variants are returned as a native array from the updated WordPress plugin.
  */
 export const GET_PRODUCTS_QUERY = `
   query GetShopProducts {
@@ -667,86 +610,18 @@ export const GET_PRODUCTS_QUERY = `
           }
         }
         productFields {
-          hasVariants
-          pricePublic
-          priceMember
-          stripePriceIdPublic
-          stripePriceIdMember
           sku
           inventory
           inStock
           membersOnly
-          ... on ProductFields {
-            variant1Label
-            variant1PricePublic
-            variant1PriceMember
-            variant1StripePriceIdPublic
-            variant1StripePriceIdMember
-            variant1Sku
-            variant1Inventory
-            variant2Label
-            variant2PricePublic
-            variant2PriceMember
-            variant2StripePriceIdPublic
-            variant2StripePriceIdMember
-            variant2Sku
-            variant2Inventory
-            variant3Label
-            variant3PricePublic
-            variant3PriceMember
-            variant3StripePriceIdPublic
-            variant3StripePriceIdMember
-            variant3Sku
-            variant3Inventory
-            variant4Label
-            variant4PricePublic
-            variant4PriceMember
-            variant4StripePriceIdPublic
-            variant4StripePriceIdMember
-            variant4Sku
-            variant4Inventory
-            variant5Label
-            variant5PricePublic
-            variant5PriceMember
-            variant5StripePriceIdPublic
-            variant5StripePriceIdMember
-            variant5Sku
-            variant5Inventory
-            variant6Label
-            variant6PricePublic
-            variant6PriceMember
-            variant6StripePriceIdPublic
-            variant6StripePriceIdMember
-            variant6Sku
-            variant6Inventory
-            variant7Label
-            variant7PricePublic
-            variant7PriceMember
-            variant7StripePriceIdPublic
-            variant7StripePriceIdMember
-            variant7Sku
-            variant7Inventory
-            variant8Label
-            variant8PricePublic
-            variant8PriceMember
-            variant8StripePriceIdPublic
-            variant8StripePriceIdMember
-            variant8Sku
-            variant8Inventory
-            variant9Label
-            variant9PricePublic
-            variant9PriceMember
-            variant9StripePriceIdPublic
-            variant9StripePriceIdMember
-            variant9Sku
-            variant9Inventory
-            variant10Label
-            variant10PricePublic
-            variant10PriceMember
-            variant10StripePriceIdPublic
-            variant10StripePriceIdMember
-            variant10Sku
-            variant10Inventory
+          variants {
+            label
+            pricePublic
+            priceMember
+            stripePriceIdPublic
+            stripePriceIdMember
+            sku
+            inventory
           }
         }
       }
@@ -794,86 +669,18 @@ export const GET_PRODUCT_QUERY = `
         }
       }
       productFields {
-        hasVariants
-        pricePublic
-        priceMember
-        stripePriceIdPublic
-        stripePriceIdMember
+        membersOnly
         sku
         inventory
         inStock
-        membersOnly
-        ... on ProductFields {
-          variant1Label
-          variant1PricePublic
-          variant1PriceMember
-          variant1StripePriceIdPublic
-          variant1StripePriceIdMember
-          variant1Sku
-          variant1Inventory
-          variant2Label
-          variant2PricePublic
-          variant2PriceMember
-          variant2StripePriceIdPublic
-          variant2StripePriceIdMember
-          variant2Sku
-          variant2Inventory
-          variant3Label
-          variant3PricePublic
-          variant3PriceMember
-          variant3StripePriceIdPublic
-          variant3StripePriceIdMember
-          variant3Sku
-          variant3Inventory
-          variant4Label
-          variant4PricePublic
-          variant4PriceMember
-          variant4StripePriceIdPublic
-          variant4StripePriceIdMember
-          variant4Sku
-          variant4Inventory
-          variant5Label
-          variant5PricePublic
-          variant5PriceMember
-          variant5StripePriceIdPublic
-          variant5StripePriceIdMember
-          variant5Sku
-          variant5Inventory
-          variant6Label
-          variant6PricePublic
-          variant6PriceMember
-          variant6StripePriceIdPublic
-          variant6StripePriceIdMember
-          variant6Sku
-          variant6Inventory
-          variant7Label
-          variant7PricePublic
-          variant7PriceMember
-          variant7StripePriceIdPublic
-          variant7StripePriceIdMember
-          variant7Sku
-          variant7Inventory
-          variant8Label
-          variant8PricePublic
-          variant8PriceMember
-          variant8StripePriceIdPublic
-          variant8StripePriceIdMember
-          variant8Sku
-          variant8Inventory
-          variant9Label
-          variant9PricePublic
-          variant9PriceMember
-          variant9StripePriceIdPublic
-          variant9StripePriceIdMember
-          variant9Sku
-          variant9Inventory
-          variant10Label
-          variant10PricePublic
-          variant10PriceMember
-          variant10StripePriceIdPublic
-          variant10StripePriceIdMember
-          variant10Sku
-          variant10Inventory
+        variants {
+          label
+          pricePublic
+          priceMember
+          stripePriceIdPublic
+          stripePriceIdMember
+          sku
+          inventory
         }
       }
     }
@@ -910,12 +717,17 @@ export const GET_PRODUCT_VARIANTS_QUERY = `
         }
         productFields {
           variantLabel
-          pricePublic
-          priceMember
-          stripePriceIdPublic
-          stripePriceIdMember
           inStock
           sku
+          variants {
+            label
+            pricePublic
+            priceMember
+            stripePriceIdPublic
+            stripePriceIdMember
+            sku
+            inventory
+          }
         }
       }
     }
@@ -949,12 +761,17 @@ export const GET_ALL_PRODUCTS_FOR_VARIANTS_QUERY = `
             }
           }
           variantLabel
-          pricePublic
-          priceMember
-          stripePriceIdPublic
-          stripePriceIdMember
           inStock
           sku
+          variants {
+            label
+            pricePublic
+            priceMember
+            stripePriceIdPublic
+            stripePriceIdMember
+            sku
+            inventory
+          }
         }
       }
     }
@@ -1009,86 +826,18 @@ export const GET_PRODUCT_BY_SLUG_QUERY = `
             }
           }
           variantLabel
-          hasVariants
-          pricePublic
-          priceMember
-          stripePriceIdPublic
-          stripePriceIdMember
           membersOnly
           sku
           inventory
           inStock
-          ... on ProductFields {
-            variant1Label
-            variant1PricePublic
-            variant1PriceMember
-            variant1StripePriceIdPublic
-            variant1StripePriceIdMember
-            variant1Sku
-            variant1Inventory
-            variant2Label
-            variant2PricePublic
-            variant2PriceMember
-            variant2StripePriceIdPublic
-            variant2StripePriceIdMember
-            variant2Sku
-            variant2Inventory
-            variant3Label
-            variant3PricePublic
-            variant3PriceMember
-            variant3StripePriceIdPublic
-            variant3StripePriceIdMember
-            variant3Sku
-            variant3Inventory
-            variant4Label
-            variant4PricePublic
-            variant4PriceMember
-            variant4StripePriceIdPublic
-            variant4StripePriceIdMember
-            variant4Sku
-            variant4Inventory
-            variant5Label
-            variant5PricePublic
-            variant5PriceMember
-            variant5StripePriceIdPublic
-            variant5StripePriceIdMember
-            variant5Sku
-            variant5Inventory
-            variant6Label
-            variant6PricePublic
-            variant6PriceMember
-            variant6StripePriceIdPublic
-            variant6StripePriceIdMember
-            variant6Sku
-            variant6Inventory
-            variant7Label
-            variant7PricePublic
-            variant7PriceMember
-            variant7StripePriceIdPublic
-            variant7StripePriceIdMember
-            variant7Sku
-            variant7Inventory
-            variant8Label
-            variant8PricePublic
-            variant8PriceMember
-            variant8StripePriceIdPublic
-            variant8StripePriceIdMember
-            variant8Sku
-            variant8Inventory
-            variant9Label
-            variant9PricePublic
-            variant9PriceMember
-            variant9StripePriceIdPublic
-            variant9StripePriceIdMember
-            variant9Sku
-            variant9Inventory
-            variant10Label
-            variant10PricePublic
-            variant10PriceMember
-            variant10StripePriceIdPublic
-            variant10StripePriceIdMember
-            variant10Sku
-            variant10Inventory
+          variants {
+            label
+            pricePublic
+            priceMember
+            stripePriceIdPublic
+            stripePriceIdMember
+            sku
+            inventory
           }
         }
       }
@@ -1121,12 +870,9 @@ export interface WPProductVariant {
   };
   productFields?: {
     variantLabel?: string;
-    pricePublic?: string;
-    priceMember?: string;
-    stripePriceIdPublic?: string;
-    stripePriceIdMember?: string;
     inStock?: boolean;
     sku?: string;
+    variants?: WPProductVariantShape[];
   };
 }
 
@@ -1311,9 +1057,7 @@ export async function getProductBySlug(
       }
       return {
         ...data.shopProduct,
-        productFields:
-          normalizeProductFields(data.shopProduct.productFields as FlatProductFields) ??
-          data.shopProduct.productFields,
+        productFields: data.shopProduct.productFields,
         mediaItems: data.mediaItems?.nodes,
       };
     } else {
@@ -1352,8 +1096,7 @@ export async function getProductBySlug(
       }
       return {
         ...node,
-        productFields:
-          normalizeProductFields(node.productFields as FlatProductFields) ?? node.productFields,
+        productFields: node.productFields,
         mediaItems: fallbackData.mediaItems?.nodes,
       };
     } else {
@@ -1398,8 +1141,7 @@ export async function getProductBySlug(
       }
       return {
         ...match,
-        productFields:
-          normalizeProductFields(match.productFields as FlatProductFields) ?? match.productFields,
+        productFields: match.productFields,
       } as WPProductDetail & { mediaItems?: ProductMediaItemNode[] };
     }
   } catch (error) {

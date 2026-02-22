@@ -354,8 +354,8 @@ export const ProductPage: React.FC = () => {
   }
 
   const isMember = !!user;
-  const hasVariants = product.productFields?.hasVariants ?? false;
   const variants = product.productFields?.variants ?? [];
+  const hasVariants = variants.length > 1;
   const variantIndex = hasVariants ? selectedVariantIndex : undefined;
 
   // Convert product to ShopProduct format for helper functions
@@ -366,26 +366,9 @@ export const ProductPage: React.FC = () => {
     excerpt: product.excerpt ?? '',
     featuredImage: product.featuredImage,
     productFields: {
-      hasVariants,
-      pricePublic: product.productFields?.pricePublic
-        ? parseFloat(product.productFields.pricePublic)
-        : undefined,
-      priceMember: product.productFields?.priceMember
-        ? parseFloat(product.productFields.priceMember)
-        : undefined,
-      stripePriceIdPublic: product.productFields?.stripePriceIdPublic,
-      stripePriceIdMember: product.productFields?.stripePriceIdMember,
       inventory: product.productFields?.inventory,
       sku: product.productFields?.sku,
-      variants: variants.map((v) => ({
-        label: v.label,
-        pricePublic: v.pricePublic,
-        priceMember: v.priceMember,
-        stripePriceIdPublic: v.stripePriceIdPublic,
-        stripePriceIdMember: v.stripePriceIdMember,
-        sku: v.sku,
-        inventory: v.inventory,
-      })),
+      variants,
       membersOnly: product.productFields?.membersOnly ?? false,
       inStock: product.productFields?.inStock ?? true,
     },
@@ -400,13 +383,14 @@ export const ProductPage: React.FC = () => {
   let publicPrice = displayPrice;
   let hasDiscount = false;
 
-  if (hasVariants && selectedVariantIndex >= 0 && variants[selectedVariantIndex]) {
+  if (selectedVariantIndex >= 0 && variants[selectedVariantIndex]) {
     const variant = variants[selectedVariantIndex];
     publicPrice = variant.pricePublic;
     hasDiscount = isMember && !!variant.priceMember;
   } else {
-    publicPrice = shopProduct.productFields.pricePublic ?? 0;
-    hasDiscount = isMember && !!shopProduct.productFields.priceMember;
+    const firstVariant = shopProduct.productFields.variants?.[0];
+    publicPrice = firstVariant?.pricePublic ?? 0;
+    hasDiscount = isMember && !!firstVariant?.priceMember;
   }
 
   const _variantLabel =
