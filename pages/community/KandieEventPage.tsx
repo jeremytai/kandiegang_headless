@@ -482,6 +482,31 @@ export const KandieEventPage: React.FC = () => {
   return (
     <>
       <Toaster />
+      {/* Modal overlay for participantsByLevel, always on top */}
+      {participantsByLevel && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+          {/* Backdrop with blur and darkening */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-[1001]" onClick={() => setParticipantsByLevel({})} />
+          {/* Modal content */}
+          <div className="relative z-[1010] w-full max-w-md rounded-xl bg-white shadow-lg p-6 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* X Close Button */}
+            <button
+              type="button"
+              aria-label="Close modal"
+              className="absolute top-4 right-4 text-slate-400 hover:text-black focus:outline-none"
+              onClick={() => setParticipantsByLevel({})}
+            >
+              {/* Replace with your close icon */}
+              ×
+            </button>
+            <h3 className="text-xl font-bold mb-4 mt-2">
+              Participants
+            </h3>
+            {/* Modal content here, e.g. participant list */}
+            {/* ...existing modal content... */}
+          </div>
+        </div>
+      )}
       <div className="bg-white min-h-screen pt-0 selection:bg-[#f9f100] selection:text-black">
         <EventHeader
           title={title}
@@ -493,7 +518,6 @@ export const KandieEventPage: React.FC = () => {
           }
           onBack={() => navigate('/community')}
         />
-
         <section>
           <div className="max-w-6xl mx-auto px-6">
             <div className="w-full border-t border-black/10 mt-10 mb-10" />
@@ -519,7 +543,6 @@ export const KandieEventPage: React.FC = () => {
                   </ReactMarkdown>
                   {/* Dev debug helpers removed after verification */}
                 </div>
-
                 {/* Additional sections that mirror the Vertica layout: Guides / Speakers */}
                 {guides.length > 0 &&
                   eventDetails?.primaryType?.toLowerCase().includes('workshop') && (
@@ -530,38 +553,8 @@ export const KandieEventPage: React.FC = () => {
                       <GuideSection guides={guides} />
                     </section>
                   )}
-
-                {/* Debug: Participant display - Commented out, now using sidebar in EventSidebarCard */}
-                {/* {profile?.is_guide && Object.keys(participantsByLevel).length > 0 && (
-                  <section>
-                    <h2 className="text-2xl font-heading-thin tracking-normal text-secondary-purple-rain mb-6">
-                      Participants
-                    </h2>
-                    <pre className="bg-slate-100 text-xs p-2 rounded mb-4 overflow-x-auto">
-                      {JSON.stringify(participantsByLevel, null, 2)}
-                    </pre>
-                    <div className="space-y-6">
-                      {Object.entries(participantsByLevel).map(([level, participants]) => (
-                        <div key={level}>
-                          <h3 className="text-lg font-semibold text-secondary-purple-rain mb-2">
-                            {level.charAt(0).toUpperCase() + level.slice(1)}
-                          </h3>
-                          <ul className="list-disc pl-6">
-                            {participants.map((p) => (
-                              <li key={p.user_id} className="text-slate-700">
-                                {p.first_name} {p.last_name}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )} */}
-
                 {/* Partners or extra info could go here */}
               </article>
-
               <aside className="order-1 lg:order-2 w-full lg:flex-1 min-w-0 lg:self-start lg:sticky lg:top-28 h-fit">
                 <div>
                   <EventSidebarCard
@@ -608,7 +601,6 @@ export const KandieEventPage: React.FC = () => {
             </div>
           </div>
         </section>
-
         {/* Partner CTA (sits above global newsletter section) */}
         <div className="w-full px-4 md:px-6 mt-20">
           <section className="relative rounded-xl p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
@@ -628,14 +620,6 @@ export const KandieEventPage: React.FC = () => {
                   height: 100% !important;
                 }
               `}</style>
-            {/* Add this style block to your global CSS or a CSS module instead of inline here:
-              .kandie-img-full {
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-              }
-              */}
             <div className="absolute inset-0 bg-slate-900/70" aria-hidden />
             <div className="relative z-10 flex flex-col items-center">
               <h2 className="text-4xl md:text-6xl font-light tracking-normal text-white mb-8">
