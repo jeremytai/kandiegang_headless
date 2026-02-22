@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kandie Gang Shop Products
  * Description: Shop Products CPT with 10 Variants + WPGraphQL + Stripe Support + Featured Images
- * Version: 6.3
+ * Version: 6.5
  */
 
 if (!defined('ABSPATH')) exit;
@@ -226,7 +226,17 @@ add_action('graphql_register_types', function () {
         'resolve' => function ($source) {
             $post_id = $source->databaseId ?? $source->ID ?? null;
             if (!$post_id) return false;
-            return (int) get_post_meta($post_id, 'inventory', true) > 0;
+            // Debug output
+            error_log("KG inStock resolver: post_id=$post_id");
+            $main_inventory = (int) get_post_meta($post_id, 'inventory', true);
+            error_log("KG inStock resolver: main_inventory=$main_inventory");
+            if ($main_inventory > 0) return true;
+            for ($i = 1; $i <= 10; $i++) {
+                $variant_inventory = (int) get_post_meta($post_id, "variant{$i}Inventory", true);
+                error_log("KG inStock resolver: variant{$i}Inventory=$variant_inventory");
+                if ($variant_inventory > 0) return true;
+            }
+            return false;
         }
     ]);
 });
