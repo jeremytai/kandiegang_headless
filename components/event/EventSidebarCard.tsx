@@ -136,7 +136,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
           {category && (
             <div>
               <p className={labelClass}>Category</p>
-              <p className={valueClass}>{typeof category === 'string' ? category.charAt(0).toUpperCase() + category.slice(1) : category}</p>
+              <p className={valueClass}>{typeof category === 'string' ? category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : category}</p>
             </div>
           )}
           {type && (

@@ -23,23 +23,19 @@ export const GET_KANDIE_EVENTS_QUERY = `
           eventDate
           rideTime
           description
-          
+
           # Workshop Specifics
           workshopCapacity
           workshopStartTime
-          
+
           # Ride Category
           rideCategory
-          
+
           # Levels (With Guide Avatars)
           level1 {
             distanceKm
             routeUrl
-            gpxFile {
-              node {
-                id
-              }
-            }
+            gpxFile
             guides {
               nodes {
                 ... on RideGuide {
@@ -58,11 +54,7 @@ export const GET_KANDIE_EVENTS_QUERY = `
           level2 {
             distanceKm
             routeUrl
-            gpxFile {
-              node {
-                id
-              }
-            }
+            gpxFile
             guides {
               nodes {
                 ... on RideGuide {
@@ -81,11 +73,7 @@ export const GET_KANDIE_EVENTS_QUERY = `
           level2plus {
             distanceKm
             routeUrl
-            gpxFile {
-              node {
-                id
-              }
-            }
+            gpxFile
             guides {
               nodes {
                 ... on RideGuide {
@@ -104,11 +92,7 @@ export const GET_KANDIE_EVENTS_QUERY = `
           level3 {
             distanceKm
             routeUrl
-            gpxFile {
-              node {
-                id
-              }
-            }
+            gpxFile
             guides {
               nodes {
                 ... on RideGuide {
@@ -173,11 +157,7 @@ export const GET_KANDIE_EVENT_QUERY = `
         level1 {
           distanceKm
           routeUrl
-          gpxFile {
-            node {
-              id
-            }
-          }
+          gpxFile
           guides {
             nodes {
                 ... on RideGuide {
@@ -196,11 +176,7 @@ export const GET_KANDIE_EVENT_QUERY = `
         level2 {
           distanceKm
           routeUrl
-          gpxFile {
-            node {
-              id
-            }
-          }
+          gpxFile
           guides {
             nodes {
               ... on RideGuide {
@@ -219,11 +195,7 @@ export const GET_KANDIE_EVENT_QUERY = `
         level2plus {
           distanceKm
           routeUrl
-          gpxFile {
-            node {
-              id
-            }
-          }
+          gpxFile
           guides {
             nodes {
               ... on RideGuide {
@@ -242,11 +214,7 @@ export const GET_KANDIE_EVENT_QUERY = `
         level3 {
           distanceKm
           routeUrl
-          gpxFile {
-            node {
-              id
-            }
-          }
+          gpxFile
           guides {
             nodes {
               ... on RideGuide {

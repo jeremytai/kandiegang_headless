@@ -55,7 +55,7 @@ const FALLBACK_EVENTS: EventsLayoutEvent[] = [
     href: 'https://discord.com/channels/1059075420798079036/1458942794545631467',
     imageBase: '/images/250621_hamburg-14',
     title: 'Tour de Energie',
-    tag: 'Road Event',
+    tag: 'Road',
     description:
       'If last year is any indication, this will be a fun, challenging ride with thirty other Kandies in Göttingen.',
     startDate: '2026-06-21T09:00:00.000Z',
@@ -108,7 +108,9 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
       ? transformMediaUrl(event.featuredImage.node.sourceUrl)
       : undefined,
     title: event.title,
-    tag: details?.primaryType || 'Event',
+    tag: details?.primaryType
+      ? details.primaryType.charAt(0).toUpperCase() + details.primaryType.slice(1).toLowerCase()
+      : 'Event',
     description: truncatedDescription,
     startDate: details?.eventDate || new Date().toISOString(),
     endDate: details?.eventDate || new Date().toISOString(),
