@@ -43,6 +43,15 @@ export const KandieEventPage: React.FC = () => {
       }>
     >
   >({});
+  const [cancelledLevels, setCancelledLevels] = useState<
+    Record<string, { reason: string; cancelled_at: string }>
+  >({});
+  const [guideCancelTarget, setGuideCancelTarget] = useState<{
+    levelKey: string;
+    label: string;
+  } | null>(null);
+  const [guideCancelReason, setGuideCancelReason] = useState('');
+  const [guideCancelLoading, setGuideCancelLoading] = useState(false);
   // Fetch all participants for the event and group by ride_level
   const refreshParticipantsByLevel = useCallback(async () => {
     if (!eventData?.databaseId || !supabase) return;
@@ -91,6 +100,23 @@ export const KandieEventPage: React.FC = () => {
       setParticipantsByLevel(grouped);
     } catch (err) {
       console.warn('Participant lookup failed:', err);
+    }
+  }, [eventData?.databaseId, supabase]);
+
+  const refreshCancelledLevels = useCallback(async () => {
+    if (!eventData?.databaseId || !supabase) return;
+    try {
+      const { data } = await supabase
+        .from('ride_level_cancellations')
+        .select('ride_level, reason, cancelled_at')
+        .eq('event_id', Number(eventData.databaseId));
+      const map: Record<string, { reason: string; cancelled_at: string }> = {};
+      (data ?? []).forEach((row) => {
+        map[row.ride_level] = { reason: row.reason, cancelled_at: row.cancelled_at };
+      });
+      setCancelledLevels(map);
+    } catch (err) {
+      console.warn('Cancelled levels lookup failed:', err);
     }
   }, [eventData?.databaseId, supabase]);
 
@@ -217,6 +243,11 @@ export const KandieEventPage: React.FC = () => {
     if (!eventData?.databaseId) return;
     refreshParticipantsByLevel();
   }, [eventData?.databaseId, refreshParticipantsByLevel]);
+
+  useEffect(() => {
+    if (!eventData?.databaseId) return;
+    refreshCancelledLevels();
+  }, [eventData?.databaseId, refreshCancelledLevels]);
 
   useEffect(() => {
     if (!eventData?.databaseId || typeof window === 'undefined') return;
@@ -448,6 +479,41 @@ export const KandieEventPage: React.FC = () => {
     }
   };
 
+  const handleGuideCancelRide = async (levelKey: string, reason: string) => {
+    if (!supabase || !eventData?.databaseId) return;
+    setGuideCancelLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        toast.error('You must be logged in to cancel a ride.');
+        return;
+      }
+      const response = await fetch('/api/guide-cancel-ride', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ eventId: eventData.databaseId, rideLevel: levelKey, reason }),
+      });
+      if (response.ok) {
+        toast.success('Ride cancelled. Riders have been notified by email.');
+        setGuideCancelTarget(null);
+        setGuideCancelReason('');
+        refreshCancelledLevels();
+        refreshParticipantsByLevel();
+      } else {
+        const json = await response.json().catch(() => ({}));
+        toast.error((json as { error?: string })?.error || 'Failed to cancel the ride.');
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setGuideCancelLoading(false);
+    }
+  };
+
   const eventDateValue = eventDetails?.eventDate || '';
   const eventDate = eventDateValue ? new Date(eventDateValue) : null;
   const eventDatePart = eventDateValue.split('T')[0];
@@ -536,6 +602,7 @@ export const KandieEventPage: React.FC = () => {
                         const allParticipants = participantsByLevel[level.levelKey] ?? [];
                         const confirmed = allParticipants.filter((p) => !p.is_waitlist);
                         const waitlisted = allParticipants.filter((p) => p.is_waitlist);
+                        const cancellation = cancelledLevels[level.levelKey];
                         return (
                           <div key={level.levelKey}>
                             <h3 className="text-lg font-medium text-primary-ink mb-3">{level.label}</h3>
@@ -573,11 +640,97 @@ export const KandieEventPage: React.FC = () => {
                                 )}
                               </div>
                             )}
+                            <div className="mt-4">
+                              {cancellation ? (
+                                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                                  <p className="text-sm font-medium text-red-700">Ride cancelled</p>
+                                  <p className="text-sm text-red-600 mt-1">{cancellation.reason}</p>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setGuideCancelTarget({ levelKey: level.levelKey, label: level.label })
+                                  }
+                                  className="text-sm text-red-500 hover:text-red-700 hover:underline"
+                                >
+                                  Cancel this ride
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
                     </div>
                   </section>
+                )}
+                {/* Guide cancel ride modal */}
+                {guideCancelTarget && (
+                  <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Cancel ride"
+                    onClick={() => {
+                      if (!guideCancelLoading) {
+                        setGuideCancelTarget(null);
+                        setGuideCancelReason('');
+                      }
+                    }}
+                  >
+                    <div
+                      className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <h3 className="text-lg font-semibold text-primary-ink">
+                        Cancel {guideCancelTarget.label} ride?
+                      </h3>
+                      <p className="mt-2 text-sm text-slate-600">
+                        This will cancel the ride for all confirmed and waitlisted riders. Everyone on
+                        your list will receive an email with your reason.
+                      </p>
+                      <div className="mt-4">
+                        <label
+                          htmlFor="guide-cancel-reason"
+                          className="block text-xs tracking-[0.08em] text-secondary-purple-rain mb-2"
+                        >
+                          Reason for cancellation
+                        </label>
+                        <textarea
+                          id="guide-cancel-reason"
+                          value={guideCancelReason}
+                          onChange={(e) => setGuideCancelReason(e.target.value)}
+                          placeholder="Let your riders know why (e.g., weather, personal emergency)…"
+                          rows={3}
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-primary-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary-purple-rain/40 resize-none"
+                          disabled={guideCancelLoading}
+                        />
+                      </div>
+                      <div className="mt-4 flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGuideCancelTarget(null);
+                            setGuideCancelReason('');
+                          }}
+                          disabled={guideCancelLoading}
+                          className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                          Keep ride
+                        </button>
+                        <button
+                          type="button"
+                          disabled={guideCancelLoading || guideCancelReason.trim().length < 3}
+                          onClick={() =>
+                            handleGuideCancelRide(guideCancelTarget.levelKey, guideCancelReason.trim())
+                          }
+                          className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {guideCancelLoading ? 'Cancelling…' : 'Yes, cancel ride'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
                 {/* Additional sections that mirror the Vertica layout: Guides / Speakers */}
                 {guides.length > 0 &&
@@ -608,6 +761,7 @@ export const KandieEventPage: React.FC = () => {
                         places,
                         spotsLeft,
                         isSoldOut: spotsLeft === 0,
+                        isCancelledByGuide: !!cancelledLevels[level.levelKey],
                       };
                     })}
                     isPublic={isPublic}

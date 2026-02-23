@@ -17,6 +17,7 @@ interface EventSidebarCardProps {
     places?: number;
     spotsLeft?: number;
     isSoldOut?: boolean;
+    isCancelledByGuide?: boolean;
   }>;
   isPublic: boolean;
   canSignup: boolean;
@@ -301,10 +302,14 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           className="flex flex-1 items-center gap-2 text-left min-w-0"
                         >
                           <span className="text-sm font-normal text-primary-ink">{level.label}</span>
-                          {!isOpen && level.spotsLeft != null && level.places != null && (
-                            <span className="text-xs font-normal text-slate-500">
-                              {`${level.spotsLeft} of ${level.places} Spots available`}
-                            </span>
+                          {!isOpen && (
+                            level.isCancelledByGuide
+                              ? <span className="text-xs font-normal text-red-500">Cancelled</span>
+                              : level.spotsLeft != null && level.places != null && (
+                                  <span className="text-xs font-normal text-slate-500">
+                                    {`${level.spotsLeft} of ${level.places} Spots available`}
+                                  </span>
+                                )
                           )}
                         </button>
                         <div className="flex items-center shrink-0">
@@ -332,9 +337,10 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           </div>
                           <div>
                             <p className={labelClass}>Spots Available</p>
-                            <p className={valueClass}>
-                              {level.places ?? placesPerGuide * level.guides.length}
-                              {level.spotsLeft != null && ` total · ${level.spotsLeft} left`}
+                            <p className={level.isCancelledByGuide ? 'text-sm text-red-500 font-medium' : valueClass}>
+                              {level.isCancelledByGuide
+                                ? 'Cancelled'
+                                : `${level.places ?? placesPerGuide * level.guides.length}${level.spotsLeft != null ? ` total · ${level.spotsLeft} left` : ''}`}
                             </p>
                           </div>
                           {typeof level.distanceKm === 'number' && (
