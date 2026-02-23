@@ -489,13 +489,13 @@ export const KandieEventPage: React.FC = () => {
         toast.error('You must be logged in to cancel a ride.');
         return;
       }
-      const response = await fetch('/api/guide-cancel-ride', {
+      const response = await fetch('/api/event', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ eventId: eventData.databaseId, rideLevel: levelKey, reason }),
+        body: JSON.stringify({ action: 'guide-cancel-level', eventId: eventData.databaseId, rideLevel: levelKey, reason }),
       });
       if (response.ok) {
         toast.success('Ride cancelled. Riders have been notified by email.');
