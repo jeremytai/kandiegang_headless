@@ -551,7 +551,7 @@ export const KandieEventPage: React.FC = () => {
                                     <ul className="space-y-1">
                                       {confirmed.map((p, i) => (
                                         <li key={p.user_id || i} className="text-sm text-primary-ink">
-                                          {p.first_name} {p.last_name}
+                                          {p.first_name} {p.last_name ? p.last_name.charAt(0) + '.' : ''}
                                         </li>
                                       ))}
                                     </ul>
@@ -565,7 +565,7 @@ export const KandieEventPage: React.FC = () => {
                                     <ul className="space-y-1">
                                       {waitlisted.map((p, i) => (
                                         <li key={p.user_id || i} className="text-sm text-slate-500">
-                                          {p.first_name} {p.last_name}
+                                          {p.first_name} {p.last_name ? p.last_name.charAt(0) + '.' : ''}
                                         </li>
                                       ))}
                                     </ul>
