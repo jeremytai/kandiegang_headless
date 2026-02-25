@@ -791,8 +791,8 @@ export const KandieEventPage: React.FC = () => {
             </div>
           </div>
         </section>
-        {/* Partner CTA (sits above global newsletter section) */}
-        <div className="w-full px-4 md:px-6 mt-20">
+        {/* Partner CTA (sits above global newsletter section) — z-0 so it stays under modals (z-50) */}
+        <div className="w-full px-4 md:px-6 mt-20 relative z-0">
           <section className="relative rounded-xl p-12 md:p-24 flex flex-col items-center text-center mb-1 overflow-hidden">
             <img
               src={imageSrc('/images/250923_kandiegangsocialride-10-2048x1539')}
