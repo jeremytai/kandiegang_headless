@@ -209,12 +209,17 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                               <button
                                 type="button"
                                 className={valueClass}
-                                onClick={() =>
-                                  setRouteModal({
-                                    url: level.routeUrl as string,
-                                    label: level.label,
-                                  })
-                                }
+                                onClick={() => {
+                                  // On mobile, open modal; on desktop/tablet, open in new tab
+                                  if (window.matchMedia('(max-width: 767px)').matches) {
+                                    setRouteModal({
+                                      url: level.routeUrl as string,
+                                      label: level.label,
+                                    });
+                                  } else {
+                                    window.open(level.routeUrl as string, '_blank', 'noopener,noreferrer');
+                                  }
+                                }}
                               >
                                 View Route
                               </button>
