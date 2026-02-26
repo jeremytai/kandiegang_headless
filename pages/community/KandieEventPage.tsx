@@ -352,6 +352,7 @@ export const KandieEventPage: React.FC = () => {
       guides: (eventDetails?.level1?.guides?.nodes || []).map((guide) => ({
         id: guide.databaseId,
         name: guide.title,
+        image: guide.featuredImage?.node?.sourceUrl ? transformMediaUrl(guide.featuredImage.node.sourceUrl) : undefined,
       })),
       pace: paceByLevel['Level 1'],
       distanceKm: eventDetails?.level1?.distanceKm ?? null,
@@ -363,6 +364,7 @@ export const KandieEventPage: React.FC = () => {
       guides: (eventDetails?.level2?.guides?.nodes || []).map((guide) => ({
         id: guide.databaseId,
         name: guide.title,
+        image: guide.featuredImage?.node?.sourceUrl ? transformMediaUrl(guide.featuredImage.node.sourceUrl) : undefined,
       })),
       pace: paceByLevel['Level 2'],
       distanceKm: eventDetails?.level2?.distanceKm ?? null,
@@ -374,6 +376,7 @@ export const KandieEventPage: React.FC = () => {
       guides: (eventDetails?.level2plus?.guides?.nodes || []).map((guide) => ({
         id: guide.databaseId,
         name: guide.title,
+        image: guide.featuredImage?.node?.sourceUrl ? transformMediaUrl(guide.featuredImage.node.sourceUrl) : undefined,
       })),
       pace: paceByLevel['Level 2+'],
       distanceKm: eventDetails?.level2plus?.distanceKm ?? null,
@@ -385,6 +388,7 @@ export const KandieEventPage: React.FC = () => {
       guides: (eventDetails?.level3?.guides?.nodes || []).map((guide) => ({
         id: guide.databaseId,
         name: guide.title,
+        image: guide.featuredImage?.node?.sourceUrl ? transformMediaUrl(guide.featuredImage.node.sourceUrl) : undefined,
       })),
       pace: paceByLevel['Level 3'],
       distanceKm: eventDetails?.level3?.distanceKm ?? null,

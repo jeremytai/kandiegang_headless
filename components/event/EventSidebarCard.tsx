@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Link, Info, User, Clock, X } from 'lucide-react';
+import { motion, useSpring, AnimatePresence } from 'framer-motion';
 
 interface EventSidebarCardProps {
   date: string;
@@ -10,7 +11,7 @@ interface EventSidebarCardProps {
   levels?: Array<{
     levelKey: string;
     label: string;
-    guides: Array<{ id: string | number; name?: string; email?: string }>;
+    guides: Array<{ id: string | number; name?: string; email?: string; image?: string }>;
     pace?: string;
     distanceKm?: number | null;
     routeUrl?: string;
@@ -49,6 +50,68 @@ interface EventSidebarCardProps {
 }
 
 import { useAuth } from '../../context/AuthContext';
+
+const GuideHoverName: React.FC<{
+  guide: { id: string | number; name?: string; email?: string; image?: string };
+}> = ({ guide }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const containerRef = useRef<HTMLSpanElement | null>(null);
+  const label = guide.name || guide.email || String(guide.id);
+
+  const springConfig = { damping: 25, stiffness: 200 };
+  const mouseX = useSpring(0, springConfig);
+  const mouseY = useSpring(0, springConfig);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    mouseX.set(e.clientX);
+    mouseY.set(e.clientY);
+  };
+
+  if (!guide.image) return <span>{label}</span>;
+
+  return (
+    <span
+      ref={containerRef}
+      className="relative inline-block"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
+    >
+      {label}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            style={{
+              position: 'fixed',
+              left: mouseX,
+              top: mouseY,
+              pointerEvents: 'none',
+              zIndex: 50,
+              x: '-25%',
+              y: '-110%',
+            }}
+            className="hidden lg:block"
+          >
+            <div className="h-[140px] w-[140px] overflow-hidden rounded-full shadow-2xl border-2 border-white bg-white">
+              <img
+                alt={label}
+                loading="lazy"
+                width="140"
+                height="140"
+                className="h-full w-full object-cover"
+                src={guide.image}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+};
+
 const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   date,
   time,
@@ -180,7 +243,12 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                         <div>
                           <p className={labelClass}>Guides</p>
                           <p className={valueClass}>
-                            {level.guides.map((g) => g.name || g.email || g.id).join(', ')}
+                            {level.guides.map((g, gi) => (
+                              <React.Fragment key={String(g.id)}>
+                                {gi > 0 && ', '}
+                                <GuideHoverName guide={g} />
+                              </React.Fragment>
+                            ))}
                           </p>
                         </div>
                         <div>
@@ -337,7 +405,12 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           <div>
                             <p className={labelClass}>Guides</p>
                             <p className={valueClass}>
-                              {level.guides.map((g) => g.name || g.email || g.id).join(', ')}
+                              {level.guides.map((g, gi) => (
+                                <React.Fragment key={String(g.id)}>
+                                  {gi > 0 && ', '}
+                                  <GuideHoverName guide={g} />
+                                </React.Fragment>
+                              ))}
                             </p>
                           </div>
                           <div>
