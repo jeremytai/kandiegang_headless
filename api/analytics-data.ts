@@ -67,6 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       last_login,
       is_guide,
       is_member,
+      is_archived,
       first_name,
       last_name,
       billing_address_1,

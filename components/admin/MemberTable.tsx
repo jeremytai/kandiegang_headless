@@ -225,6 +225,7 @@ function MemberDetailPanel({
   const [editState, setEditState] = useState({
     is_guide: member.is_guide,
     is_team: member.is_team ?? false,
+    is_archived: member.is_archived ?? null,
     display_name: member.display_name || '',
     accepts_marketing: member.accepts_marketing,
     member_since: member.member_since ? member.member_since.slice(0, 10) : '',
@@ -239,6 +240,7 @@ function MemberDetailPanel({
   const isDirty =
     editState.is_guide !== member.is_guide ||
     editState.is_team !== (member.is_team ?? false) ||
+    editState.is_archived !== (member.is_archived ?? null) ||
     editState.display_name !== (member.display_name || '') ||
     editState.accepts_marketing !== member.accepts_marketing ||
     editState.member_since !== (member.member_since ? member.member_since.slice(0, 10) : '') ||
@@ -266,6 +268,7 @@ function MemberDetailPanel({
           updates: {
             is_guide: editState.is_guide,
             is_team: editState.is_team,
+            is_archived: editState.is_archived,
             display_name: editState.display_name || null,
             accepts_marketing: editState.accepts_marketing,
             member_since: editState.member_since || null,
@@ -283,6 +286,7 @@ function MemberDetailPanel({
       onUpdate(member.id, {
         is_guide: editState.is_guide,
         is_team: editState.is_team,
+        is_archived: editState.is_archived,
         display_name: editState.display_name || '',
         accepts_marketing: editState.accepts_marketing,
         member_since: editState.member_since || null,
@@ -630,6 +634,34 @@ function MemberDetailPanel({
               onChange={(v) => setEditState((s) => ({ ...s, is_team: v }))}
             />
             <div>
+              <label className="block text-neutral-400 text-xs mb-1">Archive</label>
+              <div className="flex gap-2">
+                {(['auto', 'archived', 'active'] as const).map((opt) => {
+                  const value =
+                    opt === 'auto' ? null : opt === 'archived' ? true : false;
+                  const current = editState.is_archived;
+                  const isSelected = current === value;
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setEditState((s) => ({ ...s, is_archived: value }))}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                        isSelected
+                          ? 'bg-neutral-900 text-white'
+                          : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                      }`}
+                    >
+                      {opt === 'auto' ? 'Auto' : opt === 'archived' ? 'Archived' : 'Active'}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-neutral-300 text-xs mt-1">
+                Auto = archived if inactive 1+ year and joined 1+ year ago
+              </p>
+            </div>
+            <div>
               <label
                 htmlFor={`member-status-${member.id}`}
                 className="block text-neutral-400 text-xs mb-1"
@@ -734,6 +766,97 @@ function MemberDetailPanel({
   );
 }
 
+/* ─── Member row ─── */
+function MemberRow({
+  member,
+  expandedId,
+  setExpandedId,
+  localMembers,
+  handleUpdate,
+  handleMerged,
+  muted = false,
+}: {
+  member: MemberAnalytics;
+  expandedId: string | null;
+  setExpandedId: (id: string | null) => void;
+  localMembers: MemberAnalytics[];
+  handleUpdate: (id: string, updates: Partial<MemberAnalytics>) => void;
+  handleMerged: (targetId: string, sourceId: string) => void;
+  muted?: boolean;
+}) {
+  return (
+    <React.Fragment>
+      <tr
+        className={`border-b border-neutral-100 cursor-pointer transition-colors ${
+          expandedId === member.id ? 'bg-[#fafafa]' : 'hover:bg-[#fafafa]'
+        } ${muted ? 'opacity-60' : ''}`}
+        onClick={() => setExpandedId(expandedId === member.id ? null : member.id)}
+      >
+        <td className="py-3 px-4 text-neutral-900 font-medium">
+          {member.display_name || 'N/A'}
+        </td>
+        <td className="py-3 px-4 text-neutral-500">{member.email}</td>
+        <td className="py-3 px-4 text-neutral-900 text-right font-mono">
+          €{(member.lifetime_value || 0).toFixed(2)}
+        </td>
+        <td className="py-3 px-4 text-neutral-900 text-right">{member.order_count || 0}</td>
+        <td className="py-3 px-4 text-right">
+          {member.event_participation_count ? (
+            <Badge color="#ff611a">{member.event_participation_count} events</Badge>
+          ) : (
+            <span className="text-neutral-300">—</span>
+          )}
+        </td>
+        <td className="py-3 px-4">
+          <div className="flex flex-wrap gap-1">
+            {member.is_guide && <Badge color="#ff611a">Guide</Badge>}
+            {member.is_team && <Badge color="#46519C">Team</Badge>}
+            {!member.is_guide && !member.is_team && (
+              <span className="text-neutral-300">—</span>
+            )}
+          </div>
+        </td>
+        <td className="py-3 px-4">
+          {member.stripe_subscription_status === 'active' && (
+            <Badge color="#10B981">Active</Badge>
+          )}
+          {member.stripe_subscription_status === 'trialing' && (
+            <Badge color="#ff611a">Trial</Badge>
+          )}
+          {member.stripe_subscription_status === 'canceled' && (
+            <Badge color="#a3a3a3">Canceled</Badge>
+          )}
+          {!member.stripe_subscription_status && <Badge color="#a3a3a3">No Sub</Badge>}
+          {member.is_at_risk && (
+            <span className="ml-1">
+              <Badge color="#ef4444">⚠ {member.days_until_expiration}d</Badge>
+            </span>
+          )}
+        </td>
+        <td className="py-3 px-4 text-neutral-500">
+          {member.last_login ? (
+            new Date(member.last_login).toLocaleDateString()
+          ) : (
+            <span className="text-neutral-300">Never</span>
+          )}
+        </td>
+      </tr>
+      {expandedId === member.id && (
+        <tr>
+          <td colSpan={8} className="p-0">
+            <MemberDetailPanel
+              member={member}
+              allMembers={localMembers}
+              onUpdate={handleUpdate}
+              onMerged={handleMerged}
+            />
+          </td>
+        </tr>
+      )}
+    </React.Fragment>
+  );
+}
+
 /* ─── Main table ─── */
 export function MemberTable({ members }: MemberTableProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('lifetime_value');
@@ -741,6 +864,7 @@ export function MemberTable({ members }: MemberTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [localMembers, setLocalMembers] = useState<MemberAnalytics[]>(members);
+  const [showArchived, setShowArchived] = useState(false);
 
   React.useEffect(() => {
     setLocalMembers(members);
@@ -800,6 +924,34 @@ export function MemberTable({ members }: MemberTableProps) {
     return filtered;
   }, [localMembers, searchQuery, sortColumn, sortDirection]);
 
+  const { recentMembers, archivedMembers } = useMemo(() => {
+    const now = new Date();
+    const loginCutoff = new Date(now);
+    loginCutoff.setFullYear(now.getFullYear() - 1); // no login in 1+ year
+    const joinCutoff = new Date(now);
+    joinCutoff.setFullYear(now.getFullYear() - 1); // joined 1+ year ago
+
+    const isArchived = (m: MemberAnalytics): boolean => {
+      // Manual overrides take priority
+      if (m.is_archived === true) return true;
+      if (m.is_archived === false) return false;
+      // Auto: no recent login AND old enough
+      const noRecentLogin = !m.last_login || new Date(m.last_login) < loginCutoff;
+      const joinDate = m.customer_since
+        ? new Date(m.customer_since)
+        : m.member_since
+          ? new Date(m.member_since)
+          : null;
+      const isOldEnough = joinDate ? joinDate < joinCutoff : false;
+      return noRecentLogin && isOldEnough;
+    };
+
+    return {
+      recentMembers: filteredAndSortedMembers.filter((m) => !isArchived(m)),
+      archivedMembers: filteredAndSortedMembers.filter((m) => isArchived(m)),
+    };
+  }, [filteredAndSortedMembers]);
+
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (column !== sortColumn) return null;
     return <span className="ml-1 text-[#ff611a]">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
@@ -857,79 +1009,45 @@ export function MemberTable({ members }: MemberTableProps) {
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedMembers.map((member) => (
-              <React.Fragment key={member.id}>
-                <tr
-                  className={`border-b border-neutral-100 cursor-pointer transition-colors ${
-                    expandedId === member.id ? 'bg-[#fafafa]' : 'hover:bg-[#fafafa]'
-                  }`}
-                  onClick={() => setExpandedId(expandedId === member.id ? null : member.id)}
-                >
-                  <td className="py-3 px-4 text-neutral-900 font-medium">
-                    {member.display_name || 'N/A'}
-                  </td>
-                  <td className="py-3 px-4 text-neutral-500">{member.email}</td>
-                  <td className="py-3 px-4 text-neutral-900 text-right font-mono">
-                    €{(member.lifetime_value || 0).toFixed(2)}
-                  </td>
-                  <td className="py-3 px-4 text-neutral-900 text-right">
-                    {member.order_count || 0}
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    {member.event_participation_count ? (
-                      <Badge color="#ff611a">{member.event_participation_count} events</Badge>
-                    ) : (
-                      <span className="text-neutral-300">—</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex flex-wrap gap-1">
-                      {member.is_guide && <Badge color="#ff611a">Guide</Badge>}
-                      {member.is_team && <Badge color="#46519C">Team</Badge>}
-                      {!member.is_guide && !member.is_team && (
-                        <span className="text-neutral-300">—</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    {member.stripe_subscription_status === 'active' && (
-                      <Badge color="#10B981">Active</Badge>
-                    )}
-                    {member.stripe_subscription_status === 'trialing' && (
-                      <Badge color="#ff611a">Trial</Badge>
-                    )}
-                    {member.stripe_subscription_status === 'canceled' && (
-                      <Badge color="#a3a3a3">Canceled</Badge>
-                    )}
-                    {!member.stripe_subscription_status && <Badge color="#a3a3a3">No Sub</Badge>}
-                    {member.is_at_risk && (
-                      <span className="ml-1">
-                        <Badge color="#ef4444">⚠ {member.days_until_expiration}d</Badge>
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-neutral-500">
-                    {member.last_login ? (
-                      new Date(member.last_login).toLocaleDateString()
-                    ) : (
-                      <span className="text-neutral-300">Never</span>
-                    )}
-                  </td>
-                </tr>
-                {expandedId === member.id && (
-                  <tr>
-                    <td colSpan={8} className="p-0">
-                      <MemberDetailPanel
-                        member={member}
-                        allMembers={localMembers}
-                        onUpdate={handleUpdate}
-                        onMerged={handleMerged}
-                      />
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
+            {recentMembers.map((member) => (
+              <MemberRow
+                key={member.id}
+                member={member}
+                expandedId={expandedId}
+                setExpandedId={setExpandedId}
+                localMembers={localMembers}
+                handleUpdate={handleUpdate}
+                handleMerged={handleMerged}
+              />
             ))}
+
+            {archivedMembers.length > 0 && (
+              <tr
+                className="border-b border-neutral-200 cursor-pointer hover:bg-neutral-50 transition-colors"
+                onClick={() => setShowArchived((v) => !v)}
+              >
+                <td colSpan={8} className="py-3 px-4 text-center">
+                  <span className="text-neutral-400 text-xs font-medium uppercase tracking-[0.1em]">
+                    {showArchived ? '▴ Hide' : '▾ Show'} {archivedMembers.length} archived member
+                    {archivedMembers.length !== 1 ? 's' : ''}
+                  </span>
+                </td>
+              </tr>
+            )}
+
+            {showArchived &&
+              archivedMembers.map((member) => (
+                <MemberRow
+                  key={member.id}
+                  member={member}
+                  expandedId={expandedId}
+                  setExpandedId={setExpandedId}
+                  localMembers={localMembers}
+                  handleUpdate={handleUpdate}
+                  handleMerged={handleMerged}
+                  muted
+                />
+              ))}
           </tbody>
         </table>
 
@@ -939,7 +1057,14 @@ export function MemberTable({ members }: MemberTableProps) {
       </div>
 
       <div className="mt-4 text-neutral-400 text-sm">
-        Showing {filteredAndSortedMembers.length} of {localMembers.length} members
+        Showing {recentMembers.length}
+        {archivedMembers.length > 0 && (
+          <> of {filteredAndSortedMembers.length}</>
+        )}{' '}
+        member{recentMembers.length !== 1 ? 's' : ''}
+        {archivedMembers.length > 0 && !showArchived && (
+          <span className="ml-1">· {archivedMembers.length} archived</span>
+        )}
       </div>
     </div>
   );

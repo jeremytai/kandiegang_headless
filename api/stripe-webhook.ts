@@ -369,7 +369,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   const { data: existing } = await supabase
     .from('profiles')
-    .select('membership_plans, membership_expiration')
+    .select('membership_plans, membership_expiration, customer_since')
     .eq('id', profileId)
     .single();
   const existingPlans: string[] = Array.isArray(existing?.membership_plans)
@@ -391,6 +391,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       membership_plans: plans,
       member_since: today,
       membership_expiration: newExpiration,
+      // Only set customer_since if not already set — preserves the earliest date
+      ...(!existing?.customer_since && { customer_since: today }),
       ...(stripeCustomerId && { stripe_customer_id: stripeCustomerId }),
     })
     .eq('id', profileId);

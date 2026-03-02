@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import {
   KeyMetrics,
@@ -18,9 +18,11 @@ interface AnalyticsData {
   members: MemberAnalytics[];
   loading: boolean;
   error: string | null;
+  refresh: () => void;
 }
 
 export function useAnalyticsData() {
+  const [tick, setTick] = useState(0);
   const [data, setData] = useState<AnalyticsData>({
     metrics: null,
     ltvDistribution: [],
@@ -30,7 +32,10 @@ export function useAnalyticsData() {
     members: [],
     loading: true,
     error: null,
+    refresh: () => {},
   });
+
+  const refresh = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
     async function fetchAnalytics() {
@@ -65,6 +70,7 @@ export function useAnalyticsData() {
           members: json.members,
           loading: false,
           error: null,
+          refresh,
         });
       } catch (err) {
         console.error('Analytics fetch error:', err);
@@ -77,7 +83,7 @@ export function useAnalyticsData() {
     }
 
     fetchAnalytics();
-  }, []);
+  }, [tick, refresh]);
 
-  return data;
+  return { ...data, refresh };
 }

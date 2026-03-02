@@ -12,6 +12,7 @@ const EDITABLE_FIELDS = new Set([
   'is_guide',
   'is_member',
   'is_team',
+  'is_archived',
   'display_name',
   'tags',
   'accepts_marketing',
