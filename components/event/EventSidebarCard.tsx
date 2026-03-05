@@ -51,6 +51,18 @@ interface EventSidebarCardProps {
 
 import { useAuth } from '../../context/AuthContext';
 
+const getKomootEmbedUrl = (url: string): string => {
+  try {
+    const parsed = new URL(url);
+    const match = parsed.pathname.match(/\/tour\/(\d+)/);
+    if (!match) return url;
+    const tourId = match[1];
+    return `https://www.komoot.com/tour/${tourId}/embed?profile=1`;
+  } catch {
+    return url;
+  }
+};
+
 const GuideHoverName: React.FC<{
   guide: { id: string | number; name?: string; email?: string; image?: string };
 }> = ({ guide }) => {
@@ -600,7 +612,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
             <div className="aspect-video w-full bg-white">
               <iframe
                 title={`${routeModal.label} route`}
-                src={routeModal.url}
+                src={getKomootEmbedUrl(routeModal.url)}
                 className="h-full w-full"
                 loading="lazy"
               />

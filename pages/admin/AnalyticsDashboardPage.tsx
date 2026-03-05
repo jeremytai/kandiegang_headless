@@ -161,7 +161,27 @@ export const AnalyticsDashboardPage: React.FC = () => {
               <MetricCard
                 title="Total Members"
                 value={metrics?.totalMembers || 0}
-                subtitle="All registered members"
+                subtitle={
+                  <span className="flex items-center gap-2 text-sm">
+                    <span className="text-emerald-500">
+                      {members.filter(
+                        (m) =>
+                          m.stripe_subscription_status === 'active' ||
+                          m.stripe_subscription_status === 'trialing'
+                      ).length}{' '}
+                      active
+                    </span>
+                    <span className="text-neutral-300">·</span>
+                    <span className="text-neutral-400">
+                      {members.filter(
+                        (m) =>
+                          m.stripe_subscription_status !== 'active' &&
+                          m.stripe_subscription_status !== 'trialing'
+                      ).length}{' '}
+                      inactive
+                    </span>
+                  </span>
+                }
                 active={activeFilter === 'all'}
                 onClick={() => toggleFilter('all')}
               />

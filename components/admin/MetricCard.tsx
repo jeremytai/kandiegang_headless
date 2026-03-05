@@ -3,7 +3,7 @@ import React from 'react';
 interface MetricCardProps {
   title: string;
   value: string | number;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   active?: boolean;
   onClick?: () => void;
 }
