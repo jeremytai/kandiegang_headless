@@ -90,8 +90,8 @@ const GuideHoverName: React.FC<{
               top: mouseY,
               pointerEvents: 'none',
               zIndex: 50,
-              x: '-25%',
-              y: '-110%',
+              x: '-10%',
+              y: '-70%',
             }}
             className="hidden lg:block"
           >

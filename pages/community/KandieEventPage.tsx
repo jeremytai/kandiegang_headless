@@ -30,6 +30,7 @@ export const KandieEventPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [restoredSignup, setRestoredSignup] = useState(false);
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const [registrations, setRegistrations] = useState<Record<string, { isWaitlist: boolean }>>({});
   const [participantsByLevel, setParticipantsByLevel] = useState<
     Record<
@@ -164,6 +165,12 @@ export const KandieEventPage: React.FC = () => {
       console.warn('Registration lookup failed:', err);
     }
   }, [eventData?.databaseId, user?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -331,12 +338,24 @@ export const KandieEventPage: React.FC = () => {
   // Debug logs removed for production
   const intro = rawExcerpt.trim() || description.split('\n')[0].trim();
 
-  // Gather all guides from levels
+  const rideCategory = eventDetails?.rideCategory?.toLowerCase() ?? '';
+  const isWorkshop = Boolean(eventDetails?.primaryType?.toLowerCase().includes('workshop'));
+
+  // Normalize gravel guides shape (connection or array)
+  const rawGravelGuides = (eventDetails as unknown as {
+    gravelGuides?: RideGuide[] | { nodes?: RideGuide[] };
+  })?.gravelGuides;
+  const gravelGuideNodes: RideGuide[] = Array.isArray(rawGravelGuides)
+    ? rawGravelGuides
+    : rawGravelGuides?.nodes || [];
+
+  // Gather all guides from levels (and gravel, if present)
   const guides: RideGuide[] = [
     ...(eventDetails?.level1?.guides?.nodes || []),
     ...(eventDetails?.level2?.guides?.nodes || []),
     ...(eventDetails?.level2plus?.guides?.nodes || []),
     ...(eventDetails?.level3?.guides?.nodes || []),
+    ...gravelGuideNodes,
   ];
 
   const paceByLevel: Record<string, string> = {
@@ -345,7 +364,7 @@ export const KandieEventPage: React.FC = () => {
     'Level 2+': '28 - 30 km/h',
     'Level 3': '30 - 33 km/h',
   };
-  const levelsWithGuides = [
+  const baseLevelsWithGuides = [
     {
       levelKey: 'level1',
       label: 'Level 1',
@@ -395,10 +414,33 @@ export const KandieEventPage: React.FC = () => {
       routeUrl: eventDetails?.level3?.routeUrl,
     },
   ].filter((level) => level.guides.length > 0);
+  const isGravelRide = !isWorkshop && rideCategory.includes('gravel');
+
+  const gravelLevelsWithGuides =
+    isGravelRide && gravelGuideNodes.length > 0
+      ? [
+          {
+            levelKey: 'gravel',
+            label: 'Gravel Ride',
+            guides: gravelGuideNodes.map((guide) => ({
+              id: guide.databaseId,
+              name: guide.title,
+              image: (guide as any).featuredImage?.node?.sourceUrl
+                ? transformMediaUrl((guide as any).featuredImage.node.sourceUrl)
+                : undefined,
+            })),
+            pace: eventDetails?.gravelPace ?? 'Gravel pace',
+            distanceKm: eventDetails?.gravelDistanceKm ?? null,
+            routeUrl: eventDetails?.gravelRouteUrl ?? undefined,
+          },
+        ]
+      : [];
+
+  const levelsWithGuides = isGravelRide ? gravelLevelsWithGuides : baseLevelsWithGuides;
+
   const workshopCapacity = eventDetails?.workshopCapacity ?? null;
-  const isWorkshop = Boolean(eventDetails?.primaryType?.toLowerCase().includes('workshop'));
   const workshopCount = capacityCounts.workshop ?? 0;
-  const now = new Date();
+  const now = new Date(nowMs);
   const publicRelease = publicReleaseDate ? new Date(publicReleaseDate) : null;
   const hasValidPublicRelease = Boolean(publicRelease && !Number.isNaN(publicRelease.getTime()));
   const isPublic = !hasValidPublicRelease || now >= (publicRelease as Date);
@@ -429,6 +471,26 @@ export const KandieEventPage: React.FC = () => {
   const requiresFlintaAttestation = isFlintaOnly || (!isPublic && !isMember);
   const allowWaitlist = canSignupNow;
 
+  const formatCountdown = (target: Date | null): string | null => {
+    if (!target) return null;
+    const diffMs = target.getTime() - nowMs;
+    if (diffMs <= 0) return null;
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad2 = (value: number) => String(value).padStart(2, '0');
+    if (days > 0) {
+      return `${days}d ${pad2(hours)}h ${pad2(minutes)}m ${pad2(seconds)}s`;
+    }
+    return `${pad2(hours)}h ${pad2(minutes)}m ${pad2(seconds)}s`;
+  };
+
+  const earlyTarget: Date | null =
+    !hasValidPublicRelease ? null : !isMember ? flintaRelease : memberRelease;
+  const earlyCountdown = !canSignupNow ? formatCountdown(earlyTarget) : null;
+
   const signupLabel = !canSignupNow
     ? 'Coming Soon'
     : isPublic
@@ -438,7 +500,9 @@ export const KandieEventPage: React.FC = () => {
         : 'FLINTA* Early Access';
 
   const signupHelper = !canSignupNow
-    ? 'Early access opens soon'
+    ? earlyCountdown
+      ? `Early access opens in ${earlyCountdown}`
+      : 'Early access opens soon'
     : isPublic
       ? undefined
       : isMember
