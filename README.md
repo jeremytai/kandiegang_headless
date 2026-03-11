@@ -7,6 +7,18 @@
   - check email notifications (cancelled event, cancelled participation, new event, etc.)
   - add event participation to the dashboard
 
+## 🚴 Gravel Grouprides
+
+Gravel events are modeled as **single-level grouprides** with a dedicated ACF configuration and sidebar presentation:
+
+- In WordPress ACF (`kandie-gang-grouprides-manager` plugin):
+  - Set `Event Type` to `Groupride` and `Ride Category` to `Gravel`.
+  - Use the **Gravel Guides** field (`gravelGuides`) for assigning guides (no per-level groups).
+  - Use **Pace** (`gravelPace`), **Distance (km)** (`gravelDistanceKm`), and **Route URL** (`gravelRouteUrl`) for the ride details.
+- In the frontend (`KandieEventPage` → `EventSidebarCard`):
+  - Gravel rides render as a single pseudo-level called **“Gravel Ride”**.
+  - The sidebar shows, in order: **Guides**, **Spots Available**, **Distance**, **Pace**, and **Route**, and uses the same early-access / waitlist logic as multi-level road rides.
+
 ## 🕵️ Vignette/Shadow Investigation Findings
 
 **Issue:** Persistent right-side vignette or shadow visible on all screens, especially with certain context providers enabled (e.g., AuthProvider).
@@ -45,6 +57,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **📊 Analytics (PostHog)**: Consent-gated product analytics (page views, funnels); loads only after user accepts analytics in the cookie banner; supports opt-out on consent revocation
 - **🧑‍🤝‍🧑 Event Participants List**: Each event page now displays a list of participants, grouped by ride level, directly under the event description for guides and admins.
 - **🛠️ Next.js API Handler Migration**: All serverless API handlers have been migrated to Next.js `pages/api/` for improved maintainability and Vercel compatibility.
+ - **🚴 Gravel Events**: First-class support for gravel grouprides with a single-level model (guides, distance, pace, route) and Komoot route embeds in a responsive sidebar modal.
 
 ## 🚀 Tech Stack
 
