@@ -338,7 +338,13 @@ export const KandieEventPage: React.FC = () => {
   // Debug logs removed for production
   const intro = rawExcerpt.trim() || description.split('\n')[0].trim();
 
-  const rideCategory = eventDetails?.rideCategory?.toLowerCase() ?? '';
+  const rawRideCategory = eventDetails?.rideCategory;
+  const rideCategory =
+    typeof rawRideCategory === 'string'
+      ? rawRideCategory.toLowerCase()
+      : Array.isArray(rawRideCategory)
+        ? String(rawRideCategory[0] ?? '').toLowerCase()
+        : '';
   const isWorkshop = Boolean(eventDetails?.primaryType?.toLowerCase().includes('workshop'));
 
   // Normalize gravel guides shape (connection or array)
