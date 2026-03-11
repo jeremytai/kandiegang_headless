@@ -30,6 +30,23 @@ export const GET_KANDIE_EVENTS_QUERY = `
 
           # Ride Category
           rideCategory
+          gravelPace
+          gravelDistanceKm
+          gravelRouteUrl
+          gravelGuides {
+            nodes {
+              ... on RideGuide {
+                databaseId
+                title
+                featuredImage {
+                  node {
+                    sourceUrl
+                    altText
+                  }
+                }
+              }
+            }
+          }
 
           # Levels (With Guide Avatars)
           level1 {
@@ -152,6 +169,23 @@ export const GET_KANDIE_EVENT_QUERY = `
         
         # Ride Category
         rideCategory
+        gravelPace
+        gravelDistanceKm
+        gravelRouteUrl
+        gravelGuides {
+          nodes {
+            ... on RideGuide {
+              databaseId
+              title
+              featuredImage {
+                node {
+                  sourceUrl
+                  altText
+                }
+              }
+            }
+          }
+        }
         
         # Levels (With Guide Avatars)
         level1 {

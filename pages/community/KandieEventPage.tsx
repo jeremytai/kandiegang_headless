@@ -331,12 +331,23 @@ export const KandieEventPage: React.FC = () => {
   // Debug logs removed for production
   const intro = rawExcerpt.trim() || description.split('\n')[0].trim();
 
-  // Gather all guides from levels
+  const rideCategory = eventDetails?.rideCategory?.toLowerCase() ?? '';
+  const isWorkshop = Boolean(eventDetails?.primaryType?.toLowerCase().includes('workshop'));
+
+  // Normalize gravel guides shape: ACF+WPGraphQL can return either a connection (with nodes)
+  // or a plain array of RideGuide objects, depending on configuration.
+  const rawGravelGuides = (eventDetails as unknown as { gravelGuides?: RideGuide[] | { nodes?: RideGuide[] } })?.gravelGuides;
+  const gravelGuideNodes: RideGuide[] = Array.isArray(rawGravelGuides)
+    ? rawGravelGuides
+    : rawGravelGuides?.nodes || [];
+
+  // Gather all guides from levels (and gravel, if present)
   const guides: RideGuide[] = [
     ...(eventDetails?.level1?.guides?.nodes || []),
     ...(eventDetails?.level2?.guides?.nodes || []),
     ...(eventDetails?.level2plus?.guides?.nodes || []),
     ...(eventDetails?.level3?.guides?.nodes || []),
+    ...gravelGuideNodes,
   ];
 
   const paceByLevel: Record<string, string> = {
@@ -345,7 +356,7 @@ export const KandieEventPage: React.FC = () => {
     'Level 2+': '28 - 30 km/h',
     'Level 3': '30 - 33 km/h',
   };
-  const levelsWithGuides = [
+  const baseLevelsWithGuides = [
     {
       levelKey: 'level1',
       label: 'Level 1',
@@ -395,8 +406,32 @@ export const KandieEventPage: React.FC = () => {
       routeUrl: eventDetails?.level3?.routeUrl,
     },
   ].filter((level) => level.guides.length > 0);
+
+  const isGravelRide = !isWorkshop && rideCategory.includes('gravel');
+
+  const gravelLevelsWithGuides =
+    isGravelRide && gravelGuideNodes.length > 0
+      ? [
+          {
+            levelKey: 'gravel',
+            label: 'Gravel Ride',
+            guides: gravelGuideNodes.map((guide) => ({
+              id: guide.databaseId,
+              name: guide.title,
+              image: guide.featuredImage?.node?.sourceUrl
+                ? transformMediaUrl(guide.featuredImage.node.sourceUrl)
+                : undefined,
+            })),
+            pace: eventDetails?.gravelPace ?? 'Gravel pace',
+            distanceKm: eventDetails?.gravelDistanceKm ?? null,
+            routeUrl: eventDetails?.gravelRouteUrl ?? undefined,
+          },
+        ]
+      : [];
+
+  const levelsWithGuides = isGravelRide ? gravelLevelsWithGuides : baseLevelsWithGuides;
+
   const workshopCapacity = eventDetails?.workshopCapacity ?? null;
-  const isWorkshop = Boolean(eventDetails?.primaryType?.toLowerCase().includes('workshop'));
   const workshopCount = capacityCounts.workshop ?? 0;
   const now = new Date();
   const publicRelease = publicReleaseDate ? new Date(publicReleaseDate) : null;

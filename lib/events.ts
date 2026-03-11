@@ -37,6 +37,12 @@ export interface EventDetails {
   excerpt?: string;
   workshopCapacity?: number;
   workshopStartTime?: string;
+  gravelPace?: string;
+  gravelDistanceKm?: number | null;
+  gravelRouteUrl?: string;
+  gravelGuides?: {
+    nodes: RideGuide[];
+  };
   level1?: RideLevel;
   level2?: RideLevel;
   level2plus?: RideLevel;
