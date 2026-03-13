@@ -518,7 +518,7 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing or invalid eventId' });
   }
   if (!rideLevel) return res.status(400).json({ error: 'Missing ride level' });
-  if (!firstName || !lastName) {
+  if (!firstName || (!lastName && isGuestSignup)) {
     return res.status(400).json({ error: 'Missing first or last name' });
   }
   if (firstName.length > 100) {

@@ -73,11 +73,12 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     if (parts.length === 1) return [parts[0], ''];
     return [parts[0], parts.slice(1).join(' ')];
   }, [profile?.display_name]);
-  // Only skip name entry when we can derive both first AND last name from display_name
-  const shouldSkipNameEntry = !!user && !!profile?.display_name && defaultLastName.length > 0;
+  const shouldSkipNameEntry = !!user && !!profile?.display_name;
   const effectiveFirstName = (firstName || defaultFirstName).trim();
   const effectiveLastName = (lastName || defaultLastName).trim();
-  const hasNames = effectiveFirstName.length > 0 && effectiveLastName.length > 0;
+  const hasNames = shouldSkipNameEntry
+    ? effectiveFirstName.length > 0
+    : effectiveFirstName.length > 0 && effectiveLastName.length > 0;
   const levelSummary = `${intent.eventTitle} – ${intent.levelLabel}`;
   useEffect(() => {
     // Effect logic removed; unnecessary dependency 'restoredIntent' removed
@@ -152,7 +153,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       setError('First name is required.');
       return;
     }
-    if (!trimmedLast) {
+    if (!trimmedLast && !shouldSkipNameEntry) {
       setError('Last name is required.');
       return;
     }
@@ -187,7 +188,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         rideLevel: intent.levelKey,
         eventType: intent.eventType,
         flintaAttested,
-        firstName: trimmedFirst,
+        firstName: !trimmedLast && shouldSkipNameEntry ? (profile?.display_name ?? trimmedFirst) : trimmedFirst,
         lastName: trimmedLast,
       };
       console.log('[EventSignupPanel] Sending signup request:', signupPayload);
