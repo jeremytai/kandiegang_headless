@@ -30,7 +30,7 @@ export function useEventParticipation(): EventParticipationData {
         } = (await supabase?.auth.getSession()) ?? { data: { session: null } };
         if (!session?.access_token) throw new Error('Not authenticated');
 
-        const res = await fetch('/api/event-participation', {
+        const res = await fetch('/api/analytics-data?section=events', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
 
