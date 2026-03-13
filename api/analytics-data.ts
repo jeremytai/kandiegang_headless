@@ -213,13 +213,24 @@ async function handleEventParticipation(res: NextApiResponse, adminClient: any) 
   try {
     const { data: rows, error: regError } = await adminClient
       .from('registrations')
-      .select(
-        'event_id, ride_level, event_type, first_name, last_name, user_id, is_waitlist, created_at, cancelled_at, profiles(email)'
-      )
+      .select('event_id, ride_level, event_type, first_name, last_name, user_id, is_waitlist, created_at, cancelled_at')
       .order('created_at', { ascending: true });
 
     if (regError) throw regError;
     if (!rows || rows.length === 0) return res.status(200).json({ events: [] });
+
+    // Fetch emails for all user_ids in a separate query
+    const userIds = [...new Set(rows.map((r: any) => r.user_id).filter(Boolean))] as string[];
+    const emailByUserId: Record<string, string> = {};
+    if (userIds.length > 0) {
+      const { data: profileRows } = await adminClient
+        .from('profiles')
+        .select('id, email')
+        .in('id', userIds);
+      if (profileRows) {
+        for (const p of profileRows) emailByUserId[p.id] = p.email;
+      }
+    }
 
     // Per-user cross-event stats
     const totalSignupsByUser: Record<string, number> = {};
@@ -263,7 +274,7 @@ async function handleEventParticipation(res: NextApiResponse, adminClient: any) 
           userId: uid,
           firstName: row.first_name,
           lastName: row.last_name,
-          email: row.profiles?.email ?? null,
+          email: uid ? (emailByUserId[uid] ?? null) : null,
           rideLevel: level,
           isWaitlist: Boolean(row.is_waitlist),
           signedUpAt: row.created_at,

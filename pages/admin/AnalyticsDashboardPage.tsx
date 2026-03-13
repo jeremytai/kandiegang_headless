@@ -30,6 +30,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
     refresh,
   } = useAnalyticsData();
   const [activeFilter, setActiveFilter] = useState<MetricFilter>('all');
+  const [showEventBreakdown, setShowEventBreakdown] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
@@ -216,8 +217,8 @@ export const AnalyticsDashboardPage: React.FC = () => {
                 title="Event Participation"
                 value={members.filter((m) => (m.event_participation_count || 0) > 0).length}
                 subtitle={`${metrics?.totalEventParticipation || 0} total signups`}
-                active={activeFilter === 'has_events'}
-                onClick={() => toggleFilter('has_events')}
+                active={showEventBreakdown}
+                onClick={() => setShowEventBreakdown((v) => !v)}
               />
             </div>
 
@@ -257,8 +258,8 @@ export const AnalyticsDashboardPage: React.FC = () => {
               <MemberTable members={filteredMembers} />
             </div>
 
-            {/* Section 5: Event Participation */}
-            <EventParticipationTable />
+            {/* Section 5: Event Participation (shown on demand) */}
+            {showEventBreakdown && <EventParticipationTable />}
           </div>
         )}
       </div>
