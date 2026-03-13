@@ -61,7 +61,6 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
 
   // Derived values
   const hasEmail = email.trim().length > 0;
-  const hasNames = firstName.trim().length > 0 && lastName.trim().length > 0;
   const needsFlintaAttestation = intent.requiresFlintaAttestation;
   const canSubmit = !needsFlintaAttestation || flintaAttested;
   const hasAuthEmail = user?.email && user.email.length > 0;
@@ -69,6 +68,15 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email || '';
   const lookupDisplayName = email;
   const shouldSkipNameEntry = !!user && !!profile?.display_name;
+  const [defaultFirstName, defaultLastName] = React.useMemo(() => {
+    if (!profile?.display_name) return ['', ''];
+    const parts = profile.display_name.trim().split(/\s+/);
+    if (parts.length === 1) return [parts[0], ''];
+    return [parts[0], parts.slice(1).join(' ')];
+  }, [profile?.display_name]);
+  const effectiveFirstName = (firstName || defaultFirstName).trim();
+  const effectiveLastName = (lastName || defaultLastName).trim();
+  const hasNames = effectiveFirstName.length > 0 && effectiveLastName.length > 0;
   const levelSummary = `${intent.eventTitle} – ${intent.levelLabel}`;
   useEffect(() => {
     // Effect logic removed; unnecessary dependency 'restoredIntent' removed
@@ -137,8 +145,8 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   // This function is removed to fix TypeScript errors
   // Removed the function entirely
   const handleConfirmSignup = async () => {
-    const trimmedFirst = firstName.trim();
-    const trimmedLast = lastName.trim();
+    const trimmedFirst = effectiveFirstName;
+    const trimmedLast = effectiveLastName;
     if (!trimmedFirst) {
       setError('First name is required.');
       return;
