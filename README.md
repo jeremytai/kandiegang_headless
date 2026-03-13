@@ -25,9 +25,9 @@ Event signups are gated by a **Public Release Date** set in WordPress ACF. Early
 
 ```ts
 if (!isPublic) {
-  if (inMemberWindow && !isMember && !flintaAttested) → 403 "Member early access only."
-  if (inFlintaWindow && !flintaAttested && !isMember) → 403 "FLINTA early access only."
-  if (!inMemberWindow && !inFlintaWindow)             → 403 "Registration not open yet."
+  if (inMemberWindow && !isMember && !flintaAttested)    → 403 "Member early access only."
+  if (!inMemberWindow && inFlintaWindow && !flintaAttested) → 403 "FLINTA early access only."
+  if (!inMemberWindow && !inFlintaWindow)                → 403 "Registration not open yet."
 }
 ```
 
