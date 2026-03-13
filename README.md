@@ -7,6 +7,40 @@
   - check email notifications (cancelled event, cancelled participation, new event, etc.)
   - add event participation to the dashboard
 
+## 🗓️ Event Signup & Early Access Logic
+
+Event signups are gated by a **Public Release Date** set in WordPress ACF. Early access windows open before that date, controlled by env vars.
+
+### Access Windows
+
+| Window | Opens | Who can sign up |
+| --- | --- | --- |
+| FLINTA* only | `FLINTA_EARLY_DAYS` (default: 7) days before release | FLINTA* riders only |
+| Member + FLINTA* | `MEMBER_EARLY_DAYS` (default: 5) days before release | Members + FLINTA* riders |
+| Public | Release date | Everyone |
+
+> Both `VITE_FLINTA_EARLY_DAYS` / `VITE_MEMBER_EARLY_DAYS` (frontend) and `FLINTA_EARLY_DAYS` / `MEMBER_EARLY_DAYS` (API) must be set consistently in `.env.local` and Vercel environment variables.
+
+### API enforcement (`api/event.ts`)
+
+```ts
+if (!isPublic) {
+  if (inMemberWindow && !isMember && !flintaAttested) → 403 "Member early access only."
+  if (inFlintaWindow && !flintaAttested && !isMember) → 403 "FLINTA early access only."
+  if (!inMemberWindow && !inFlintaWindow)             → 403 "Registration not open yet."
+}
+```
+
+- `isMember` is resolved server-side from the caller's Supabase auth token (`profile.is_member`).
+- Guest signups (no auth token) are treated as non-members and require Cloudflare Turnstile verification.
+- `isFlintaOnly` events additionally require `flintaAttested` at all times.
+
+### Authenticated member signup
+
+When a logged-in member signs up, name entry is skipped if `profile.display_name` is set. If the display name is a single word (no last name), the full display name is sent as `firstName` and `lastName` is left empty — the API allows this for authenticated requests.
+
+---
+
 ## 🚴 Gravel Grouprides
 
 Gravel events are modeled as **single-level grouprides** with a dedicated ACF configuration and sidebar presentation:

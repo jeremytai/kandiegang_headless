@@ -18,8 +18,8 @@ const WP_GRAPHQL_URL =
   process.env.VITE_WP_GRAPHQL_URL ||
   process.env.WP_GRAPHQL_URL ||
   'https://wp-origin.kandiegang.com/graphql';
-const FLINTA_EARLY_DAYS = Number(process.env.FLINTA_EARLY_DAYS ?? 4);
-const MEMBER_EARLY_DAYS = Number(process.env.MEMBER_EARLY_DAYS ?? 2);
+const FLINTA_EARLY_DAYS = Number(process.env.FLINTA_EARLY_DAYS ?? 7);
+const MEMBER_EARLY_DAYS = Number(process.env.MEMBER_EARLY_DAYS ?? 5);
 const PLACES_PER_GUIDE = 7;
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 
@@ -613,7 +613,7 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
         if (inMemberWindow && !isMember && !flintaAttested) {
           return res.status(403).json({ error: 'Member early access only.' });
         }
-        if (inFlintaWindow && !flintaAttested) {
+        if (!inMemberWindow && inFlintaWindow && !flintaAttested) {
           return res.status(403).json({ error: 'FLINTA early access only.' });
         }
         if (!inMemberWindow && !inFlintaWindow) {

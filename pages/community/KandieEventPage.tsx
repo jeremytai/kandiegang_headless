@@ -460,8 +460,8 @@ export const KandieEventPage: React.FC = () => {
       : [];
   const isFlintaOnly = Boolean(eventDetails?.isFlintaOnly);
   const dayMs = 24 * 60 * 60 * 1000;
-  const memberEarlyDays = Number(import.meta.env.VITE_MEMBER_EARLY_DAYS ?? 2);
-  const flintaEarlyDays = Number(import.meta.env.VITE_FLINTA_EARLY_DAYS ?? 4);
+  const memberEarlyDays = Number(import.meta.env.VITE_MEMBER_EARLY_DAYS ?? 5);
+  const flintaEarlyDays = Number(import.meta.env.VITE_FLINTA_EARLY_DAYS ?? 7);
   const memberRelease = hasValidPublicRelease
     ? new Date((publicRelease as Date).getTime() - memberEarlyDays * dayMs)
     : null;
@@ -474,7 +474,9 @@ export const KandieEventPage: React.FC = () => {
   const isFlintaWindow = Boolean(
     flintaRelease && now >= flintaRelease && (!publicRelease || now < (publicRelease as Date))
   );
-  const canSignupNow = isPublic || isMemberWindow || isFlintaWindow;
+  // During FLINTA-only window (days 7–5): only non-members (FLINTA*) can sign up
+  const isFlintaOnlyWindow = isFlintaWindow && !isMemberWindow;
+  const canSignupNow = isPublic || isMemberWindow || (isFlintaOnlyWindow && !isMember);
   const requiresFlintaAttestation = isFlintaOnly || (!isPublic && !isMember);
   const allowWaitlist = canSignupNow;
 
