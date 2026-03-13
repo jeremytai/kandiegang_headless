@@ -655,13 +655,6 @@ function MemberOffcanvasAccountContent({
             </Link>
             <button
               type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 hover:border-slate-900 transition"
-            >
-              Log out
-            </button>
-            <button
-              type="button"
               onClick={() => setDeleteAccountModalOpen(true)}
               className="mt-2 text-sm text-red-600 hover:underline bg-transparent border-none p-0 cursor-pointer font-normal"
             >
@@ -759,6 +752,15 @@ function MemberOffcanvasAccountContent({
           </AnimatePresence>
         </div>
       ))}
+      <div className="px-6 md:px-8 pt-6 pb-4">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="inline-flex w-full items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 hover:border-slate-900 transition"
+        >
+          Log out
+        </button>
+      </div>
     </div>
   );
 }

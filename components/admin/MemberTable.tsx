@@ -802,7 +802,7 @@ function MemberRow({
         <td className="py-3 px-4 text-neutral-900 text-right">{member.order_count || 0}</td>
         <td className="py-3 px-4 text-right">
           {member.event_participation_count ? (
-            <Badge color="#ff611a">{member.event_participation_count} events</Badge>
+            <Badge color="#ff611a">{member.event_participation_count}</Badge>
           ) : (
             <span className="text-neutral-300">—</span>
           )}
