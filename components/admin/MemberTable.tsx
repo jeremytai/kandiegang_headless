@@ -913,6 +913,10 @@ export function MemberTable({ members }: MemberTableProps) {
           return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
         }
 
+        if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
+          return sortDirection === 'asc' ? Number(aVal) - Number(bVal) : Number(bVal) - Number(aVal);
+        }
+
         if (typeof aVal === 'string' && typeof bVal === 'string') {
           return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
         }
@@ -997,11 +1001,11 @@ export function MemberTable({ members }: MemberTableProps) {
               >
                 Events <SortIcon column="event_participation_count" />
               </th>
-              <th className="text-left py-3 px-4 text-neutral-400 text-xs font-medium uppercase tracking-[0.1em]">
-                Role
+              <th className={thClass} onClick={() => handleSort('is_guide')}>
+                Role <SortIcon column="is_guide" />
               </th>
-              <th className="text-left py-3 px-4 text-neutral-400 text-xs font-medium uppercase tracking-[0.1em]">
-                Member
+              <th className={thClass} onClick={() => handleSort('stripe_subscription_status')}>
+                Member <SortIcon column="stripe_subscription_status" />
               </th>
               <th className={thClass} onClick={() => handleSort('last_login')}>
                 Last Login <SortIcon column="last_login" />
