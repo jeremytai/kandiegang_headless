@@ -125,7 +125,7 @@ type EventAccessData = {
 };
 
 async function fetchEventAccessData(eventId: number): Promise<EventAccessData | null> {
-  const query = `query GetRideEventAccess($id: ID!) { rideEvent(id: $id, idType: DATABASE_ID) { publicReleaseDate eventDetails { isFlintaOnly workshopCapacity level1 { guides { nodes { id } } } level2 { guides { nodes { id } } } level2plus { guides { nodes { id } } } level3 { guides { nodes { id } } } } } }`;
+  const query = `query GetRideEventAccess($id: ID!) { rideEvent(id: $id, idType: DATABASE_ID) { publicReleaseDate eventDetails { isFlintaOnly workshopCapacity level1 { guides { nodes { id } } } level2 { guides { nodes { id } } } level2plus { guides { nodes { id } } } level3 { guides { nodes { id } } } gravelGuides { nodes { id } } } } }`;
   const response = await fetch(WP_GRAPHQL_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -144,6 +144,7 @@ async function fetchEventAccessData(eventId: number): Promise<EventAccessData | 
       ? details.level2plus.guides.nodes.length
       : 0,
     level3: Array.isArray(details.level3?.guides?.nodes) ? details.level3.guides.nodes.length : 0,
+    gravel: Array.isArray(details.gravelGuides?.nodes) ? details.gravelGuides.nodes.length : 0,
   };
   return {
     publicReleaseDate: rideEvent.publicReleaseDate ?? null,
