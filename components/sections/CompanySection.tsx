@@ -194,7 +194,7 @@ export const CompanySection: React.FC = () => {
 
   if (loading) {
     return (
-      <section className="py-40 px-6 bg-breath flex flex-col items-center">
+      <section className="hidden md:flex py-40 px-6 bg-breath flex-col items-center">
         <div className="max-w-4xl w-full text-center">
           <h2 className="text-3xl md:text-7xl font-light tracking-tight text-secondary-current text-balance mb-12 md:mb-16">
             Kandie Gang Guides
@@ -208,7 +208,7 @@ export const CompanySection: React.FC = () => {
   }
 
   return (
-    <section className="py-40 px-6 bg-breath flex flex-col items-center">
+    <section className="hidden md:flex py-40 px-6 bg-breath flex-col items-center">
       <div className="max-w-4xl w-full text-center">
         <h2 className="text-3xl md:text-7xl font-light tracking-tight text-secondary-current text-balance mb-12 md:mb-16">
           Kandie Gang Guides
