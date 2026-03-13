@@ -339,18 +339,16 @@ export const KandieEventPage: React.FC = () => {
   const intro = rawExcerpt.trim() || description.split('\n')[0].trim();
 
   const rawRideCategory = eventDetails?.rideCategory;
-  const rideCategory =
-    typeof rawRideCategory === 'string'
-      ? rawRideCategory.toLowerCase()
-      : Array.isArray(rawRideCategory)
-        ? String(rawRideCategory[0] ?? '').toLowerCase()
-        : '';
+  const rideCategory = (Array.isArray(rawRideCategory) ? rawRideCategory[0] : rawRideCategory)
+    ? String(Array.isArray(rawRideCategory) ? rawRideCategory[0] : rawRideCategory).toLowerCase()
+    : '';
   const isWorkshop = Boolean(eventDetails?.primaryType?.toLowerCase().includes('workshop'));
 
-  // Normalize gravel guides shape (connection or array)
-  const rawGravelGuides = (eventDetails as unknown as {
-    gravelGuides?: RideGuide[] | { nodes?: RideGuide[] };
-  })?.gravelGuides;
+  // Normalize gravel guides shape: ACF+WPGraphQL can return either a connection (with nodes)
+  // or a plain array of RideGuide objects, depending on configuration.
+  const rawGravelGuides = (
+    eventDetails as unknown as { gravelGuides?: RideGuide[] | { nodes?: RideGuide[] } }
+  )?.gravelGuides;
   const gravelGuideNodes: RideGuide[] = Array.isArray(rawGravelGuides)
     ? rawGravelGuides
     : rawGravelGuides?.nodes || [];
@@ -413,13 +411,16 @@ export const KandieEventPage: React.FC = () => {
       guides: (eventDetails?.level3?.guides?.nodes || []).map((guide) => ({
         id: guide.databaseId,
         name: guide.title,
-        image: guide.featuredImage?.node?.sourceUrl ? transformMediaUrl(guide.featuredImage.node.sourceUrl) : undefined,
+        image: guide.featuredImage?.node?.sourceUrl
+          ? transformMediaUrl(guide.featuredImage.node.sourceUrl)
+          : undefined,
       })),
       pace: paceByLevel['Level 3'],
       distanceKm: eventDetails?.level3?.distanceKm ?? null,
       routeUrl: eventDetails?.level3?.routeUrl,
     },
   ].filter((level) => level.guides.length > 0);
+
   const isGravelRide = !isWorkshop && rideCategory.includes('gravel');
 
   const gravelLevelsWithGuides =
@@ -431,8 +432,8 @@ export const KandieEventPage: React.FC = () => {
             guides: gravelGuideNodes.map((guide) => ({
               id: guide.databaseId,
               name: guide.title,
-              image: (guide as any).featuredImage?.node?.sourceUrl
-                ? transformMediaUrl((guide as any).featuredImage.node.sourceUrl)
+              image: guide.featuredImage?.node?.sourceUrl
+                ? transformMediaUrl(guide.featuredImage.node.sourceUrl)
                 : undefined,
             })),
             pace: eventDetails?.gravelPace ?? 'Gravel pace',
@@ -824,7 +825,7 @@ export const KandieEventPage: React.FC = () => {
                     date={dateLabel}
                     time={timeLabel}
                     location={locationLabel}
-                    category={eventDetails?.rideCategory}
+                    category={rideCategory || undefined}
                     type={eventDetails?.primaryType}
                     levels={levelsWithGuides.map((level) => {
                       const places = level.guides.length * 7;

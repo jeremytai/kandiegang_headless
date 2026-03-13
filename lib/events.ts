@@ -40,9 +40,9 @@ export interface EventDetails {
   gravelPace?: string;
   gravelDistanceKm?: number | null;
   gravelRouteUrl?: string;
-  gravelGuides?: {
+  gravelGuides?: RideGuide[] | {
     nodes?: RideGuide[];
-  } | RideGuide[];
+  };
   level1?: RideLevel;
   level2?: RideLevel;
   level2plus?: RideLevel;

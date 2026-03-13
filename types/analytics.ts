@@ -26,6 +26,7 @@ export interface MemberAnalytics {
   is_guide: boolean;
   is_member: boolean;
   is_team: boolean;
+  is_archived: boolean | null;
   event_participation_count?: number;
   days_until_expiration?: number;
   is_at_risk?: boolean;

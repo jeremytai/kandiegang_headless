@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useAuth } from '../../context/AuthContext';
 import { useAnalyticsData } from '../../hooks/useAnalyticsData';
+import { supabase } from '../../lib/supabaseClient';
 import { MetricCard } from '../../components/admin/MetricCard';
 import { LTVDistributionChart } from '../../components/admin/charts/LTVDistributionChart';
 import { MemberGrowthChart } from '../../components/admin/charts/MemberGrowthChart';
@@ -25,9 +26,43 @@ export const AnalyticsDashboardPage: React.FC = () => {
     members,
     loading,
     error,
+    refresh,
   } = useAnalyticsData();
   const [activeFilter, setActiveFilter] = useState<MetricFilter>('all');
   const tableRef = useRef<HTMLDivElement>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  async function handleStripeSync() {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const {
+        data: { session },
+      } = (await supabase?.auth.getSession()) ?? { data: { session: null } };
+      if (!session?.access_token) {
+        setSyncResult('Not authenticated');
+        return;
+      }
+      const res = await fetch('/api/stripe-sync', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSyncResult(body.error || `Error ${res.status}`);
+        return;
+      }
+      setSyncResult(
+        `Synced ${body.synced} profile(s), ${body.totalNewOrders} new order(s) added.`
+      );
+      refresh();
+    } catch (err) {
+      setSyncResult(err instanceof Error ? err.message : 'Sync failed');
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const hasAccess = Boolean(user && profile?.is_guide);
 
@@ -92,14 +127,29 @@ export const AnalyticsDashboardPage: React.FC = () => {
     <div className="min-h-screen bg-[#fafafa] pt-32 md:pt-40 pb-40">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
-        <div className="mb-10">
-          <p className="text-[#ff611a] text-xs font-medium uppercase tracking-[0.2em] mb-3">
-            Dashboard
-          </p>
-          <h1 className="text-4xl md:text-5xl font-light text-neutral-900 mb-2 tracking-tight">
-            Member Analytics
-          </h1>
-          <p className="text-neutral-400 text-sm">Kandie Gang Cycling Club</p>
+        <div className="mb-10 flex items-start justify-between gap-6 flex-wrap">
+          <div>
+            <p className="text-[#ff611a] text-xs font-medium uppercase tracking-[0.2em] mb-3">
+              Dashboard
+            </p>
+            <h1 className="text-4xl md:text-5xl font-light text-neutral-900 mb-2 tracking-tight">
+              Member Analytics
+            </h1>
+            <p className="text-neutral-400 text-sm">Kandie Gang Cycling Club</p>
+          </div>
+          <div className="flex flex-col items-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={handleStripeSync}
+              disabled={syncing}
+              className="px-4 py-2 bg-neutral-900 text-white text-sm rounded-lg hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {syncing ? 'Syncing…' : 'Sync from Stripe'}
+            </button>
+            {syncResult && (
+              <p className="text-xs text-neutral-500 max-w-xs text-right">{syncResult}</p>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -111,7 +161,27 @@ export const AnalyticsDashboardPage: React.FC = () => {
               <MetricCard
                 title="Total Members"
                 value={metrics?.totalMembers || 0}
-                subtitle="All registered members"
+                subtitle={
+                  <span className="flex items-center gap-2 text-sm">
+                    <span className="text-emerald-500">
+                      {members.filter(
+                        (m) =>
+                          m.stripe_subscription_status === 'active' ||
+                          m.stripe_subscription_status === 'trialing'
+                      ).length}{' '}
+                      active
+                    </span>
+                    <span className="text-neutral-300">·</span>
+                    <span className="text-neutral-400">
+                      {members.filter(
+                        (m) =>
+                          m.stripe_subscription_status !== 'active' &&
+                          m.stripe_subscription_status !== 'trialing'
+                      ).length}{' '}
+                      inactive
+                    </span>
+                  </span>
+                }
                 active={activeFilter === 'all'}
                 onClick={() => toggleFilter('all')}
               />
