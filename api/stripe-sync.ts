@@ -168,7 +168,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 async function syncCustomerInvoices(
   stripe: Stripe,
-  adminClient: ReturnType<typeof createClient>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminClient: any,
   profileId: string,
   stripeCustomerId: string,
   existingOrderHistory: any,
