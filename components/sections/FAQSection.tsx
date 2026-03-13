@@ -65,7 +65,7 @@ export const FAQSection: React.FC = () => {
   };
 
   return (
-    <section id="faqs" className="bg-white">
+    <section id="faqs" className="bg-white mt-12 md:mt-0">
       <div className="relative m-4 overflow-hidden rounded-xl bg-secondary-purple-rain p-6 md:m-6 md:p-8 lg:p-12">
         <div className="grid grid-cols-1 pt-10 pb-20 gap-12 lg:grid-cols-12 lg:gap-6 lg:items-start">
           <h2 className="text-left text-3xl font-light tracking-tight text-secondary-blush md:text-7xl lg:col-span-12 mb-12 md:mb-16">

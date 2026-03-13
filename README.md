@@ -6,6 +6,32 @@
   - add join waitlist CTA to event pages
   - check email notifications (cancelled event, cancelled participation, new event, etc.)
   - add event participation to the dashboard
+- Normalize WordPress event descriptions so Markdown lists render correctly (handle en-dash/em-dash, common bullet characters, numbered markers like `)` or `.`, and strip zero-width/non-breaking spaces). Add a regression test or example content and remove dev-only debug UI after verification.
+- Add a guide/admin page to view event registrations (signed-up attendees), not just waitlist entries.
+- [Done] Show event participants on each event page, grouped by ride level, for guides/admins.
+- [Done] Migrate all serverless API handlers to Next.js `pages/api/` directory.
+
+## 🕵️ Vignette/Shadow Investigation Findings
+
+**Issue:** Persistent right-side vignette or shadow visible on all screens, especially with certain context providers enabled (e.g., AuthProvider).
+
+**Investigation Steps:**
+- Systematically removed and tested layout classes (`overflow-hidden`, `rounded-b-[24px]`, `bg-white`) from the main content wrapper in App.tsx.
+- Searched for any `box-shadow`, `linear-gradient`, `filter`, `::after`, `::before`, or z-index/stacking context issues in all global and component-level CSS/TSX files.
+- Confirmed no global or component-level overlays, gradients, or shadows were present.
+- Verified that the main content wrapper and background layers use only solid colors (no gradients or shadows).
+- Confirmed the effect is not caused by the WeatherStatusBackground, Footer, or OffCanvas components.
+- The issue persists even after removing all obvious suspects, suggesting a possible browser rendering artifact or subtle stacking context interaction.
+
+**Current Status:**
+- No explicit shadow, gradient, or overlay found in the codebase.
+- The vignette/shadow is not caused by any Tailwind utility, custom CSS, or React component logic.
+- Removing `overflow-hidden`, `rounded-b-[24px]`, and `bg-white` from the main content wrapper did not resolve the issue.
+- The effect may be a browser rendering artifact or related to stacking context/z-index, but no code-based cause has been identified.
+
+**Recommendation:**
+- If the vignette/shadow persists, test in a different browser or device to rule out rendering artifacts.
+- Continue to check for any subtle stacking context or compositing issues if new layout changes are made.
 
 ## 🗓️ Event Signup & Early Access Logic
 
@@ -52,28 +78,6 @@ Gravel events are modeled as **single-level grouprides** with a dedicated ACF co
 - In the frontend (`KandieEventPage` → `EventSidebarCard`):
   - Gravel rides render as a single pseudo-level called **“Gravel Ride”**.
   - The sidebar shows, in order: **Guides**, **Spots Available**, **Distance**, **Pace**, and **Route**, and uses the same early-access / waitlist logic as multi-level road rides.
-
-## 🕵️ Vignette/Shadow Investigation Findings
-
-**Issue:** Persistent right-side vignette or shadow visible on all screens, especially with certain context providers enabled (e.g., AuthProvider).
-
-**Investigation Steps:**
-- Systematically removed and tested layout classes (`overflow-hidden`, `rounded-b-[24px]`, `bg-white`) from the main content wrapper in App.tsx.
-- Searched for any `box-shadow`, `linear-gradient`, `filter`, `::after`, `::before`, or z-index/stacking context issues in all global and component-level CSS/TSX files.
-- Confirmed no global or component-level overlays, gradients, or shadows were present.
-- Verified that the main content wrapper and background layers use only solid colors (no gradients or shadows).
-- Confirmed the effect is not caused by the WeatherStatusBackground, Footer, or OffCanvas components.
-- The issue persists even after removing all obvious suspects, suggesting a possible browser rendering artifact or subtle stacking context interaction.
-
-**Current Status:**
-- No explicit shadow, gradient, or overlay found in the codebase.
-- The vignette/shadow is not caused by any Tailwind utility, custom CSS, or React component logic.
-- Removing `overflow-hidden`, `rounded-b-[24px]`, and `bg-white` from the main content wrapper did not resolve the issue.
-- The effect may be a browser rendering artifact or related to stacking context/z-index, but no code-based cause has been identified.
-
-**Recommendation:**
-- If the vignette/shadow persists, test in a different browser or device to rule out rendering artifacts.
-- Continue to check for any subtle stacking context or compositing issues if new layout changes are made.
 
 _Documented: Feb 2026_
 A high-fidelity replication of the experimental UI and interactions from Kandie Gang, built as a headless WordPress frontend. This project focuses on high-quality animations, smooth scroll-driven effects, and a premium "mundane made magic" aesthetic, powered by a type-safe WordPress GraphQL bridge.
@@ -731,13 +735,6 @@ Make sure to set environment variables in your hosting platform:
 ## 📝 License
 
 This project is private and proprietary.
-
-## TODO
-
-- Normalize WordPress event descriptions so Markdown lists render correctly (handle en-dash/em-dash, common bullet characters, numbered markers like `)` or `.`, and strip zero-width/non-breaking spaces). Add a regression test or example content and remove dev-only debug UI after verification.
-- Add a guide/admin page to view event registrations (signed-up attendees), not just waitlist entries.
-- [Done] Show event participants on each event page, grouped by ride level, for guides/admins.
-- [Done] Migrate all serverless API handlers to Next.js `pages/api/` directory.
 
 ## 🤝 Contributing
 

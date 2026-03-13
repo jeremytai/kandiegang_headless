@@ -26,7 +26,7 @@ interface EventSidebarCardProps {
   signupState?: {
     label: string;
     disabled: boolean;
-    helper?: string;
+    helper?: React.ReactNode;
     allowWaitlist?: boolean;
   };
   onSignup?: (level: { levelKey: string; label: string }) => void;

@@ -25,7 +25,7 @@ export const KandieEventPage: React.FC = () => {
   const { yy, mm, dd, slug } = useParams<{ yy: string; mm: string; dd: string; slug: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const { openEventSignup } = useMemberLoginOffcanvas();
+  const { openEventSignup, openMemberLogin } = useMemberLoginOffcanvas();
   const [eventData, setEventData] = useState<KandieEventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [restoredSignup, setRestoredSignup] = useState(false);
@@ -518,6 +518,22 @@ export const KandieEventPage: React.FC = () => {
         ? 'Member early access is open'
         : 'FLINTA* early access is open';
 
+  // For the sidebar card we can render JSX — when both windows are open, invite non-members to log in
+  const signupHelperNode =
+    !isMember && isMemberWindow && canSignupNow ? (
+      <>
+        FLINTA* and{' '}
+        <button
+          type="button"
+          onClick={openMemberLogin}
+          className="underline hover:text-slate-700"
+        >
+          Members
+        </button>{' '}
+        early access is open
+      </>
+    ) : signupHelper;
+
   const handleSignup = (level: { levelKey: string; label: string }) => {
     if (!eventData) return;
     const intent: EventSignupIntent = {
@@ -847,7 +863,7 @@ export const KandieEventPage: React.FC = () => {
                     signupState={{
                       label: signupLabel,
                       disabled: !canSignupNow,
-                      helper: signupHelper,
+                      helper: signupHelperNode,
                       allowWaitlist,
                     }}
                     onSignup={handleSignup}
