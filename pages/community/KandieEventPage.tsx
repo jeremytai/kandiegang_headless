@@ -20,6 +20,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
+import { usePageMeta } from '../../hooks/usePageMeta';
 
 export const KandieEventPage: React.FC = () => {
   const { yy, mm, dd, slug } = useParams<{ yy: string; mm: string; dd: string; slug: string }>();
@@ -53,6 +54,20 @@ export const KandieEventPage: React.FC = () => {
   } | null>(null);
   const [guideCancelReason, setGuideCancelReason] = useState('');
   const [guideCancelLoading, setGuideCancelLoading] = useState(false);
+
+  // Dynamic page meta and Open Graph tags for event sharing.
+  // Always call this hook (even before data is loaded) to keep hook order stable.
+  const pageTitle = eventData ? `${eventData.title} | Kandie Gang` : 'Event | Kandie Gang';
+  const ogDescription =
+    eventData?.excerpt?.trim() ||
+    eventData?.eventDetails?.excerpt?.trim() ||
+    eventData?.eventDetails?.description?.split('\n')[0].trim() ||
+    null;
+  const ogImageUrl = eventData?.featuredImage?.node?.sourceUrl
+    ? transformMediaUrl(eventData.featuredImage.node.sourceUrl)
+    : null;
+
+  usePageMeta(pageTitle, ogDescription, ogImageUrl);
   // Fetch all participants for the event and group by ride_level
   const refreshParticipantsByLevel = useCallback(async () => {
     if (!eventData?.databaseId || !supabase) return;

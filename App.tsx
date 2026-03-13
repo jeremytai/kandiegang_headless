@@ -36,6 +36,7 @@ import { MemberLoginOffcanvasProvider } from './context/MemberLoginOffcanvasCont
 import { CartProvider } from './context/CartContext';
 import { CartOffcanvas } from './components/shop/CartOffcanvas';
 import { HelmetProvider } from 'react-helmet-async';
+import { getKandieEvents, type WPRideEvent } from './lib/wordpress';
 
 // Lazy-loaded pages (code-split by route to keep main bundle under 600 kB)
 const AboutPage = lazy(() =>
@@ -135,9 +136,19 @@ const App: React.FC = () => {
   // Password gate disabled - site is now publicly accessible
   const [isUnlocked, setIsUnlocked] = useState(true);
   const [announcementDismissed, setAnnouncementDismissed] = useState(false);
+  const [nextEvent, setNextEvent] = useState<{ title: string; href: string } | null>(null);
   const location = useLocation();
 
   const showGate = false; // Password gate disabled
+
+  function generateSlug(title: string): string {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  }
 
   useEffect(() => {
     if (isLoading || showGate) {
@@ -179,6 +190,56 @@ const App: React.FC = () => {
       sessionStorage.removeItem('logoutRedirecting');
     }
   }, [location.pathname]);
+
+  // Fetch next upcoming event for announcement bar
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchNextEvent = async () => {
+      try {
+        const events = await getKandieEvents(10);
+        if (!events || events.length === 0) return;
+
+        const now = new Date();
+        const futureEvents = events
+          .map((event: WPRideEvent) => {
+            const eventDateStr = event.eventDetails?.eventDate;
+            const eventDate = eventDateStr ? new Date(eventDateStr) : null;
+            if (!eventDate || Number.isNaN(eventDate.getTime())) return null;
+            return { event, eventDate };
+          })
+          .filter((item): item is { event: WPRideEvent; eventDate: Date } => item !== null)
+          .filter(({ eventDate }) => eventDate.getTime() >= now.getTime())
+          .sort((a, b) => a.eventDate.getTime() - b.eventDate.getTime());
+
+        if (!futureEvents.length) return;
+
+        const { event, eventDate } = futureEvents[0];
+        const slug = generateSlug(event.title);
+        const yy = eventDate.getFullYear().toString().slice(2);
+        const mm = (eventDate.getMonth() + 1).toString().padStart(2, '0');
+        const dd = eventDate.getDate().toString().padStart(2, '0');
+
+        if (!isMounted) return;
+
+        setNextEvent({
+          title: event.title,
+          href: `/event/${yy}/${mm}/${dd}/${slug}`,
+        });
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.error('[App] Failed to load next event for announcement bar', error);
+        }
+      }
+    };
+
+    fetchNextEvent();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Only use Framer Motion scroll hooks for non-test-blank routes
   let scale, y;
@@ -247,7 +308,12 @@ const App: React.FC = () => {
                     ].join(' ')}
                   >
                     <AnnouncementBar
-                      message="Please be patient as we go through some changes."
+                      message={
+                        nextEvent
+                          ? `Join us: ${nextEvent.title}`
+                          : "We're  making some changes. Some things might not work as expected."
+                      }
+                      href={nextEvent?.href}
                       onDismiss={() => setAnnouncementDismissed(true)}
                     />
                     <Suspense fallback={<PageLoader />}>
