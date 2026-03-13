@@ -151,7 +151,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       setError('First name is required.');
       return;
     }
-    if (!trimmedLast) {
+    if (!trimmedLast && !shouldSkipNameEntry) {
       setError('Last name is required.');
       return;
     }
@@ -468,7 +468,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       <button
         type="button"
         onClick={handleConfirmSignup}
-        disabled={isSubmitting || !canSubmit || !hasNames || !hasAuthEmail}
+        disabled={isSubmitting || !canSubmit || (!shouldSkipNameEntry && !hasNames) || (shouldSkipNameEntry && !effectiveFirstName) || !hasAuthEmail}
         className="inline-flex items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary-purple-rain/80 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
         {isSubmitting ? 'Submitting…' : 'Confirm signup'}
