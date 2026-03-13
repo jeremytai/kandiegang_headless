@@ -10,6 +10,7 @@ import { MemberAreasChart } from '../../components/admin/charts/MemberAreasChart
 import { MarketingOptInCard } from '../../components/admin/MarketingOptInCard';
 import { ChurnRiskCard } from '../../components/admin/ChurnRiskCard';
 import { MemberTable } from '../../components/admin/MemberTable';
+import { EventParticipationTable } from '../../components/admin/EventParticipationTable';
 import { MemberAnalytics } from '../../types/analytics';
 
 type MetricFilter = 'all' | 'active_subs' | 'at_risk' | 'has_ltv' | 'has_events';
@@ -159,7 +160,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
             {/* Section 1: Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               <MetricCard
-                title="Total Members"
+                title="Total Users"
                 value={metrics?.totalMembers || 0}
                 subtitle={
                   <span className="flex items-center gap-2 text-sm">
@@ -213,8 +214,8 @@ export const AnalyticsDashboardPage: React.FC = () => {
               />
               <MetricCard
                 title="Event Participation"
-                value={metrics?.totalEventParticipation || 0}
-                subtitle="Total event signups"
+                value={members.filter((m) => (m.event_participation_count || 0) > 0).length}
+                subtitle={`${metrics?.totalEventParticipation || 0} total signups`}
                 active={activeFilter === 'has_events'}
                 onClick={() => toggleFilter('has_events')}
               />
@@ -255,6 +256,9 @@ export const AnalyticsDashboardPage: React.FC = () => {
               )}
               <MemberTable members={filteredMembers} />
             </div>
+
+            {/* Section 5: Event Participation */}
+            <EventParticipationTable />
           </div>
         )}
       </div>

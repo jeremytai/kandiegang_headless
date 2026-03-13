@@ -98,6 +98,31 @@ export interface MarketingOptIn {
   percentage: number;
 }
 
+export interface EventParticipationRegistrant {
+  userId: string | null;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  rideLevel: string;
+  isWaitlist: boolean;
+  signedUpAt: string;
+  cancelledAt: string | null;
+  totalSignups: number;
+  totalCancellations: number;
+}
+
+export interface EventParticipationEvent {
+  eventId: number;
+  title: string;
+  date: string;
+  eventType: string;
+  confirmed: number;
+  waitlist: number;
+  cancelled: number;
+  byLevel: Record<string, { confirmed: number; waitlist: number; cancelled: number }>;
+  registrants: EventParticipationRegistrant[];
+}
+
 export const CHART_COLORS = {
   primary: '#2A3577', // User's selected color
   secondary: '#3D4A8F', // Lighter variant
