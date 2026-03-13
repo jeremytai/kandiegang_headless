@@ -100,7 +100,8 @@ export const MemberLoginForm: React.FC<MemberLoginFormProps> = ({
     }
     setError(null);
     setIsSubmitting(true);
-    const { error: magicError } = await signInWithMagicLink(email.trim());
+    const redirectTo = typeof window !== 'undefined' ? window.location.href : undefined;
+    const { error: magicError } = await signInWithMagicLink(email.trim(), redirectTo);
     setIsSubmitting(false);
     if (magicError) {
       setError(magicError);
@@ -249,7 +250,8 @@ export const MemberSignupForm: React.FC<MemberSignupFormProps> = ({
     }
     setError(null);
     setIsSubmitting(true);
-    const { error: magicError } = await signInWithMagicLink(email.trim());
+    const redirectTo = typeof window !== 'undefined' ? window.location.href : undefined;
+    const { error: magicError } = await signInWithMagicLink(email.trim(), redirectTo);
     setIsSubmitting(false);
     if (magicError) {
       setError(magicError);
