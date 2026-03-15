@@ -13,6 +13,7 @@ export interface MemberAnalytics {
   id: string;
   display_name: string;
   email: string;
+  wp_user_id: number | null;
   lifetime_value: number;
   order_count: number;
   stripe_subscription_status: string | null;

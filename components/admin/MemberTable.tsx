@@ -227,6 +227,7 @@ function MemberDetailPanel({
     is_team: member.is_team ?? false,
     is_archived: member.is_archived ?? null,
     display_name: member.display_name || '',
+    wp_user_id: member.wp_user_id != null ? String(member.wp_user_id) : '',
     accepts_marketing: member.accepts_marketing,
     member_since: member.member_since ? member.member_since.slice(0, 10) : '',
     membership_expiration: member.membership_expiration
@@ -242,6 +243,7 @@ function MemberDetailPanel({
     editState.is_team !== (member.is_team ?? false) ||
     editState.is_archived !== (member.is_archived ?? null) ||
     editState.display_name !== (member.display_name || '') ||
+    editState.wp_user_id !== (member.wp_user_id != null ? String(member.wp_user_id) : '') ||
     editState.accepts_marketing !== member.accepts_marketing ||
     editState.member_since !== (member.member_since ? member.member_since.slice(0, 10) : '') ||
     editState.membership_expiration !==
@@ -270,6 +272,7 @@ function MemberDetailPanel({
             is_team: editState.is_team,
             is_archived: editState.is_archived,
             display_name: editState.display_name || null,
+            wp_user_id: editState.wp_user_id ? Number(editState.wp_user_id) : null,
             accepts_marketing: editState.accepts_marketing,
             member_since: editState.member_since || null,
             membership_expiration: editState.membership_expiration || null,
@@ -288,6 +291,7 @@ function MemberDetailPanel({
         is_team: editState.is_team,
         is_archived: editState.is_archived,
         display_name: editState.display_name || '',
+        wp_user_id: editState.wp_user_id ? Number(editState.wp_user_id) : null,
         accepts_marketing: editState.accepts_marketing,
         member_since: editState.member_since || null,
         membership_expiration: editState.membership_expiration || null,
@@ -622,6 +626,17 @@ function MemberDetailPanel({
                 onChange={(e) => setEditState((s) => ({ ...s, display_name: e.target.value }))}
                 className="w-full bg-white border border-neutral-200 text-neutral-900 px-3 py-1.5 rounded text-sm focus:outline-none focus:border-[#ff611a] transition-colors"
               />
+            </div>
+            <div>
+              <label className="block text-neutral-400 text-xs mb-1">WordPress User ID</label>
+              <input
+                type="number"
+                value={editState.wp_user_id}
+                onChange={(e) => setEditState((s) => ({ ...s, wp_user_id: e.target.value }))}
+                placeholder="e.g. 42"
+                className="w-full bg-white border border-neutral-200 text-neutral-900 px-3 py-1.5 rounded text-sm focus:outline-none focus:border-[#ff611a] transition-colors"
+              />
+              <p className="text-neutral-300 text-xs mt-1">Required for guides to see their participant list</p>
             </div>
             <Toggle
               label="Guide"

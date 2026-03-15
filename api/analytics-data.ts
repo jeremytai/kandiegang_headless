@@ -77,6 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       is_guide,
       is_team,
       is_member,
+      wp_user_id,
       is_archived,
       first_name,
       last_name,
