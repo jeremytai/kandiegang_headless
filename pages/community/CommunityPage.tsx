@@ -136,6 +136,11 @@ export const CommunityPage: React.FC = () => {
 
         if (wpEvents && wpEvents.length > 0) {
           const transformedEvents = wpEvents.map(transformToEventsLayoutEvent);
+          transformedEvents.sort((a, b) => {
+            const aTime = new Date(a.startDate).getTime();
+            const bTime = new Date(b.startDate).getTime();
+            return aTime - bTime; // soonest first (e.g. March 29 before March 31)
+          });
           setEvents(transformedEvents);
           if (import.meta.env.DEV) {
             console.log('[Community] Loaded events:', transformedEvents.length);
