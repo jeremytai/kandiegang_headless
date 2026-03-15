@@ -467,14 +467,12 @@ export const KandieEventPage: React.FC = () => {
   const hasValidPublicRelease = Boolean(publicRelease && !Number.isNaN(publicRelease.getTime()));
   const isPublic = !hasValidPublicRelease || now >= (publicRelease as Date);
   const isMember = Boolean(profile?.is_member);
-  const matchedLevels = profile?.is_guide && profile?.wp_user_id
-    ? levelsWithGuides.filter((level) =>
-        level.guides.some((g) => String(g.id) === String(profile.wp_user_id))
-      )
-    : [];
-  const guidedLevels = profile?.is_guide
-    ? (matchedLevels.length > 0 ? matchedLevels : levelsWithGuides)
-    : [];
+  const guidedLevels =
+    profile?.is_guide && profile?.wp_user_id
+      ? levelsWithGuides.filter((level) =>
+          level.guides.some((g) => String(g.id) === String(profile.wp_user_id))
+        )
+      : [];
   const isFlintaOnly = Boolean(eventDetails?.isFlintaOnly);
   const dayMs = 24 * 60 * 60 * 1000;
   const memberEarlyDays = Number(import.meta.env.VITE_MEMBER_EARLY_DAYS ?? 5);
