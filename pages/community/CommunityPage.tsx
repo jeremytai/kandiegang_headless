@@ -226,16 +226,26 @@ export const CommunityPage: React.FC = () => {
             </div>
           )}
 
-          {/* Events display */}
-          {!loading && events.length > 0 && (
-            <>
-              <EventsLayout events={events.slice(0, 1)} />
-              <ThreeThingsToDo />
-              {events.slice(1, 7).map((event, index) => (
-                <EventsLayout key={event.id} events={[event]} showTopBorder={index === 0} />
-              ))}
-            </>
-          )}
+          {/* Events display: next (soonest upcoming) event always above ThreeThingsToDo */}
+          {!loading && events.length > 0 && (() => {
+            const now = Date.now();
+            const upcoming = events.filter(
+              (e) => new Date(e.startDate).getTime() >= now
+            );
+            return (
+              <>
+                <EventsLayout events={upcoming.length > 0 ? [upcoming[0]] : []} />
+                <ThreeThingsToDo />
+                {upcoming.slice(1, 7).map((event, index) => (
+                  <EventsLayout
+                    key={event.id}
+                    events={[event]}
+                    showTopBorder={index === 0}
+                  />
+                ))}
+              </>
+            );
+          })()}
 
           {!loading && events.length === 0 && (
             <div className="text-center py-12">
