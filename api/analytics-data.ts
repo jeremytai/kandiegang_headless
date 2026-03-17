@@ -16,7 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  if (!checkRateLimit(req, res, { windowMs: 60_000, max: 10, keyPrefix: 'analytics-data' })) {
+  if (
+    !(await checkRateLimit(req, res, { windowMs: 60_000, max: 10, keyPrefix: 'analytics-data' }))
+  ) {
     return;
   }
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {

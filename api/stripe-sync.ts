@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Low rate limit — this is an expensive operation
-  if (!checkRateLimit(req, res, { windowMs: 60_000, max: 3, keyPrefix: 'stripe-sync' })) {
+  if (!(await checkRateLimit(req, res, { windowMs: 60_000, max: 3, keyPrefix: 'stripe-sync' }))) {
     return;
   }
 

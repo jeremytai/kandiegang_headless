@@ -42,7 +42,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  if (!checkRateLimit(req, res, { windowMs: 60_000, max: 30, keyPrefix: 'admin-update-profile' })) {
+  if (
+    !(await checkRateLimit(req, res, { windowMs: 60_000, max: 30, keyPrefix: 'admin-update-profile' }))
+  ) {
     return;
   }
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
