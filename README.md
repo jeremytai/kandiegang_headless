@@ -346,6 +346,26 @@ The shared `ContactForm` component (`components/ContactForm.tsx`) is used on bot
 
 Analytics are provided by [PostHog](https://posthog.com) and are **consent-gated**: the PostHog script only loads after the user accepts **analytics** in the cookie banner. If the user later revokes analytics in cookie preferences, PostHog stops sending data (`opt_out_capturing`).
 
+## 🔐 Security audit (March 2026)
+
+This repo received a quick security hardening pass with a focus on API safety and production resilience.
+
+### Changes
+
+- **Redis-backed rate limiting (with in-memory fallback)**: Shared rate limits across serverless instances when Upstash is configured; falls back to per-process buckets when Redis is unavailable. See `lib/rateLimit.ts` and API routes under `api/`.
+- **Stricter admin profile updates**: `/api/admin-update-profile` now validates the *type/shape* of each editable field before applying updates (rejects invalid payloads with a 400).
+- **Email HTML escaping**: Event email templates now escape user-controlled strings (e.g. event titles / URLs / reasons) to prevent HTML injection in outbound emails.
+- **PostHog SDK updated**: `posthog-js` upgraded to keep analytics SDK current.
+
+### Required Vercel env vars (for Redis rate limiting)
+
+Add these to **Development**, **Preview**, and **Production**:
+
+```env
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
+```
+
 ### Setup
 
 1. Create a project at [posthog.com](https://posthog.com) and copy your **Project API Key** (e.g. `phc_...`).
