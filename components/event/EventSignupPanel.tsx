@@ -174,8 +174,6 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     try {
       const sessionResult = await supabase.auth.getSession();
       const accessToken = sessionResult?.data?.session?.access_token;
-      console.log('[EventSignupPanel] Supabase session result:', sessionResult);
-      console.log('[EventSignupPanel] Access token:', accessToken);
       if (!accessToken) {
         setError('Please log in again to complete signup.');
         setIsSubmitting(false);
@@ -191,7 +189,6 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         firstName: !trimmedLast && shouldSkipNameEntry ? (profile?.display_name ?? trimmedFirst) : trimmedFirst,
         lastName: trimmedLast,
       };
-      console.log('[EventSignupPanel] Sending signup request:', signupPayload);
       const response = await fetch('/api/event', {
         method: 'POST',
         headers: {
@@ -200,9 +197,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         },
         body: JSON.stringify({ action: 'signup', ...signupPayload }),
       });
-      console.log('[EventSignupPanel] Signup response:', response);
       const data = await response.json().catch(() => ({}));
-      console.log('[EventSignupPanel] Signup response data:', data);
       if (!response.ok) {
         if (response.status === 409) {
           setError('That level is sold out. Please choose another level or check back later.');

@@ -7,25 +7,27 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
-/** Fields that guides are allowed to edit via this endpoint. */
-const EDITABLE_FIELDS = new Set([
-  'is_guide',
-  'is_member',
-  'is_team',
-  'wp_user_id',
-  'is_archived',
-  'display_name',
-  'tags',
-  'accepts_marketing',
-  'member_since',
-  'membership_expiration',
-  'stripe_subscription_status',
-  'order_history',
-  'order_count',
-  'lifetime_value',
-  'avg_order_value',
-  'last_order_date',
-]);
+/** Per-field type validators for editable profile fields. */
+const FIELD_VALIDATORS: Record<string, (v: unknown) => boolean> = {
+  is_guide:                 (v) => typeof v === 'boolean',
+  is_member:                (v) => typeof v === 'boolean',
+  is_team:                  (v) => typeof v === 'boolean',
+  is_archived:              (v) => v === null || typeof v === 'boolean',
+  wp_user_id:               (v) => v === null || (typeof v === 'number' && Number.isInteger(v)),
+  display_name:             (v) => typeof v === 'string' && v.length <= 200,
+  accepts_marketing:        (v) => v === null || typeof v === 'boolean',
+  member_since:             (v) => v === null || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)),
+  membership_expiration:    (v) => v === null || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)),
+  stripe_subscription_status: (v) => v === null || (typeof v === 'string' && v.length <= 50),
+  order_count:              (v) => typeof v === 'number' && Number.isInteger(v) && v >= 0,
+  lifetime_value:           (v) => typeof v === 'number' && v >= 0,
+  avg_order_value:          (v) => v === null || (typeof v === 'number' && v >= 0),
+  last_order_date:          (v) => v === null || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)),
+  tags:                     (v) => Array.isArray(v) && (v as unknown[]).every((t) => typeof t === 'string' && t.length <= 100),
+  order_history:            (v) => Array.isArray(v),
+};
+
+const EDITABLE_FIELDS = new Set(Object.keys(FIELD_VALIDATORS));
 
 /**
  * POST /api/admin-update-profile
@@ -105,12 +107,19 @@ async function handleUpdate(
   }
 
   const safeUpdates: Record<string, unknown> = {};
+  const invalidFields: string[] = [];
   for (const [key, value] of Object.entries(updates)) {
-    if (EDITABLE_FIELDS.has(key)) {
+    if (!EDITABLE_FIELDS.has(key)) continue;
+    if (!FIELD_VALIDATORS[key](value)) {
+      invalidFields.push(key);
+    } else {
       safeUpdates[key] = value;
     }
   }
 
+  if (invalidFields.length > 0) {
+    return res.status(400).json({ error: `Invalid value for field(s): ${invalidFields.join(', ')}` });
+  }
   if (Object.keys(safeUpdates).length === 0) {
     return res.status(400).json({ error: 'No editable fields provided' });
   }

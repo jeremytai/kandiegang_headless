@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import DOMPurify from 'dompurify';
 import type { NormalizedBlock } from '../lib/storyGalleries';
 import { GalleryGrid } from './GalleryGrid';
 
@@ -27,7 +28,7 @@ export const StoryBlocksRenderer: React.FC<StoryBlocksRendererProps> = ({
             <p
               key={i}
               className="mb-4 last:mb-0 text-slate-700 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: block.content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.content) }}
             />
           );
         }
