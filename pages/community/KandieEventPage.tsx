@@ -626,6 +626,43 @@ export const KandieEventPage: React.FC = () => {
   const eventDate = eventDateValue ? new Date(eventDateValue) : null;
   const eventDatePart = eventDateValue.split('T')[0];
   const eventDateForWeekday = eventDatePart ? new Date(`${eventDatePart}T12:00:00`) : null;
+
+  const urlOccurrenceDate = (() => {
+    if (!yy || !mm || !dd) return null;
+    const yyNum = Number(yy);
+    const mmNum = Number(mm);
+    const ddNum = Number(dd);
+    if (!Number.isFinite(yyNum) || !Number.isFinite(mmNum) || !Number.isFinite(ddNum)) return null;
+
+    // Routes currently encode a 2-digit year (e.g. "26") from `getFullYear().slice(2)`.
+    const fullYear = yyNum < 100 ? 2000 + yyNum : yyNum;
+    if (mmNum < 1 || mmNum > 12) return null;
+    if (ddNum < 1 || ddNum > 31) return null;
+
+    // Use local noon to avoid off-by-one-day shifts from timezone conversions.
+    const candidate = new Date(fullYear, mmNum - 1, ddNum, 12, 0, 0, 0);
+    return Number.isNaN(candidate.getTime()) ? null : candidate;
+  })();
+
+  const shouldUseUrlOccurrenceDate = (() => {
+    if (!urlOccurrenceDate) return false;
+
+    // Prefer URL date for repeating events.
+    if (Boolean(eventDetails?.repeatingEvent)) return true;
+
+    // Fallback: if the URL date differs from the WP `eventDate` date-part, prefer the URL.
+    // This prevents repeating/series occurrences from showing the base eventDate.
+    const wpDateForCompare = eventDateForWeekday && !Number.isNaN(eventDateForWeekday.getTime()) ? eventDateForWeekday : null;
+    if (!wpDateForCompare) return false;
+
+    const mismatch =
+      wpDateForCompare.getFullYear() !== urlOccurrenceDate.getFullYear() ||
+      wpDateForCompare.getMonth() !== urlOccurrenceDate.getMonth() ||
+      wpDateForCompare.getDate() !== urlOccurrenceDate.getDate();
+
+    return mismatch;
+  })();
+
   const getOrdinal = (day: number) => {
     const mod10 = day % 10;
     const mod100 = day % 100;
@@ -650,6 +687,19 @@ export const KandieEventPage: React.FC = () => {
     weekdayLabel && monthLabel && dayLabel && yearLabel
       ? `${weekdayLabel}, ${dayLabel} ${monthLabel}, ${yearLabel}`
       : eventDateValue;
+
+  const urlDateLabel =
+    urlOccurrenceDate && shouldUseUrlOccurrenceDate
+      ? (() => {
+          const weekday = urlOccurrenceDate.toLocaleDateString([], { weekday: 'short' });
+          const month = urlOccurrenceDate.toLocaleDateString([], { month: 'long' });
+          const day = getOrdinal(urlOccurrenceDate.getDate());
+          const year = String(urlOccurrenceDate.getFullYear());
+          return `${weekday}, ${day} ${month}, ${year}`;
+        })()
+      : null;
+
+  const effectiveDateLabel = urlDateLabel ?? dateLabel;
   const timeLabel = eventDetails?.workshopStartTime?.trim() || eventDetails?.rideTime?.trim();
   const meetingPoint = eventDetails?.meetingPoint;
   const locationName = meetingPoint?.name || '';
@@ -878,7 +928,7 @@ export const KandieEventPage: React.FC = () => {
               <aside className="order-1 lg:order-2 w-full lg:flex-1 min-w-0 lg:self-start lg:sticky lg:top-28 h-fit">
                 <div>
                   <EventSidebarCard
-                    date={dateLabel}
+                    date={effectiveDateLabel}
                     time={timeLabel}
                     location={locationLabel}
                     category={rideCategory || undefined}
