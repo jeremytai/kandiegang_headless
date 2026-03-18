@@ -210,11 +210,11 @@ export const KandieEventPage: React.FC = () => {
         }
 
         const isRepeating = Boolean(seriesEvent.eventDetails?.repeatingEvent);
-        const shouldResolveOccurrence = isRepeating && Boolean(yy && mm && dd);
+        const hasRouteDate = Boolean(yy && mm && dd);
 
         let eventToRender = seriesEvent;
 
-        if (shouldResolveOccurrence) {
+        if (hasRouteDate) {
           const yyNum = Number(yy);
           const mmNum = Number(mm);
           const ddNum = Number(dd);
@@ -230,14 +230,14 @@ export const KandieEventPage: React.FC = () => {
           const occurrenceYmd = `${yyyy}-${String(mmNum).padStart(2, '0')}-${String(ddNum).padStart(2, '0')}`;
 
           const occurrenceEvent = await getKandieEventBySlugAndDate(slug, occurrenceYmd);
-          if (!occurrenceEvent) {
+          if (occurrenceEvent) {
+            eventToRender = occurrenceEvent;
+          } else if (isRepeating) {
             // Hard requirement: repeating events must have an occurrence for the URL date.
             setNotFound(true);
             setLoading(false);
             return;
           }
-
-          eventToRender = occurrenceEvent;
         }
 
         // Transform gpxFile from { node: { id } } to string, safely
