@@ -8,7 +8,11 @@ import EventHeader from '../../components/event/EventHeader';
 import GuideSection from '../../components/sections/GuideSection';
 import EventSidebarCard from '../../components/event/EventSidebarCard';
 import { KandieEventData, RideGuide } from '../../lib/events';
-import { getKandieEventBySlug, transformMediaUrl } from '../../lib/wordpress';
+import {
+  getKandieEventBySlug,
+  getKandieEventBySlugAndDate,
+  transformMediaUrl,
+} from '../../lib/wordpress';
 import { useAuth } from '../../context/AuthContext';
 import { useMemberLoginOffcanvas } from '../../context/MemberLoginOffcanvasContext';
 import { supabase } from '../../lib/supabaseClient';
@@ -28,6 +32,7 @@ export const KandieEventPage: React.FC = () => {
   const { user, profile } = useAuth();
   const { openEventSignup, openMemberLogin } = useMemberLoginOffcanvas();
   const [eventData, setEventData] = useState<KandieEventData | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
   const [restoredSignup, setRestoredSignup] = useState(false);
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
@@ -192,12 +197,47 @@ export const KandieEventPage: React.FC = () => {
       if (!slug) return;
 
       try {
-        const event = await getKandieEventBySlug(slug);
+        setLoading(true);
+        setNotFound(false);
 
-        if (!event) {
+        const seriesEvent = await getKandieEventBySlug(slug);
+
+        if (!seriesEvent) {
           console.error('Event not found for slug:', slug);
+          setNotFound(true);
           setLoading(false);
           return;
+        }
+
+        const isRepeating = Boolean(seriesEvent.eventDetails?.repeatingEvent);
+        const shouldResolveOccurrence = isRepeating && Boolean(yy && mm && dd);
+
+        let eventToRender = seriesEvent;
+
+        if (shouldResolveOccurrence) {
+          const yyNum = Number(yy);
+          const mmNum = Number(mm);
+          const ddNum = Number(dd);
+
+          if (!Number.isFinite(yyNum) || !Number.isFinite(mmNum) || !Number.isFinite(ddNum)) {
+            setNotFound(true);
+            setLoading(false);
+            return;
+          }
+
+          const fullYear = yyNum < 100 ? 2000 + yyNum : yyNum;
+          const yyyy = String(fullYear);
+          const occurrenceYmd = `${yyyy}-${String(mmNum).padStart(2, '0')}-${String(ddNum).padStart(2, '0')}`;
+
+          const occurrenceEvent = await getKandieEventBySlugAndDate(slug, occurrenceYmd);
+          if (!occurrenceEvent) {
+            // Hard requirement: repeating events must have an occurrence for the URL date.
+            setNotFound(true);
+            setLoading(false);
+            return;
+          }
+
+          eventToRender = occurrenceEvent;
         }
 
         // Transform gpxFile from { node: { id } } to string, safely
@@ -220,23 +260,23 @@ export const KandieEventPage: React.FC = () => {
         };
 
         const transformedEvent: KandieEventData = {
-          ...event,
+          ...eventToRender,
           slug, // ensure slug is always present
-          databaseId: event.databaseId || '0', // fallback if undefined
-          eventDetails: event.eventDetails
+          databaseId: eventToRender.databaseId || '0', // fallback if undefined
+          eventDetails: eventToRender.eventDetails
             ? {
-                ...event.eventDetails,
+                ...eventToRender.eventDetails,
                 level1: transformLevel(
-                  event.eventDetails.level1 as import('../../lib/events').RideLevel
+                  eventToRender.eventDetails.level1 as import('../../lib/events').RideLevel
                 ),
                 level2: transformLevel(
-                  event.eventDetails.level2 as import('../../lib/events').RideLevel
+                  eventToRender.eventDetails.level2 as import('../../lib/events').RideLevel
                 ),
                 level2plus: transformLevel(
-                  event.eventDetails.level2plus as import('../../lib/events').RideLevel
+                  eventToRender.eventDetails.level2plus as import('../../lib/events').RideLevel
                 ),
                 level3: transformLevel(
-                  event.eventDetails.level3 as import('../../lib/events').RideLevel
+                  eventToRender.eventDetails.level3 as import('../../lib/events').RideLevel
                 ),
               }
             : undefined,
@@ -249,7 +289,7 @@ export const KandieEventPage: React.FC = () => {
     };
 
     fetchEvent();
-  }, [slug]);
+  }, [slug, yy, mm, dd]);
 
   useEffect(() => {
     if (!eventData?.databaseId) return;
@@ -315,10 +355,25 @@ export const KandieEventPage: React.FC = () => {
     }
   }, [eventData, user, openEventSignup, restoredSignup]);
 
-  if (loading || !eventData) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-secondary-purple-rain" />
+      </div>
+    );
+  }
+
+  if (notFound || !eventData) {
+    return (
+      <div className="min-h-screen pt-32 md:pt-40 pb-24 flex flex-col items-center justify-center bg-white">
+        <p className="text-slate-500 mb-6">Event not found.</p>
+        <Link
+          to="/community"
+          className="inline-flex items-center gap-2 text-secondary-purple-rain font-bold hover:underline"
+        >
+          <span className="inline-block w-4 h-4" aria-hidden />
+          Back to Community
+        </Link>
       </div>
     );
   }
