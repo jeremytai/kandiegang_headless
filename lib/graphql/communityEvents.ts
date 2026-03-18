@@ -409,6 +409,12 @@ export const GET_KANDIE_EVENT_WITH_OCCURRENCE_QUERY = `
 
       occurrenceByDate(date: $date) {
         databaseId
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
         occurrenceDetails {
           occurrenceDate
           occurrenceLevel1Guides {

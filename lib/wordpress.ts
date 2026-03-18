@@ -1368,6 +1368,7 @@ type WPOccurrenceDetails = {
 type WPRideEventWithOccurrence = WPRideEvent & {
   occurrenceByDate?: {
     databaseId: string;
+    featuredImage?: { node: { sourceUrl: string; altText?: string } };
     occurrenceDetails?: WPOccurrenceDetails;
   } | null;
 };
@@ -1447,6 +1448,7 @@ export async function getKandieEventBySlugAndDate(
     const { occurrenceByDate: _occ, ...rest } = rideEvent;
     return {
       ...(rest as WPRideEvent),
+      ...(occurrence?.featuredImage ? { featuredImage: occurrence.featuredImage } : {}),
       eventDetails: mergedDetails,
     };
   } catch (error) {
