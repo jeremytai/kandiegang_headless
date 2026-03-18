@@ -83,16 +83,56 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();
 }
 
+function toYmd(isoOrYmd: string | undefined): string | null {
+  if (!isoOrYmd) return null;
+  // Handles both "YYYY-MM-DD" and "YYYY-MM-DDTHH:mm:ss+00:00"
+  const ymd = isoOrYmd.split('T')[0]?.trim();
+  return ymd && /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? ymd : null;
+}
+
+function getOccurrenceYmds(details: WPRideEvent['eventDetails']): string[] {
+  const startYmd = toYmd(details?.eventDate);
+  const endYmd = toYmd(details?.repeatUntil);
+
+  if (!startYmd) return [];
+
+  // If we don't have an explicit repeat end date, show only the base occurrence.
+  if (!endYmd) return [startYmd];
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const start = new Date(`${startYmd}T12:00:00.000Z`);
+  const end = new Date(`${endYmd}T12:00:00.000Z`);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return [startYmd];
+
+  const ymds: string[] = [];
+  const max = 60; // safety guard: never render an infinite set
+
+  for (let cur = new Date(start); cur.getTime() <= end.getTime() && ymds.length < max; ) {
+    ymds.push(cur.toISOString().slice(0, 10));
+    cur = new Date(cur.getTime() + 7 * DAY_MS);
+  }
+
+  return ymds.length ? ymds : [startYmd];
+}
+
 /**
  * Transform WordPress RideEvent to EventsLayoutEvent
  */
-function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
+function transformToEventsLayoutEvent(
+  event: WPRideEvent,
+  occurrenceYmd?: string
+): EventsLayoutEvent {
   const details = event.eventDetails;
-  const eventDate = details?.eventDate ? new Date(details.eventDate) : new Date();
   const slug = generateSlug(event.title);
-  const yy = eventDate.getFullYear().toString().slice(2);
-  const mm = (eventDate.getMonth() + 1).toString().padStart(2, '0');
-  const dd = eventDate.getDate().toString().padStart(2, '0');
+
+  const baseYmd = toYmd(details?.eventDate) ?? toYmd(new Date().toISOString()) ?? null;
+  const ymd = occurrenceYmd ?? baseYmd ?? new Date().toISOString().slice(0, 10);
+  const occDate = new Date(`${ymd}T12:00:00.000Z`);
+
+  const yy = occDate.getUTCFullYear().toString().slice(2);
+  const mm = (occDate.getUTCMonth() + 1).toString().padStart(2, '0');
+  const dd = occDate.getUTCDate().toString().padStart(2, '0');
 
   // Truncate description to 200 characters
   const fullDescription = stripHtml(event.excerpt || details?.description || '');
@@ -102,7 +142,7 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
       : fullDescription;
 
   return {
-    id: event.databaseId || `event-${Date.now()}`,
+    id: event.databaseId && ymd ? `${event.databaseId}-${ymd}` : `event-${Date.now()}-${ymd}`,
     href: `/event/${yy}/${mm}/${dd}/${slug}`,
     imageUrl: event.featuredImage?.node?.sourceUrl
       ? transformMediaUrl(event.featuredImage.node.sourceUrl)
@@ -112,11 +152,15 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
       ? details.primaryType.charAt(0).toUpperCase() + details.primaryType.slice(1).toLowerCase()
       : 'Event',
     description: truncatedDescription,
-    startDate: details?.eventDate || new Date().toISOString(),
-    endDate: details?.eventDate || new Date().toISOString(),
-    year: eventDate.getFullYear().toString(),
-    days: eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    month: eventDate.toLocaleDateString('en-US', { weekday: 'long' }),
+    startDate: `${ymd}T00:00:00.000Z`,
+    endDate: `${ymd}T00:00:00.000Z`,
+    year: occDate.getUTCFullYear().toString(),
+    days: occDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }),
+    month: occDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }),
     location: details?.meetingPoint?.city || '',
   };
 }
@@ -135,15 +179,20 @@ export const CommunityPage: React.FC = () => {
         const wpEvents = await getKandieEvents(20);
 
         if (wpEvents && wpEvents.length > 0) {
-          const transformedEvents = wpEvents.map(transformToEventsLayoutEvent);
-          transformedEvents.sort((a, b) => {
+          const expandedEvents = wpEvents.flatMap((event) => {
+            const occurrences = getOccurrenceYmds(event.eventDetails);
+            if (!occurrences.length) return [];
+            return occurrences.map((ymd) => transformToEventsLayoutEvent(event, ymd));
+          });
+
+          expandedEvents.sort((a, b) => {
             const aTime = new Date(a.startDate).getTime();
             const bTime = new Date(b.startDate).getTime();
             return aTime - bTime; // soonest first (e.g. March 29 before March 31)
           });
-          setEvents(transformedEvents);
+          setEvents(expandedEvents);
           if (import.meta.env.DEV) {
-            console.log('[Community] Loaded events:', transformedEvents.length);
+            console.log('[Community] Loaded events:', expandedEvents.length);
           }
         } else {
           setEvents(FALLBACK_EVENTS);

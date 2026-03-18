@@ -1256,6 +1256,7 @@ export interface EventDetailsMetadata {
   workshopCapacity?: number;
   workshopStartTime?: string;
   rideCategory?: string;
+  repeatUntil?: string; // ISO date string for recurring events
   level1?: RideLevel;
   level2?: RideLevel;
   level2plus?: RideLevel;
