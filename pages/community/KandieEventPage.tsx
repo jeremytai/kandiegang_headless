@@ -679,12 +679,35 @@ export const KandieEventPage: React.FC = () => {
             <div className="flex flex-col lg:flex-row lg:justify-center lg:items-start gap-20">
               {/* Main content */}
               <article className="space-y-12 order-2 lg:order-1 flex-1 min-w-0">
-                <div className="kandieEventPage max-w-none text-slate-600 leading-relaxed [&_h1]:text-4xl [&_h1]:font-heading-thin [&_h1]:tracking-normal [&_h2]:text-3xl [&_h2]:font-heading-thin [&_h2]:tracking-normal [&_h3]:text-3xl [&_h3]:font-heading-thin [&_h3]:tracking-normal [&_h4]:text-2xl [&_h4]:font-heading-thin [&_h4]:tracking-normal [&_h5]:text-xl [&_h5]:font-heading-thin [&_h5]:tracking-normal [&_h6]:font-heading-thin [&_h6]:tracking-normal [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2">
-                  <style>{`
-                    .kandieEventPage h1, .kandieEventPage h2, .kandieEventPage h3, .kandieEventPage h4, .kandieEventPage h5, .kandieEventPage h6 {
-                      color: var(--color-secondary-purple-rain);
-                    }
-                  `}</style>
+                <div
+                  className={[
+                    // Markdown typography: tuned for legibility like an article page.
+                    'kandieEventPage',
+                    // Keep a readable measure even in wide layouts with sidebar.
+                    'max-w-[72ch]',
+                    // Base body styling (avoid Tailwind Typography defaults).
+                    'text-primary-ink text-[17px] leading-[1.5]',
+                    // Paragraph rhythm (tighter than before).
+                    '[&_p]:my-2.5 [&_p]:leading-[1.5]',
+                    // Headings (brand).
+                    '[&_h1]:text-secondary-purple-rain [&_h2]:text-secondary-purple-rain [&_h3]:text-secondary-purple-rain [&_h4]:text-secondary-purple-rain [&_h5]:text-secondary-purple-rain [&_h6]:text-secondary-purple-rain',
+                    '[&_h1]:font-heading-regular [&_h2]:font-heading-thin [&_h3]:font-heading-thin [&_h4]:font-heading-thin [&_h5]:font-heading-thin [&_h6]:font-heading-thin',
+                    // H1 headline style (match your event page headline treatment).
+                    '[&_h1]:text-4xl md:[&_h1]:text-5xl [&_h1]:leading-[1.05] [&_h1]:mt-0 [&_h1]:mb-6',
+                    // Heading spacing + scale.
+                    '[&_h2]:text-3xl [&_h2]:leading-[1.15] [&_h2]:mt-10 [&_h2]:mb-3',
+                    '[&_h3]:text-2xl [&_h3]:leading-[1.2] [&_h3]:mt-10 [&_h3]:mb-3',
+                    '[&_h4]:text-xl [&_h4]:leading-[1.25] [&_h4]:mt-8 [&_h4]:mb-3',
+                    // Lists.
+                    '[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5',
+                    '[&_li]:my-1 [&_li]:leading-[1.5]',
+                    // Links: editorial style (Vertica-like): body-colored + subtle underline.
+                    '[&_a]:text-primary-ink [&_a]:underline [&_a]:underline-offset-2',
+                    '[&_a]:decoration-primary-ink/25 hover:[&_a]:decoration-primary-ink/60',
+                    // Inline code / blocks should stay ink, not default black.
+                    '[&_code]:text-primary-ink [&_pre]:text-primary-ink',
+                  ].join(' ')}
+                >
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[

@@ -203,7 +203,7 @@ export const CommunityPage: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="text-lg md:text-2xl text-primary-ink max-w-2xl font-light tracking-tight text-balance"
             >
-              Join us for upcoming events, workshops, and social rides in Hamburg.
+              Join us for upcoming rides, events and workshops.
             </motion.p>
           </div>
         </div>

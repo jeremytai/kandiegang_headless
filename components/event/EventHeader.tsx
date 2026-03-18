@@ -23,7 +23,7 @@ const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBac
             {onBack && (
               <button
                 onClick={onBack}
-                className="inline-flex items-center gap-2 text-secondary-current hover:text-white text-sm font-medium transition-colors mb-6"
+                className="inline-flex items-center gap-2 text-secondary-current hover:text-secondary-purple-rain text-sm font-medium transition-colors mb-6"
               >
                 <ArrowLeft className="w-4 h-4" /> Events
               </button>
@@ -35,10 +35,15 @@ const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBac
 
             {intro && (
               <div className="w-full">
-                <div className="text-xl md:text-xl font-light leading-normal text-secondary-blush">
+                <div className="max-w-[65ch] text-secondary-blush text-[17px] leading-[1.5] [&_p]:my-2.5 [&_p]:leading-[1.5] [&_a]:text-secondary-blush [&_a]:underline [&_a]:underline-offset-2 [&_a]:decoration-secondary-blush/35 hover:[&_a]:decoration-secondary-blush/70">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                    rehypePlugins={[
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      rehypeRaw as any,
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      rehypeSanitize as any,
+                    ]}
                   >
                     {intro}
                   </ReactMarkdown>
