@@ -128,7 +128,6 @@ export const GET_KANDIE_EVENTS_QUERY = `
 
           # Logistics & FLINTA
           isFlintaOnly
-          repeatingEvent
           meetingPoint {
             name
             street
@@ -267,7 +266,6 @@ export const GET_KANDIE_EVENT_QUERY = `
 
         # Logistics & FLINTA
         isFlintaOnly
-        repeatingEvent
         meetingPoint {
           name
           street

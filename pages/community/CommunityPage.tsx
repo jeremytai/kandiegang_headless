@@ -228,9 +228,10 @@ export const CommunityPage: React.FC = () => {
 
           {/* Events display: next (soonest upcoming) event always above ThreeThingsToDo */}
           {!loading && events.length > 0 && (() => {
-            const now = Date.now();
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
             const upcoming = events.filter(
-              (e) => new Date(e.startDate).getTime() >= now
+              (e) => new Date(e.startDate).getTime() >= todayStart.getTime()
             );
             return (
               <>
