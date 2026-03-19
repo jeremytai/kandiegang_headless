@@ -8,11 +8,7 @@ import EventHeader from '../../components/event/EventHeader';
 import GuideSection from '../../components/sections/GuideSection';
 import EventSidebarCard from '../../components/event/EventSidebarCard';
 import { KandieEventData, RideGuide } from '../../lib/events';
-import {
-  getKandieEventBySlug,
-  getKandieEventBySlugAndDate,
-  transformMediaUrl,
-} from '../../lib/wordpress';
+import { getKandieEventBySlug, transformMediaUrl } from '../../lib/wordpress';
 import { useAuth } from '../../context/AuthContext';
 import { useMemberLoginOffcanvas } from '../../context/MemberLoginOffcanvasContext';
 import { supabase } from '../../lib/supabaseClient';
@@ -32,7 +28,6 @@ export const KandieEventPage: React.FC = () => {
   const { user, profile } = useAuth();
   const { openEventSignup, openMemberLogin } = useMemberLoginOffcanvas();
   const [eventData, setEventData] = useState<KandieEventData | null>(null);
-  const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
   const [restoredSignup, setRestoredSignup] = useState(false);
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
@@ -197,52 +192,12 @@ export const KandieEventPage: React.FC = () => {
       if (!slug) return;
 
       try {
-        setLoading(true);
-        setNotFound(false);
+        const event = await getKandieEventBySlug(slug);
 
-        const seriesEvent = await getKandieEventBySlug(slug);
-
-        if (!seriesEvent) {
+        if (!event) {
           console.error('Event not found for slug:', slug);
-          setNotFound(true);
           setLoading(false);
           return;
-        }
-
-        const isRepeating = Boolean(seriesEvent.eventDetails?.repeatingEvent);
-        const hasRouteDate = Boolean(yy && mm && dd);
-
-        let eventToRender = seriesEvent;
-
-        if (hasRouteDate) {
-          const yyNum = Number(yy);
-          const mmNum = Number(mm);
-          const ddNum = Number(dd);
-
-          if (!Number.isFinite(yyNum) || !Number.isFinite(mmNum) || !Number.isFinite(ddNum)) {
-            setNotFound(true);
-            setLoading(false);
-            return;
-          }
-
-          const fullYear = yyNum < 100 ? 2000 + yyNum : yyNum;
-          const yyyy = String(fullYear);
-          const occurrenceYmd = `${yyyy}-${String(mmNum).padStart(2, '0')}-${String(ddNum).padStart(2, '0')}`;
-
-          try {
-            const occurrenceEvent = await getKandieEventBySlugAndDate(slug, occurrenceYmd);
-            if (occurrenceEvent) {
-              eventToRender = occurrenceEvent;
-            } else if (isRepeating) {
-              // No occurrence found for this date — show 404.
-              setNotFound(true);
-              setLoading(false);
-              return;
-            }
-          } catch {
-            // Query failed (e.g. schema mismatch) — fall back to base series event.
-            console.error('[KandieEventPage] Occurrence query failed, showing base event');
-          }
         }
 
         // Transform gpxFile from { node: { id } } to string, safely
@@ -265,23 +220,23 @@ export const KandieEventPage: React.FC = () => {
         };
 
         const transformedEvent: KandieEventData = {
-          ...eventToRender,
+          ...event,
           slug, // ensure slug is always present
-          databaseId: eventToRender.databaseId || '0', // fallback if undefined
-          eventDetails: eventToRender.eventDetails
+          databaseId: event.databaseId || '0', // fallback if undefined
+          eventDetails: event.eventDetails
             ? {
-                ...eventToRender.eventDetails,
+                ...event.eventDetails,
                 level1: transformLevel(
-                  eventToRender.eventDetails.level1 as import('../../lib/events').RideLevel
+                  event.eventDetails.level1 as import('../../lib/events').RideLevel
                 ),
                 level2: transformLevel(
-                  eventToRender.eventDetails.level2 as import('../../lib/events').RideLevel
+                  event.eventDetails.level2 as import('../../lib/events').RideLevel
                 ),
                 level2plus: transformLevel(
-                  eventToRender.eventDetails.level2plus as import('../../lib/events').RideLevel
+                  event.eventDetails.level2plus as import('../../lib/events').RideLevel
                 ),
                 level3: transformLevel(
-                  eventToRender.eventDetails.level3 as import('../../lib/events').RideLevel
+                  event.eventDetails.level3 as import('../../lib/events').RideLevel
                 ),
               }
             : undefined,
@@ -294,7 +249,7 @@ export const KandieEventPage: React.FC = () => {
     };
 
     fetchEvent();
-  }, [slug, yy, mm, dd]);
+  }, [slug]);
 
   useEffect(() => {
     if (!eventData?.databaseId) return;
@@ -360,25 +315,10 @@ export const KandieEventPage: React.FC = () => {
     }
   }, [eventData, user, openEventSignup, restoredSignup]);
 
-  if (loading) {
+  if (loading || !eventData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-secondary-purple-rain" />
-      </div>
-    );
-  }
-
-  if (notFound || !eventData) {
-    return (
-      <div className="min-h-screen pt-32 md:pt-40 pb-24 flex flex-col items-center justify-center bg-white">
-        <p className="text-slate-500 mb-6">Event not found.</p>
-        <Link
-          to="/community"
-          className="inline-flex items-center gap-2 text-secondary-purple-rain font-bold hover:underline"
-        >
-          <span className="inline-block w-4 h-4" aria-hidden />
-          Back to Community
-        </Link>
       </div>
     );
   }
@@ -686,43 +626,6 @@ export const KandieEventPage: React.FC = () => {
   const eventDate = eventDateValue ? new Date(eventDateValue) : null;
   const eventDatePart = eventDateValue.split('T')[0];
   const eventDateForWeekday = eventDatePart ? new Date(`${eventDatePart}T12:00:00`) : null;
-
-  const urlOccurrenceDate = (() => {
-    if (!yy || !mm || !dd) return null;
-    const yyNum = Number(yy);
-    const mmNum = Number(mm);
-    const ddNum = Number(dd);
-    if (!Number.isFinite(yyNum) || !Number.isFinite(mmNum) || !Number.isFinite(ddNum)) return null;
-
-    // Routes currently encode a 2-digit year (e.g. "26") from `getFullYear().slice(2)`.
-    const fullYear = yyNum < 100 ? 2000 + yyNum : yyNum;
-    if (mmNum < 1 || mmNum > 12) return null;
-    if (ddNum < 1 || ddNum > 31) return null;
-
-    // Use local noon to avoid off-by-one-day shifts from timezone conversions.
-    const candidate = new Date(fullYear, mmNum - 1, ddNum, 12, 0, 0, 0);
-    return Number.isNaN(candidate.getTime()) ? null : candidate;
-  })();
-
-  const shouldUseUrlOccurrenceDate = (() => {
-    if (!urlOccurrenceDate) return false;
-
-    // Prefer URL date for repeating events.
-    if (Boolean(eventDetails?.repeatingEvent)) return true;
-
-    // Fallback: if the URL date differs from the WP `eventDate` date-part, prefer the URL.
-    // This prevents repeating/series occurrences from showing the base eventDate.
-    const wpDateForCompare = eventDateForWeekday && !Number.isNaN(eventDateForWeekday.getTime()) ? eventDateForWeekday : null;
-    if (!wpDateForCompare) return false;
-
-    const mismatch =
-      wpDateForCompare.getFullYear() !== urlOccurrenceDate.getFullYear() ||
-      wpDateForCompare.getMonth() !== urlOccurrenceDate.getMonth() ||
-      wpDateForCompare.getDate() !== urlOccurrenceDate.getDate();
-
-    return mismatch;
-  })();
-
   const getOrdinal = (day: number) => {
     const mod10 = day % 10;
     const mod100 = day % 100;
@@ -747,19 +650,6 @@ export const KandieEventPage: React.FC = () => {
     weekdayLabel && monthLabel && dayLabel && yearLabel
       ? `${weekdayLabel}, ${dayLabel} ${monthLabel}, ${yearLabel}`
       : eventDateValue;
-
-  const urlDateLabel =
-    urlOccurrenceDate && shouldUseUrlOccurrenceDate
-      ? (() => {
-          const weekday = urlOccurrenceDate.toLocaleDateString([], { weekday: 'short' });
-          const month = urlOccurrenceDate.toLocaleDateString([], { month: 'long' });
-          const day = getOrdinal(urlOccurrenceDate.getDate());
-          const year = String(urlOccurrenceDate.getFullYear());
-          return `${weekday}, ${day} ${month}, ${year}`;
-        })()
-      : null;
-
-  const effectiveDateLabel = urlDateLabel ?? dateLabel;
   const timeLabel = eventDetails?.workshopStartTime?.trim() || eventDetails?.rideTime?.trim();
   const meetingPoint = eventDetails?.meetingPoint;
   const locationName = meetingPoint?.name || '';
@@ -988,7 +878,7 @@ export const KandieEventPage: React.FC = () => {
               <aside className="order-1 lg:order-2 w-full lg:flex-1 min-w-0 lg:self-start lg:sticky lg:top-28 h-fit">
                 <div>
                   <EventSidebarCard
-                    date={effectiveDateLabel}
+                    date={dateLabel}
                     time={timeLabel}
                     location={locationLabel}
                     category={rideCategory || undefined}

@@ -1256,7 +1256,6 @@ export interface EventDetailsMetadata {
   workshopCapacity?: number;
   workshopStartTime?: string;
   rideCategory?: string;
-  repeatUntil?: string; // ISO date string for recurring events
   level1?: RideLevel;
   level2?: RideLevel;
   level2plus?: RideLevel;
@@ -1347,118 +1346,6 @@ export async function getKandieEventBySlug(slug: string): Promise<WPRideEvent | 
   } catch (error) {
     console.error(`[Event] Failed to fetch event with slug "${slug}":`, error);
     return null;
-  }
-}
-
-type WPGuideNode = {
-  databaseId: string | number;
-  title: string;
-  featuredImage?: { node: { sourceUrl: string; altText?: string } };
-};
-
-type WPOccurrenceDetails = {
-  occurrenceDate?: string;
-  occurrenceLevel1Guides?: { nodes?: WPGuideNode[] };
-  occurrenceLevel2Guides?: { nodes?: WPGuideNode[] };
-  occurrenceLevel2plusGuides?: { nodes?: WPGuideNode[] };
-  occurrenceLevel3Guides?: { nodes?: WPGuideNode[] };
-  occurrenceGravelGuides?: { nodes?: WPGuideNode[] };
-};
-
-type WPRideEventWithOccurrence = WPRideEvent & {
-  occurrenceByDate?: {
-    databaseId: string;
-    featuredImage?: { node: { sourceUrl: string; altText?: string } };
-    occurrenceDetails?: WPOccurrenceDetails;
-  } | null;
-};
-
-/**
- * Fetch a series event by slug AND its specific occurrence by date (Y-m-d).
- * Hard requirement: returns null if the occurrence does not exist.
- *
- * Guides are overridden from the occurrence so week-by-week guide changes render correctly
- * while keeping the series slug stable in URLs.
- */
-export async function getKandieEventBySlugAndDate(
-  slug: string,
-  date: string
-): Promise<WPRideEvent | null> {
-  try {
-    const { GET_KANDIE_EVENT_WITH_OCCURRENCE_QUERY } = await import('./graphql/communityEvents.ts');
-    const data = await wpQuery<{ rideEvent: WPRideEventWithOccurrence | null }>(
-      GET_KANDIE_EVENT_WITH_OCCURRENCE_QUERY,
-      { slug, date },
-      { useCache: true }
-    );
-
-    const rideEvent = data.rideEvent ?? null;
-    const occurrence = rideEvent?.occurrenceByDate ?? null;
-    const occurrenceDetails = occurrence?.occurrenceDetails ?? null;
-
-    if (!rideEvent || !occurrenceDetails) return null;
-
-    const baseDetails = rideEvent.eventDetails;
-    if (!baseDetails) return null;
-
-    const rideCategoryRaw = baseDetails.rideCategory;
-    const rideCategory = (Array.isArray(rideCategoryRaw) ? rideCategoryRaw[0] : rideCategoryRaw) || '';
-    const isGravel = String(rideCategory).toLowerCase().includes('gravel');
-
-    const guidesOrEmpty = (nodes?: WPGuideNode[]) => ({ nodes: nodes ?? [] });
-
-    // Build a new eventDetails object with occurrence-level guide overrides.
-    const mergedDetails: EventDetailsMetadata = {
-      ...baseDetails,
-      // For gravel rides, guides live on the gravel field (no levels).
-      gravelGuides: isGravel
-        ? guidesOrEmpty(occurrenceDetails.occurrenceGravelGuides?.nodes)
-        : baseDetails.gravelGuides,
-      // For non-gravel rides, guides are per level.
-      level1: isGravel
-        ? baseDetails.level1
-        : {
-            ...(baseDetails.level1 ?? {}),
-            guides: guidesOrEmpty(occurrenceDetails.occurrenceLevel1Guides?.nodes),
-          },
-      level2: isGravel
-        ? baseDetails.level2
-        : {
-            ...(baseDetails.level2 ?? {}),
-            guides: guidesOrEmpty(occurrenceDetails.occurrenceLevel2Guides?.nodes),
-          },
-      level2plus: isGravel
-        ? baseDetails.level2plus
-        : {
-            ...(baseDetails.level2plus ?? {}),
-            guides: guidesOrEmpty(occurrenceDetails.occurrenceLevel2plusGuides?.nodes),
-          },
-      level3: isGravel
-        ? baseDetails.level3
-        : {
-            ...(baseDetails.level3 ?? {}),
-            guides: guidesOrEmpty(occurrenceDetails.occurrenceLevel3Guides?.nodes),
-          },
-    };
-
-    // Keep the eventDate anchored to the requested occurrence date (midday UTC to avoid TZ shifts downstream).
-    // This makes downstream UI (and URL generation) consistent with the occurrence.
-    mergedDetails.eventDate = `${date}T12:00:00.000Z`;
-
-    const { occurrenceByDate: _occ, ...rest } = rideEvent;
-    return {
-      ...(rest as WPRideEvent),
-      ...(occurrence?.featuredImage ? { featuredImage: occurrence.featuredImage } : {}),
-      eventDetails: mergedDetails,
-    };
-  } catch (error) {
-    console.error(
-      `[Event] Failed to fetch event occurrence for slug "${slug}" date "${date}":`,
-      error
-    );
-    // Re-throw so the caller can distinguish a query failure (show base event)
-    // from a missing occurrence (show 404).
-    throw error;
   }
 }
 
