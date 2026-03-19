@@ -1358,7 +1358,6 @@ type WPGuideNode = {
 
 type WPOccurrenceDetails = {
   occurrenceDate?: string;
-  occurrenceImage?: string;
   occurrenceLevel1Guides?: { nodes?: WPGuideNode[] };
   occurrenceLevel2Guides?: { nodes?: WPGuideNode[] };
   occurrenceLevel2plusGuides?: { nodes?: WPGuideNode[] };
@@ -1369,6 +1368,7 @@ type WPOccurrenceDetails = {
 type WPRideEventWithOccurrence = WPRideEvent & {
   occurrenceByDate?: {
     databaseId: string;
+    featuredImage?: { node: { sourceUrl: string; altText?: string } };
     occurrenceDetails?: WPOccurrenceDetails;
   } | null;
 };
@@ -1446,12 +1446,9 @@ export async function getKandieEventBySlugAndDate(
     mergedDetails.eventDate = `${date}T12:00:00.000Z`;
 
     const { occurrenceByDate: _occ, ...rest } = rideEvent;
-    const occurrenceImageUrl = occurrenceDetails.occurrenceImage;
     return {
       ...(rest as WPRideEvent),
-      ...(occurrenceImageUrl
-        ? { featuredImage: { node: { sourceUrl: occurrenceImageUrl, altText: '' } } }
-        : {}),
+      ...(occurrence?.featuredImage ? { featuredImage: occurrence.featuredImage } : {}),
       eventDetails: mergedDetails,
     };
   } catch (error) {
@@ -1459,7 +1456,9 @@ export async function getKandieEventBySlugAndDate(
       `[Event] Failed to fetch event occurrence for slug "${slug}" date "${date}":`,
       error
     );
-    return null;
+    // Re-throw so the caller can distinguish a query failure (show base event)
+    // from a missing occurrence (show 404).
+    throw error;
   }
 }
 

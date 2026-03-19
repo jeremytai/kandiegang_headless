@@ -229,14 +229,19 @@ export const KandieEventPage: React.FC = () => {
           const yyyy = String(fullYear);
           const occurrenceYmd = `${yyyy}-${String(mmNum).padStart(2, '0')}-${String(ddNum).padStart(2, '0')}`;
 
-          const occurrenceEvent = await getKandieEventBySlugAndDate(slug, occurrenceYmd);
-          if (occurrenceEvent) {
-            eventToRender = occurrenceEvent;
-          } else if (isRepeating) {
-            // Hard requirement: repeating events must have an occurrence for the URL date.
-            setNotFound(true);
-            setLoading(false);
-            return;
+          try {
+            const occurrenceEvent = await getKandieEventBySlugAndDate(slug, occurrenceYmd);
+            if (occurrenceEvent) {
+              eventToRender = occurrenceEvent;
+            } else if (isRepeating) {
+              // No occurrence found for this date — show 404.
+              setNotFound(true);
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // Query failed (e.g. schema mismatch) — fall back to base series event.
+            console.error('[KandieEventPage] Occurrence query failed, showing base event');
           }
         }
 
