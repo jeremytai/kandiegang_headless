@@ -153,6 +153,11 @@ async function loadUserAndProfile(): Promise<{
   // Keep auth_providers in sync so settings can show connected accounts
   await syncAuthProvidersForUser(user);
 
+  // Merge profile data (is_guide, membership, etc.) from any other account with the same email.
+  // Handles the case where Discord OAuth created a second auth user instead of linking to an
+  // existing email account. No-op when there is nothing to merge.
+  await supabase.rpc('merge_profile_by_email', { p_user_id: user.id });
+
   const { data: raw, error: profileError } = await supabase
     .from('profiles')
     .select('*')
