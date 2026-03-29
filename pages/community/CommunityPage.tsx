@@ -228,10 +228,10 @@ export const CommunityPage: React.FC = () => {
 
           {/* Events display: next (soonest upcoming) event always above ThreeThingsToDo */}
           {!loading && events.length > 0 && (() => {
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
+            const cetFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' });
+            const todayCET = cetFmt.format(new Date());
             const upcoming = events.filter(
-              (e) => new Date(e.startDate).getTime() >= todayStart.getTime()
+              (e) => cetFmt.format(new Date(e.startDate)) >= todayCET
             );
             return (
               <>
