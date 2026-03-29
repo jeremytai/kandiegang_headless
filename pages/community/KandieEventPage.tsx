@@ -54,6 +54,12 @@ export const KandieEventPage: React.FC = () => {
   } | null>(null);
   const [guideCancelReason, setGuideCancelReason] = useState('');
   const [guideCancelLoading, setGuideCancelLoading] = useState(false);
+  const [guideMessageTarget, setGuideMessageTarget] = useState<{
+    levelKey: string;
+    label: string;
+  } | null>(null);
+  const [guideMessageText, setGuideMessageText] = useState('');
+  const [guideMessageLoading, setGuideMessageLoading] = useState(false);
 
   // Dynamic page meta and Open Graph tags for event sharing.
   // Always call this hook (even before data is loaded) to keep hook order stable.
@@ -622,6 +628,41 @@ export const KandieEventPage: React.FC = () => {
     }
   };
 
+  const handleGuideMessageParticipants = async (levelKey: string, message: string) => {
+    if (!supabase || !eventData?.databaseId) return;
+    setGuideMessageLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        toast.error('You must be logged in to message participants.');
+        return;
+      }
+      const response = await fetch('/api/event', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ action: 'guide-message-participants', eventId: eventData.databaseId, rideLevel: levelKey, message }),
+      });
+      if (response.ok) {
+        const json = await response.json().catch(() => ({}));
+        const count = (json as { emailsSent?: number })?.emailsSent ?? 0;
+        toast.success(`Message sent to ${count} participant${count !== 1 ? 's' : ''}.`);
+        setGuideMessageTarget(null);
+        setGuideMessageText('');
+      } else {
+        const json = await response.json().catch(() => ({}));
+        toast.error((json as { error?: string })?.error || 'Failed to send message.');
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setGuideMessageLoading(false);
+    }
+  };
+
   const eventDateValue = eventDetails?.eventDate || '';
   const eventDate = eventDateValue ? new Date(eventDateValue) : null;
   const eventDatePart = eventDateValue.split('T')[0];
@@ -771,22 +812,33 @@ export const KandieEventPage: React.FC = () => {
                                 )}
                               </div>
                             )}
-                            <div className="mt-4">
+                            <div className="mt-4 flex flex-col gap-2">
                               {cancellation ? (
                                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
                                   <p className="text-sm font-medium text-red-700">Ride cancelled</p>
                                   <p className="text-sm text-red-600 mt-1">{cancellation.reason}</p>
                                 </div>
                               ) : (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setGuideCancelTarget({ levelKey: level.levelKey, label: level.label })
-                                  }
-                                  className="text-sm text-red-500 hover:text-red-700 hover:underline"
-                                >
-                                  Cancel this ride
-                                </button>
+                                <div className="flex items-center gap-4">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setGuideMessageTarget({ levelKey: level.levelKey, label: level.label })
+                                    }
+                                    className="rounded-full border border-secondary-purple-rain px-3 py-1.5 text-xs font-semibold text-secondary-purple-rain hover:bg-secondary-purple-rain hover:text-white transition-colors"
+                                  >
+                                    Message participants
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setGuideCancelTarget({ levelKey: level.levelKey, label: level.label })
+                                    }
+                                    className="text-sm text-red-500 hover:text-red-700 hover:underline"
+                                  >
+                                    Cancel this ride
+                                  </button>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -794,6 +846,73 @@ export const KandieEventPage: React.FC = () => {
                       })}
                     </div>
                   </section>
+                )}
+                {/* Guide message participants modal */}
+                {guideMessageTarget && (
+                  <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Message participants"
+                    onClick={() => {
+                      if (!guideMessageLoading) {
+                        setGuideMessageTarget(null);
+                        setGuideMessageText('');
+                      }
+                    }}
+                  >
+                    <div
+                      className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <h3 className="text-lg font-semibold text-primary-ink">
+                        Message {guideMessageTarget.label} participants
+                      </h3>
+                      <p className="mt-2 text-sm text-slate-600">
+                        Your message will be emailed to everyone signed up for this ride level.
+                      </p>
+                      <div className="mt-4">
+                        <label
+                          htmlFor="guide-message-text"
+                          className="block text-xs tracking-[0.08em] text-secondary-purple-rain mb-2"
+                        >
+                          Message
+                        </label>
+                        <textarea
+                          id="guide-message-text"
+                          value={guideMessageText}
+                          onChange={(e) => setGuideMessageText(e.target.value)}
+                          placeholder="Write your message to participants…"
+                          rows={4}
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-primary-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary-purple-rain/40 resize-none"
+                          disabled={guideMessageLoading}
+                        />
+                      </div>
+                      <div className="mt-4 flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGuideMessageTarget(null);
+                            setGuideMessageText('');
+                          }}
+                          disabled={guideMessageLoading}
+                          className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={guideMessageLoading || guideMessageText.trim().length < 3}
+                          onClick={() =>
+                            handleGuideMessageParticipants(guideMessageTarget.levelKey, guideMessageText.trim())
+                          }
+                          className="rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-semibold text-white hover:bg-secondary-purple-rain/90 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {guideMessageLoading ? 'Sending…' : 'Send message'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
                 {/* Guide cancel ride modal */}
                 {guideCancelTarget && (

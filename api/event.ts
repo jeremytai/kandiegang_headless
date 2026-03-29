@@ -326,6 +326,38 @@ function buildRideCancelledText(eventTitle: string, rideLevel: string, reason: s
   ].join('\n');
 }
 
+function buildGuideMessageHtml(
+  eventTitle: string,
+  rideLevel: string,
+  message: string,
+  eventUrl?: string
+): string {
+  const safeTitle = escapeHtml(eventTitle);
+  const levelLabel = escapeHtml(formatRideLevel(rideLevel));
+  const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
+  const safeUrl = eventUrl ? escapeHtml(eventUrl) : undefined;
+  const pill = safeUrl
+    ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:rgb(255,254,254);background-color:rgb(72,81,151);text-decoration:none;padding:11px 16px 13px;border-radius:9999px;font-weight:bold;">${safeTitle} - ${levelLabel}</a>`
+    : `<span style="display:inline-block;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:rgb(255,254,254);background-color:rgb(72,81,151);padding:11px 16px 13px;border-radius:9999px;font-weight:bold;">${safeTitle} - ${levelLabel}</span>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="margin:0;padding:0;background:rgb(250,250,252);"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width:100%;border-collapse:collapse;margin:0;padding:0;text-align:center;table-layout:fixed;background:rgb(250,250,252);"><tbody><tr><td align="center" style="padding:0;background:rgb(250,250,252);"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width:100%;border-collapse:collapse;margin:0;padding:0;text-align:center;table-layout:fixed;background:rgb(250,250,252);"><tbody><tr><td align="center" style="padding:24px 0px 16px;background:rgb(250,250,252);"><a href="https://kandiegang.com?guidemessage" target="_blank" rel="noopener noreferrer"><img alt="Kandie Gang" width="138" src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" style="display:block;width:138px;max-width:138px;margin:0 auto;"></a></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" align="center" style="width:100%;max-width:602px;border-collapse:separate;background:rgb(255,255,254);border-radius:16px;border:1px solid rgb(221,221,221);margin:0 auto;"><tbody><tr><td align="center" style="padding:40px 0px;border-radius:16px;background:rgb(255,255,254);"><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="center" style="padding:0px 40px 20px;background:rgb(255,255,254);"><h2 style="font-family:RoobertPRO,Helvetica,Arial,sans-serif;font-size:32px;line-height:40px;font-weight:normal;margin:0;color:rgb(72,81,151);">A message from your guide.</h2></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="center" style="padding:0px 40px;background:rgb(255,255,254);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:rgb(28,28,30);margin:0;">Your guide has sent you a message about the following ride:</p></td></tr><tr><td align="center" style="padding:20px 0px 0px;background:rgb(255,255,254);"></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="center" style="padding:0px 40px;background:rgb(255,255,254);"><table border="0" cellpadding="0" cellspacing="0" align="center" style="border-collapse:collapse;"><tbody><tr><td align="center">${pill}</td></tr></tbody></table></td></tr><tr><td align="center" style="padding:20px 0px 0px;background:rgb(255,255,254);"></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="left" style="padding:0px 40px 24px;background:rgb(255,255,254);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:rgb(100,100,105);margin:0 0 4px 0;text-transform:uppercase;letter-spacing:0.08em;">Message</p><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:rgb(28,28,30);margin:0;">${safeMessage}</p></td></tr></tbody></table></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" align="center" style="width:100%;max-width:600px;border-collapse:collapse;margin:0 auto;"><tbody><tr><td align="center" style="padding:60px 0px 0px;background:rgb(250,250,252);"></td></tr><tr><td align="center" style="padding:0px 40px 24px;background:rgb(250,250,252);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;margin:0;color:rgb(28,28,30);">If you have any questions, just reply to this email — we're always happy to help.</p></td></tr><tr><td align="center" style="padding:0px 40px 24px;background:rgb(250,250,252);"><a href="https://kandiegang.com?guidemessage" target="_blank" rel="noopener noreferrer"><img alt="Kandie Gang" width="138" src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" style="display:block;width:138px;max-width:138px;margin:0 auto;"></a></td></tr><tr><td align="center" style="padding:0px 40px;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:rgb(28,28,30);"><span>Kandie Gang<br>It's a love story 💜</span><br><br></td></tr><tr><td align="center" style="padding:0px 40px;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;"><span><a href="https://www.kandiegang.com/privacy-policy?guidemessage" target="_blank" rel="noopener noreferrer" style="font-weight:bold;text-decoration:none;color:rgb(72,81,151);">Privacy Policy</a> | <a href="https://www.kandiegang.com/about?guidemessage" target="_blank" rel="noopener noreferrer" style="font-weight:bold;text-decoration:none;color:rgb(72,81,151);">About Us</a></span></td></tr></tbody></table></td></tr></tbody></table></body></html>`;
+}
+
+function buildGuideMessageText(eventTitle: string, rideLevel: string, message: string): string {
+  return [
+    'A message from your guide',
+    '',
+    'Your guide has sent you a message about the following ride:',
+    `${eventTitle} - ${formatRideLevel(rideLevel)}`,
+    '',
+    'Message:',
+    message,
+    '',
+    "If you have any questions, just reply to this email — we're always happy to help.",
+    '',
+    "Kandie Gang — It's a love story 💜",
+  ].join('\n');
+}
+
 async function handleGuideCancelLevel(req: VercelRequest, res: VercelResponse) {
   const authHeader = req.headers.authorization;
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -441,6 +473,101 @@ async function handleGuideCancelLevel(req: VercelRequest, res: VercelResponse) {
   }
 
   return res.status(200).json({ success: true, cancelledCount: registrationList.length, emailsSent });
+}
+
+async function handleGuideMessageParticipants(req: VercelRequest, res: VercelResponse) {
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!bearerToken) return res.status(401).json({ error: 'Authentication required' });
+
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const {
+    data: { user },
+    error: userError,
+  } = await anonClient.auth.getUser(bearerToken);
+  if (userError || !user) return res.status(401).json({ error: 'Invalid or expired token' });
+
+  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: callerProfile } = await adminClient
+    .from('profiles')
+    .select('is_guide, wp_user_id')
+    .eq('id', user.id)
+    .single();
+
+  if (!callerProfile?.is_guide || !callerProfile?.wp_user_id) {
+    return res.status(403).json({ error: 'Guide access required' });
+  }
+
+  const body = req.body as { eventId?: string | number; rideLevel?: string; message?: string };
+  const eventIdRaw = body?.eventId;
+  const eventId =
+    typeof eventIdRaw === 'string' ? Number(eventIdRaw) : (eventIdRaw as number | undefined);
+  const rideLevel = typeof body?.rideLevel === 'string' ? body.rideLevel.trim() : null;
+  const message = typeof body?.message === 'string' ? body.message.trim() : null;
+
+  if (!eventId || Number.isNaN(eventId)) return res.status(400).json({ error: 'Missing or invalid eventId' });
+  if (!rideLevel) return res.status(400).json({ error: 'Missing rideLevel' });
+  if (!message || message.length < 3) return res.status(400).json({ error: 'A message is required' });
+
+  const guideIds = await fetchLevelGuideIds(eventId, rideLevel);
+  if (guideIds.length > 0 && !guideIds.includes(Number(callerProfile.wp_user_id))) {
+    return res.status(403).json({ error: 'You are not assigned as a guide for this level' });
+  }
+
+  const { data: registrations, error: regsError } = await adminClient
+    .from('registrations')
+    .select('id, user_id, email, first_name, ride_level')
+    .eq('event_id', eventId)
+    .eq('ride_level', rideLevel)
+    .is('cancelled_at', null);
+  if (regsError) {
+    console.error('[guide-message-participants] Registrations fetch error:', regsError);
+    return res.status(500).json({ error: 'Failed to fetch registrations' });
+  }
+
+  const registrationList = registrations ?? [];
+  if (registrationList.length === 0) {
+    return res.status(200).json({ success: true, emailsSent: 0 });
+  }
+
+  const eventTitle = await fetchEventTitle(eventId);
+  const eventUrl = `${BASE_URL}/community`;
+
+  let emailsSent = 0;
+  if (RESEND_API_KEY) {
+    const resend = new Resend(RESEND_API_KEY);
+    const userIds = registrationList.filter((r) => !r.email && r.user_id).map((r) => r.user_id as string);
+    let profileEmails: Record<string, string> = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await adminClient.from('profiles').select('id, email').in('id', userIds);
+      (profiles ?? []).forEach((p) => { if (p.email) profileEmails[p.id] = p.email; });
+    }
+    for (const reg of registrationList) {
+      const to = reg.email ?? (reg.user_id ? profileEmails[reg.user_id] : null);
+      if (!to) continue;
+      try {
+        await resend.emails.send({
+          from: FROM_EMAIL,
+          to,
+          subject: `Message from your guide – ${eventTitle} - ${formatRideLevel(rideLevel)}`,
+          html: buildGuideMessageHtml(eventTitle, rideLevel, message, eventUrl),
+          text: buildGuideMessageText(eventTitle, rideLevel, message),
+        });
+        emailsSent++;
+      } catch (emailErr) {
+        console.warn('[guide-message-participants] Email send error for', to, emailErr);
+      }
+    }
+  }
+
+  return res.status(200).json({ success: true, participantCount: registrationList.length, emailsSent });
 }
 
 // ─── Capacity handler (GET) ───────────────────────────────────────────────────
@@ -953,6 +1080,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === 'signup') return handleSignup(req, res);
     if (action === 'cancel') return handleCancel(req, res);
     if (action === 'guide-cancel-level') return handleGuideCancelLevel(req, res);
+    if (action === 'guide-message-participants') return handleGuideMessageParticipants(req, res);
     return res.status(400).json({ error: 'Invalid or missing action' });
   }
   return res.status(405).json({ error: 'Method not allowed' });

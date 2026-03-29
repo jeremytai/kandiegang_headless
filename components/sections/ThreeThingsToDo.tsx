@@ -124,7 +124,7 @@ export const ThreeThingsToDo: React.FC = () => {
       <div className="col-span-full lg:col-span-6 lg:col-start-7">
         <p className="[&+p]:mt-[1em] font-body text-large text-secondary-current leading-relaxed">
           Damit alle eine sichere und entspannte Zeit haben, bitten wir dich, die folgenden drei
-          Punkte durchzulesen – einschließlich der unterschriebenen Verzichtserklärung..
+          Punkte durchzulesen – einschließlich der unterschriebenen Verzichtserklärung.
         </p>
       </div>
 
