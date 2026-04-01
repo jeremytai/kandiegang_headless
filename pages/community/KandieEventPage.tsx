@@ -761,6 +761,65 @@ export const KandieEventPage: React.FC = () => {
                   </ReactMarkdown>
                   {/* Dev debug helpers removed after verification */}
                 </div>
+                {/* Workshop participants — visible to guides/speakers */}
+                {isWorkshop && (profile?.is_guide || guides.some((g) => String(g.databaseId) === String(profile?.wp_user_id))) && (() => {
+                  const allParticipants = participantsByLevel['workshop'] ?? [];
+                  const confirmed = allParticipants.filter((p) => !p.is_waitlist);
+                  const waitlisted = allParticipants.filter((p) => p.is_waitlist);
+                  return (
+                    <section>
+                      <hr className="border-t border-black/10 mb-10" />
+                      <h2 className="text-2xl font-heading-light tracking-normal text-secondary-purple-rain mb-6">
+                        Participants
+                      </h2>
+                      {allParticipants.length === 0 ? (
+                        <p className="text-sm text-slate-500">No participants yet.</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {confirmed.length > 0 && (
+                            <div>
+                              <p className="text-xs tracking-[0.08em] text-secondary-purple-rain mb-2">
+                                Confirmed ({confirmed.length})
+                              </p>
+                              <ul className="space-y-1">
+                                {confirmed.map((p, i) => (
+                                  <li key={p.user_id || i} className="text-sm text-primary-ink">
+                                    {p.first_name} {p.last_name ? p.last_name.charAt(0) + '.' : ''}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {waitlisted.length > 0 && (
+                            <div>
+                              <p className="text-xs tracking-[0.08em] text-secondary-purple-rain mb-2">
+                                Waitlist ({waitlisted.length})
+                              </p>
+                              <ul className="space-y-1">
+                                {waitlisted.map((p, i) => (
+                                  <li key={p.user_id || i} className="text-sm text-slate-500">
+                                    {p.first_name} {p.last_name ? p.last_name.charAt(0) + '.' : ''}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="mt-4 flex flex-col gap-2">
+                        <div className="flex items-center gap-4">
+                          <button
+                            type="button"
+                            onClick={() => setGuideMessageTarget({ levelKey: 'workshop', label: 'Workshop' })}
+                            className="rounded-full border border-secondary-purple-rain px-3 py-1.5 text-xs font-semibold text-secondary-purple-rain hover:bg-secondary-purple-rain hover:text-white transition-colors"
+                          >
+                            Message participants
+                          </button>
+                        </div>
+                      </div>
+                    </section>
+                  );
+                })()}
                 {/* Participants by guided level — visible to guides only */}
                 {guidedLevels.length > 0 && (
                   <section>
