@@ -31,6 +31,7 @@ export const KandieEventPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [restoredSignup, setRestoredSignup] = useState(false);
   const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
+  const [hasRegistrationCode, setHasRegistrationCode] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [registrations, setRegistrations] = useState<Record<string, { isWaitlist: boolean }>>({});
   const [participantsByLevel, setParticipantsByLevel] = useState<
@@ -153,6 +154,9 @@ export const KandieEventPage: React.FC = () => {
       const data = (await response.json().catch(() => ({}))) as unknown;
       if (data && typeof data === 'object' && 'counts' in data) {
         setCapacityCounts(data.counts as Record<string, number>);
+      }
+      if (data && typeof data === 'object' && 'hasRegistrationCode' in data) {
+        setHasRegistrationCode(Boolean((data as { hasRegistrationCode?: boolean }).hasRegistrationCode));
       }
     } catch {
       // Capacity is optional; ignore errors.
@@ -566,6 +570,7 @@ export const KandieEventPage: React.FC = () => {
       eventType: eventDetails?.primaryType,
       accessNote: signupHelper,
       requiresFlintaAttestation,
+      hasRegistrationCode,
     };
     openEventSignup(intent);
   };

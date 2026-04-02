@@ -14,6 +14,7 @@ export type EventSignupIntent = {
   eventType?: string;
   accessNote?: string;
   requiresFlintaAttestation: boolean;
+  hasRegistrationCode?: boolean;
   firstName?: string;
   lastName?: string;
 };
@@ -52,6 +53,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   const [firstName, setFirstName] = useState(intent.firstName ?? '');
   const [lastName, setLastName] = useState(intent.lastName ?? '');
   const [flintaAttested, setFlintaAttested] = useState(false);
+  const [registrationCode, setRegistrationCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // magicLinkSent is unused, removed
@@ -62,7 +64,10 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   // Derived values
   const hasEmail = email.trim().length > 0;
   const needsFlintaAttestation = intent.requiresFlintaAttestation;
-  const canSubmit = !needsFlintaAttestation || flintaAttested;
+  const needsRegistrationCode = Boolean(intent.hasRegistrationCode);
+  const canSubmit =
+    (!needsFlintaAttestation || flintaAttested) &&
+    (!needsRegistrationCode || registrationCode.trim().length > 0);
   const hasAuthEmail = user?.email && user.email.length > 0;
   const isMember = !!profile?.is_member;
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email || '';
@@ -123,6 +128,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
           lastName: lastName.trim(),
           email: email.trim(),
           turnstileToken: turnstileToken,
+          registrationCode: needsRegistrationCode ? registrationCode.trim() : undefined,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -188,6 +194,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         flintaAttested,
         firstName: !trimmedLast && shouldSkipNameEntry ? (profile?.display_name ?? trimmedFirst) : trimmedFirst,
         lastName: trimmedLast,
+        registrationCode: needsRegistrationCode ? registrationCode.trim() : undefined,
       };
       const response = await fetch('/api/event', {
         method: 'POST',
@@ -322,6 +329,24 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
             />
           </div>
 
+          {needsRegistrationCode && (
+            <div>
+              <label htmlFor="event-signup-reg-code" className={labelClass}>
+                Registration code
+              </label>
+              <input
+                id="event-signup-reg-code"
+                type="text"
+                required
+                className={inputClass}
+                value={registrationCode}
+                onChange={(e) => setRegistrationCode(e.target.value)}
+                placeholder="Enter the event code"
+                autoComplete="off"
+              />
+            </div>
+          )}
+
           {needsFlintaAttestation && (
             <label className="flex items-start gap-3 text-sm text-slate-700">
               <input
@@ -442,6 +467,24 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
           <p className="font-semibold mb-1">Heads up</p>
           <p>You are signing up as a guest (not a current member).</p>
+        </div>
+      )}
+
+      {needsRegistrationCode && (
+        <div>
+          <label htmlFor="event-confirm-reg-code" className={labelClass}>
+            Registration code
+          </label>
+          <input
+            id="event-confirm-reg-code"
+            type="text"
+            required
+            className={inputClass}
+            value={registrationCode}
+            onChange={(e) => setRegistrationCode(e.target.value)}
+            placeholder="Enter the event code"
+            autoComplete="off"
+          />
         </div>
       )}
 

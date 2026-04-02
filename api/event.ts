@@ -122,10 +122,11 @@ type EventAccessData = {
   isFlintaOnly?: boolean | null;
   workshopCapacity?: number | null;
   guideCounts: Record<string, number>;
+  registrationCode?: string | null;
 };
 
 async function fetchEventAccessData(eventId: number): Promise<EventAccessData | null> {
-  const query = `query GetRideEventAccess($id: ID!) { rideEvent(id: $id, idType: DATABASE_ID) { publicReleaseDate eventDetails { isFlintaOnly workshopCapacity level1 { guides { nodes { id } } } level2 { guides { nodes { id } } } level2plus { guides { nodes { id } } } level3 { guides { nodes { id } } } gravelGuides { nodes { id } } } } }`;
+  const query = `query GetRideEventAccess($id: ID!) { rideEvent(id: $id, idType: DATABASE_ID) { publicReleaseDate eventDetails { isFlintaOnly workshopCapacity registrationCode level1 { guides { nodes { id } } } level2 { guides { nodes { id } } } level2plus { guides { nodes { id } } } level3 { guides { nodes { id } } } gravelGuides { nodes { id } } } } }`;
   const response = await fetch(WP_GRAPHQL_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -152,6 +153,10 @@ async function fetchEventAccessData(eventId: number): Promise<EventAccessData | 
     workshopCapacity:
       typeof details.workshopCapacity === 'number' ? details.workshopCapacity : null,
     guideCounts,
+    registrationCode:
+      typeof details.registrationCode === 'string' && details.registrationCode.trim()
+        ? details.registrationCode.trim()
+        : null,
   };
 }
 
@@ -612,7 +617,15 @@ async function handleCapacity(req: VercelRequest, res: VercelResponse) {
       counts[level] = (counts[level] ?? 0) + 1;
     });
 
-    return res.status(200).json({ eventId: eventIdNumber, total: rows.length, counts });
+    let hasRegistrationCode = false;
+    try {
+      const access = await fetchEventAccessData(eventIdNumber);
+      hasRegistrationCode = Boolean(access?.registrationCode);
+    } catch {
+      // Non-fatal; capacity data is still useful without this
+    }
+
+    return res.status(200).json({ eventId: eventIdNumber, total: rows.length, counts, hasRegistrationCode });
   } catch (err) {
     console.error('[event-capacity] Error:', err);
     return res.status(500).json({ error: 'Failed to load capacity' });
@@ -632,6 +645,7 @@ type EventSignupBody = {
   lastName?: string;
   email?: string;
   turnstileToken?: string;
+  registrationCode?: string;
 };
 
 async function handleSignup(req: VercelRequest, res: VercelResponse) {
@@ -749,6 +763,17 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
     const isFlintaOnly = Boolean(access.isFlintaOnly);
     if (isFlintaOnly && !flintaAttested) {
       return res.status(403).json({ error: 'This event is FLINTA only.' });
+    }
+
+    if (access.registrationCode) {
+      const submitted =
+        typeof body?.registrationCode === 'string' ? body.registrationCode.trim() : '';
+      if (!submitted) {
+        return res.status(403).json({ error: 'A registration code is required for this event.' });
+      }
+      if (submitted.toLowerCase() !== access.registrationCode.toLowerCase()) {
+        return res.status(403).json({ error: 'Incorrect registration code.' });
+      }
     }
 
     const now = new Date();
