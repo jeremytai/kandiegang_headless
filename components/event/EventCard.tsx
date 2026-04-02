@@ -16,6 +16,8 @@ export interface EventCardProps {
   days: string;
   month: string;
   location: string;
+  /** When true, bottom rule is hidden from `md` up only; mobile still shows it (e.g. before ThreeThingsToDo). */
+  hideBottomBorder?: boolean;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({
@@ -29,12 +31,17 @@ export const EventCard: React.FC<EventCardProps> = ({
   days,
   month,
   location,
+  hideBottomBorder,
 }) => {
   const imageUrl =
     externalImageUrl || (imageBase ? imageSrc(imageBase, 800) : '/images/fallback-event.jpg');
   const isExternal = /^https?:\/\//i.test(href);
-  const linkClassName =
-    'group relative grid grid-cols-[160px_1fr] md:grid-cols-[180px_minmax(0,1fr)_auto] gap-x-4 gap-y-4 md:gap-6 items-stretch border-b border-primary-ink/[0.06] pl-0 pr-4 pt-6 pb-10 md:pr-8 md:pt-8 md:pb-12 text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-drift focus-visible:ring-offset-2 focus-visible:ring-offset-primary-breath';
+  const linkClassName = [
+    'group relative grid grid-cols-[160px_1fr] md:grid-cols-[180px_minmax(0,1fr)_auto] gap-x-4 gap-y-4 md:gap-6 items-stretch pl-0 pr-4 pt-6 pb-10 md:pr-8 md:pt-8 md:pb-12 text-inherit no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-drift focus-visible:ring-offset-2 focus-visible:ring-offset-primary-breath',
+    hideBottomBorder
+      ? 'border-b border-primary-ink/[0.06] md:border-b-0'
+      : 'border-b border-primary-ink/[0.06]',
+  ].join(' ');
 
   const linkContent = (
     <>

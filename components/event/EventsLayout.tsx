@@ -11,9 +11,15 @@ interface EventsLayoutProps {
   events: EventsLayoutEvent[];
   /** When true, renders a top border (e.g. for event blocks that are not the first on the page). */
   showTopBorder?: boolean;
+  /** When true, hero card has no bottom border from `md` up; mobile keeps the divider before ThreeThingsToDo. */
+  omitHeroBottomBorder?: boolean;
 }
 
-export const EventsLayout: React.FC<EventsLayoutProps> = ({ events, showTopBorder }) => {
+export const EventsLayout: React.FC<EventsLayoutProps> = ({
+  events,
+  showTopBorder,
+  omitHeroBottomBorder,
+}) => {
   const now = new Date();
 
   const cetDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(now);
@@ -42,7 +48,7 @@ export const EventsLayout: React.FC<EventsLayoutProps> = ({ events, showTopBorde
     >
       {nextEvent && (
         <div className="w-full">
-          <EventCard {...nextEvent} />
+          <EventCard {...nextEvent} hideBottomBorder={omitHeroBottomBorder} />
         </div>
       )}
 

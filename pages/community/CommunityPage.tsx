@@ -83,6 +83,31 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();
 }
 
+/** YYYY-MM in Europe/Berlin, for comparing calendar months */
+function yearMonthKeyCET(isoDate: string): string {
+  const d = new Date(isoDate);
+  if (Number.isNaN(d.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Berlin',
+    year: 'numeric',
+    month: '2-digit',
+  }).formatToParts(d);
+  const y = parts.find((p) => p.type === 'year')?.value ?? '';
+  const m = parts.find((p) => p.type === 'month')?.value ?? '';
+  return `${y}-${m}`;
+}
+
+function currentYearMonthKeyCET(): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Berlin',
+    year: 'numeric',
+    month: '2-digit',
+  }).formatToParts(new Date());
+  const y = parts.find((p) => p.type === 'year')?.value ?? '';
+  const m = parts.find((p) => p.type === 'month')?.value ?? '';
+  return `${y}-${m}`;
+}
+
 /**
  * Transform WordPress RideEvent to EventsLayoutEvent
  */
@@ -226,24 +251,48 @@ export const CommunityPage: React.FC = () => {
             </div>
           )}
 
-          {/* Events display: next (soonest upcoming) event always above ThreeThingsToDo */}
+          {/* Current month: first event, then ThreeThingsToDo, then remaining events */}
           {!loading && events.length > 0 && (() => {
             const cetFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' });
             const todayCET = cetFmt.format(new Date());
             const upcoming = events.filter(
               (e) => cetFmt.format(new Date(e.startDate)) >= todayCET
             );
+            const ym = currentYearMonthKeyCET();
+            const thisMonthUpcoming = upcoming.filter(
+              (e) => yearMonthKeyCET(e.startDate) === ym
+            );
+            const monthTitle = new Intl.DateTimeFormat('en-US', {
+              timeZone: 'Europe/Berlin',
+              month: 'long',
+              year: 'numeric',
+            }).format(new Date());
+
             return (
               <>
-                <EventsLayout events={upcoming.length > 0 ? [upcoming[0]] : []} />
-                <ThreeThingsToDo />
-                {upcoming.slice(1, 7).map((event, index) => (
-                  <EventsLayout
-                    key={event.id}
-                    events={[event]}
-                    showTopBorder={index === 0}
-                  />
-                ))}
+                {thisMonthUpcoming.length > 0 ? (
+                  <div className="space-y-6">
+                    <h2 className="text-2xl md:text-3xl font-heading-light text-secondary-purple-rain tracking-tight">
+                      Upcoming in {monthTitle}
+                    </h2>
+                    <EventsLayout events={[thisMonthUpcoming[0]]} omitHeroBottomBorder />
+                    <ThreeThingsToDo />
+                    {thisMonthUpcoming.slice(1).map((event, index) => (
+                      <EventsLayout
+                        key={event.id}
+                        events={[event]}
+                        showTopBorder={index === 0}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-lg text-primary-ink/80 font-light">
+                      No more events scheduled this month. Check back soon or join us on Discord for updates.
+                    </p>
+                    <ThreeThingsToDo />
+                  </>
+                )}
               </>
             );
           })()}
