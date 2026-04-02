@@ -107,6 +107,11 @@ const AnalyticsDashboardPage = lazy(() =>
     default: m.AnalyticsDashboardPage,
   }))
 );
+const GuideAnalyticsPage = lazy(() =>
+  import('./pages/guide/GuideAnalyticsPage').then((m) => ({
+    default: m.GuideAnalyticsPage,
+  }))
+);
 const SignUpPage = lazy(() =>
   import('./pages/members/SignUpPage').then((m) => ({ default: m.SignUpPage }))
 );
@@ -358,6 +363,7 @@ const App: React.FC = () => {
                           <Route path="/event/cancel" element={<EventCancelPage />} />
                           <Route path="/admin/waitlist" element={<WaitlistAdminPage />} />
                           <Route path="/admin/analytics" element={<AnalyticsDashboardPage />} />
+                          <Route path="/guide/analytics" element={<GuideAnalyticsPage />} />
                           <Route path="/signup" element={<SignUpPage />} />
                           <Route path="/members" element={<MembersAreaPage />} />
                           <Route path="/members/settings" element={<MembersSettingsPage />} />
