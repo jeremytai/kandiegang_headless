@@ -29,7 +29,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({
   if (dismissed) return null;
 
   const content = (
-    <span className="font-body text-[11px] md:text-xs font-normal tracking-wide leading-none text-slate-600">
+    <span className="font-body text-[11px] md:text-xs font-normal tracking-wide leading-none text-primary-breath">
       {message}
     </span>
   );
@@ -45,7 +45,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({
           {href ? (
             <a
               href={href}
-              className="hover:underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black rounded"
+              className="text-primary-breath hover:underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black rounded"
             >
               {content}
             </a>

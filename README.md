@@ -781,4 +781,20 @@ To ensure only the correct guides can view participants for an event level, the 
 
 > **Note:** You must have the correct Supabase service role key and URL in your environment variables or pass them inline as shown above.
 
+### Pending: guides missing WordPress ride_guide posts
+
+The following guides have `is_guide: true` in Supabase but no `ride_guide` post in WordPress, so they cannot see event participants. Each needs a ride_guide post created in WP Admin → Ride Guides → Add New, then their `wp_user_id` in Supabase updated to the new post's databaseId.
+
+| Name | Supabase email | Current wp\_user\_id |
+| --- | --- | --- |
+| Benjamin N. | `benjamin@digitalsalat.de` | null |
+| Annette Eicker | `annette.eicker@gmx.de` | 3 (wrong — old WP user ID) |
+
+Once the WP posts are created, update each profile via the Supabase dashboard or REST API:
+
+```http
+PATCH /rest/v1/profiles?id=eq.<supabase_user_id>
+{ "wp_user_id": <new_ride_guide_databaseId> }
+```
+
 ---
