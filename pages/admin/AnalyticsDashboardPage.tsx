@@ -32,6 +32,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<MetricFilter>('all');
   const [showEventBreakdown, setShowEventBreakdown] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
+  const eventParticipationBreakdownRef = useRef<HTMLDivElement>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
 
@@ -76,6 +77,22 @@ export const AnalyticsDashboardPage: React.FC = () => {
         100
       );
     }
+  };
+
+  const toggleEventParticipationBreakdown = () => {
+    setShowEventBreakdown((shown) => {
+      if (!shown) {
+        setTimeout(
+          () =>
+            eventParticipationBreakdownRef.current?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            }),
+          100
+        );
+      }
+      return !shown;
+    });
   };
 
   const filteredMembers = useMemo(() => {
@@ -207,18 +224,20 @@ export const AnalyticsDashboardPage: React.FC = () => {
                 subtitle="Lifetime revenue"
                 active={activeFilter === 'has_ltv'}
                 onClick={() => toggleFilter('has_ltv')}
+                sensitiveValue
               />
               <MetricCard
                 title="Average LTV"
                 value={`€${(metrics?.avgLTV || 0).toFixed(2)}`}
                 subtitle="Per member"
+                sensitiveValue
               />
               <MetricCard
                 title="Event Participation"
                 value={members.filter((m) => (m.event_participation_count || 0) > 0).length}
                 subtitle={`${metrics?.totalEventParticipation || 0} total signups`}
                 active={showEventBreakdown}
-                onClick={() => setShowEventBreakdown((v) => !v)}
+                onClick={toggleEventParticipationBreakdown}
               />
             </div>
 
@@ -258,8 +277,13 @@ export const AnalyticsDashboardPage: React.FC = () => {
               <MemberTable members={filteredMembers} />
             </div>
 
-            {/* Section 5: Event Participation (shown on demand) */}
-            {showEventBreakdown && <EventParticipationTable />}
+            {/* Section 5: Event Participation — Breakdown table (scroll target from metric card) */}
+            <div
+              ref={eventParticipationBreakdownRef}
+              className="scroll-mt-28 md:scroll-mt-40"
+            >
+              {showEventBreakdown && <EventParticipationTable />}
+            </div>
           </div>
         )}
       </div>
