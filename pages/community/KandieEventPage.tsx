@@ -74,7 +74,12 @@ export const KandieEventPage: React.FC = () => {
     ? transformMediaUrl(eventData.featuredImage.node.sourceUrl)
     : null;
 
-  usePageMeta(pageTitle, ogDescription, ogImageUrl);
+  const eventPageUrl =
+    eventData && yy && mm && dd && slug && typeof window !== 'undefined'
+      ? `${window.location.origin}/event/${yy}/${mm}/${dd}/${slug}`
+      : null;
+
+  usePageMeta(pageTitle, ogDescription, ogImageUrl, eventPageUrl);
   // Fetch all participants for the event and group by ride_level
   const refreshParticipantsByLevel = useCallback(async () => {
     if (!eventData?.databaseId || !supabase) return;

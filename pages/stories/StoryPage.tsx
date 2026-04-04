@@ -5,7 +5,7 @@
  * Route: /story/:slug (e.g. /story/kandie-gang-season-opener-2025)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowLeft } from 'lucide-react';
@@ -114,12 +114,31 @@ export const StoryPage: React.FC = () => {
     };
   }, [slug]);
 
+  const shareDescription = useMemo(() => {
+    if (!post) return null;
+    const fromExcerpt = stripHtml(post.excerpt || '').trim();
+    if (fromExcerpt) return fromExcerpt;
+    if (post.content) {
+      const plain = stripHtml(post.content).replace(/\s+/g, ' ').trim();
+      if (plain) return plain.length > 280 ? `${plain.slice(0, 277)}…` : plain;
+    }
+    return null;
+  }, [post]);
+
+  const ogImageUrl = post?.featuredImage?.node?.sourceUrl
+    ? transformMediaUrl(post.featuredImage.node.sourceUrl)
+    : null;
+
+  const storyPageUrl =
+    post && slug && typeof window !== 'undefined'
+      ? `${window.location.origin}/story/${slug}`
+      : null;
+
   usePageMeta(
     post ? `${stripHtml(post.title)} | Kandie Gang` : 'Story | Kandie Gang',
-    post ? stripHtml(post.excerpt) : null,
-    post?.featuredImage?.node?.sourceUrl
-      ? transformMediaUrl(post.featuredImage.node.sourceUrl)
-      : null
+    shareDescription,
+    ogImageUrl,
+    storyPageUrl
   );
 
   if (!slug) {

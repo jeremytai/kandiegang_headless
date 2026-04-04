@@ -1,8 +1,8 @@
 /**
- * Vercel Edge Middleware: for link-preview bots hitting /event/:yy/:mm/:dd/:slug,
- * return HTML with Open Graph meta from WordPress. The SPA still sets meta in the
- * browser via usePageMeta, but crawlers do not run JS and would otherwise only see
- * index.html defaults.
+ * Vercel Edge Middleware: for link-preview bots hitting /event/... or /story/:slug,
+ * return HTML with Open Graph / Twitter meta from WordPress. The SPA still sets meta
+ * in the browser via usePageMeta, but crawlers often do not run JS and would otherwise
+ * only see index.html defaults.
  */
 import { next } from '@vercel/functions';
 
@@ -12,7 +12,7 @@ const DEFAULT_OG_IMAGE =
 const DEFAULT_DESCRIPTION =
   "Join Hamburg's most vibrant and inclusive cycling community. Group rides, events, and a safe space for FLINTA* and BIPOC cyclists.";
 
-const OG_QUERY = `
+const EVENT_OG_QUERY = `
   query GetKandieEventOg($slug: ID!) {
     rideEvent(id: $slug, idType: SLUG) {
       title
@@ -29,8 +29,23 @@ const OG_QUERY = `
   }
 `;
 
+const STORY_OG_QUERY = `
+  query GetStoryOg($slug: ID!) {
+    post(id: $slug, idType: SLUG) {
+      title
+      excerpt
+      featuredImage {
+        node {
+          sourceUrl
+        }
+      }
+      content
+    }
+  }
+`;
+
 export const config = {
-  matcher: '/event/:path*',
+  matcher: ['/event/:path*', '/story/:path*'],
 };
 
 type OgPayload = {
@@ -119,7 +134,7 @@ async function fetchEventOg(slug: string): Promise<OgPayload | null> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      query: OG_QUERY,
+      query: EVENT_OG_QUERY,
       variables: { slug },
     }),
   });
@@ -156,6 +171,56 @@ async function fetchEventOg(slug: string): Promise<OgPayload | null> {
 
   return {
     title: `${ev.title} | Kandie Gang`,
+    description,
+    image,
+  };
+}
+
+async function fetchStoryOg(slug: string): Promise<OgPayload | null> {
+  const endpoint = getGraphqlUrl();
+  if (!endpoint) return null;
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: STORY_OG_QUERY,
+      variables: { slug },
+    }),
+  });
+
+  if (!res.ok) return null;
+
+  const json = (await res.json()) as {
+    errors?: unknown[];
+    data?: {
+      post?: {
+        title?: string;
+        excerpt?: string;
+        content?: string;
+        featuredImage?: { node?: { sourceUrl?: string } };
+      };
+    };
+  };
+
+  if (json.errors?.length) return null;
+
+  const post = json.data?.post;
+  if (!post?.title) return null;
+
+  const excerptHtml = post.excerpt?.trim() ?? '';
+  const fromExcerpt = stripHtml(excerptHtml);
+  const fromContent = post.content
+    ? stripHtml(post.content).replace(/\s+/g, ' ').trim()
+    : '';
+  const rawDesc = fromExcerpt || fromContent || '';
+  const description = truncate(rawDesc || DEFAULT_DESCRIPTION, 300);
+
+  const imageRaw = post.featuredImage?.node?.sourceUrl;
+  const image = imageRaw ? normalizeMediaUrl(imageRaw) : DEFAULT_OG_IMAGE;
+
+  return {
+    title: `${post.title} | Kandie Gang`,
     description,
     image,
   };
@@ -201,6 +266,40 @@ export default async function middleware(request: Request): Promise<Response> {
   const pathname = url.pathname;
 
   const parts = pathname.split('/').filter(Boolean);
+  const ua = request.headers.get('user-agent') ?? '';
+
+  if (parts[0] === 'story' && parts.length === 2) {
+    const slug = parts[1];
+    if (!slug || !isLinkPreviewBot(ua)) {
+      return next();
+    }
+
+    const canonicalUrl = `${url.origin}${pathname}`;
+
+    let og: OgPayload | null = null;
+    try {
+      og = await fetchStoryOg(slug);
+    } catch {
+      og = null;
+    }
+
+    if (!og) {
+      og = {
+        title: 'Story | Kandie Gang',
+        description: DEFAULT_DESCRIPTION,
+        image: DEFAULT_OG_IMAGE,
+      };
+    }
+
+    const html = buildOgHtml(canonicalUrl, og);
+    return new Response(html, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=86400',
+      },
+    });
+  }
+
   if (parts[0] !== 'event') {
     return next();
   }
@@ -213,7 +312,6 @@ export default async function middleware(request: Request): Promise<Response> {
     return next();
   }
 
-  const ua = request.headers.get('user-agent') ?? '';
   if (!isLinkPreviewBot(ua)) {
     return next();
   }
