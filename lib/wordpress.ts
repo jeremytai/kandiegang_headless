@@ -101,6 +101,8 @@ export interface WPPage {
 export interface WPCategory {
   name: string;
   slug: string;
+  /** WordPress term ID — used for `categoryIn` post queries (WPGraphQL). */
+  databaseId?: number;
 }
 
 /** Relay-style pageInfo for cursor-based pagination of posts. */
@@ -348,6 +350,128 @@ export async function getCategoryPosts(
   };
 }
 
+/** Public /stories page: posts in any of these category slugs (see `getStoriesPosts`). */
+export const STORIES_CATEGORY_SLUGS = ['social-rides', 'workshop'] as const;
+
+export const GET_POSTS_IN_CATEGORIES_QUERY = `
+  query GetPostsInCategories($first: Int!, $after: String, $categoryIn: [ID!]!) {
+    posts(
+      first: $first
+      after: $after
+      where: { orderby: { field: DATE, order: DESC }, categoryIn: $categoryIn }
+    ) {
+      nodes {
+        id
+        title
+        excerpt
+        date
+        uri
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        categories {
+          nodes {
+            name
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export type PostsInCategoriesResponse = {
+  posts: { nodes: WPPost[]; pageInfo: WPPostsPageInfo };
+};
+
+/**
+ * Posts assigned to any of the given category term IDs (OR), newest first.
+ */
+export async function getPostsForCategoryDatabaseIds(
+  categoryDatabaseIds: number[],
+  first: number,
+  after?: string | null
+): Promise<{ nodes: WPPost[]; pageInfo: WPPostsPageInfo } | null> {
+  if (categoryDatabaseIds.length === 0) return null;
+  const data = await wpQuery<PostsInCategoriesResponse>(
+    GET_POSTS_IN_CATEGORIES_QUERY,
+    {
+      first,
+      after: after ?? null,
+      categoryIn: categoryDatabaseIds,
+    },
+    { useCache: true }
+  );
+  return {
+    nodes: data.posts.nodes,
+    pageInfo: data.posts.pageInfo,
+  };
+}
+
+/**
+ * Stories index: `social-rides` and `workshop` posts, merged, with cursor pagination when supported.
+ */
+export async function getStoriesPosts(
+  first: number,
+  after?: string | null
+): Promise<{ nodes: WPPost[]; pageInfo: WPPostsPageInfo } | null> {
+  const categories = await getCategories();
+  const categoryIn = STORIES_CATEGORY_SLUGS.map((slug) => {
+    const c = categories.find((x) => x.slug === slug);
+    return c?.databaseId;
+  }).filter((id): id is number => id != null);
+
+  if (categoryIn.length > 0) {
+    try {
+      const result = await getPostsForCategoryDatabaseIds(categoryIn, first, after ?? null);
+      if (result) return result;
+    } catch (err) {
+      const isDev =
+        (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+        (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
+      if (isDev) {
+        console.warn('[getStoriesPosts] categoryIn query failed, trying merge fallback:', err);
+      }
+    }
+  }
+
+  if (after) {
+    return getCategoryPosts(STORIES_CATEGORY_SLUGS[0], first, after);
+  }
+
+  const results = await Promise.all(
+    STORIES_CATEGORY_SLUGS.map((slug) => getCategoryPosts(slug, first, null))
+  );
+  const valid = results.filter(Boolean) as { nodes: WPPost[]; pageInfo: WPPostsPageInfo }[];
+  if (valid.length === 0) return null;
+
+  const byId = new Map<string, WPPost>();
+  for (const r of valid) {
+    for (const node of r.nodes) {
+      if (!byId.has(node.id)) byId.set(node.id, node);
+    }
+  }
+  const nodes = Array.from(byId.values()).sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const trimmed = nodes.slice(0, first);
+  // No stable Relay cursor across merged category queries — avoid broken "Load more".
+
+  return {
+    nodes: trimmed,
+    pageInfo: {
+      hasNextPage: false,
+      endCursor: null,
+    },
+  };
+}
+
 /**
  * Query to fetch categories from WordPress (for filtering, nav, etc.).
  */
@@ -357,6 +481,7 @@ export const GET_CATEGORIES_QUERY = `
       nodes {
         name
         slug
+        databaseId
       }
     }
   }

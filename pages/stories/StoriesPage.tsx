@@ -9,7 +9,8 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import {
-  getCategoryPosts,
+  getStoriesPosts,
+  STORIES_CATEGORY_SLUGS,
   wpQuery,
   GET_POSTS_QUERY,
   GetPostsResponse,
@@ -23,7 +24,6 @@ import {
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { usePageMeta } from '../../hooks/usePageMeta';
 
-const STORIES_CATEGORY_SLUG = 'social-rides';
 const POSTS_FIRST = 24;
 
 function scrollToTop() {
@@ -66,18 +66,18 @@ export const StoriesPage: React.FC = () => {
         let categoriesData: WPCategory[] | null = null;
 
         try {
-          result = await getCategoryPosts(STORIES_CATEGORY_SLUG, POSTS_FIRST, after);
+          result = await getStoriesPosts(POSTS_FIRST, after);
           if (import.meta.env.DEV && result) {
             console.log(
-              '[Stories] Loaded from category "%s": %d posts',
-              STORIES_CATEGORY_SLUG,
+              '[Stories] Loaded from categories %s: %d posts',
+              STORIES_CATEGORY_SLUGS.join(', '),
               result.nodes.length
             );
           }
         } catch (categoryErr) {
           if (import.meta.env.DEV) {
             console.warn(
-              '[Stories] Category query failed, falling back to all posts:',
+              '[Stories] Stories category query failed, falling back to all posts:',
               categoryErr
             );
           }
