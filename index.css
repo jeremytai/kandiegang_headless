@@ -193,7 +193,8 @@ html {
  */
 html.is-safari-webkit {
   overflow-y: scroll;
-  scrollbar-gutter: stable;
+  /* Intentionally no scrollbar-gutter: stable — it reserves inline space on <html> and can
+     desync full-viewport fixed layers (e.g. off-canvas, 100vw) vs in-flow width:100% chrome. */
 }
 
 html.is-safari-webkit::-webkit-scrollbar {

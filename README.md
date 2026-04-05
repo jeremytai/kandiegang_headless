@@ -1,7 +1,6 @@
 # Kandie Gang Headless WordPress
 
 ## TO DO
-- remove vignette
 - Events
   - add join waitlist CTA to event pages
   - check email notifications (cancelled event, cancelled participation, new event, etc.)
@@ -10,28 +9,6 @@
 - Add a guide/admin page to view event registrations (signed-up attendees), not just waitlist entries.
 - [Done] Show event participants on each event page, grouped by ride level, for guides/admins.
 - [Done] Migrate all serverless API handlers to Next.js `pages/api/` directory.
-
-## 🕵️ Vignette/Shadow Investigation Findings
-
-**Issue:** Persistent right-side vignette or shadow visible on all screens, especially with certain context providers enabled (e.g., AuthProvider).
-
-**Investigation Steps:**
-- Systematically removed and tested layout classes (`overflow-hidden`, `rounded-b-[24px]`, `bg-white`) from the main content wrapper in App.tsx.
-- Searched for any `box-shadow`, `linear-gradient`, `filter`, `::after`, `::before`, or z-index/stacking context issues in all global and component-level CSS/TSX files.
-- Confirmed no global or component-level overlays, gradients, or shadows were present.
-- Verified that the main content wrapper and background layers use only solid colors (no gradients or shadows).
-- Confirmed the effect is not caused by the WeatherStatusBackground, Footer, or OffCanvas components.
-- The issue persists even after removing all obvious suspects, suggesting a possible browser rendering artifact or subtle stacking context interaction.
-
-**Current Status:**
-- No explicit shadow, gradient, or overlay found in the codebase.
-- The vignette/shadow is not caused by any Tailwind utility, custom CSS, or React component logic.
-- Removing `overflow-hidden`, `rounded-b-[24px]`, and `bg-white` from the main content wrapper did not resolve the issue.
-- The effect may be a browser rendering artifact or related to stacking context/z-index, but no code-based cause has been identified.
-
-**Recommendation:**
-- If the vignette/shadow persists, test in a different browser or device to rule out rendering artifacts.
-- Continue to check for any subtle stacking context or compositing issues if new layout changes are made.
 
 ## 🗓️ Event Signup & Early Access Logic
 
@@ -95,7 +72,7 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **📊 Analytics (PostHog)**: Consent-gated product analytics (page views, funnels); loads only after user accepts analytics in the cookie banner; supports opt-out on consent revocation
 - **🧑‍🤝‍🧑 Event Participants List**: Each event page now displays a list of participants, grouped by ride level, directly under the event description for guides and admins.
 - **🛠️ Next.js API Handler Migration**: All serverless API handlers have been migrated to Next.js `pages/api/` for improved maintainability and Vercel compatibility.
- - **🚴 Gravel Events**: First-class support for gravel grouprides with a single-level model (guides, distance, pace, route) and Komoot route embeds in a responsive sidebar modal.
+- **🚴 Gravel Events**: First-class support for gravel group rides via a single **Gravel Ride** level (guides, spots, distance, pace, route) and Komoot route embeds in a responsive sidebar modal.
 
 ## 🚀 Tech Stack
 
@@ -353,7 +330,7 @@ This repo received a quick security hardening pass with a focus on API safety an
 ### Changes
 
 - **Redis-backed rate limiting (with in-memory fallback)**: Shared rate limits across serverless instances when Upstash is configured; falls back to per-process buckets when Redis is unavailable. See `lib/rateLimit.ts` and API routes under `api/`.
-- **Stricter admin profile updates**: `/api/admin-update-profile` now validates the *type/shape* of each editable field before applying updates (rejects invalid payloads with a 400).
+- **Stricter admin profile updates**: `POST /api/admin-update-profile` (`api/admin-update-profile.ts`) validates the `updates` payload for the default **update** action using per-field rules (booleans, bounded strings, ISO dates, non-negative numbers, tag arrays, etc.). Invalid values on whitelisted keys return **400**; unknown keys are ignored. Guides only (Bearer token); rate-limited.
 - **Email HTML escaping**: Event email templates now escape user-controlled strings (e.g. event titles / URLs / reasons) to prevent HTML injection in outbound emails.
 - **PostHog SDK updated**: `posthog-js` upgraded to keep analytics SDK current.
 
