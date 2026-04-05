@@ -6,7 +6,7 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 // ...existing code (removed unused Link import)
@@ -83,31 +83,6 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();
 }
 
-/** YYYY-MM in Europe/Berlin, for comparing calendar months */
-function yearMonthKeyCET(isoDate: string): string {
-  const d = new Date(isoDate);
-  if (Number.isNaN(d.getTime())) return '';
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Berlin',
-    year: 'numeric',
-    month: '2-digit',
-  }).formatToParts(d);
-  const y = parts.find((p) => p.type === 'year')?.value ?? '';
-  const m = parts.find((p) => p.type === 'month')?.value ?? '';
-  return `${y}-${m}`;
-}
-
-function currentYearMonthKeyCET(): string {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Berlin',
-    year: 'numeric',
-    month: '2-digit',
-  }).formatToParts(new Date());
-  const y = parts.find((p) => p.type === 'year')?.value ?? '';
-  const m = parts.find((p) => p.type === 'month')?.value ?? '';
-  return `${y}-${m}`;
-}
-
 /**
  * Transform WordPress RideEvent to EventsLayoutEvent
  */
@@ -146,10 +121,13 @@ function transformToEventsLayoutEvent(event: WPRideEvent): EventsLayoutEvent {
   };
 }
 
+const UPCOMING_PAGE_SIZE = 5;
+
 export const CommunityPage: React.FC = () => {
   const [events, setEvents] = useState<EventsLayoutEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [visibleUpcomingCount, setVisibleUpcomingCount] = useState(UPCOMING_PAGE_SIZE);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -157,7 +135,7 @@ export const CommunityPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const wpEvents = await getKandieEvents(20);
+        const wpEvents = await getKandieEvents(60);
 
         if (wpEvents && wpEvents.length > 0) {
           const transformedEvents = wpEvents.map(transformToEventsLayoutEvent);
@@ -187,6 +165,10 @@ export const CommunityPage: React.FC = () => {
 
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    setVisibleUpcomingCount(UPCOMING_PAGE_SIZE);
+  }, [events]);
 
   return (
     <div className="relative selection:bg-[#f9f100] selection:text-black overflow-x-hidden">
@@ -251,44 +233,50 @@ export const CommunityPage: React.FC = () => {
             </div>
           )}
 
-          {/* Current month: first event, then ThreeThingsToDo, then remaining events */}
+          {/* Upcoming events (soonest first): first event + ThreeThingsToDo + more, paginated by 5 */}
           {!loading && events.length > 0 && (() => {
             const cetFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' });
             const todayCET = cetFmt.format(new Date());
             const upcoming = events.filter(
               (e) => cetFmt.format(new Date(e.startDate)) >= todayCET
             );
-            const ym = currentYearMonthKeyCET();
-            const thisMonthUpcoming = upcoming.filter(
-              (e) => yearMonthKeyCET(e.startDate) === ym
-            );
-            const monthTitle = new Intl.DateTimeFormat('en-US', {
-              timeZone: 'Europe/Berlin',
-              month: 'long',
-              year: 'numeric',
-            }).format(new Date());
+            const displayed = upcoming.slice(0, visibleUpcomingCount);
+            const canLoadMore = upcoming.length > visibleUpcomingCount;
+            const nextChunk = Math.min(UPCOMING_PAGE_SIZE, upcoming.length - visibleUpcomingCount);
 
             return (
               <>
-                {thisMonthUpcoming.length > 0 ? (
+                {displayed.length > 0 ? (
                   <div className="space-y-6">
-                    <h2 className="text-2xl md:text-3xl font-heading-light text-secondary-purple-rain tracking-tight">
-                      Upcoming in {monthTitle}
-                    </h2>
-                    <EventsLayout events={[thisMonthUpcoming[0]]} omitHeroBottomBorder />
+                    <EventsLayout events={[displayed[0]]} omitHeroBottomBorder />
                     <ThreeThingsToDo />
-                    {thisMonthUpcoming.slice(1).map((event, index) => (
+                    {displayed.slice(1).map((event, index) => (
                       <EventsLayout
                         key={event.id}
                         events={[event]}
                         showTopBorder={index === 0}
                       />
                     ))}
+                    {canLoadMore && (
+                      <div className="flex justify-center pt-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setVisibleUpcomingCount((c) => c + UPCOMING_PAGE_SIZE)
+                          }
+                          className="inline-flex items-center justify-center rounded-full border border-black/20 bg-white px-8 py-3 text-sm font-medium text-primary-ink shadow-sm transition hover:bg-primary-ink/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-purple-rain focus-visible:ring-offset-2"
+                        >
+                          {nextChunk === UPCOMING_PAGE_SIZE
+                            ? 'Show next 5 events'
+                            : `Show next ${nextChunk} event${nextChunk === 1 ? '' : 's'}`}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
                     <p className="text-lg text-primary-ink/80 font-light">
-                      No more events scheduled this month. Check back soon or join us on Discord for updates.
+                      No upcoming events right now. Check back soon or join us on Discord for updates.
                     </p>
                     <ThreeThingsToDo />
                   </>

@@ -8,7 +8,7 @@ interface SectionHeaderProps {
 
 export const SectionHeader: React.FC<SectionHeaderProps> = ({ title, showScrollHint = true }) => {
   return (
-    <div className="bg-secondary-purple-rain pt-8 md:pt-12 pb-4 md:pb-8 px-4 md:px-8 lg:px-16 lg:z-20">
+    <div className="border-0 bg-secondary-purple-rain pt-8 md:pt-12 pb-2 md:pb-3 px-4 md:px-8 lg:px-16 lg:z-20">
       <div className="flex items-center gap-4 justify-between">
         <h2 className="text-4xl md:text-6xl lg:text-7xl font-light tracking-tight text-secondary-current text-balance">
           {title}

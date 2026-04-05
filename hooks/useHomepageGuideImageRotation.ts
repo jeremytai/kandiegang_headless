@@ -61,5 +61,7 @@ export function useHomepageGuideImageRotation() {
       ? shuffledImages[imageIndex % shuffledImages.length]
       : PLACEHOLDER_IMAGE;
 
-  return { currentImage, imageIndex, shuffledImages };
+  const guidesReady = guideImages.length > 0;
+
+  return { currentImage, imageIndex, shuffledImages, guidesReady };
 }
