@@ -224,8 +224,8 @@ export const CompanySection: React.FC = () => {
             />
           ))}
         </div>
-        <p className="mt-20 text-slate-400 text-md font-light">
-          Kandie Gang Tuesday Social Rides are from April through the end of September and are led by our Ride Guides.
+        <p className="mt-20 text-secondary-purple-rain text-md font-light">
+          Kandie Gang Tuesday Social Rides are from April through the end of September and are led by our Guides.
           Besides road rides, we often organize gravel rides and activities based around cycling culture.
         </p>
       </div>
