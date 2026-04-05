@@ -15,6 +15,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import { ArrowLeft, Menu, X, User, ShoppingBag } from 'lucide-react';
 import { useMemberLoginOffcanvas } from '../../context/MemberLoginOffcanvasContext';
+import { useLightMotionBackdrop } from '../../hooks/useLightMotionBackdrop';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { imageSrc } from '../../lib/images';
@@ -55,6 +56,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
   const { openMemberLogin } = useMemberLoginOffcanvas();
   const { openCart, itemCount } = useCart();
   const { scrollY } = useScroll();
+  const lightBackdrop = useLightMotionBackdrop();
   const isLoggedIn = Boolean(user);
   const avatarUrl = profile?.avatar_url ?? null;
   const isGuide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
@@ -159,9 +161,9 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
             stiffness: 200,
             layout: { duration: 0.4 },
           }}
-          className={`w-full bg-white backdrop-blur-2xl border border-black/20 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.15)] overflow-hidden pointer-events-auto ${
-            isExpanded ? 'max-w-[640px] rounded-[16px]' : 'max-w-[340px] rounded-[16px]'
-          }`}
+          className={`w-full border border-black/20 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.15)] overflow-hidden pointer-events-auto ${
+            lightBackdrop ? 'bg-white/95' : 'bg-white backdrop-blur-2xl'
+          } ${isExpanded ? 'max-w-[640px] rounded-[16px]' : 'max-w-[340px] rounded-[16px]'}`}
         >
           <div className="grid grid-cols-3 items-center px-2.5 py-2.5">
             <div className="flex items-center gap-1 pl-3">

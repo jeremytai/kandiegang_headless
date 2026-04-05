@@ -16,6 +16,7 @@ import { ExpandingHero } from '../../components/visual/ExpandingHero';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { StoryBlocksRenderer } from '../../components/common/StoryBlocksRenderer';
 import { usePageMeta } from '../../hooks/usePageMeta';
+import { useLightMotionBackdrop } from '../../hooks/useLightMotionBackdrop';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();
@@ -43,6 +44,7 @@ const DEMO_POST: WPPost = {
 };
 
 export const StoryPage: React.FC = () => {
+  const lightBackdrop = useLightMotionBackdrop();
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const fromMembers = location.state?.from === '/members';
@@ -228,7 +230,11 @@ export const StoryPage: React.FC = () => {
               imageAlt={stripHtml(post.title)}
             />
 
-            <div className="sticky top-0 z-10 max-w-4xl mx-auto px-6 pt-5 pb-6 bg-primary-breath/90 backdrop-blur-sm">
+            <div
+              className={`sticky top-0 z-10 max-w-4xl mx-auto px-6 pt-5 pb-6 ${
+                lightBackdrop ? 'bg-primary-breath/96' : 'bg-primary-breath/90 backdrop-blur-sm'
+              }`}
+            >
               <Link
                 to={backToHref}
                 onClick={() => {

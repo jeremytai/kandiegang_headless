@@ -15,6 +15,7 @@ import { EventSignupPanel, type EventSignupIntent } from '../components/event/Ev
 import { MemberMetaCard } from '../components/member/MemberMetaCard';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { useLightMotionBackdrop } from '../hooks/useLightMotionBackdrop';
 
 const DELETE_ACCOUNT_CONFIRM_PHRASE = 'Yes, delete account';
 
@@ -790,6 +791,7 @@ function DeleteAccountModal({
   const [deleted, setDeleted] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const lightBackdrop = useLightMotionBackdrop();
   const canDelete = confirmText.trim() === DELETE_ACCOUNT_CONFIRM_PHRASE;
 
   useEffect(() => {
@@ -847,7 +849,7 @@ function DeleteAccountModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm"
+            className={`fixed inset-0 z-[110] ${lightBackdrop ? 'bg-black/70' : 'bg-black/60 backdrop-blur-sm'}`}
             onClick={deleted ? undefined : handleClose}
             aria-hidden
           />

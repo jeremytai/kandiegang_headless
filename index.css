@@ -134,7 +134,7 @@ body {
   font-weight: var(--font-weight);
   line-height: var(--line-height);
   scroll-behavior: smooth;
-  background-color: var(--color-secondary-signal);
+  background-color: var(--color-primary-breath);
   margin: 0;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -144,6 +144,7 @@ body {
 
 #root {
   min-height: 100vh;
+  background-color: var(--color-primary-breath);
 }
 
 /* Selection Styles */
@@ -182,6 +183,38 @@ body {
 /* Smooth Scrolling for the whole document */
 html {
   scroll-behavior: smooth;
+  background-color: var(--color-primary-breath);
+}
+
+/*
+ * Safari (desktop + iOS WebView browsers using WebKit without Chrome UA):
+ * macOS Safari often uses overlay scrollbars that stay invisible until scroll.
+ * Non-overlay scrollbar styling + overflow-y: scroll makes the bar visible and usable.
+ */
+html.is-safari-webkit {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+html.is-safari-webkit::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html.is-safari-webkit::-webkit-scrollbar-track {
+  background: rgba(31, 34, 35, 0.06);
+}
+
+html.is-safari-webkit::-webkit-scrollbar-thumb {
+  background: rgba(31, 34, 35, 0.28);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+html.is-safari-webkit::-webkit-scrollbar-thumb:hover {
+  background: rgba(31, 34, 35, 0.45);
+  background-clip: padding-box;
 }
 
 /* Custom text balance utility */

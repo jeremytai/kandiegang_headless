@@ -7,6 +7,7 @@
 
 import React, { useCallback, useState } from 'react';
 import { Check } from 'lucide-react';
+import { useLightMotionBackdrop } from '../../hooks/useLightMotionBackdrop';
 import { KandieCodeModal } from '../modals/KandieCodeModal';
 import { RideLevelsModal } from '../modals/RideLevelsModal';
 import { WaiverModal } from '../modals/WaiverModal';
@@ -76,6 +77,7 @@ function writeThreeThingsCookie(state: ThreeThingsState) {
 }
 
 export const ThreeThingsToDo: React.FC = () => {
+  const lightBackdrop = useLightMotionBackdrop();
   const [kandieCodeModalOpen, setKandieCodeModalOpen] = useState(false);
   const [rideLevelsModalOpen, setRideLevelsModalOpen] = useState(false);
   const [waiverModalOpen, setWaiverModalOpen] = useState(false);
@@ -104,7 +106,9 @@ export const ThreeThingsToDo: React.FC = () => {
 
   return (
     <section
-      className="grid grid-cols-12 gap-x-4 gap-y-5 px-4 pt-6 pb-16 text-primary-ink transition-colors duration-300 lg:gap-x-6 lg:px-6 lg:pt-10 lg:pb-24 bg-white/75 backdrop-blur-md rounded-xl"
+      className={`grid grid-cols-12 gap-x-4 gap-y-5 px-4 pt-6 pb-16 text-primary-ink transition-colors duration-300 lg:gap-x-6 lg:px-6 lg:pt-10 lg:pb-24 rounded-xl ${
+        lightBackdrop ? 'bg-white/92' : 'bg-white/75 backdrop-blur-md'
+      }`}
       aria-labelledby="specifications-heading"
     >
       {/* Left column: main heading + Specifications label */}

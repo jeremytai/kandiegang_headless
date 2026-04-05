@@ -6,7 +6,7 @@
  * - Layout wrapper for all pages and persistent navigation elements.
  */
 
-import React, { useRef, useState, useEffect, lazy, Suspense } from 'react';
+import React, { useRef, useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 
@@ -37,6 +37,7 @@ import { CartProvider } from './context/CartContext';
 import { CartOffcanvas } from './components/shop/CartOffcanvas';
 import { HelmetProvider } from 'react-helmet-async';
 import { getKandieEvents, type WPRideEvent } from './lib/wordpress';
+import { useLightMotionBackdrop } from './hooks/useLightMotionBackdrop';
 
 // Lazy-loaded pages (code-split by route to keep main bundle under 600 kB)
 const AboutPage = lazy(() =>
@@ -132,8 +133,144 @@ const PageLoader = () => (
   <div className="min-h-[40vh] flex items-center justify-center" aria-hidden />
 );
 
-const App: React.FC = () => {
+type AppMainInnerProps = {
+  announcementDismissed: boolean;
+  setAnnouncementDismissed: React.Dispatch<React.SetStateAction<boolean>>;
+  nextEvent: { title: string; href: string } | null;
+  isLoading: boolean;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  showGate: boolean;
+  setIsUnlocked: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+/** Main app chrome + scroll-driven layout. Hooks here are always called (no conditional hooks). */
+function AppMainInner({
+  announcementDismissed,
+  setAnnouncementDismissed,
+  nextEvent,
+  isLoading,
+  setIsLoading,
+  showGate,
+  setIsUnlocked,
+}: AppMainInnerProps) {
+  const location = useLocation();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const lightMotion = useLightMotionBackdrop();
+
+  const { scrollYProgress } = useScroll({
+    target: sentinelRef,
+    offset: ['start end', 'end end'],
+  });
+
+  const springConfig = useMemo(
+    () =>
+      lightMotion
+        ? { stiffness: 400, damping: 50, restDelta: 0.01 }
+        : { stiffness: 100, damping: 30, restDelta: 0.001 },
+    [lightMotion]
+  );
+  const smoothProgress = useSpring(scrollYProgress, springConfig);
+  const scale = useTransform(
+    smoothProgress,
+    [0, 0.8],
+    lightMotion ? [1, 1] : [1, 0.92]
+  );
+  const y = useTransform(smoothProgress, [0, 1], lightMotion ? [0, 0] : [0, -20]);
+
+  return (
+    <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white rounded-b-[24px] rounded-t-none">
+      {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
+      {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
+
+      <WeatherStatusBackground />
+      <StickyTop offsetVariant={announcementDismissed ? 'tight' : 'withBar'} />
+
+      <motion.div
+        style={{
+          scale,
+          y,
+          transformOrigin: 'bottom center',
+          ...(lightMotion ? {} : { willChange: 'transform' }),
+        }}
+        className={[
+          'relative z-10 w-full min-h-screen bg-white rounded-b-[24px] rounded-t-none',
+          '[backface-visibility:hidden]',
+        ].join(' ')}
+      >
+        <AnnouncementBar
+          message={
+            nextEvent
+              ? `Join us: ${nextEvent.title}`
+              : "We're  making some changes. Some things might not work as expected."
+          }
+          href={nextEvent?.href}
+          onDismiss={() => setAnnouncementDismissed(true)}
+        />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route element={<PageTransition />}>
+              <Route
+                path="/"
+                element={
+                  <>
+                    <LandingPage />
+                    <SectionHeader title="Community is the Catalyst" />
+                    <HorizontalRevealSection />
+                    <CompanySection />
+                    <FAQSection />
+                  </>
+                }
+              />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/community" element={<CommunityPage />} />
+              <Route path="/stories" element={<StoriesPage />} />
+              <Route path="/story/:slug" element={<StoryPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/imprint" element={<ImprintPage />} />
+              <Route path="/waiver" element={<WaiverPage />} />
+              <Route path="/terms-of-use" element={<TermsOfUsePage />} />
+              <Route path="/kandiecode" element={<KandieCodePage />} />
+              <Route path="/ridelevels" element={<RideLevelsPage />} />
+              <Route path="/kandiegangcyclingclub" element={<KandieGangCyclingClubPage />} />
+              <Route path="/event/:yy/:mm/:dd/:slug" element={<KandieEventPage />} />
+              <Route path="/design-system" element={<DesignSystemWIP />} />
+              <Route path="/login/member" element={<MemberLoginPage />} />
+              <Route path="/login/shop" element={<ShopLoginPage />} />
+              <Route path="/shop" element={<ShopPage />} />
+              <Route path="/shop/:slug" element={<ProductPage />} />
+              <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+              <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
+              <Route path="/event/cancel" element={<EventCancelPage />} />
+              <Route path="/admin/waitlist" element={<WaitlistAdminPage />} />
+              <Route path="/admin/analytics" element={<AnalyticsDashboardPage />} />
+              <Route path="/guide/analytics" element={<GuideAnalyticsPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/members" element={<MembersAreaPage />} />
+              <Route path="/members/settings" element={<MembersSettingsPage />} />
+              <Route />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
+        </Suspense>
+
+        <NewsletterSection />
+        <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
+        <Footer />
+      </motion.div>
+
+      <div
+        ref={sentinelRef}
+        className="relative h-[50vh] md:h-[70vh] w-full pointer-events-none"
+      />
+      {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(location.pathname) && (
+        <StickyBottom />
+      )}
+    </div>
+  );
+}
+
+const App: React.FC = () => {
   // Skip preloader in dev so the site is visible immediately (set VITE_SKIP_PRELOADER=1)
   const [isLoading, setIsLoading] = useState(
     () => !(import.meta.env.DEV && import.meta.env.VITE_SKIP_PRELOADER === '1')
@@ -246,26 +383,8 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Only use Framer Motion scroll hooks for non-test-blank routes
-  let scale, y;
-  if (location.pathname !== '/test-blank') {
-    // Use framer-motion hooks directly (must be top-level imports)
-    const { scrollYProgress } = useScroll({
-      target: sentinelRef,
-      offset: ['start end', 'end end'],
-    });
-    const smoothProgress = useSpring(scrollYProgress, {
-      stiffness: 100,
-      damping: 30,
-      restDelta: 0.001,
-    });
-    scale = useTransform(smoothProgress, [0, 0.8], [1, 0.92]);
-    y = useTransform(smoothProgress, [0, 1], [0, -20]);
-  }
-
   // Minimal blank test route — renders only the App shell, no content
   if (location.pathname === '/test-blank') {
-    // Minimal blank test route — no Framer Motion hooks, no refs, just a div
     return (
       <div style={{ minHeight: '100vh', background: '#fff' }}>
         <WeatherStatusBackground />
@@ -291,102 +410,15 @@ const App: React.FC = () => {
           <ContactModalProvider>
             <MemberLoginOffcanvasProvider>
               <CartProvider>
-                <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white rounded-b-[24px] rounded-t-none">
-                  {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
-                  {showGate && <PasswordGate onUnlock={() => setIsUnlocked(true)} />}
-
-                  <WeatherStatusBackground />
-                  <StickyTop offsetVariant={announcementDismissed ? 'tight' : 'withBar'} />
-
-                  {/* Main Content */}
-                  <motion.div
-                    style={{
-                      scale,
-                      y,
-                      transformOrigin: 'bottom center',
-                      willChange: 'transform',
-                    }}
-                    className={[
-                      'relative z-10 w-full min-h-screen bg-white rounded-b-[24px] rounded-t-none',
-                      // 'overflow-hidden', // removed for vignette test
-                      '[backface-visibility:hidden]',
-                    ].join(' ')}
-                  >
-                    <AnnouncementBar
-                      message={
-                        nextEvent
-                          ? `Join us: ${nextEvent.title}`
-                          : "We're  making some changes. Some things might not work as expected."
-                      }
-                      href={nextEvent?.href}
-                      onDismiss={() => setAnnouncementDismissed(true)}
-                    />
-                    <Suspense fallback={<PageLoader />}>
-                      <Routes>
-                        <Route element={<PageTransition />}>
-                          <Route
-                            path="/"
-                            element={
-                              <>
-                                <LandingPage />
-                                <SectionHeader title="Community is the Catalyst" />
-                                <HorizontalRevealSection />
-                                <CompanySection />
-                                <FAQSection />
-                              </>
-                            }
-                          />
-                          <Route path="/about" element={<AboutPage />} />
-                          <Route path="/community" element={<CommunityPage />} />
-                          <Route path="/stories" element={<StoriesPage />} />
-                          <Route path="/story/:slug" element={<StoryPage />} />
-                          <Route path="/contact" element={<ContactPage />} />
-                          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                          <Route path="/imprint" element={<ImprintPage />} />
-                          <Route path="/waiver" element={<WaiverPage />} />
-                          <Route path="/terms-of-use" element={<TermsOfUsePage />} />
-                          {/* Removed TailwindElementsPage route for rollback */}
-                          <Route path="/kandiecode" element={<KandieCodePage />} />
-                          <Route path="/ridelevels" element={<RideLevelsPage />} />
-                          <Route
-                            path="/kandiegangcyclingclub"
-                            element={<KandieGangCyclingClubPage />}
-                          />
-                          <Route path="/event/:yy/:mm/:dd/:slug" element={<KandieEventPage />} />
-                          <Route path="/design-system" element={<DesignSystemWIP />} />
-                          <Route path="/login/member" element={<MemberLoginPage />} />
-                          <Route path="/login/shop" element={<ShopLoginPage />} />
-                          <Route path="/shop" element={<ShopPage />} />
-                          <Route path="/shop/:slug" element={<ProductPage />} />
-                          <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-                          <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
-                          <Route path="/event/cancel" element={<EventCancelPage />} />
-                          <Route path="/admin/waitlist" element={<WaitlistAdminPage />} />
-                          <Route path="/admin/analytics" element={<AnalyticsDashboardPage />} />
-                          <Route path="/guide/analytics" element={<GuideAnalyticsPage />} />
-                          <Route path="/signup" element={<SignUpPage />} />
-                          <Route path="/members" element={<MembersAreaPage />} />
-                          <Route path="/members/settings" element={<MembersSettingsPage />} />
-                          <Route />
-                          <Route path="*" element={<NotFoundPage />} />
-                        </Route>
-                      </Routes>
-                    </Suspense>
-
-                    <NewsletterSection />
-                    <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
-                    <Footer />
-                  </motion.div>
-
-                  {/* Scroll sentinel to allow scrolling past the main content to trigger the reveal */}
-                  <div
-                    ref={sentinelRef}
-                    className="relative h-[50vh] md:h-[70vh] w-full pointer-events-none"
-                  />
-                  {['/', '/stories', '/about', '/kandiegangcyclingclub'].includes(
-                    location.pathname
-                  ) && <StickyBottom />}
-                </div>
+                <AppMainInner
+                  announcementDismissed={announcementDismissed}
+                  setAnnouncementDismissed={setAnnouncementDismissed}
+                  nextEvent={nextEvent}
+                  isLoading={isLoading}
+                  setIsLoading={setIsLoading}
+                  showGate={showGate}
+                  setIsUnlocked={setIsUnlocked}
+                />
                 <CartOffcanvas />
               </CartProvider>
             </MemberLoginOffcanvasProvider>

@@ -5,14 +5,44 @@
  * - Coordinates multiple words ("It's a Love Story") flying into their final positions.
  * - Each word has its own specific timing and vertical offset linked to scroll progress.
  * - Smoothly transitions from a low-opacity, scattered state to a bold, unified headline.
+ * - Static layout on Safari / reduced-motion (no scroll-linked springs).
  */
 
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { AnimatedBlob } from './AnimatedBlob';
+import { useLightMotionBackdrop } from '../../hooks/useLightMotionBackdrop';
 
-export const ScrollingHeadline: React.FC = () => {
+function ScrollingHeadlineStatic() {
+  return (
+    <section className="relative h-[100vh] bg-primary-breath">
+      <div className="sticky top-0 h-screen w-full overflow-hidden">
+        <AnimatedBlob contained />
+        <div className="relative z-10 flex flex-col items-center justify-center h-full px-6">
+          <div className="relative flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-6 w-full text-center font-heading-light text-secondary-blush">
+            <div className="text-[14vw] lg:text-[10vw] leading-none tracking-normal">It&apos;s a</div>
+            <div className="text-[14vw] lg:text-[10vw] leading-none tracking-normal">Love</div>
+            <div className="text-[14vw] lg:text-[10vw] leading-none tracking-normal">
+              <Link
+                to="/stories"
+                className="hover:underline focus:outline-none focus:underline cursor-pointer"
+              >
+                Story
+              </Link>
+            </div>
+          </div>
+          <p className="mt-12 text-white text-lg md:text-xl max-w-xl text-center leading-relaxed font-normal">
+            We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without
+            excluding men).
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ScrollingHeadlineMotion() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -32,6 +62,7 @@ export const ScrollingHeadline: React.FC = () => {
   const mundaneOpacity = useTransform(smoothProgress, [0, 0.2], [0.1, 1]);
   const madeOpacity = useTransform(smoothProgress, [0.2, 0.4], [0, 1]);
   const magicOpacity = useTransform(smoothProgress, [0.4, 0.6], [0, 1]);
+  const paragraphOpacity = useTransform(smoothProgress, [0.7, 0.9], [0, 1]);
 
   return (
     <section ref={containerRef} className="relative h-[100vh]">
@@ -43,7 +74,7 @@ export const ScrollingHeadline: React.FC = () => {
               style={{ y: mundaneY, opacity: mundaneOpacity }}
               className="text-[14vw] lg:text-[10vw] leading-none tracking-normal"
             >
-              It's a
+              It&apos;s a
             </motion.div>
             <motion.div
               style={{ y: madeY, opacity: madeOpacity }}
@@ -64,7 +95,7 @@ export const ScrollingHeadline: React.FC = () => {
             </motion.div>
           </div>
           <motion.p
-            style={{ opacity: useTransform(smoothProgress, [0.7, 0.9], [0, 1]) }}
+            style={{ opacity: paragraphOpacity }}
             className="mt-12 text-white text-lg md:text-xl max-w-xl text-center leading-relaxed font-normal"
           >
             We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without
@@ -74,4 +105,12 @@ export const ScrollingHeadline: React.FC = () => {
       </div>
     </section>
   );
+}
+
+export const ScrollingHeadline: React.FC = () => {
+  const lightMotion = useLightMotionBackdrop();
+  if (lightMotion) {
+    return <ScrollingHeadlineStatic />;
+  }
+  return <ScrollingHeadlineMotion />;
 };

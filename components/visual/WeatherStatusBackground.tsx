@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sun, Cloud, CloudRain, CloudLightning, Moon, Snowflake } from 'lucide-react';
+import { useLightMotionBackdrop } from '../../hooks/useLightMotionBackdrop';
 
 // Locked to Hamburg
 const HAMBURG_LAT = 53.5511;
@@ -106,7 +107,11 @@ async function fetchWeatherByCoords(
   return null;
 }
 
+const pillBase =
+  'rounded-full border border-black/10 px-5 py-3 text-[12px] font-bold text-slate-900 shadow-sm transition-all md:px-7 md:py-4 md:text-[14px]';
+
 export const WeatherStatusBackground: React.FC = () => {
+  const lightBackdrop = useLightMotionBackdrop();
   const [dateStr, setDateStr] = useState('');
   const [weather, setWeather] = useState<{ temp: number; condition: string }>({
     temp: 0,
@@ -164,13 +169,31 @@ export const WeatherStatusBackground: React.FC = () => {
         </p>
 
         <div className="flex flex-wrap justify-center gap-2 md:gap-4">
-          <div className="flex items-center gap-2.5 rounded-full border border-black/10 bg-white/10 px-5 py-3 text-[12px] font-bold text-slate-900 shadow-sm backdrop-blur-sm transition-all hover:bg-white/20 md:px-7 md:py-4 md:text-[14px]">
+          <div
+            className={`flex items-center gap-2.5 ${pillBase} ${
+              lightBackdrop
+                ? 'bg-white/88 hover:bg-white'
+                : 'bg-white/10 backdrop-blur-sm hover:bg-white/20'
+            }`}
+          >
             {dateStr || '—'}
           </div>
-          <div className="rounded-full border border-black/10 bg-white/10 px-5 py-3 text-[12px] font-bold text-slate-900 shadow-sm backdrop-blur-sm transition-all hover:bg-white/20 md:px-7 md:py-4 md:text-[14px]">
+          <div
+            className={`${pillBase} ${
+              lightBackdrop
+                ? 'bg-white/88 hover:bg-white'
+                : 'bg-white/10 backdrop-blur-sm hover:bg-white/20'
+            }`}
+          >
             {DEFAULT_LOCATION.label}
           </div>
-          <div className="flex items-center gap-2.5 rounded-full border border-black/10 bg-white/10 px-5 py-3 text-[12px] font-bold text-slate-900 shadow-sm backdrop-blur-sm transition-all hover:bg-white/20 md:px-7 md:py-4 md:text-[14px]">
+          <div
+            className={`flex items-center gap-2.5 ${pillBase} ${
+              lightBackdrop
+                ? 'bg-white/88 hover:bg-white'
+                : 'bg-white/10 backdrop-blur-sm hover:bg-white/20'
+            }`}
+          >
             <WeatherIcon condition={weather.condition} />
             {weather.temp}°C
           </div>

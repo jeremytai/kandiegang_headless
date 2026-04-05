@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+      (function () {
+        try {
+          var ua = navigator.userAgent;
+          if (!/safari/i.test(ua)) return;
+          if (/chrome|crios|fxios|edg|opr\//i.test(ua)) return;
+          document.documentElement.classList.add('is-safari-webkit');
+        } catch (e) {}
+      })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="cloudflare-rocket-loader" content="off">
