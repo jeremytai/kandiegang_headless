@@ -32,7 +32,7 @@ function ScrollingHeadlineStatic() {
               </Link>
             </div>
           </div>
-          <p className="mt-12 text-white text-lg md:text-xl max-w-xl text-center leading-relaxed font-normal">
+          <p className="mt-12 text-secondary-blush text-lg md:text-xl max-w-xl text-center leading-relaxed font-normal">
             We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without
             excluding men).
           </p>
@@ -96,7 +96,7 @@ function ScrollingHeadlineMotion() {
           </div>
           <motion.p
             style={{ opacity: paragraphOpacity }}
-            className="mt-12 text-white text-lg md:text-xl max-w-xl text-center leading-relaxed font-normal"
+            className="mt-12 text-secondary-blush text-lg md:text-xl max-w-xl text-center leading-relaxed font-normal"
           >
             We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without
             excluding men).
