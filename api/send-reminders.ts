@@ -1,6 +1,7 @@
 // Cron job: send 24-hour event reminder emails to confirmed participants.
-// Runs every hour via Vercel Cron. The 23–25h window + reminder_sent_at guard
-// ensures each participant receives exactly one reminder per registration.
+// Runs once daily at 07:00 UTC via Vercel Cron. The 17–41h window covers all
+// events starting anytime the following calendar day. The reminder_sent_at
+// guard ensures each participant receives exactly one reminder per registration.
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
@@ -170,10 +171,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const eventIds = [...new Set(registrations.map((r) => Number(r.event_id)))];
     const wpMeta = await fetchWpEventsMeta(eventIds);
 
-    // Filter to events happening in the 23–25 hour window from now
+    // Filter to events happening tomorrow (17–41h from now).
+    // Cron runs at 07:00 UTC daily, so this window covers all events
+    // starting anywhere between 00:00 and 23:59 UTC the following day.
     const now = Date.now();
-    const windowStart = now + 23 * 60 * 60 * 1000;
-    const windowEnd = now + 25 * 60 * 60 * 1000;
+    const windowStart = now + 17 * 60 * 60 * 1000;
+    const windowEnd = now + 41 * 60 * 60 * 1000;
 
     const qualifyingEventIds = new Set(
       eventIds.filter((id) => {

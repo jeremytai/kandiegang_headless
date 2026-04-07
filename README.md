@@ -3,11 +3,12 @@
 ## TO DO
 - Events
   - add join waitlist CTA to event pages
-  - check email notifications (cancelled event, cancelled participation, new event, etc.)
 - Normalize WordPress event descriptions so Markdown lists render correctly (handle en-dash/em-dash, common bullet characters, numbered markers like `)` or `.`, and strip zero-width/non-breaking spaces). Add a regression test or example content and remove dev-only debug UI after verification.
-- Add a guide/admin page to view event registrations (signed-up attendees), not just waitlist entries.
 - [Done] Show event participants on each event page, grouped by ride level, for guides/admins.
 - [Done] Migrate all serverless API handlers to Next.js `pages/api/` directory.
+- [Done] Admin analytics participant management (remove, no-show, personal email).
+- [Done] Guide dashboard at `/guide/analytics` with event stats, charts, and participant table.
+- [Done] 24-hour event reminder emails (Vercel Cron, daily at 07:00 UTC).
 
 ## 🗓️ Event Signup & Early Access Logic
 
@@ -72,6 +73,9 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
 - **🧑‍🤝‍🧑 Event Participants List**: Each event page now displays a list of participants, grouped by ride level, directly under the event description for guides and admins.
 - **🛠️ Next.js API Handler Migration**: All serverless API handlers have been migrated to Next.js `pages/api/` for improved maintainability and Vercel compatibility.
 - **🚴 Gravel Events**: First-class support for gravel group rides via a single **Gravel Ride** level (guides, spots, distance, pace, route) and Komoot route embeds in a responsive sidebar modal.
+- **🗂️ Admin Participant Management**: Guides and admins can remove participants (with automatic waitlist promotion), mark no-shows, and send personal emails directly from the analytics dashboard.
+- **📊 Guide Dashboard**: Dedicated guide view at `/guide/analytics` with ride stats (total events, avg participants, no-show rate, cancellation rate, repeat riders), level popularity and monthly volume charts, and the full participant table.
+- **🔔 24-hour Event Reminders**: Automated daily email reminders sent to all confirmed participants the day before their event, including event link and a one-click cancel link (fresh token issued per reminder).
 
 ## 🚀 Tech Stack
 
@@ -322,6 +326,64 @@ The shared `ContactForm` component (`components/ContactForm.tsx`) is used on bot
 
 Analytics are provided by [PostHog](https://posthog.com) and are **consent-gated**: the PostHog script only loads after the user accepts **analytics** in the cookie banner. If the user later revokes analytics in cookie preferences, PostHog stops sending data (`opt_out_capturing`).
 
+## 🔔 Event Reminder Emails
+
+Confirmed participants receive a reminder email approximately 24 hours before their event. The system is implemented as a Vercel Cron job.
+
+### How it works
+
+- **Schedule**: runs once daily at **07:00 UTC** (`0 7 * * *` in `vercel.json`)
+- **Window**: finds all confirmed (non-waitlist, non-cancelled) registrations whose event falls **17–41 hours from now** — covering all events starting anytime the following calendar day
+- **Deduplication**: `reminder_sent_at` is written to the registration row on first send; subsequent cron runs skip already-reminded registrations
+- **Cancel token rotation**: each reminder issues a fresh cancel token and updates `cancel_token_hash` / `cancel_token_issued_at` in the same DB write, so the cancel link in the reminder email is always valid
+- **Email**: personalised "See you tomorrow, [Name]!" with event title, level, date, event page link, and cancel link — styled to match all other Kandie Gang transactional emails
+
+### Required migrations
+
+Run against your Supabase database before deploying:
+
+```sql
+-- reminder_sent_at column
+ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ;
+
+-- no_show_at column (for guide no-show tracking)
+ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS no_show_at TIMESTAMPTZ;
+```
+
+### Required env vars
+
+| Variable | Description |
+| --- | --- |
+| `CRON_SECRET` | Random secret; Vercel passes it as `Authorization: Bearer <secret>` to the cron endpoint. Set in Vercel → Settings → Environment Variables. |
+
+> **Vercel Hobby limit**: cron jobs are limited to one execution per day. The 17–41h window is sized accordingly.
+
+---
+
+## 🗂️ Admin & Guide Tools
+
+### Participant management (`/admin/analytics`)
+
+Guides and admins can take per-participant actions directly from the Event Participation table:
+
+| Action | What it does |
+| --- | --- |
+| **Remove from event** | Cancels the registration; promotes the next waitlisted person (sends them a new confirmation + cancel token) |
+| **Mark as no-show** | Sets `no_show_at` on the registration. Does **not** open a waitlist spot — the slot was consumed. |
+| **Send personal email** | Composes a custom email to that specific participant via Resend |
+
+All actions are guide-authenticated (`POST /api/admin-update-profile` with `action=admin-remove-participant`, `admin-no-show`, or `admin-send-participant-email`).
+
+### Guide dashboard (`/guide/analytics`)
+
+Available at `/guide/analytics` to all users with `is_guide = true`. Displays:
+
+- **Metric cards**: total rides (past / upcoming split), average participants per past event, no-show rate, cancellation rate, unique riders, repeat rider %
+- **Charts**: confirmed spots by level (all-time) and events per month (last 12 months)
+- **Event participation table**: full expandable event/participant table with management actions; email column hidden for privacy
+
+---
+
 ## 🔐 Security audit (March 2026)
 
 This repo received a quick security hardening pass with a focus on API safety and production resilience.
@@ -390,7 +452,7 @@ The shop product pages (`/shop/:slug`) include Stripe Checkout integration for s
    - If checkout is cancelled, users return to the product page
    - **Note**: The API endpoint `/api/create-checkout-session` only works with `vercel dev` or when deployed to Vercel
 
-### How it works
+### Checkout flow
 
 - The `CheckoutButton` component (`components/CheckoutButton.tsx`) calls `/api/create-checkout-session` to create a Stripe Checkout session
 - The Vercel serverless function (`api/create-checkout-session.ts`) handles session creation securely on the server
