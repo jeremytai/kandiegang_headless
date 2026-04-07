@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit } from '../lib/rateLimit.js';
+import { isGuideProfile } from '../lib/guideAccess.js';
 import { bucketize, aggregateByMonth, countByArea } from '../utils/dataTransformations.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -47,11 +48,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { data: callerProfile } = await adminClient
     .from('profiles')
-    .select('is_guide')
+    .select('is_guide, membership_plans')
     .eq('id', user.id)
     .single();
 
-  if (!callerProfile?.is_guide) {
+  if (!isGuideProfile(callerProfile)) {
     return res.status(403).json({ error: 'Forbidden — guide access required' });
   }
 

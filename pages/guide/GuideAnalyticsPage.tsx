@@ -14,6 +14,7 @@ import { useEventParticipation } from '../../hooks/useEventParticipation';
 import { MetricCard } from '../../components/admin/MetricCard';
 import { EventParticipationTable } from '../../components/admin/EventParticipationTable';
 import type { EventParticipationEvent } from '../../types/analytics';
+import { isGuideProfile } from '../../lib/guideAccess';
 
 /* ─── Constants ─── */
 const LEVEL_LABELS: Record<string, string> = {
@@ -139,7 +140,7 @@ export const GuideAnalyticsPage: React.FC = () => {
 
   const stats = useMemo(() => computeStats(events), [events]);
 
-  const hasAccess = Boolean(user && profile?.is_guide);
+  const hasAccess = Boolean(user && isGuideProfile(profile));
 
   if (!hasAccess) {
     return (

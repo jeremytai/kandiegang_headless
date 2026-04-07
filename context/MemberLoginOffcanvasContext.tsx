@@ -16,6 +16,7 @@ import { MemberMetaCard } from '../components/member/MemberMetaCard';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { useLightMotionBackdrop } from '../hooks/useLightMotionBackdrop';
+import { isGuideProfile } from '../lib/guideAccess';
 
 const DELETE_ACCOUNT_CONFIRM_PHRASE = 'Yes, delete account';
 
@@ -401,12 +402,6 @@ function isCyclingMember(plans: string[] | null | undefined): boolean {
   );
 }
 
-/** True if profile has a plan name containing "guide". */
-function isGuideFromPlans(plans: string[] | null | undefined): boolean {
-  if (!Array.isArray(plans)) return false;
-  return plans.some((p) => p.toLowerCase().includes('guide'));
-}
-
 type PanelView = 'login' | 'signup' | 'event-signup';
 
 /** Account view when user is logged in. Own component so hook count is independent of the auth/form view. */
@@ -451,7 +446,7 @@ function MemberOffcanvasAccountContent({
 
   const daysLeft = getDaysLeft(profile?.membership_expiration ?? null);
   const showCyclingMember = isCyclingMember(profile?.membership_plans);
-  const showGuide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
+  const showGuide = isGuideProfile(profile);
   const hasRolePills = showCyclingMember || showGuide;
   const isMember = profile?.is_member === true;
 
@@ -592,27 +587,6 @@ function MemberOffcanvasAccountContent({
         </>
       ),
     },
-    ...(profile?.is_guide === true
-      ? [
-          {
-            label: 'Guide Dashboard',
-            content: (
-              <div className="space-y-3">
-                <p className="text-sm text-slate-600">
-                  Event overview, participation metrics, and the full events table for guides.
-                </p>
-                <Link
-                  to="/guide/analytics"
-                  onClick={onClose}
-                  className="inline-flex w-full items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary-purple-rain/90 transition"
-                >
-                  Open Guide Dashboard
-                </Link>
-              </div>
-            ),
-          },
-        ]
-      : []),
     {
       label: 'Activity',
       content: (
@@ -649,7 +623,7 @@ function MemberOffcanvasAccountContent({
                   Analytics Dashboard
                 </Link>
                 {/* Show Design System link if user is a guide */}
-                {profile?.is_guide === true && (
+                {showGuide && (
                   <Link
                     to="/design-system"
                     onClick={onClose}
@@ -717,6 +691,23 @@ function MemberOffcanvasAccountContent({
         <p className="text-lg md:text-xl font-medium tracking-tight text-secondary-purple-rain">
           Hello {profile?.display_name}
         </p>
+        {showGuide && (
+          <div className="mt-4 space-y-2">
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-secondary-purple-rain">
+              Guide Dashboard
+            </p>
+            <Link
+              to="/guide/analytics"
+              onClick={onClose}
+              className="inline-flex w-full items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary-purple-rain/90 transition"
+            >
+              Open Guide Dashboard
+            </Link>
+            <p className="text-xs text-slate-500">
+              Event overview, participation metrics, and the full events table.
+            </p>
+          </div>
+        )}
         {generalSection}
       </div>
       {/* Accordion sections */}
