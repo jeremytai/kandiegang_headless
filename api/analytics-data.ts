@@ -311,7 +311,7 @@ async function fetchWpEventsMeta(
 ): Promise<Record<number, { title: string; date: string }>> {
   if (eventIds.length === 0) return {};
   const aliases = eventIds
-    .map((id) => `e${id}: rideEvent(id: "${id}", idType: DATABASE_ID) { title date }`)
+    .map((id) => `e${id}: rideEvent(id: "${id}", idType: DATABASE_ID) { title eventDetails { eventDate } }`)
     .join('\n    ');
   try {
     const response = await fetch(WP_GRAPHQL_URL, {
@@ -325,7 +325,7 @@ async function fetchWpEventsMeta(
     const result: Record<number, { title: string; date: string }> = {};
     for (const id of eventIds) {
       const entry = data[`e${id}`];
-      if (entry) result[id] = { title: entry.title || `Event #${id}`, date: entry.date ? entry.date.split('T')[0] : '' };
+      if (entry) result[id] = { title: entry.title || `Event #${id}`, date: entry.eventDetails?.eventDate ? entry.eventDetails.eventDate.split('T')[0] : '' };
     }
     return result;
   } catch {
