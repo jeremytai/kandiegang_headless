@@ -1048,7 +1048,7 @@ async function handleCancel(req: VercelRequest, res: VercelResponse) {
     if (data?.event_id && data?.ride_level) {
       const { data: nextInLine } = await adminClient
         .from('registrations')
-        .select('id, user_id, ride_level, cancel_token_hash')
+        .select('id, user_id, email, ride_level')
         .eq('event_id', data.event_id)
         .eq('ride_level', data.ride_level)
         .eq('is_waitlist', true)
@@ -1058,26 +1058,37 @@ async function handleCancel(req: VercelRequest, res: VercelResponse) {
         .maybeSingle();
 
       if (nextInLine) {
+        const { token: newCancelToken, hash: newCancelTokenHash } = createCancelToken();
         await adminClient
           .from('registrations')
-          .update({ is_waitlist: false, waitlist_promoted_at: new Date().toISOString() })
+          .update({
+            is_waitlist: false,
+            waitlist_promoted_at: new Date().toISOString(),
+            cancel_token_hash: newCancelTokenHash,
+            cancel_token_issued_at: new Date().toISOString(),
+          })
           .eq('id', nextInLine.id);
 
         if (RESEND_API_KEY) {
           try {
             const resend = new Resend(RESEND_API_KEY);
-            const { data: profile } = await adminClient
-              .from('profiles')
-              .select('email')
-              .eq('id', nextInLine.user_id)
-              .single();
-            const email = profile?.email ?? null;
-            if (email) {
+            let recipientEmail: string | null = null;
+            if (nextInLine.email) {
+              recipientEmail = nextInLine.email;
+            } else if (nextInLine.user_id) {
+              const { data: profile } = await adminClient
+                .from('profiles')
+                .select('email')
+                .eq('id', nextInLine.user_id)
+                .single();
+              recipientEmail = profile?.email ?? null;
+            }
+            if (recipientEmail) {
               const eventTitle = await fetchEventTitle(Number(data.event_id));
-              const cancelUrl = `${BASE_URL}/event/cancel?token=${encodeURIComponent(token)}`;
+              const cancelUrl = `${BASE_URL}/event/cancel?token=${encodeURIComponent(newCancelToken)}`;
               await resend.emails.send({
                 from: FROM_EMAIL,
-                to: email,
+                to: recipientEmail,
                 subject: 'A spot opened up for your event',
                 html: buildPromotedHtml(eventTitle, nextInLine.ride_level, cancelUrl),
                 text: buildPromotedText(eventTitle, nextInLine.ride_level, cancelUrl),
