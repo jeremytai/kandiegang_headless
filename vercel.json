@@ -3,5 +3,11 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/((?!api|assets|fonts|images|logos|robots.txt|_redirects).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/send-reminders",
+      "schedule": "0 * * * *"
+    }
   ]
 }

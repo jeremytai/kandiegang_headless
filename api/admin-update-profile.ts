@@ -68,7 +68,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: 'Not configured' });
   }
 
-  // Verify caller is an authenticated guide
+  const action = (req.body as { action?: string }).action || 'update';
+
+  // profile-lookup is unauthenticated — handle before auth check
+  if (action === 'profile-lookup') return handleProfileLookup(req, res);
+
+  // All other actions require guide authentication
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) {
@@ -96,8 +101,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!callerProfile?.is_guide) {
     return res.status(403).json({ error: 'Forbidden — guide access required' });
   }
-
-  const action = (req.body as { action?: string }).action || 'update';
 
   if (action === 'merge') return handleMerge(req, res, adminClient);
   if (action === 'admin-remove-participant') return handleRemoveParticipant(req, res, adminClient);
@@ -550,4 +553,31 @@ async function handleSendParticipantEmail(
   }
 
   return res.status(200).json({ success: true });
+}
+
+// ─── Profile lookup (unauthenticated) ────────────────────────────────────────
+
+async function handleProfileLookup(req: NextApiRequest, res: NextApiResponse) {
+  const body = req.body as { email?: string };
+  const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+  if (!email || !email.includes('@')) return res.status(200).json({ displayName: null });
+
+  try {
+    const adminClient = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const { data } = await adminClient
+      .from('profiles')
+      .select('display_name')
+      .ilike('email', email)
+      .limit(1)
+      .maybeSingle();
+    const displayName =
+      typeof data?.display_name === 'string' && data.display_name.trim()
+        ? data.display_name.trim()
+        : null;
+    return res.status(200).json({ displayName });
+  } catch {
+    return res.status(200).json({ displayName: null });
+  }
 }
