@@ -216,7 +216,7 @@ async function handleEventParticipation(res: NextApiResponse, adminClient: any) 
   try {
     const { data: rows, error: regError } = await adminClient
       .from('registrations')
-      .select('event_id, ride_level, event_type, first_name, last_name, user_id, is_waitlist, created_at, cancelled_at')
+      .select('id, event_id, ride_level, event_type, first_name, last_name, user_id, is_waitlist, created_at, cancelled_at, no_show_at')
       .order('created_at', { ascending: true });
 
     if (regError) throw regError;
@@ -274,6 +274,7 @@ async function handleEventParticipation(res: NextApiResponse, adminClient: any) 
         else { byLevel[level].confirmed++; confirmed++; }
         const uid = row.user_id as string | null;
         return {
+          registrationId: row.id,
           userId: uid,
           firstName: row.first_name,
           lastName: row.last_name,
@@ -282,6 +283,7 @@ async function handleEventParticipation(res: NextApiResponse, adminClient: any) 
           isWaitlist: Boolean(row.is_waitlist),
           signedUpAt: row.created_at,
           cancelledAt: row.cancelled_at ?? null,
+          noShowAt: row.no_show_at ?? null,
           totalSignups: uid ? (totalSignupsByUser[uid] || 0) : 0,
           totalCancellations: uid ? (totalCancellationsByUser[uid] || 0) : 0,
         };

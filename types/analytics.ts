@@ -100,6 +100,7 @@ export interface MarketingOptIn {
 }
 
 export interface EventParticipationRegistrant {
+  registrationId: string;
   userId: string | null;
   firstName: string;
   lastName: string;
@@ -108,6 +109,7 @@ export interface EventParticipationRegistrant {
   isWaitlist: boolean;
   signedUpAt: string;
   cancelledAt: string | null;
+  noShowAt: string | null;
   totalSignups: number;
   totalCancellations: number;
 }
