@@ -314,44 +314,72 @@ function ParticipantList({
   eventId,
   eventTitle,
   onRefresh,
+  hideEmail = false,
 }: {
   registrants: EventParticipationRegistrant[];
   eventId: number;
   eventTitle: string;
   onRefresh: () => void;
+  hideEmail?: boolean;
 }) {
   // Optimistic overrides: applied immediately on action success, cleared on next data refresh
   const [overrides, setOverrides] = useState<Record<string, 'cancel' | 'noshow'>>({});
+  const [levelSort, setLevelSort] = useState<'asc' | 'desc' | null>(null);
 
   function handleOptimisticUpdate(registrationId: string, type: 'cancel' | 'noshow') {
     setOverrides((prev) => ({ ...prev, [registrationId]: type }));
   }
 
+  function toggleLevelSort() {
+    setLevelSort((prev) => (prev === null ? 'asc' : prev === 'asc' ? 'desc' : null));
+  }
+
+  const levelRank = (rideLevel: string) => {
+    const idx = LEVEL_ORDER.indexOf(rideLevel);
+    return idx === -1 ? LEVEL_ORDER.length : idx;
+  };
+
   const sorted = [...registrants].sort((a, b) => {
     const effectiveCancelled = (r: EventParticipationRegistrant) =>
       Boolean(r.cancelledAt) || overrides[r.registrationId] === 'cancel';
-    const rank = (r: EventParticipationRegistrant) =>
+    const statusRank = (r: EventParticipationRegistrant) =>
       effectiveCancelled(r) ? 2 : r.isWaitlist ? 1 : 0;
-    const diff = rank(a) - rank(b);
-    if (diff !== 0) return diff;
+
+    if (levelSort !== null) {
+      const levelDiff = levelRank(a.rideLevel) - levelRank(b.rideLevel);
+      if (levelDiff !== 0) return levelSort === 'asc' ? levelDiff : -levelDiff;
+    }
+
+    const statusDiff = statusRank(a) - statusRank(b);
+    if (statusDiff !== 0) return statusDiff;
     return a.signedUpAt.localeCompare(b.signedUpAt);
   });
+
+  const headers = ['Name', ...(hideEmail ? [] : ['Email']), 'Level', 'Signed up', 'Status', 'Total signups', 'Total cancels', ''];
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-neutral-100">
-            {['Name', 'Email', 'Level', 'Signed up', 'Status', 'Total signups', 'Total cancels', ''].map(
-              (h, i) => (
+            {headers.map((h) => (
+              h === 'Level' ? (
                 <th
-                  key={i}
+                  key="Level"
+                  onClick={toggleLevelSort}
+                  className="text-left py-2 px-3 text-neutral-400 font-medium uppercase tracking-[0.08em] whitespace-nowrap cursor-pointer hover:text-[#ff611a] transition-colors select-none"
+                >
+                  Level{levelSort === 'asc' ? ' ↑' : levelSort === 'desc' ? ' ↓' : ''}
+                </th>
+              ) : (
+                <th
+                  key={h}
                   className={`text-left py-2 px-3 text-neutral-400 font-medium uppercase tracking-[0.08em] whitespace-nowrap${h === '' ? ' w-8' : ''}`}
                 >
                   {h}
                 </th>
               )
-            )}
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -367,7 +395,7 @@ function ParticipantList({
                 <td className="py-2 px-3 font-medium text-neutral-800 whitespace-nowrap">
                   {r.firstName} {r.lastName}
                 </td>
-                <td className="py-2 px-3 text-neutral-500">{r.email ?? '—'}</td>
+                {!hideEmail && <td className="py-2 px-3 text-neutral-500">{r.email ?? '—'}</td>}
                 <td className="py-2 px-3">
                   <Badge color={TYPE_COLORS.ride}>
                     {LEVEL_LABELS[r.rideLevel] ?? r.rideLevel}
@@ -413,11 +441,13 @@ function EventRow({
   isExpanded,
   onToggle,
   onRefresh,
+  hideEmail,
 }: {
   event: EventParticipationEvent;
   isExpanded: boolean;
   onToggle: () => void;
   onRefresh: () => void;
+  hideEmail?: boolean;
 }) {
   const typeColor = TYPE_COLORS[event.eventType] ?? '#6b7280';
   const typeLabel =
@@ -500,6 +530,7 @@ function EventRow({
                 eventId={event.eventId}
                 eventTitle={event.title}
                 onRefresh={onRefresh}
+                hideEmail={hideEmail}
               />
             )}
           </td>
@@ -513,7 +544,7 @@ function EventRow({
 type SortKey = 'date' | 'title' | 'confirmed' | 'waitlist' | 'cancelled';
 type SortDir = 'asc' | 'desc';
 
-export function EventParticipationTable() {
+export function EventParticipationTable({ hideEmail }: { hideEmail?: boolean } = {}) {
   const { events, loading, error, refresh } = useEventParticipation();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('date');
@@ -611,6 +642,7 @@ export function EventParticipationTable() {
                     setExpandedId((prev) => (prev === event.eventId ? null : event.eventId))
                   }
                   onRefresh={refresh}
+                  hideEmail={hideEmail}
                 />
               ))}
             </tbody>

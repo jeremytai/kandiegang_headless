@@ -291,7 +291,7 @@ export const GuideAnalyticsPage: React.FC = () => {
             </div>
 
             {/* ─── Full event & participant table ─── */}
-            <EventParticipationTable />
+            <EventParticipationTable hideEmail />
           </>
         )}
       </div>
