@@ -39,11 +39,13 @@ function ParticipantActions({
   eventId,
   eventTitle,
   onActionComplete,
+  onOptimisticUpdate,
 }: {
   registrant: EventParticipationRegistrant;
   eventId: number;
   eventTitle: string;
   onActionComplete: () => void;
+  onOptimisticUpdate: (registrationId: string, type: 'cancel' | 'noshow') => void;
 }) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState<'remove' | 'noshow' | null>(null);
@@ -95,6 +97,7 @@ function ParticipantActions({
       await callApi({ action: 'admin-remove-participant', registrationId: registrant.registrationId, eventId });
       setOpen(false);
       setConfirming(null);
+      onOptimisticUpdate(registrant.registrationId, 'cancel');
       onActionComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove participant');
@@ -110,6 +113,7 @@ function ParticipantActions({
       await callApi({ action: 'admin-no-show', registrationId: registrant.registrationId });
       setOpen(false);
       setConfirming(null);
+      onOptimisticUpdate(registrant.registrationId, 'noshow');
       onActionComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to mark as no-show');
@@ -316,10 +320,18 @@ function ParticipantList({
   eventTitle: string;
   onRefresh: () => void;
 }) {
+  // Optimistic overrides: applied immediately on action success, cleared on next data refresh
+  const [overrides, setOverrides] = useState<Record<string, 'cancel' | 'noshow'>>({});
+
+  function handleOptimisticUpdate(registrationId: string, type: 'cancel' | 'noshow') {
+    setOverrides((prev) => ({ ...prev, [registrationId]: type }));
+  }
+
   const sorted = [...registrants].sort((a, b) => {
-    // Confirmed first, then waitlist, then cancelled
+    const effectiveCancelled = (r: EventParticipationRegistrant) =>
+      Boolean(r.cancelledAt) || overrides[r.registrationId] === 'cancel';
     const rank = (r: EventParticipationRegistrant) =>
-      r.cancelledAt ? 2 : r.isWaitlist ? 1 : 0;
+      effectiveCancelled(r) ? 2 : r.isWaitlist ? 1 : 0;
     const diff = rank(a) - rank(b);
     if (diff !== 0) return diff;
     return a.signedUpAt.localeCompare(b.signedUpAt);
@@ -344,8 +356,9 @@ function ParticipantList({
         </thead>
         <tbody>
           {sorted.map((r, i) => {
-            const isCancelled = Boolean(r.cancelledAt);
-            const isNoShow = Boolean(r.noShowAt) && !isCancelled;
+            const override = overrides[r.registrationId];
+            const isCancelled = Boolean(r.cancelledAt) || override === 'cancel';
+            const isNoShow = (Boolean(r.noShowAt) || override === 'noshow') && !isCancelled;
             const isWaitlist = r.isWaitlist && !isCancelled;
             const rowClass = isCancelled ? 'opacity-50' : '';
 
@@ -378,10 +391,11 @@ function ParticipantList({
                 <td className="py-2 px-3 text-center text-neutral-500">{r.totalCancellations}</td>
                 <td className="py-2 px-3 text-right">
                   <ParticipantActions
-                    registrant={r}
+                    registrant={{ ...r, cancelledAt: isCancelled ? (r.cancelledAt ?? 'pending') : null, noShowAt: isNoShow ? (r.noShowAt ?? 'pending') : null }}
                     eventId={eventId}
                     eventTitle={eventTitle}
                     onActionComplete={onRefresh}
+                    onOptimisticUpdate={handleOptimisticUpdate}
                   />
                 </td>
               </tr>
