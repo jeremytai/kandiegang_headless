@@ -26,6 +26,9 @@ const LEVEL_LABELS: Record<string, string> = {
 };
 const LEVEL_ORDER = ['level1', 'level2', 'level2plus', 'level3', 'gravel', 'workshop'];
 
+/** Matches guide/admin accent (labels, monthly chart, MetricCard). */
+const ACCENT_ORANGE = '#ff611a';
+
 const TOOLTIP_STYLE = {
   backgroundColor: '#fff',
   border: '1px solid #e5e5e5',
@@ -242,7 +245,7 @@ export const GuideAnalyticsPage: React.FC = () => {
                       <Bar
                         dataKey="count"
                         name="Confirmed spots"
-                        fill="#2A3577"
+                        fill={ACCENT_ORANGE}
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
@@ -278,7 +281,7 @@ export const GuideAnalyticsPage: React.FC = () => {
                     <Bar
                       dataKey="events"
                       name="Events"
-                      fill="#ff611a"
+                      fill={ACCENT_ORANGE}
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
