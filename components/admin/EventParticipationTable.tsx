@@ -75,7 +75,7 @@ function ParticipantActions({
   async function callApi(body: Record<string, unknown>) {
     const { data: { session } } = (await supabase?.auth.getSession()) ?? { data: { session: null } };
     if (!session?.access_token) throw new Error('Not authenticated');
-    const res = await fetch('/api/admin-participant', {
+    const res = await fetch('/api/admin-update-profile', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
