@@ -592,6 +592,27 @@ function MemberOffcanvasAccountContent({
         </>
       ),
     },
+    ...(profile?.is_guide === true
+      ? [
+          {
+            label: 'Guide Dashboard',
+            content: (
+              <div className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Event overview, participation metrics, and the full events table for guides.
+                </p>
+                <Link
+                  to="/guide/analytics"
+                  onClick={onClose}
+                  className="inline-flex w-full items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary-purple-rain/90 transition"
+                >
+                  Open Guide Dashboard
+                </Link>
+              </div>
+            ),
+          },
+        ]
+      : []),
     {
       label: 'Activity',
       content: (
@@ -611,15 +632,6 @@ function MemberOffcanvasAccountContent({
           <div className="text-sm text-slate-500">
             Coming soon: Manage your notification preferences.
           </div>
-          {profile?.is_guide === true && (
-            <Link
-              to="/guide/analytics"
-              onClick={onClose}
-              className="mt-3 inline-flex items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-2.5 text-sm font-semibold text-white hover:bg-secondary-purple-rain/90 transition"
-            >
-              Event Participation
-            </Link>
-          )}
         </>
       ),
     },
