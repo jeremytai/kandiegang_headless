@@ -722,7 +722,7 @@ export const KandieEventPage: React.FC = () => {
               : undefined
           }
           onBack={() => navigate('/community')}
-          shareSlug={slug}
+          shareSlug={eventData.slug || slug}
           pageUrl={eventPageUrl}
         />
         <section>

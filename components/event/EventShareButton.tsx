@@ -27,6 +27,12 @@ export const EventShareButton: React.FC<EventShareButtonProps> = ({ eventSlug, p
       if (!res.ok) {
         throw new Error(res.status === 404 ? 'Event not found' : `HTTP ${res.status}`);
       }
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('image')) {
+        throw new Error(
+          'Share image unavailable (API did not return an image). With Vite dev, use the /api/event-share proxy or run npm run dev:vercel.'
+        );
+      }
       const blob = await res.blob();
       const file = new File([blob], `kandie-gang-${eventSlug}.png`, { type: 'image/png' });
       const sharePayload: ShareData = {

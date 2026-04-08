@@ -19,6 +19,11 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
       proxy: {
+        // Vite otherwise serves api/event-share.tsx as JS (same path as the module); proxy to real serverless PNG.
+        '/api/event-share': {
+          target: env.VITE_DEV_EVENT_SHARE_ORIGIN || 'https://www.kandiegang.com',
+          changeOrigin: true,
+        },
         '/api/geolocation': {
           target: 'https://ipapi.co',
           changeOrigin: true,
