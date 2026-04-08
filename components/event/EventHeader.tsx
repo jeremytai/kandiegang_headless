@@ -4,15 +4,26 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { EventShareButton } from './EventShareButton';
 
 interface EventHeaderProps {
   title: string;
   intro?: string;
   imageUrl?: string;
   onBack?: () => void;
+  /** WordPress ride slug — enables branded PNG share card. */
+  shareSlug?: string;
+  pageUrl?: string | null;
 }
 
-const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBack }) => {
+const EventHeader: React.FC<EventHeaderProps> = ({
+  title,
+  intro,
+  imageUrl,
+  onBack,
+  shareSlug,
+  pageUrl,
+}) => {
   return (
     // Main Wrapper with the "grey-50" background
     <section className="bg-secondary-purple-rain py-12 md:py-20 overflow-hidden">
@@ -22,6 +33,7 @@ const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBac
           <div className="order-2 lg:order-1 lg:col-span-7">
             {onBack && (
               <button
+                type="button"
                 onClick={onBack}
                 className="inline-flex items-center gap-2 text-secondary-current hover:text-secondary-purple-rain text-sm font-medium transition-colors mb-6"
               >
@@ -29,7 +41,7 @@ const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBac
               </button>
             )}
 
-            <h1 className="text-4xl md:text-6xl font-heading-regular text-white leading-tight mb-6">
+            <h1 className="text-4xl md:text-6xl font-heading-regular text-white leading-tight mb-3">
               {title}
             </h1>
 
@@ -50,6 +62,12 @@ const EventHeader: React.FC<EventHeaderProps> = ({ title, intro, imageUrl, onBac
                 </div>
               </div>
             )}
+
+            {shareSlug ? (
+              <div className={intro ? 'mt-6' : undefined}>
+                <EventShareButton eventSlug={shareSlug} pageUrl={pageUrl} />
+              </div>
+            ) : null}
           </div>
 
           {/* Right Side: Media */}

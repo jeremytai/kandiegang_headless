@@ -722,6 +722,8 @@ export const KandieEventPage: React.FC = () => {
               : undefined
           }
           onBack={() => navigate('/community')}
+          shareSlug={slug}
+          pageUrl={eventPageUrl}
         />
         <section>
           <div className="max-w-6xl mx-auto px-6">
