@@ -19,7 +19,9 @@
   font-weight: normal;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/ivy-ora/IvyOraDispLight.woff2') format('woff2');
+  src:
+    url('/fonts/ivy-ora/IvyOraDispLight.ttf') format('truetype'),
+    url('/fonts/ivy-ora/IvyOraDispLight.woff2') format('woff2');
 }
 
 /* IvyOra Display - Regular */
@@ -63,7 +65,9 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/gt-planar/GTPlanarRegular.woff2') format('woff2');
+  src:
+    url('/fonts/gt-planar/GTPlanarRegular.ttf') format('truetype'),
+    url('/fonts/gt-planar/GTPlanarRegular.woff2') format('woff2');
 }
 
 @font-face {

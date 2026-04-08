@@ -1,39 +1,29 @@
 # Fonts Directory
 
-Place your font files here. This directory is served as static assets by Vite.
+Static assets for the site and for **`/api/event-share`** (branded PNG). Declarations live in `fonts.css`.
 
-## Font File Structure
+## Required for event share PNG (commit these)
 
-Organize fonts by family:
+Vercel Edge loads them from the same origin as the site:
+
+- `ivy-ora/IvyOraDispLight.ttf`
+- `gt-planar/GTPlanarRegular.ttf`
+
+`npm run build` runs `verify:share-fonts` first if either is missing.
+
+## Layout (IvyOra + GTPlanar)
 
 ```text
 public/fonts/
-  ├── fonts.css (font declarations)
-  ├── gt-pressure/
-  │   └── GT-Pressure-Bold.woff2 (or .woff)
-  ├── gt-pressure-mono/
-  │   ├── GT-Pressure-Mono-Regular.woff2
-  │   └── GT-Pressure-Mono-Bold.woff2
-  └── cambon/
-      ├── Cambon-Regular.woff2
-      ├── Cambon-Italic.woff2
-      ├── Cambon-Medium.woff2
-      ├── Cambon-SemiBold.woff2
-      └── Cambon-Bold.woff2
+  ├── fonts.css
+  ├── ivy-ora/   # IvyOra Display (Thin, Light, Regular) — .woff2 and/or .ttf
+  └── gt-planar/ # GTPlanar weights — .woff2 and/or .ttf
 ```
 
+## Font usage (site)
 
-## Font Usage
-
-- **GT-Pressure Bold**: Headlines (h1, h2, h3, etc.)
-- **GT-Pressure Mono**: Subheadlines (use `.subheadline` class)
-- **Cambon**: Body text and paragraphs
-
-## CSS Classes
-
-- `.font-headline` - Apply GT-Pressure Bold
-- `.font-subheadline` - Apply GT-Pressure Mono
-- `.font-body` - Apply Cambon
+- **IvyOra Display**: headings — see `index.css` / Tailwind `font-heading-*`
+- **GTPlanar**: body — `--font-body`, `.font-body`
 
 ## Font Formats
 

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:vercel": "npm run build && vercel dev -A vercel.dev.json",
+    "verify:share-fonts": "node scripts/verify-share-fonts.mjs",
+    "prebuild": "npm run verify:share-fonts",
     "build": "vite build && node scripts/optimize-images.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -21,6 +23,7 @@
     "@types/dompurify": "^3.0.5",
     "@upstash/redis": "^1.36.2",
     "@vercel/functions": "^3.4.3",
+    "@vercel/og": "^0.11.1",
     "dompurify": "^3.3.3",
     "framer-motion": "^12.23.26",
     "gsap": "^3.14.2",

@@ -692,6 +692,7 @@ The project uses IvyOra Display for headings and GTPlanar for body text (all nor
 
 - **IvyOra Display** (`public/fonts/ivy-ora/`): Thin (`--font-heading-thin`), Light (`--font-heading-light`), Regular (`--font-heading-regular`) — used for h1–h6 and headline components
 - **GTPlanar** (`public/fonts/gt-planar/`): Weights 250, 300, 400, 700 (normal/italic) — used for body text, paragraphs, and subheadlines (`--font-body`)
+- **Event share card** (`GET /api/event-share`): Uses the same faces as static files **`public/fonts/ivy-ora/IvyOraDispLight.ttf`** and **`public/fonts/gt-planar/GTPlanarRegular.ttf`** (committed in repo). `npm run build` runs `verify:share-fonts` first so deploys fail fast if either file is missing.
 
 Fonts are loaded in `public/fonts/fonts.css`. Use CSS variables or utility classes:
 - **Variables**: `var(--font-heading-thin)`, `var(--font-heading-light)`, `var(--font-heading-regular)`, `var(--font-body)`
