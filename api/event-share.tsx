@@ -165,9 +165,19 @@ async function loadFallbackFonts(): Promise<FontSet> {
   };
 }
 
-// Logo natural aspect ratio: 253 × 145 ≈ 1.745 : 1
-const LOGO_W = 420;
-const LOGO_H = Math.round(420 / (253 / 145)); // ≈ 241
+/** Figma “Instagram Post” (493:2919): logo frame 253×145px */
+const LOGO_W = 253;
+const LOGO_H = 145;
+
+/** Inset event block width from Figma (subtract group ~784px) */
+const PANEL_W = 784;
+
+/** Black link icon ~24px, matches Figma link-01 on cream pill */
+const LINK_ICON_DATA_URI =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><path stroke="#1F2223" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path stroke="#1F2223" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+  );
 
 function shareCardElement(args: {
   heroUrl: string | null;
@@ -211,7 +221,7 @@ function shareCardElement(args: {
         />
       ) : null}
 
-      {/* Dark vignette — heavier at top and bottom */}
+      {/* Figma: gradient from-black ~80% opacity at top, fade to clear (multiply feel) */}
       <div
         style={{
           position: 'absolute',
@@ -220,7 +230,7 @@ function shareCardElement(args: {
           right: 0,
           bottom: 0,
           background:
-            'linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.10) 38%, rgba(0,0,0,0.72) 100%)',
+            'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.35) 28%, rgba(0,0,0,0.08) 48%, rgba(0,0,0,0.45) 100%)',
         }}
       />
 
@@ -233,11 +243,10 @@ function shareCardElement(args: {
           flex: 1,
           alignItems: 'center',
           width: '100%',
-          paddingTop: 72,
+          paddingTop: 56,
           paddingBottom: 0,
         }}
       >
-        {/* Cycling club logo — no pill, transparent bg, displayed at full natural ratio */}
         <img
           src={logoUrl}
           alt="Kandie Gang Cycling Club"
@@ -246,20 +255,52 @@ function shareCardElement(args: {
           style={{ objectFit: 'contain' }}
         />
 
-        <div style={{ flex: 1 }} />
+        <div style={{ flex: 1, minHeight: 32 }} />
 
-        {/* Bottom info panel */}
+        {/* Cream URL pill — above blue panel (Figma 493:2901) */}
         <div
           style={{
-            width: '100%',
-            background: 'rgba(27, 31, 59, 0.88)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            background: '#FDF9F0',
+            border: '1px solid #FDF9F0',
+            borderRadius: 20,
+            height: 44,
+            minWidth: 382,
+            padding: '0 40px',
+            marginBottom: -14,
+            zIndex: 1,
+            boxShadow: '0px 4px 4px 2px rgba(0,0,0,0.04)',
+          }}
+        >
+          <img src={LINK_ICON_DATA_URI} alt="" width={24} height={24} style={{ flexShrink: 0 }} />
+          <span
+            style={{
+              fontSize: 21,
+              color: '#1F2223',
+              fontFamily: bodyFont,
+              textAlign: 'center',
+            }}
+          >
+            www.kandiegang.com
+          </span>
+        </div>
+
+        {/* Inset blue panel + rounded top (Figma subtract / event block) */}
+        <div
+          style={{
+            width: PANEL_W,
+            background: '#46519C',
             borderTopLeftRadius: 40,
             borderTopRightRadius: 40,
-            padding: '48px 56px 64px',
+            padding: '52px 48px 60px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 20,
+            gap: 22,
           }}
         >
           {dateTimeLine ? (
@@ -269,7 +310,7 @@ function shareCardElement(args: {
                 color: '#F2ADAA',
                 fontFamily: bodyFont,
                 textAlign: 'center',
-                letterSpacing: 0.5,
+                lineHeight: 1.2,
               }}
             >
               {dateTimeLine}
@@ -278,27 +319,16 @@ function shareCardElement(args: {
           <span
             style={{
               fontSize: titleFontSize,
-              color: '#FDF9F0',
+              color: '#FFFFFF',
               fontFamily: headlineFont,
               fontWeight: headlineWeight,
               textAlign: 'center',
-              lineHeight: 1.15,
+              lineHeight: 1.12,
               textTransform: 'capitalize',
-              maxWidth: 940,
+              maxWidth: PANEL_W - 80,
             }}
           >
             {title}
-          </span>
-          {/* Subtle URL line */}
-          <span
-            style={{
-              fontSize: 22,
-              color: 'rgba(253,249,240,0.55)',
-              fontFamily: bodyFont,
-              marginTop: 8,
-            }}
-          >
-            kandiegang.com
           </span>
         </div>
       </div>
@@ -330,7 +360,9 @@ export default async function handler(request: Request): Promise<Response> {
     loadBrandFontsFromSite(request),
   ]);
 
-  const titleFontSize = title.length > 48 ? 44 : title.length > 32 ? 50 : 56;
+  /** Figma headline ~76px IvyOra Light; scale down for long titles (panel max ~696px) */
+  const titleFontSize =
+    title.length > 52 ? 48 : title.length > 40 ? 58 : title.length > 32 ? 68 : 76;
   const primary = brandFonts ?? (await loadFallbackFonts());
 
   const cardBase = {

@@ -44,12 +44,39 @@ export function formatEventTimeLabel(details: {
   return t;
 }
 
+/**
+ * Share PNG date line — matches Figma Brand Instagram frame (month before ordinal day).
+ * e.g. "Saturday, April 11th, 2026 | 10:00am"
+ */
+function formatEventDateLabelForShareCard(eventDateIso: string): string {
+  if (!eventDateIso) return '';
+  const eventDatePart = eventDateIso.split('T')[0];
+  const eventDate = eventDateIso ? new Date(eventDateIso) : new Date(NaN);
+  const eventDateForWeekday = eventDatePart ? new Date(`${eventDatePart}T12:00:00`) : null;
+  const weekdayLabel =
+    eventDateForWeekday && !Number.isNaN(eventDateForWeekday.getTime())
+      ? eventDateForWeekday.toLocaleDateString('en-US', { weekday: 'long' })
+      : '';
+  const monthLabel =
+    eventDate && !Number.isNaN(eventDate.getTime())
+      ? eventDate.toLocaleDateString('en-US', { month: 'long' })
+      : '';
+  const dayLabel =
+    eventDate && !Number.isNaN(eventDate.getTime()) ? getOrdinal(eventDate.getDate()) : '';
+  const yearLabel =
+    eventDate && !Number.isNaN(eventDate.getTime()) ? String(eventDate.getFullYear()) : '';
+  if (weekdayLabel && monthLabel && dayLabel && yearLabel) {
+    return `${weekdayLabel}, ${monthLabel} ${dayLabel}, ${yearLabel}`;
+  }
+  return eventDateIso;
+}
+
 /** Figma-style line: "Saturday, April 11th, 2026 | 10:00am" */
 export function formatShareDateTimeLine(
   eventDateIso: string,
   details: { workshopStartTime?: string | null; rideTime?: string | null }
 ): string {
-  const date = formatEventDateLabel(eventDateIso);
+  const date = formatEventDateLabelForShareCard(eventDateIso);
   const time = formatEventTimeLabel(details);
   if (date && time) return `${date} | ${time}`;
   if (date) return date;
