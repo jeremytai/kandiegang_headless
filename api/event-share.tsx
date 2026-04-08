@@ -64,6 +64,22 @@ const GT_PLANAR_PATHS = [
   '/fonts/gt-planar/GTPlanarRegular.woff2',
 ];
 
+/** Cycling club SVG logo — fetch from origin, encode as data URI for Satori */
+async function loadLogoDataUri(origin: string): Promise<string> {
+  try {
+    const res = await fetch(`${origin}/logos/kandiegang_cyclingclub_logo_breath.svg`);
+    if (res.ok) {
+      const text = await res.text();
+      const b64 = btoa(unescape(encodeURIComponent(text)));
+      return `data:image/svg+xml;base64,${b64}`;
+    }
+  } catch {
+    // fall through to PNG fallback
+  }
+  // PNG fallback: logo_blush.png (cream-coloured, transparent bg)
+  return `${origin}/logos/logo_blush.png`;
+}
+
 function transformMediaUrlServer(url: string): string {
   if (!url) return url;
   const MEDIA_CDN_BASE = (process.env.VITE_MEDIA_CDN_URL || '').replace(/\/$/, '');
@@ -149,6 +165,10 @@ async function loadFallbackFonts(): Promise<FontSet> {
   };
 }
 
+// Logo natural aspect ratio: 253 × 145 ≈ 1.745 : 1
+const LOGO_W = 420;
+const LOGO_H = Math.round(420 / (253 / 145)); // ≈ 241
+
 function shareCardElement(args: {
   heroUrl: string | null;
   logoUrl: string;
@@ -170,13 +190,14 @@ function shareCardElement(args: {
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        background: '#2A3577',
+        background: '#1B1F3B',
       }}
     >
+      {/* Hero image full-bleed */}
       {heroUrl ? (
         <img
           src={heroUrl}
-          alt="Event"
+          alt=""
           width={WIDTH}
           height={HEIGHT}
           style={{
@@ -189,6 +210,8 @@ function shareCardElement(args: {
           }}
         />
       ) : null}
+
+      {/* Dark vignette — heavier at top and bottom */}
       <div
         style={{
           position: 'absolute',
@@ -197,9 +220,11 @@ function shareCardElement(args: {
           right: 0,
           bottom: 0,
           background:
-            'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.12) 42%, rgba(0,0,0,0.55) 100%)',
+            'linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.10) 38%, rgba(0,0,0,0.72) 100%)',
         }}
       />
+
+      {/* Content layer */}
       <div
         style={{
           position: 'relative',
@@ -208,56 +233,43 @@ function shareCardElement(args: {
           flex: 1,
           alignItems: 'center',
           width: '100%',
-          paddingTop: 48,
+          paddingTop: 72,
+          paddingBottom: 0,
         }}
       >
+        {/* Cycling club logo — no pill, transparent bg, displayed at full natural ratio */}
         <img
           src={logoUrl}
-          alt="Kandie Gang"
-          width={240}
-          height={72}
-          style={{
-            objectFit: 'contain',
-            height: 72,
-          }}
+          alt="Kandie Gang Cycling Club"
+          width={LOGO_W}
+          height={LOGO_H}
+          style={{ objectFit: 'contain' }}
         />
+
         <div style={{ flex: 1 }} />
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            background: '#fdf9f0',
-            borderRadius: 22,
-            padding: '10px 32px',
-            marginBottom: 28,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-            gap: 12,
-          }}
-        >
-          <span style={{ fontSize: 22, fontFamily: bodyFont }}>🔗</span>
-          <span style={{ fontSize: 21, color: '#1F2223', fontFamily: bodyFont }}>www.kandiegang.com</span>
-        </div>
+
+        {/* Bottom info panel */}
         <div
           style={{
             width: '100%',
-            background: '#46519C',
-            borderTopLeftRadius: 36,
-            borderTopRightRadius: 36,
-            padding: '44px 48px 56px',
+            background: 'rgba(27, 31, 59, 0.88)',
+            borderTopLeftRadius: 40,
+            borderTopRightRadius: 40,
+            padding: '48px 56px 64px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 18,
+            gap: 20,
           }}
         >
           {dateTimeLine ? (
             <span
               style={{
-                fontSize: 28,
+                fontSize: 30,
                 color: '#F2ADAA',
                 fontFamily: bodyFont,
                 textAlign: 'center',
+                letterSpacing: 0.5,
               }}
             >
               {dateTimeLine}
@@ -266,16 +278,27 @@ function shareCardElement(args: {
           <span
             style={{
               fontSize: titleFontSize,
-              color: '#ffffff',
+              color: '#FDF9F0',
               fontFamily: headlineFont,
               fontWeight: headlineWeight,
               textAlign: 'center',
-              lineHeight: 1.12,
+              lineHeight: 1.15,
               textTransform: 'capitalize',
-              maxWidth: 920,
+              maxWidth: 940,
             }}
           >
             {title}
+          </span>
+          {/* Subtle URL line */}
+          <span
+            style={{
+              fontSize: 22,
+              color: 'rgba(253,249,240,0.55)',
+              fontFamily: bodyFont,
+              marginTop: 8,
+            }}
+          >
+            kandiegang.com
           </span>
         </div>
       </div>
@@ -301,11 +324,13 @@ export default async function handler(request: Request): Promise<Response> {
   const details = event.eventDetails ?? {};
   const eventDate = details.eventDate || '';
   const dateTimeLine = formatShareDateTimeLine(eventDate, details);
-  const logoUrl = 'https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png';
+
+  const [logoUrl, brandFonts] = await Promise.all([
+    loadLogoDataUri(url.origin),
+    loadBrandFontsFromSite(request),
+  ]);
 
   const titleFontSize = title.length > 48 ? 44 : title.length > 32 ? 50 : 56;
-
-  const brandFonts = await loadBrandFontsFromSite(request);
   const primary = brandFonts ?? (await loadFallbackFonts());
 
   const cardBase = {

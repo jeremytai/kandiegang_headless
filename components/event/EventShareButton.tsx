@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -15,52 +15,76 @@ function shareCardUrl(slug: string): string {
 
 export const EventShareButton: React.FC<EventShareButtonProps> = ({ eventSlug, pageUrl }) => {
   const [busy, setBusy] = useState(false);
-  const inFlight = useRef(false);
+  // Pre-fetched blob cached here so the click handler can call navigator.share() synchronously,
+  // which is required to satisfy the browser's user-gesture requirement.
+  const blobRef = useRef<Blob | null>(null);
 
-  const handleShare = useCallback(async () => {
-    if (!eventSlug.trim() || inFlight.current) return;
-    inFlight.current = true;
-    setBusy(true);
-    try {
-      const cardUrl = shareCardUrl(eventSlug);
-      const res = await fetch(cardUrl);
-      if (!res.ok) {
-        throw new Error(res.status === 404 ? 'Event not found' : `HTTP ${res.status}`);
-      }
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('image')) {
-        throw new Error(
-          'Share image unavailable (API did not return an image). With Vite dev, use the /api/event-share proxy or run npm run dev:vercel.'
-        );
-      }
-      const blob = await res.blob();
+  useEffect(() => {
+    if (!eventSlug.trim()) return;
+    let cancelled = false;
+    fetch(shareCardUrl(eventSlug))
+      .then((res) => (res.ok && res.headers.get('content-type')?.includes('image') ? res.blob() : null))
+      .then((blob) => { if (!cancelled && blob) blobRef.current = blob; })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [eventSlug]);
+
+  const handleShare = useCallback(() => {
+    if (busy) return;
+
+    const blob = blobRef.current;
+    const fallbackUrl = pageUrl || window.location.href;
+
+    // Path 1: file share — blob is ready, call navigator.share() synchronously
+    if (blob) {
       const file = new File([blob], `kandie-gang-${eventSlug}.png`, { type: 'image/png' });
-      const sharePayload: ShareData = {
+      const filePayload: ShareData = {
         files: [file],
         title: 'Kandie Gang event',
         text: pageUrl ? `Join us: ${pageUrl}` : undefined,
       };
+      if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.(filePayload)) {
+        navigator.share(filePayload)
+          .then(() => toast.success('Shared'))
+          .catch((e) => { if (e.name !== 'AbortError') toast.error('Could not share'); });
+        return;
+      }
+      // navigator.share unavailable — download instead
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kandie-gang-${eventSlug}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Image downloaded');
+      return;
+    }
 
-      if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.(sharePayload)) {
-        await navigator.share(sharePayload);
-        toast.success('Shared');
-      } else {
-        const url = URL.createObjectURL(blob);
+    // Path 2: blob not ready yet — fall back to URL-only share (still synchronous)
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: 'Kandie Gang event', url: fallbackUrl })
+        .then(() => toast.success('Shared'))
+        .catch((e) => { if (e.name !== 'AbortError') toast.error('Could not share'); });
+      return;
+    }
+
+    // Path 3: no share API — fetch now and download (async is fine here, no share API involved)
+    setBusy(true);
+    fetch(shareCardUrl(eventSlug))
+      .then((res) => res.ok ? res.blob() : Promise.reject(new Error(`HTTP ${res.status}`)))
+      .then((b) => {
+        blobRef.current = b;
+        const url = URL.createObjectURL(b);
         const a = document.createElement('a');
         a.href = url;
         a.download = `kandie-gang-${eventSlug}.png`;
         a.click();
         URL.revokeObjectURL(url);
         toast.success('Image downloaded');
-      }
-    } catch (e) {
-      if ((e as Error).name === 'AbortError') return;
-      toast.error(e instanceof Error ? e.message : 'Could not create share image');
-    } finally {
-      inFlight.current = false;
-      setBusy(false);
-    }
-  }, [eventSlug, pageUrl]);
+      })
+      .catch((e) => toast.error(e instanceof Error ? e.message : 'Could not create share image'))
+      .finally(() => setBusy(false));
+  }, [eventSlug, pageUrl, busy]);
 
   return (
     <button
