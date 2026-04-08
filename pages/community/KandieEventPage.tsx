@@ -21,6 +21,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 import { usePageMeta } from '../../hooks/usePageMeta';
+import { normalizeEventType } from '../../lib/eventType';
 
 export const KandieEventPage: React.FC = () => {
   const { yy, mm, dd, slug } = useParams<{ yy: string; mm: string; dd: string; slug: string }>();
@@ -372,7 +373,9 @@ export const KandieEventPage: React.FC = () => {
   const rideCategory = (Array.isArray(rawRideCategory) ? rawRideCategory[0] : rawRideCategory)
     ? String(Array.isArray(rawRideCategory) ? rawRideCategory[0] : rawRideCategory).toLowerCase()
     : '';
-  const isWorkshop = Boolean(eventDetails?.primaryType?.toLowerCase().includes('workshop'));
+  const primaryTypeRaw = eventDetails?.primaryType;
+  const eventType = normalizeEventType(primaryTypeRaw);
+  const isWorkshop = eventType === 'workshop';
 
   // Normalize gravel guides shape: ACF+WPGraphQL can return either a connection (with nodes)
   // or a plain array of RideGuide objects, depending on configuration.
@@ -572,7 +575,7 @@ export const KandieEventPage: React.FC = () => {
       eventTitle: eventData.title,
       levelKey: level.levelKey,
       levelLabel: level.label,
-      eventType: eventDetails?.primaryType,
+      eventType,
       accessNote: signupHelper,
       requiresFlintaAttestation,
       hasRegistrationCode,
@@ -1071,7 +1074,8 @@ export const KandieEventPage: React.FC = () => {
                     time={timeLabel}
                     location={locationLabel}
                     category={rideCategory || undefined}
-                    type={eventDetails?.primaryType}
+                    type={eventType}
+                    typeLabel={primaryTypeRaw}
                     levels={levelsWithGuides.map((level) => {
                       const places = level.guides.length * 7;
                       const used = capacityCounts[level.levelKey] ?? 0;

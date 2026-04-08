@@ -8,6 +8,7 @@ interface EventSidebarCardProps {
   location: string;
   category?: string;
   type?: string;
+  typeLabel?: string;
   levels?: Array<{
     levelKey: string;
     label: string;
@@ -130,6 +131,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   location,
   category,
   type,
+  typeLabel,
   levels,
   isPublic,
   canSignup,
@@ -184,6 +186,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   const placesPerGuide = 7;
 
   const isWorkshop = type === 'workshop';
+  const displayedType = typeLabel ?? type;
   return (
     <aside className="bg-primary-breath p-6 rounded-lg space-y-4">
       <div>
@@ -218,7 +221,11 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
           {type && (
             <div>
               <p className={labelClass}>Type</p>
-              <p className={valueClass}>{typeof type === 'string' ? type.charAt(0).toUpperCase() + type.slice(1) : type}</p>
+              <p className={valueClass}>
+                {typeof displayedType === 'string'
+                  ? displayedType.charAt(0).toUpperCase() + displayedType.slice(1)
+                  : displayedType}
+              </p>
             </div>
           )}
           {type && <div className="mb-2" />}

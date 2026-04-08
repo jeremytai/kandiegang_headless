@@ -19,6 +19,7 @@ const TYPE_COLORS: Record<string, string> = {
   ride: '#2A3577',
   gravel: '#16a34a',
   workshop: '#7c3aed',
+  training: '#0ea5e9',
 };
 
 /* ─── Badge ─── */
