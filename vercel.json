@@ -1,6 +1,18 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/season-opener-2025",
+      "destination": "https://www.kandiegang.com/story/season-opener-2025",
+      "permanent": true
+    },
+    {
+      "source": "/season-opener-2025/",
+      "destination": "https://www.kandiegang.com/story/season-opener-2025",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/((?!api|assets|fonts|images|logos|robots.txt|_redirects).*)", "destination": "/index.html" }
   ],
