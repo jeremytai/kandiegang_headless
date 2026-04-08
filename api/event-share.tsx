@@ -165,19 +165,14 @@ async function loadFallbackFonts(): Promise<FontSet> {
   };
 }
 
-/** Figma “Instagram Post” (493:2919): logo frame 253×145px */
-const LOGO_W = 253;
-const LOGO_H = 145;
+// Logo natural aspect ratio: 253 × 145 ≈ 1.745 : 1
+const LOGO_W = 360;
+const LOGO_H = Math.round(LOGO_W / (253 / 145)); // ≈ 206
 
-/** Inset event block width from Figma (subtract group ~784px) */
-const PANEL_W = 784;
-
-/** Black link icon ~24px, matches Figma link-01 on cream pill */
-const LINK_ICON_DATA_URI =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><path stroke="#1F2223" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path stroke="#1F2223" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
-  );
+// Floating card
+const CARD_MARGIN_X = 56;
+const CARD_MARGIN_BOTTOM = 56;
+const CARD_WIDTH = WIDTH - CARD_MARGIN_X * 2; // 968
 
 function shareCardElement(args: {
   heroUrl: string | null;
@@ -221,7 +216,7 @@ function shareCardElement(args: {
         />
       ) : null}
 
-      {/* Figma: gradient from-black ~80% opacity at top, fade to clear (multiply feel) */}
+      {/* Light vignette — mainly at top so photo shows through in middle */}
       <div
         style={{
           position: 'absolute',
@@ -230,7 +225,7 @@ function shareCardElement(args: {
           right: 0,
           bottom: 0,
           background:
-            'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.35) 28%, rgba(0,0,0,0.08) 48%, rgba(0,0,0,0.45) 100%)',
+            'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.08) 100%)',
         }}
       />
 
@@ -243,10 +238,11 @@ function shareCardElement(args: {
           flex: 1,
           alignItems: 'center',
           width: '100%',
-          paddingTop: 56,
-          paddingBottom: 0,
+          paddingTop: 72,
+          paddingBottom: CARD_MARGIN_BOTTOM,
         }}
       >
+        {/* Cycling club logo — no pill, transparent bg */}
         <img
           src={logoUrl}
           alt="Kandie Gang Cycling Club"
@@ -255,52 +251,36 @@ function shareCardElement(args: {
           style={{ objectFit: 'contain' }}
         />
 
-        <div style={{ flex: 1, minHeight: 32 }} />
+        <div style={{ flex: 1 }} />
 
-        {/* Cream URL pill — above blue panel (Figma 493:2901) */}
+        {/* URL badge pill — floating above the card */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
+            background: '#ffffff',
+            borderRadius: 999,
+            padding: '12px 32px',
+            marginBottom: 20,
             gap: 10,
-            background: '#FDF9F0',
-            border: '1px solid #FDF9F0',
-            borderRadius: 20,
-            height: 44,
-            minWidth: 382,
-            padding: '0 40px',
-            marginBottom: -14,
-            zIndex: 1,
-            boxShadow: '0px 4px 4px 2px rgba(0,0,0,0.04)',
           }}
         >
-          <img src={LINK_ICON_DATA_URI} alt="" width={24} height={24} style={{ flexShrink: 0 }} />
-          <span
-            style={{
-              fontSize: 21,
-              color: '#1F2223',
-              fontFamily: bodyFont,
-              textAlign: 'center',
-            }}
-          >
-            www.kandiegang.com
-          </span>
+          <span style={{ fontSize: 24, fontFamily: bodyFont }}>🔗</span>
+          <span style={{ fontSize: 24, color: '#1F2223', fontFamily: bodyFont }}>www.kandiegang.com</span>
         </div>
 
-        {/* Inset blue panel + rounded top (Figma subtract / event block) */}
+        {/* Floating card — all corners rounded, side + bottom margins */}
         <div
           style={{
-            width: PANEL_W,
-            background: '#46519C',
-            borderTopLeftRadius: 40,
-            borderTopRightRadius: 40,
-            padding: '52px 48px 60px',
+            width: CARD_WIDTH,
+            background: '#3B4BA8',
+            borderRadius: 36,
+            padding: '44px 56px 52px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 22,
+            gap: 16,
           }}
         >
           {dateTimeLine ? (
@@ -310,7 +290,6 @@ function shareCardElement(args: {
                 color: '#F2ADAA',
                 fontFamily: bodyFont,
                 textAlign: 'center',
-                lineHeight: 1.2,
               }}
             >
               {dateTimeLine}
@@ -319,13 +298,13 @@ function shareCardElement(args: {
           <span
             style={{
               fontSize: titleFontSize,
-              color: '#FFFFFF',
+              color: '#ffffff',
               fontFamily: headlineFont,
               fontWeight: headlineWeight,
               textAlign: 'center',
-              lineHeight: 1.12,
+              lineHeight: 1.1,
               textTransform: 'capitalize',
-              maxWidth: PANEL_W - 80,
+              maxWidth: CARD_WIDTH - 80,
             }}
           >
             {title}
@@ -360,9 +339,8 @@ export default async function handler(request: Request): Promise<Response> {
     loadBrandFontsFromSite(request),
   ]);
 
-  /** Figma headline ~76px IvyOra Light; scale down for long titles (panel max ~696px) */
-  const titleFontSize =
-    title.length > 52 ? 48 : title.length > 40 ? 58 : title.length > 32 ? 68 : 76;
+  // Larger base sizes to match Figma — card is narrower so wrapping to 2 lines is expected
+  const titleFontSize = title.length > 48 ? 64 : title.length > 28 ? 76 : 88;
   const primary = brandFonts ?? (await loadFallbackFonts());
 
   const cardBase = {
