@@ -65,7 +65,7 @@ const EventHeader: React.FC<EventHeaderProps> = ({
 
             {shareSlug ? (
               <div className={intro ? 'mt-6' : undefined}>
-                <EventShareButton eventSlug={shareSlug} pageUrl={pageUrl} />
+                <EventShareButton eventSlug={shareSlug} eventTitle={title} pageUrl={pageUrl} />
               </div>
             ) : null}
           </div>
