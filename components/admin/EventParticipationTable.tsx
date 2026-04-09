@@ -549,7 +549,8 @@ export function EventParticipationTable({ hideEmail }: { hideEmail?: boolean } =
   const { events, loading, error, refresh } = useEventParticipation();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('date');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [showPast, setShowPast] = useState(false);
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -571,6 +572,11 @@ export function EventParticipationTable({ hideEmail }: { hideEmail?: boolean } =
       return sortDir === 'asc' ? diff : -diff;
     });
   }, [events, sortKey, sortDir]);
+
+  const now = new Date().toISOString().split('T')[0];
+  const upcomingEvents = sorted.filter((e) => !e.date || e.date >= now);
+  // Past events always show most recent first regardless of sort direction
+  const pastEvents = sorted.filter((e) => e.date && e.date < now).reverse();
 
   const SortIcon = ({ k }: { k: SortKey }) =>
     k !== sortKey ? null : (
@@ -634,7 +640,34 @@ export function EventParticipationTable({ hideEmail }: { hideEmail?: boolean } =
               </tr>
             </thead>
             <tbody>
-              {sorted.map((event) => (
+              {upcomingEvents.map((event) => (
+                <EventRow
+                  key={event.eventId}
+                  event={event}
+                  isExpanded={expandedId === event.eventId}
+                  onToggle={() =>
+                    setExpandedId((prev) => (prev === event.eventId ? null : event.eventId))
+                  }
+                  onRefresh={refresh}
+                  hideEmail={hideEmail}
+                />
+              ))}
+
+              {pastEvents.length > 0 && (
+                <tr
+                  className="border-b border-neutral-200 cursor-pointer hover:bg-neutral-50 transition-colors"
+                  onClick={() => setShowPast((v) => !v)}
+                >
+                  <td colSpan={7} className="py-3 px-4 text-center">
+                    <span className="text-neutral-400 text-xs font-medium uppercase tracking-[0.1em]">
+                      {showPast ? '▴ Hide' : '▾ Show'} {pastEvents.length} past event
+                      {pastEvents.length !== 1 ? 's' : ''}
+                    </span>
+                  </td>
+                </tr>
+              )}
+
+              {showPast && pastEvents.map((event) => (
                 <EventRow
                   key={event.eventId}
                   event={event}

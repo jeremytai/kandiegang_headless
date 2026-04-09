@@ -168,7 +168,7 @@ export const GuideAnalyticsPage: React.FC = () => {
         </div>
 
         {loading && (
-          <div className="text-neutral-400 text-sm">Loading event data…</div>
+          <div className="text-neutral-400 text-sm">Kurzer…</div>
         )}
         {error && (
           <div className="text-red-500 text-sm">{error}</div>

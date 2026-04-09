@@ -254,7 +254,8 @@ async function handleEventParticipation(res: NextApiResponse, adminClient: any) 
       eventMap.get(eid)!.rows.push(row);
     }
 
-    const eventIds = [...eventMap.keys()];
+    const EXCLUDED_EVENT_IDS = new Set([12989, 13021]);
+    const eventIds = [...eventMap.keys()].filter((id) => !EXCLUDED_EVENT_IDS.has(id));
     const wpData = await fetchWpEventsMeta(eventIds);
 
     const LEVEL_ORDER = ['level1', 'level2', 'level2plus', 'level3', 'gravel', 'workshop'];
