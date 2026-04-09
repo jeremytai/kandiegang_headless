@@ -183,7 +183,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const meta = wpMeta[id];
         if (!meta?.date) return false;
         const eventTs = new Date(meta.date).getTime();
-        return eventTs >= windowStart && eventTs <= windowEnd;
+        return eventTs >= windowStart && eventTs < windowEnd;
       })
     );
 
