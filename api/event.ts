@@ -10,7 +10,7 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'Kandie Gang <hello@kandiegang.com>';
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'Kandie Gang <noreply@kandiegang.com>';
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://kandiegang.com');
@@ -160,16 +160,23 @@ async function fetchEventAccessData(eventId: number): Promise<EventAccessData | 
   };
 }
 
-async function fetchEventTitle(eventId: number): Promise<string> {
-  const query = `query GetRideEventTitle($id: ID!) { rideEvent(id: $id, idType: DATABASE_ID) { title } }`;
+async function fetchEventMeta(eventId: number): Promise<{ title: string; link: string }> {
+  const query = `query GetRideEventMeta($id: ID!) { rideEvent(id: $id, idType: DATABASE_ID) { title link } }`;
   const response = await fetch(WP_GRAPHQL_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables: { id: eventId } }),
   });
-  if (!response.ok) return 'Kandie Gang Event';
+  if (!response.ok) return { title: 'Kandie Gang Event', link: `${BASE_URL}/community` };
   const json = await response.json().catch(() => ({}));
-  return json?.data?.rideEvent?.title || 'Kandie Gang Event';
+  return {
+    title: json?.data?.rideEvent?.title || 'Kandie Gang Event',
+    link: json?.data?.rideEvent?.link || `${BASE_URL}/community`,
+  };
+}
+
+async function fetchEventTitle(eventId: number): Promise<string> {
+  return (await fetchEventMeta(eventId)).title;
 }
 
 function isWithinWindow(now: Date, target: Date, daysBefore: number): boolean {
@@ -447,8 +454,7 @@ async function handleGuideCancelLevel(req: VercelRequest, res: VercelResponse) {
       .in('id', registrationList.map((r) => r.id));
   }
 
-  const eventTitle = await fetchEventTitle(eventId);
-  const eventUrl = `${BASE_URL}/community`;
+  const { title: eventTitle, link: eventUrl } = await fetchEventMeta(eventId);
 
   let emailsSent = 0;
   if (RESEND_API_KEY && registrationList.length > 0) {
@@ -542,8 +548,7 @@ async function handleGuideMessageParticipants(req: VercelRequest, res: VercelRes
     return res.status(200).json({ success: true, emailsSent: 0 });
   }
 
-  const eventTitle = await fetchEventTitle(eventId);
-  const eventUrl = `${BASE_URL}/community`;
+  const { title: eventTitle, link: eventUrl } = await fetchEventMeta(eventId);
 
   let emailsSent = 0;
   if (RESEND_API_KEY) {
