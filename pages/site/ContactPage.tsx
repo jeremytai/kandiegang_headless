@@ -12,7 +12,7 @@ export const ContactPage: React.FC = () => (
     <div className="max-w-md w-full text-center">
       <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-slate-900">Contact</h1>
       <p className="text-slate-500 mb-10 leading-relaxed text-base md:text-lg font-light">
-        Reach out to the Kandie Gang team. We're building the future of home robotics.
+        Reach out to the Kandie Gang team and let us know how we can support you.
       </p>
       <ContactForm variant="page" />
     </div>
