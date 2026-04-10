@@ -22,6 +22,24 @@ const CRON_SECRET = process.env.CRON_SECRET;
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
+/** Returns the UTC calendar date string (YYYY-MM-DD) for a given offset from today. */
+function utcDateOffset(daysFromNow: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + daysFromNow);
+  return d.toISOString().split('T')[0];
+}
+
+/**
+ * Returns a human-readable timing label for an event date relative to today.
+ * e.g. "tomorrow", "on Saturday", "on Sunday"
+ */
+function eventTimingLabel(eventDate: string): string {
+  if (!eventDate) return 'tomorrow';
+  if (eventDate === utcDateOffset(1)) return 'tomorrow';
+  const weekday = new Date(eventDate).toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' });
+  return `on ${weekday}`;
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -92,18 +110,20 @@ function buildReminderHtml(
   rideLevel: string,
   eventDate: string,
   eventUrl: string,
-  cancelUrl: string
+  cancelUrl: string,
+  timingLabel: string
 ): string {
   const safeName = escapeHtml(firstName || 'there');
   const safeTitle = escapeHtml(eventTitle);
   const safeLevel = escapeHtml(formatRideLevel(rideLevel));
   const safeEventUrl = escapeHtml(eventUrl);
   const safeCancel = escapeHtml(cancelUrl);
+  const safeTimingLabel = escapeHtml(timingLabel);
   const formattedDate = eventDate
-    ? new Date(eventDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-    : 'tomorrow';
+    ? new Date(eventDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+    : 'soon';
 
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="margin:0;padding:0;background:rgb(250,250,252);"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width:100%;border-collapse:collapse;margin:0;padding:0;text-align:center;table-layout:fixed;background:rgb(250,250,252);"><tbody><tr><td align="center" style="padding:0;background:rgb(250,250,252);"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width:100%;border-collapse:collapse;margin:0;padding:0;text-align:center;table-layout:fixed;background:rgb(250,250,252);"><tbody><tr><td align="center" style="padding:24px 0px 16px;background:rgb(250,250,252);"><a href="${safeEventUrl}" target="_blank" rel="noopener noreferrer"><img alt="Kandie Gang" width="138" src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" style="display:block;width:138px;max-width:138px;margin:0 auto;"></a></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" align="center" style="width:100%;max-width:602px;border-collapse:separate;background:rgb(255,255,254);border-radius:16px;border:1px solid rgb(221,221,221);margin:0 auto;"><tbody><tr><td align="center" style="padding:40px 0px;border-radius:16px;background:rgb(255,255,254);"><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="center" style="padding:0px 40px 20px;background:rgb(255,255,254);"><h2 style="font-family:RoobertPRO,Helvetica,Arial,sans-serif;font-size:32px;line-height:40px;font-weight:normal;margin:0;color:rgb(72,81,151);">See you tomorrow, ${safeName}!</h2></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="center" style="padding:0px 40px;background:rgb(255,255,254);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:rgb(28,28,30);margin:0;">You're confirmed for the following ride:</p></td></tr><tr><td align="center" style="padding:20px 0px 0px;background:rgb(255,255,254);"></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="center" style="padding:0px 40px;background:rgb(255,255,254);"><table border="0" cellpadding="0" cellspacing="0" align="center" style="border-collapse:collapse;"><tbody><tr><td align="center"><a href="${safeEventUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:rgb(255,254,254);background-color:rgb(72,81,151);text-decoration:none;padding:11px 16px 13px;border-radius:9999px;font-weight:bold;">${safeTitle} — ${safeLevel}</a></td></tr></tbody></table></td></tr><tr><td align="center" style="padding:16px 40px 0px;background:rgb(255,255,254);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:rgb(100,100,105);margin:0;">${formattedDate}</p></td></tr><tr><td align="center" style="padding:20px 0px 0px;background:rgb(255,255,254);"></td></tr></tbody></table></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" align="center" style="width:100%;max-width:600px;border-collapse:collapse;margin:0 auto;"><tbody><tr><td align="center" style="padding:60px 0px 0px;background:rgb(250,250,252);"></td></tr><tr><td align="center" style="padding:0px 40px 24px;background:rgb(250,250,252);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;margin:0;color:rgb(28,28,30);">Can't make it? Please cancel as early as possible so someone on the waitlist can take your spot.</p></td></tr><tr><td align="center" style="padding:0px 40px 40px;background:rgb(250,250,252);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;margin:0;"><a href="${safeCancel}" target="_blank" rel="noopener noreferrer" style="font-weight:bold;text-decoration:none;color:rgb(72,81,151);">Cancel my spot</a></p></td></tr><tr><td align="center" style="padding:0px 40px 24px;background:rgb(250,250,252);"><a href="${safeEventUrl}" target="_blank" rel="noopener noreferrer"><img alt="Kandie Gang" width="138" src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" style="display:block;width:138px;max-width:138px;margin:0 auto;"></a></td></tr><tr><td align="center" style="padding:0px 40px;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:rgb(28,28,30);"><span>Kandie Gang<br>It's a love story 💜</span><br><br></td></tr><tr><td align="center" style="padding:0px 40px;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;"><span><a href="https://www.kandiegang.com/privacy-policy?reminder" target="_blank" rel="noopener noreferrer" style="font-weight:bold;text-decoration:none;color:rgb(72,81,151);">Privacy Policy</a> | <a href="https://www.kandiegang.com/about?reminder" target="_blank" rel="noopener noreferrer" style="font-weight:bold;text-decoration:none;color:rgb(72,81,151);">About Us</a></span></td></tr></tbody></table></td></tr></tbody></table></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body style="margin:0;padding:0;background:rgb(250,250,252);"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width:100%;border-collapse:collapse;margin:0;padding:0;text-align:center;table-layout:fixed;background:rgb(250,250,252);"><tbody><tr><td align="center" style="padding:0;background:rgb(250,250,252);"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width:100%;border-collapse:collapse;margin:0;padding:0;text-align:center;table-layout:fixed;background:rgb(250,250,252);"><tbody><tr><td align="center" style="padding:24px 0px 16px;background:rgb(250,250,252);"><a href="${safeEventUrl}" target="_blank" rel="noopener noreferrer"><img alt="Kandie Gang" width="138" src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" style="display:block;width:138px;max-width:138px;margin:0 auto;"></a></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" align="center" style="width:100%;max-width:602px;border-collapse:separate;background:rgb(255,255,254);border-radius:16px;border:1px solid rgb(221,221,221);margin:0 auto;"><tbody><tr><td align="center" style="padding:40px 0px;border-radius:16px;background:rgb(255,255,254);"><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="center" style="padding:0px 40px 20px;background:rgb(255,255,254);"><h2 style="font-family:RoobertPRO,Helvetica,Arial,sans-serif;font-size:32px;line-height:40px;font-weight:normal;margin:0;color:rgb(72,81,151);">See you ${safeTimingLabel}, ${safeName}!</h2></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="center" style="padding:0px 40px;background:rgb(255,255,254);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:rgb(28,28,30);margin:0;">You're confirmed for the following ride:</p></td></tr><tr><td align="center" style="padding:20px 0px 0px;background:rgb(255,255,254);"></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" width="100%" align="center" style="max-width:600px;margin:0 auto;border-collapse:collapse;"><tbody><tr><td align="center" style="padding:0px 40px;background:rgb(255,255,254);"><table border="0" cellpadding="0" cellspacing="0" align="center" style="border-collapse:collapse;"><tbody><tr><td align="center"><a href="${safeEventUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:rgb(255,254,254);background-color:rgb(72,81,151);text-decoration:none;padding:11px 16px 13px;border-radius:9999px;font-weight:bold;">${safeTitle} — ${safeLevel}</a></td></tr></tbody></table></td></tr><tr><td align="center" style="padding:16px 40px 0px;background:rgb(255,255,254);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:rgb(100,100,105);margin:0;">${formattedDate}</p></td></tr><tr><td align="center" style="padding:20px 0px 0px;background:rgb(255,255,254);"></td></tr></tbody></table></td></tr></tbody></table><table border="0" cellpadding="0" cellspacing="0" align="center" style="width:100%;max-width:600px;border-collapse:collapse;margin:0 auto;"><tbody><tr><td align="center" style="padding:60px 0px 0px;background:rgb(250,250,252);"></td></tr><tr><td align="center" style="padding:0px 40px 24px;background:rgb(250,250,252);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;margin:0;color:rgb(28,28,30);">Can't make it? Please cancel as early as possible so someone on the waitlist can take your spot.</p></td></tr><tr><td align="center" style="padding:0px 40px 40px;background:rgb(250,250,252);"><p style="font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;margin:0;"><a href="${safeCancel}" target="_blank" rel="noopener noreferrer" style="font-weight:bold;text-decoration:none;color:rgb(72,81,151);">Cancel my spot</a></p></td></tr><tr><td align="center" style="padding:0px 40px 24px;background:rgb(250,250,252);"><a href="${safeEventUrl}" target="_blank" rel="noopener noreferrer"><img alt="Kandie Gang" width="138" src="https://www.kandiegang.com/logos/kandiegang_logo_purplerain_pill.png" style="display:block;width:138px;max-width:138px;margin:0 auto;"></a></td></tr><tr><td align="center" style="padding:0px 40px;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:rgb(28,28,30);"><span>Kandie Gang<br>It's a love story 💜</span><br><br></td></tr><tr><td align="center" style="padding:0px 40px;font-family:NotoSans,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;"><span><a href="https://www.kandiegang.com/privacy-policy?reminder" target="_blank" rel="noopener noreferrer" style="font-weight:bold;text-decoration:none;color:rgb(72,81,151);">Privacy Policy</a> | <a href="https://www.kandiegang.com/about?reminder" target="_blank" rel="noopener noreferrer" style="font-weight:bold;text-decoration:none;color:rgb(72,81,151);">About Us</a></span></td></tr></tbody></table></td></tr></tbody></table></body></html>`;
 }
 
 function buildReminderText(
@@ -112,13 +132,14 @@ function buildReminderText(
   rideLevel: string,
   eventDate: string,
   eventUrl: string,
-  cancelUrl: string
+  cancelUrl: string,
+  timingLabel: string
 ): string {
   const formattedDate = eventDate
-    ? new Date(eventDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-    : 'tomorrow';
+    ? new Date(eventDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+    : 'soon';
   return [
-    `See you tomorrow, ${firstName || 'there'}!`,
+    `See you ${timingLabel}, ${firstName || 'there'}!`,
     '',
     "You're confirmed for the following ride:",
     `${eventTitle} — ${formatRideLevel(rideLevel)}`,
@@ -171,19 +192,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const eventIds = [...new Set(registrations.map((r) => Number(r.event_id)))];
     const wpMeta = await fetchWpEventsMeta(eventIds);
 
-    // Filter to events happening tomorrow (17–41h from now).
-    // Cron runs at 07:00 UTC daily, so this window covers all events
-    // starting anywhere between 00:00 and 23:59 UTC the following day.
-    const now = Date.now();
-    const windowStart = now + 17 * 60 * 60 * 1000;
-    const windowEnd = now + 41 * 60 * 60 * 1000;
+    // Filter to events happening tomorrow: compare calendar dates in UTC so the
+    // check is immune to the exact time the cron fires.
+    const tomorrowUtc = utcDateOffset(1);
 
     const qualifyingEventIds = new Set(
       eventIds.filter((id) => {
         const meta = wpMeta[id];
-        if (!meta?.date) return false;
-        const eventTs = new Date(meta.date).getTime();
-        return eventTs >= windowStart && eventTs < windowEnd;
+        return meta?.date === tomorrowUtc;
       })
     );
 
@@ -246,9 +262,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await resend.emails.send({
           from: FROM_EMAIL,
           to: toEmail,
-          subject: `Reminder: ${meta.title} is tomorrow`,
-          html: buildReminderHtml(reg.first_name, meta.title, reg.ride_level, meta.date, eventUrl, cancelUrl),
-          text: buildReminderText(reg.first_name, meta.title, reg.ride_level, meta.date, eventUrl, cancelUrl),
+          subject: `Reminder: ${meta.title} is ${eventTimingLabel(meta.date)}`,
+          html: buildReminderHtml(reg.first_name, meta.title, reg.ride_level, meta.date, eventUrl, cancelUrl, eventTimingLabel(meta.date)),
+          text: buildReminderText(reg.first_name, meta.title, reg.ride_level, meta.date, eventUrl, cancelUrl, eventTimingLabel(meta.date)),
         });
         sent++;
       } catch (emailErr) {
