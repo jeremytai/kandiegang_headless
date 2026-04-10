@@ -351,7 +351,7 @@ export async function getCategoryPosts(
 }
 
 /** Public /stories page: posts in any of these category slugs (see `getStoriesPosts`). */
-export const STORIES_CATEGORY_SLUGS = ['social-rides', 'workshop'] as const;
+export const STORIES_CATEGORY_SLUGS = ['social-rides', 'workshop', 'media'] as const;
 
 export const GET_POSTS_IN_CATEGORIES_QUERY = `
   query GetPostsInCategories($first: Int!, $after: String, $categoryIn: [ID!]!) {
@@ -415,7 +415,7 @@ export async function getPostsForCategoryDatabaseIds(
 }
 
 /**
- * Stories index: `social-rides` and `workshop` posts, merged, with cursor pagination when supported.
+ * Stories index: `social-rides`, `workshop`, and `media` posts, merged, with cursor pagination when supported.
  */
 export async function getStoriesPosts(
   first: number,
