@@ -580,6 +580,154 @@ async function handleGuideMessageParticipants(req: VercelRequest, res: VercelRes
   return res.status(200).json({ success: true, participantCount: registrationList.length, emailsSent });
 }
 
+async function handleGuideCheckIn(req: VercelRequest, res: VercelResponse) {
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!bearerToken) return res.status(401).json({ error: 'Authentication required' });
+
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const {
+    data: { user },
+    error: userError,
+  } = await anonClient.auth.getUser(bearerToken);
+  if (userError || !user) return res.status(401).json({ error: 'Invalid or expired token' });
+
+  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: callerProfile } = await adminClient
+    .from('profiles')
+    .select('is_guide, wp_user_id')
+    .eq('id', user.id)
+    .single();
+
+  if (!callerProfile?.is_guide || !callerProfile?.wp_user_id) {
+    return res.status(403).json({ error: 'Guide access required' });
+  }
+
+  const body = req.body as {
+    eventId?: string | number;
+    rideLevel?: string;
+    registrationId?: string;
+    present?: boolean;
+  };
+  const eventIdRaw = body?.eventId;
+  const eventId =
+    typeof eventIdRaw === 'string' ? Number(eventIdRaw) : (eventIdRaw as number | undefined);
+  const rideLevel = typeof body?.rideLevel === 'string' ? body.rideLevel.trim() : null;
+  const registrationId =
+    typeof body?.registrationId === 'string' ? body.registrationId.trim() : null;
+  const present = Boolean(body?.present);
+
+  if (!eventId || Number.isNaN(eventId)) return res.status(400).json({ error: 'Missing or invalid eventId' });
+  if (!rideLevel) return res.status(400).json({ error: 'Missing rideLevel' });
+  if (!registrationId) return res.status(400).json({ error: 'Missing registrationId' });
+
+  const guideIds = await fetchLevelGuideIds(eventId, rideLevel);
+  if (guideIds.length > 0 && !guideIds.includes(Number(callerProfile.wp_user_id))) {
+    return res.status(403).json({ error: 'You are not assigned as a guide for this level' });
+  }
+
+  const { data: reg, error: regError } = await adminClient
+    .from('registrations')
+    .select('id, event_id, ride_level, is_waitlist, cancelled_at')
+    .eq('id', registrationId)
+    .single();
+
+  if (regError || !reg) return res.status(404).json({ error: 'Registration not found' });
+  if (Number(reg.event_id) !== eventId || reg.ride_level !== rideLevel) {
+    return res.status(404).json({ error: 'Registration not found' });
+  }
+  if (reg.cancelled_at) return res.status(400).json({ error: 'Cannot check in a cancelled registration' });
+  if (reg.is_waitlist) return res.status(400).json({ error: 'Cannot check in a waitlisted registration' });
+
+  const now = new Date().toISOString();
+  const updates: Record<string, unknown> = present
+    ? { checked_in_at: now, no_show_at: null }
+    : { checked_in_at: null };
+
+  const { error: updateError } = await adminClient
+    .from('registrations')
+    .update(updates)
+    .eq('id', registrationId);
+
+  if (updateError) {
+    console.error('[guide-checkin] Update error:', updateError);
+    return res.status(500).json({ error: 'Failed to update attendance' });
+  }
+
+  return res.status(200).json({ success: true, present, checkedInAt: present ? now : null });
+}
+
+async function handleGuideFinalizeAttendance(req: VercelRequest, res: VercelResponse) {
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!bearerToken) return res.status(401).json({ error: 'Authentication required' });
+
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const {
+    data: { user },
+    error: userError,
+  } = await anonClient.auth.getUser(bearerToken);
+  if (userError || !user) return res.status(401).json({ error: 'Invalid or expired token' });
+
+  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: callerProfile } = await adminClient
+    .from('profiles')
+    .select('is_guide, wp_user_id')
+    .eq('id', user.id)
+    .single();
+
+  if (!callerProfile?.is_guide || !callerProfile?.wp_user_id) {
+    return res.status(403).json({ error: 'Guide access required' });
+  }
+
+  const body = req.body as { eventId?: string | number; rideLevel?: string };
+  const eventIdRaw = body?.eventId;
+  const eventId =
+    typeof eventIdRaw === 'string' ? Number(eventIdRaw) : (eventIdRaw as number | undefined);
+  const rideLevel = typeof body?.rideLevel === 'string' ? body.rideLevel.trim() : null;
+
+  if (!eventId || Number.isNaN(eventId)) return res.status(400).json({ error: 'Missing or invalid eventId' });
+  if (!rideLevel) return res.status(400).json({ error: 'Missing rideLevel' });
+
+  const guideIds = await fetchLevelGuideIds(eventId, rideLevel);
+  if (guideIds.length > 0 && !guideIds.includes(Number(callerProfile.wp_user_id))) {
+    return res.status(403).json({ error: 'You are not assigned as a guide for this level' });
+  }
+
+  const now = new Date().toISOString();
+  const { data: updated, error: updateError } = await adminClient
+    .from('registrations')
+    .update({ no_show_at: now })
+    .eq('event_id', eventId)
+    .eq('ride_level', rideLevel)
+    .eq('is_waitlist', false)
+    .is('cancelled_at', null)
+    .is('checked_in_at', null)
+    .is('no_show_at', null)
+    .select('id');
+
+  if (updateError) {
+    console.error('[guide-finalize-attendance] Update error:', updateError);
+    return res.status(500).json({ error: 'Failed to finalize attendance' });
+  }
+
+  return res.status(200).json({ success: true, noShowsMarked: (updated ?? []).length });
+}
+
 // ─── Capacity handler (GET) ───────────────────────────────────────────────────
 async function handleCapacity(req: VercelRequest, res: VercelResponse) {
   if (!(await checkRateLimit(req, res, { windowMs: 60_000, max: 60, keyPrefix: 'event-capacity' })))
@@ -1122,6 +1270,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === 'cancel') return handleCancel(req, res);
     if (action === 'guide-cancel-level') return handleGuideCancelLevel(req, res);
     if (action === 'guide-message-participants') return handleGuideMessageParticipants(req, res);
+    if (action === 'guide-checkin') return handleGuideCheckIn(req, res);
+    if (action === 'guide-finalize-attendance') return handleGuideFinalizeAttendance(req, res);
     return res.status(400).json({ error: 'Invalid or missing action' });
   }
   return res.status(405).json({ error: 'Method not allowed' });

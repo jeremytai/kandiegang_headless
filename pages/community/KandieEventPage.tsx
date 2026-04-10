@@ -39,11 +39,14 @@ export const KandieEventPage: React.FC = () => {
     Record<
       string,
       Array<{
+        id: string;
         first_name: string;
         last_name: string;
         user_id: string | null;
         is_waitlist: boolean;
         created_at: string;
+        checked_in_at?: string | null;
+        no_show_at?: string | null;
       }>
     >
   >({});
@@ -62,6 +65,11 @@ export const KandieEventPage: React.FC = () => {
   } | null>(null);
   const [guideMessageText, setGuideMessageText] = useState('');
   const [guideMessageLoading, setGuideMessageLoading] = useState(false);
+  const [finalizeAttendanceTarget, setFinalizeAttendanceTarget] = useState<{
+    levelKey: string;
+    label: string;
+  } | null>(null);
+  const [finalizeAttendanceLoading, setFinalizeAttendanceLoading] = useState(false);
 
   // Dynamic page meta and Open Graph tags for event sharing.
   // Always call this hook (even before data is loaded) to keep hook order stable.
@@ -87,7 +95,7 @@ export const KandieEventPage: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('registrations')
-        .select('ride_level,first_name,last_name,user_id,is_waitlist,created_at')
+        .select('id,ride_level,first_name,last_name,user_id,is_waitlist,created_at,checked_in_at,no_show_at')
         .eq('event_id', Number(eventData.databaseId))
         .is('cancelled_at', null);
       console.debug('[KandieEventPage] Supabase participants query result:', { data, error });
@@ -98,11 +106,14 @@ export const KandieEventPage: React.FC = () => {
       const grouped: Record<
         string,
         Array<{
+          id: string;
           first_name: string;
           last_name: string;
           user_id: string | null;
           is_waitlist: boolean;
           created_at: string;
+          checked_in_at?: string | null;
+          no_show_at?: string | null;
         }>
       > = {};
       (data ?? []).forEach((row) => {
@@ -110,11 +121,14 @@ export const KandieEventPage: React.FC = () => {
           typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
         if (!grouped[level]) grouped[level] = [];
         grouped[level].push({
+          id: row.id,
           first_name: row.first_name,
           last_name: row.last_name,
           user_id: row.user_id,
           is_waitlist: row.is_waitlist ?? false,
           created_at: row.created_at,
+          checked_in_at: row.checked_in_at ?? null,
+          no_show_at: row.no_show_at ?? null,
         });
       });
 
@@ -712,6 +726,81 @@ export const KandieEventPage: React.FC = () => {
       : [meetingPoint?.street, meetingPoint?.city].filter(Boolean).join(' ');
   const locationLabel = [locationName, locationStreetCity].filter(Boolean).join('\n');
 
+  const localDateKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const isEventDay = Boolean(eventDatePart && localDateKey(now) === eventDatePart);
+
+  const updateAttendance = async (levelKey: string, registrationId: string, present: boolean) => {
+    if (!supabase || !eventData?.databaseId) return;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        toast.error('You must be logged in to check in riders.');
+        return;
+      }
+      const response = await fetch('/api/event', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          action: 'guide-checkin',
+          eventId: eventData.databaseId,
+          rideLevel: levelKey,
+          registrationId,
+          present,
+        }),
+      });
+      if (!response.ok) {
+        const json = await response.json().catch(() => ({}));
+        toast.error((json as { error?: string })?.error || 'Failed to update attendance.');
+        return;
+      }
+      refreshParticipantsByLevel();
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    }
+  };
+
+  const finalizeAttendance = async (levelKey: string, levelLabel: string) => {
+    if (!supabase || !eventData?.databaseId) return;
+    setFinalizeAttendanceLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        toast.error('You must be logged in to finalize attendance.');
+        return;
+      }
+      const response = await fetch('/api/event', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          action: 'guide-finalize-attendance',
+          eventId: eventData.databaseId,
+          rideLevel: levelKey,
+        }),
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        toast.error((json as { error?: string })?.error || 'Failed to finalize attendance.');
+        return;
+      }
+      const count = (json as { noShowsMarked?: number })?.noShowsMarked ?? 0;
+      toast.success(`Attendance finalized for ${levelLabel}. Marked ${count} no-show${count === 1 ? '' : 's'}.`);
+      refreshParticipantsByLevel();
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setFinalizeAttendanceLoading(false);
+    }
+  };
+
   return (
     <>
       <Toaster />
@@ -862,8 +951,24 @@ export const KandieEventPage: React.FC = () => {
                                     </p>
                                     <ul className="space-y-1">
                                       {confirmed.map((p, i) => (
-                                        <li key={p.user_id || i} className="text-sm text-primary-ink">
-                                          {p.first_name} {p.last_name ? p.last_name.charAt(0) + '.' : ''}
+                                        <li key={p.id || p.user_id || i} className="text-sm text-primary-ink">
+                                          <div className="flex items-center gap-2">
+                                            {isEventDay ? (
+                                              <input
+                                                type="checkbox"
+                                                aria-label={`Mark ${p.first_name} as present`}
+                                                checked={Boolean(p.checked_in_at)}
+                                                onChange={(e) =>
+                                                  updateAttendance(level.levelKey, p.id, e.target.checked)
+                                                }
+                                                className="h-4 w-4 accent-secondary-purple-rain"
+                                              />
+                                            ) : null}
+                                            <span className={p.no_show_at ? 'text-amber-700' : undefined}>
+                                              {p.first_name} {p.last_name ? p.last_name.charAt(0) + '.' : ''}
+                                              {p.no_show_at ? ' (no-show)' : ''}
+                                            </span>
+                                          </div>
                                         </li>
                                       ))}
                                     </ul>
@@ -902,6 +1007,16 @@ export const KandieEventPage: React.FC = () => {
                                   >
                                     Message participants
                                   </button>
+                                  {isEventDay && confirmed.length > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setFinalizeAttendanceTarget({ levelKey: level.levelKey, label: level.label })}
+                                      disabled={finalizeAttendanceLoading}
+                                      className="rounded-full bg-secondary-purple-rain px-3 py-1.5 text-xs font-semibold text-white hover:bg-secondary-purple-rain/90 transition-colors"
+                                    >
+                                      Finalize attendance
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -982,6 +1097,53 @@ export const KandieEventPage: React.FC = () => {
                           className="rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-semibold text-white hover:bg-secondary-purple-rain/90 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {guideMessageLoading ? 'Sending…' : 'Send message'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Finalize attendance confirm modal */}
+                {finalizeAttendanceTarget && (
+                  <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Finalize attendance"
+                    onClick={() => {
+                      if (!finalizeAttendanceLoading) setFinalizeAttendanceTarget(null);
+                    }}
+                  >
+                    <div
+                      className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <h3 className="text-lg font-semibold text-primary-ink">
+                        Finalize attendance for {finalizeAttendanceTarget.label}?
+                      </h3>
+                      <p className="mt-2 text-sm text-slate-600">
+                        This will mark everyone <span className="font-medium">not checked</span> as a{' '}
+                        <span className="font-medium">no-show</span>. Checked riders stay marked as present.
+                      </p>
+                      <div className="mt-4 flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setFinalizeAttendanceTarget(null)}
+                          disabled={finalizeAttendanceLoading}
+                          className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={finalizeAttendanceLoading}
+                          onClick={() =>
+                            finalizeAttendance(finalizeAttendanceTarget.levelKey, finalizeAttendanceTarget.label).then(
+                              () => setFinalizeAttendanceTarget(null)
+                            )
+                          }
+                          className="rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-semibold text-white hover:bg-secondary-purple-rain/90 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {finalizeAttendanceLoading ? 'Finalizing…' : 'Yes, finalize'}
                         </button>
                       </div>
                     </div>
