@@ -33,6 +33,16 @@ function formatParticipantName(firstName: string | null | undefined, lastName: s
   return '—';
 }
 
+function formatParticipantNameFull(firstName: string | null | undefined, lastName: string | null | undefined) {
+  const first = (firstName ?? '').trim();
+  const last = (lastName ?? '').trim();
+
+  if (first && last) return `${first} ${last}`;
+  if (first) return first;
+  if (last) return last;
+  return '—';
+}
+
 /* ─── Badge ─── */
 function Badge({ children, color }: { children: React.ReactNode; color: string }) {
   return (
@@ -155,6 +165,8 @@ function ParticipantActions({
     return <span className="text-neutral-300 text-xs select-none">—</span>;
   }
 
+  const displayName = formatParticipantNameFull(registrant.firstName, registrant.lastName);
+
   return (
     <div className="relative inline-block" ref={dropdownRef}>
       <button
@@ -264,7 +276,7 @@ function ParticipantActions({
         >
           <div className="bg-white rounded-xl shadow-xl border border-neutral-200 w-full max-w-md mx-4 p-5">
             <h3 className="text-sm font-semibold text-neutral-900 mb-1">
-              Email to {formatParticipantName(registrant.firstName, registrant.lastName)}
+              Email to {displayName}
             </h3>
             <p className="text-xs text-neutral-400 mb-4">
               {registrant.email ?? 'Email from profile'}
@@ -334,6 +346,8 @@ function ParticipantList({
   onRefresh: () => void;
   hideEmail?: boolean;
 }) {
+  const formatName = hideEmail ? formatParticipantName : formatParticipantNameFull;
+
   // Optimistic overrides: applied immediately on action success, cleared on next data refresh
   const [overrides, setOverrides] = useState<Record<string, 'cancel' | 'noshow'>>({});
   const [levelSort, setLevelSort] = useState<'asc' | 'desc' | null>(null);
@@ -405,7 +419,7 @@ function ParticipantList({
             return (
               <tr key={i} className={`border-b border-neutral-50 last:border-0 ${rowClass}`}>
                 <td className="py-2 px-3 font-medium text-neutral-800 whitespace-nowrap">
-                  {formatParticipantName(r.firstName, r.lastName)}
+                  {formatName(r.firstName, r.lastName)}
                 </td>
                 {!hideEmail && <td className="py-2 px-3 text-neutral-500">{r.email ?? '—'}</td>}
                 <td className="py-2 px-3">
