@@ -550,10 +550,10 @@ export const DesignSystemWIP: React.FC = () => {
               </h3>
               <div className="border border-slate-200 rounded-2xl p-8 bg-slate-50">
                 <h1 className="text-5xl font-bold tracking-tighter text-slate-900 mb-4 font-heading">
-                  The Future of Home Robotics
+                  The Future of Inclusion Today
                 </h1>
                 <h2 className="text-2xl font-subheadline font-bold text-slate-700 mb-6">
-                  Powered by state-of-the-art AI
+                  Powered by state-of-the-art humans-beings.
                 </h2>
                 <p className="text-lg text-slate-600 leading-relaxed font-light mb-4 font-body">
                   Kandie Gang simplifies the complexities of daily life through intelligent
