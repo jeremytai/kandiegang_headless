@@ -404,6 +404,10 @@ export const ProductPage: React.FC = () => {
     .replace(/<[^>]*>/g, '')
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)));
   const productSlug = (product.slug ?? '').toLowerCase();
+  /** CMS `variantLabel` wins; sticker set variants are colors, not sizes. */
+  const variantAttributeLabel =
+    product.productFields?.variantLabel ??
+    (productSlug === 'kandie-gang-sticker-set' ? 'Color' : 'Size');
   const _hideTitleAndSizeLabel =
     /Cycling Socks/i.test(rawTitle) ||
     (/Love Story/i.test(rawTitle) && /Socks?/i.test(rawTitle)) ||
@@ -559,7 +563,7 @@ export const ProductPage: React.FC = () => {
                       setShowVariantRequiredMessage(false);
                     }}
                     hideLabel={false}
-                    variantLabel={product.productFields?.variantLabel ?? 'Size'}
+                    variantLabel={variantAttributeLabel}
                     showVariantRequiredMessage={showVariantRequiredMessage}
                   />
                 )}
@@ -762,7 +766,7 @@ export const ProductPage: React.FC = () => {
                     setShowVariantRequiredMessage(false);
                   }}
                   hideLabel={false}
-                  variantLabel={product.productFields?.variantLabel ?? 'Size'}
+                  variantLabel={variantAttributeLabel}
                   showVariantRequiredMessage={showVariantRequiredMessage}
                 />
               )}

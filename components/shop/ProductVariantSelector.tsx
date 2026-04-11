@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { ProductVariant } from '../lib/products';
+import { ProductVariant } from '../../lib/products';
 
 /** Format label for pill: size ranges like "36-39" show as "(36-39)". */
 function formatVariantLabel(label: string): string {
