@@ -17,6 +17,11 @@ function isClubMembershipOnly<T extends { productSlug: string }>(items: T[]): bo
   return items.length > 0 && items.every((i) => i.productSlug === CLUB_MEMBERSHIP_SLUG);
 }
 
+const STICKER_SET_SLUG = 'kandie-gang-sticker-set';
+function isStickerSetOnly<T extends { productSlug: string }>(items: T[]): boolean {
+  return items.length > 0 && items.every((i) => i.productSlug === STICKER_SET_SLUG);
+}
+
 type LineItemInput = {
   priceId: string;
   quantity: number;
@@ -139,13 +144,19 @@ async function handleCheckout(req: VercelRequest, res: VercelResponse) {
     const FREE_SHIPPING_THRESHOLD = 99;
     const SHIPPING_DE_CENTS = 590;
     const SHIPPING_EU_CENTS = 990;
+    const SHIPPING_STICKER_SET_CENTS = 150;
     const shippingOption = (body.shippingOption as string) || 'de';
     const subtotal = typeof body.subtotal === 'number' ? body.subtotal : undefined;
     const cartIsMembershipOnly = isClubMembershipOnly(lineItems);
+    const cartIsStickerSetOnly = isStickerSetOnly(lineItems);
 
     let shippingAmountCents = 0;
     if (subtotal != null && subtotal > 0 && !cartIsMembershipOnly) {
-      if (shippingOption === 'pickup' || subtotal >= FREE_SHIPPING_THRESHOLD) {
+      if (shippingOption === 'pickup') {
+        shippingAmountCents = 0;
+      } else if (cartIsStickerSetOnly) {
+        shippingAmountCents = SHIPPING_STICKER_SET_CENTS;
+      } else if (subtotal >= FREE_SHIPPING_THRESHOLD) {
         shippingAmountCents = 0;
       } else if (shippingOption === 'eu') {
         shippingAmountCents = SHIPPING_EU_CENTS;

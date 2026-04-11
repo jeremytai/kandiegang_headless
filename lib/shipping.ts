@@ -9,3 +9,10 @@ export const CLUB_MEMBERSHIP_SLUG = 'kandie-gang-cycling-club-membership';
 export function isClubMembershipOnly<T extends { productSlug: string }>(items: T[]): boolean {
   return items.length > 0 && items.every((i) => i.productSlug === CLUB_MEMBERSHIP_SLUG);
 }
+
+/** Product slug for Kandie Gang Sticker Set – ships at a flat €1.50 rate. */
+export const STICKER_SET_SLUG = 'kandie-gang-sticker-set';
+
+export function isStickerSetOnly<T extends { productSlug: string }>(items: T[]): boolean {
+  return items.length > 0 && items.every((i) => i.productSlug === STICKER_SET_SLUG);
+}

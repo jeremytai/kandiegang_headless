@@ -10,23 +10,26 @@ import { OffCanvas } from '../layout/OffCanvas';
 import { useCart, CartLineItem } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { posthog, FUNNEL_EVENTS } from '../../lib/posthog';
-import { isClubMembershipOnly } from '../../lib/shipping';
+import { isClubMembershipOnly, isStickerSetOnly } from '../../lib/shipping';
 import { Loader2, ShoppingBag, Trash2, Minus, Plus, CircleAlert, CircleCheck } from 'lucide-react';
 
 const FREE_SHIPPING_THRESHOLD = 99;
 const SHIPPING_DE = 5.9;
 const SHIPPING_EU = 9.9;
 const SHIPPING_PICKUP = 0;
+const SHIPPING_STICKER_SET = 1.5;
 
 export type ShippingOption = 'de' | 'eu' | 'pickup';
 
 function getShippingAmount(
   option: ShippingOption,
   subtotal: number,
-  cartIsMembershipOnly: boolean
+  cartIsMembershipOnly: boolean,
+  cartIsStickerSetOnly: boolean
 ): number {
   if (cartIsMembershipOnly) return 0;
   if (option === 'pickup') return SHIPPING_PICKUP;
+  if (cartIsStickerSetOnly) return SHIPPING_STICKER_SET;
   if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
   return option === 'de' ? SHIPPING_DE : SHIPPING_EU;
 }
@@ -106,7 +109,8 @@ export const CartOffcanvas: React.FC = () => {
   const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.quantity, 0);
   const hasAnyPrice = items.some((i) => i.price != null && i.price > 0);
   const cartIsMembershipOnly = isClubMembershipOnly(items);
-  const shippingAmount = getShippingAmount(shippingOption, subtotal, cartIsMembershipOnly);
+  const cartIsStickerSetOnly = isStickerSetOnly(items);
+  const shippingAmount = getShippingAmount(shippingOption, subtotal, cartIsMembershipOnly, cartIsStickerSetOnly);
   const total = subtotal + shippingAmount;
 
   const handleProceedToCheckout = async () => {
@@ -226,16 +230,18 @@ export const CartOffcanvas: React.FC = () => {
                         {
                           value: 'de' as const,
                           label: 'Delivery to Germany',
-                          priceLabel:
-                            subtotal >= FREE_SHIPPING_THRESHOLD
+                          priceLabel: cartIsStickerSetOnly
+                            ? `€${SHIPPING_STICKER_SET.toFixed(2)}`
+                            : subtotal >= FREE_SHIPPING_THRESHOLD
                               ? 'Free'
                               : `€${SHIPPING_DE.toFixed(2)}`,
                         },
                         {
                           value: 'eu' as const,
                           label: 'Delivery to EU',
-                          priceLabel:
-                            subtotal >= FREE_SHIPPING_THRESHOLD
+                          priceLabel: cartIsStickerSetOnly
+                            ? `€${SHIPPING_STICKER_SET.toFixed(2)}`
+                            : subtotal >= FREE_SHIPPING_THRESHOLD
                               ? 'Free'
                               : `€${SHIPPING_EU.toFixed(2)}`,
                         },
