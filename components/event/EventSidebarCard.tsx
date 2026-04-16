@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Link, Info, User, Clock, X } from 'lucide-react';
 import { motion, useSpring, AnimatePresence } from 'framer-motion';
 
@@ -156,11 +157,24 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
     label: string;
   } | null>(null);
 
+  const portalTarget = typeof document !== 'undefined' ? document.body : null;
+
   useEffect(() => {
     if (isPublic) return;
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(interval);
   }, [isPublic]);
+
+  useEffect(() => {
+    if (!portalTarget) return;
+    const isModalOpen = Boolean(routeModal || cancelTarget);
+    if (!isModalOpen) return;
+    const prevOverflow = portalTarget.style.overflow;
+    portalTarget.style.overflow = 'hidden';
+    return () => {
+      portalTarget.style.overflow = prevOverflow;
+    };
+  }, [portalTarget, routeModal, cancelTarget]);
 
   const countdownLabel = useMemo(() => {
     if (isPublic || !publicReleaseDate) return '';
@@ -594,83 +608,90 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
         </div>
       </div>
 
-      {routeModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${routeModal.label} route`}
-          onClick={() => setRouteModal(null)}
-        >
-          <div
-            className="w-full max-w-4xl overflow-hidden rounded-xl bg-white shadow-lg"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
-              <p className="text-sm font-medium text-primary-ink">{routeModal.label} Route</p>
-              <button
-                type="button"
-                className="text-sm text-slate-500 hover:text-slate-800"
-                onClick={() => setRouteModal(null)}
+      {portalTarget && routeModal
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${routeModal.label} route`}
+              onClick={() => setRouteModal(null)}
+            >
+              <div
+                className="w-full max-w-4xl overflow-hidden rounded-xl bg-white shadow-lg"
+                onClick={(event) => event.stopPropagation()}
               >
-                Close
-              </button>
-            </div>
-            <div className="aspect-video w-full bg-white">
-              <iframe
-                title={`${routeModal.label} route`}
-                src={getKomootEmbedUrl(routeModal.url)}
-                className="h-full w-full"
-                loading="lazy"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      {cancelTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Cancel registration"
-          onClick={() => setCancelTarget(null)}
-        >
-          <div
-            className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold text-primary-ink">
-              Cancel {cancelTarget.label} spot?
-            </h3>
-            <p className="mt-2 text-sm text-slate-600">
-              This will free up your spot for someone else in{' '}
-              <span className="font-medium text-slate-900">{cancelTarget.label}</span>. You can
-              re-register if spots are still available.
-            </p>
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setCancelTarget(null)}
-                className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
+                  <p className="text-sm font-medium text-primary-ink">{routeModal.label} Route</p>
+                  <button
+                    type="button"
+                    className="text-sm text-slate-500 hover:text-slate-800"
+                    onClick={() => setRouteModal(null)}
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="aspect-video w-full bg-white">
+                  <iframe
+                    title={`${routeModal.label} route`}
+                    src={getKomootEmbedUrl(routeModal.url)}
+                    className="h-full w-full"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>,
+            portalTarget
+          )
+        : null}
+
+      {portalTarget && cancelTarget
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Cancel registration"
+              onClick={() => setCancelTarget(null)}
+            >
+              <div
+                className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+                onClick={(event) => event.stopPropagation()}
               >
-                Keep spot
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (onCancelRegistration) {
-                    onCancelRegistration(cancelTarget.key);
-                  }
-                  setCancelTarget(null);
-                }}
-                className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900"
-              >
-                Yes, cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <h3 className="text-lg font-semibold text-primary-ink">
+                  Cancel {cancelTarget.label} spot?
+                </h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  This will free up your spot for someone else in{' '}
+                  <span className="font-medium text-slate-900">{cancelTarget.label}</span>. You can
+                  re-register if spots are still available.
+                </p>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCancelTarget(null)}
+                    className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    Keep spot
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onCancelRegistration) {
+                        onCancelRegistration(cancelTarget.key);
+                      }
+                      setCancelTarget(null);
+                    }}
+                    className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900"
+                  >
+                    Yes, cancel
+                  </button>
+                </div>
+              </div>
+            </div>,
+            portalTarget
+          )
+        : null}
     </aside>
   );
 };
