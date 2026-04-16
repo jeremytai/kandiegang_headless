@@ -298,7 +298,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                                 className={valueClass}
                                 href={level.routeUrl}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                               >
                                 View Route
                               </a>
@@ -306,7 +306,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                                 className="inline-flex items-center text-slate-500 hover:text-slate-800"
                                 href={level.routeUrl}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                                 aria-label={`Open ${level.label} route in a new tab`}
                               >
                                 <Link className="h-4 w-4" aria-hidden />
@@ -452,7 +452,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                                   className={valueClass}
                                   href={level.routeUrl}
                                   target="_blank"
-                                  rel="noreferrer"
+                                  rel="noopener noreferrer"
                                 >
                                   View Route
                                 </a>
@@ -460,7 +460,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                                   className="inline-flex items-center text-slate-500 hover:text-slate-800"
                                   href={level.routeUrl}
                                   target="_blank"
-                                  rel="noreferrer"
+                                  rel="noopener noreferrer"
                                   aria-label={`Open ${level.label} route in a new tab`}
                                 >
                                   <Link className="h-4 w-4" aria-hidden />
