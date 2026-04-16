@@ -53,18 +53,6 @@ interface EventSidebarCardProps {
 
 import { useAuth } from '../../context/AuthContext';
 
-const getKomootEmbedUrl = (url: string): string => {
-  try {
-    const parsed = new URL(url);
-    const match = parsed.pathname.match(/\/tour\/(\d+)/);
-    if (!match) return url;
-    const tourId = match[1];
-    return `https://www.komoot.com/tour/${tourId}/embed?profile=1`;
-  } catch {
-    return url;
-  }
-};
-
 const GuideHoverName: React.FC<{
   guide: { id: string | number; name?: string; email?: string; image?: string };
 }> = ({ guide }) => {
@@ -149,7 +137,6 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
   const valueClass = 'text-sm text-primary-ink';
   const locationLines = location.split('\n');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [routeModal, setRouteModal] = useState<{ url: string; label: string } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [cancelTarget, setCancelTarget] = useState<{ key: string; label: string } | null>(null);
   const [participantsSidebar, setParticipantsSidebar] = useState<{
@@ -167,14 +154,14 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
 
   useEffect(() => {
     if (!portalTarget) return;
-    const isModalOpen = Boolean(routeModal || cancelTarget);
+    const isModalOpen = Boolean(cancelTarget);
     if (!isModalOpen) return;
     const prevOverflow = portalTarget.style.overflow;
     portalTarget.style.overflow = 'hidden';
     return () => {
       portalTarget.style.overflow = prevOverflow;
     };
-  }, [portalTarget, routeModal, cancelTarget]);
+  }, [portalTarget, cancelTarget]);
 
   const countdownLabel = useMemo(() => {
     if (isPublic || !publicReleaseDate) return '';
@@ -307,23 +294,14 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           <div>
                             <p className={labelClass}>Route</p>
                             <div className="flex items-center gap-3">
-                              <button
-                                type="button"
+                              <a
                                 className={valueClass}
-                                onClick={() => {
-                                  // On mobile, open modal; on desktop/tablet, open in new tab
-                                  if (window.matchMedia('(max-width: 767px)').matches) {
-                                    setRouteModal({
-                                      url: level.routeUrl as string,
-                                      label: level.label,
-                                    });
-                                  } else {
-                                    window.open(level.routeUrl as string, '_blank', 'noopener,noreferrer');
-                                  }
-                                }}
+                                href={level.routeUrl}
+                                target="_blank"
+                                rel="noreferrer"
                               >
                                 View Route
-                              </button>
+                              </a>
                               <a
                                 className="inline-flex items-center text-slate-500 hover:text-slate-800"
                                 href={level.routeUrl}
@@ -470,18 +448,14 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                             <div>
                               <p className={labelClass}>Route</p>
                               <div className="flex items-center gap-3">
-                                <button
-                                  type="button"
+                                <a
                                   className={valueClass}
-                                  onClick={() =>
-                                    setRouteModal({
-                                      url: level.routeUrl as string,
-                                      label: level.label,
-                                    })
-                                  }
+                                  href={level.routeUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
                                 >
                                   View Route
-                                </button>
+                                </a>
                                 <a
                                   className="inline-flex items-center text-slate-500 hover:text-slate-800"
                                   href={level.routeUrl}
@@ -607,43 +581,6 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
           </p>
         </div>
       </div>
-
-      {portalTarget && routeModal
-        ? createPortal(
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-              role="dialog"
-              aria-modal="true"
-              aria-label={`${routeModal.label} route`}
-              onClick={() => setRouteModal(null)}
-            >
-              <div
-                className="w-full max-w-4xl overflow-hidden rounded-xl bg-white shadow-lg"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
-                  <p className="text-sm font-medium text-primary-ink">{routeModal.label} Route</p>
-                  <button
-                    type="button"
-                    className="text-sm text-slate-500 hover:text-slate-800"
-                    onClick={() => setRouteModal(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-                <div className="aspect-video w-full bg-white">
-                  <iframe
-                    title={`${routeModal.label} route`}
-                    src={getKomootEmbedUrl(routeModal.url)}
-                    className="h-full w-full"
-                    loading="lazy"
-                  />
-                </div>
-              </div>
-            </div>,
-            portalTarget
-          )
-        : null}
 
       {portalTarget && cancelTarget
         ? createPortal(
