@@ -27,9 +27,9 @@ const DEFAULT_ALT =
   'We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).';
 
 const HERO_IMAGES = [
-  '/images/250701_photosafari-12',
   '/images/240707_humanrides-75',
-  '/images/231112_stevenscup_neuduvenstedt-10',
+  'https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2026/04/08083813/260407_kandiegang_seasonopener-18-scaled.jpg',
+  'https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2026/04/08083745/260407_kandiegang_seasonopener-11-scaled.jpg',
 ] as const;
 
 export interface ExpandingHeroProps {
@@ -99,7 +99,7 @@ function ExpandingHeroMotion({ imageUrl, imageAlt }: ExpandingHeroProps) {
           }}
           className="relative bg-secondary-purple-rain overflow-hidden flex flex-col"
         >
-          <HeroImage src={src} srcSet={srcSet} imageAlt={imageAlt} imageUrl={imageUrl} />
+          <HeroImage src={src} srcSet={srcSet} imageAlt={imageAlt ?? DEFAULT_ALT} imageUrl={imageUrl} />
         </motion.div>
       </div>
     </section>
@@ -117,7 +117,7 @@ function ExpandingHeroStatic({ imageUrl, imageAlt }: ExpandingHeroProps) {
     <section ref={containerRef} className="relative h-[100vh] md:h-[100vh] bg-primary-breath">
       <div className="h-screen w-full flex flex-col items-center overflow-hidden">
         <div className="relative w-full h-[100vh] bg-secondary-purple-rain overflow-hidden flex flex-col">
-          <HeroImage src={src} srcSet={srcSet} imageAlt={imageAlt} imageUrl={imageUrl} />
+          <HeroImage src={src} srcSet={srcSet} imageAlt={imageAlt ?? DEFAULT_ALT} imageUrl={imageUrl} />
         </div>
       </div>
     </section>

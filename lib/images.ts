@@ -8,8 +8,15 @@ export const IMAGE_WIDTHS = [400, 800, 1200] as const;
 
 const isDev = import.meta.env.DEV;
 
+function isAbsoluteHttpUrl(path: string): boolean {
+  return /^https?:\/\//i.test(path);
+}
+
 /** Default src for an image. Use width for responsive variant (e.g. 400 for small avatars). In dev uses .jpg. */
 export function imageSrc(basePath: string, width?: number): string {
+  if (isAbsoluteHttpUrl(basePath)) {
+    return basePath;
+  }
   if (isDev) {
     return `${basePath}.jpg`;
   }
@@ -21,6 +28,7 @@ export function imageSrc(basePath: string, width?: number): string {
 
 /** srcset for responsive images. Empty in dev (only .jpg exists). */
 export function imageSrcSet(basePath: string): string {
+  if (isAbsoluteHttpUrl(basePath)) return '';
   if (isDev) return '';
   return IMAGE_WIDTHS.map((w) => `${basePath}-${w}w.webp ${w}w`).join(', ');
 }
