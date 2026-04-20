@@ -1,5 +1,21 @@
 # Kandie Gang Headless WordPress
 
+## 🔐 Secret Rotation Log
+
+**April 2026** — Rotated all production secrets following the [Vercel April 2026 security incident](https://vercel.com/kb/bulletin/vercel-april-2026-security-incident). All secrets below are now stored as **Sensitive** environment variables in Vercel (production only).
+
+| Secret | Rotated |
+| --- | --- |
+| `STRIPE_SECRET_KEY` | Apr 2026 |
+| `STRIPE_WEBHOOK_SECRET` | Apr 2026 |
+| `SUPABASE_SERVICE_ROLE_KEY` | Apr 2026 |
+| `RESEND_API_KEY` | Apr 2026 |
+| `UPSTASH_REDIS_REST_TOKEN` | Apr 2026 |
+| `TURNSTILE_SECRET_KEY` | Apr 2026 |
+| `CRON_SECRET` | Apr 2026 |
+
+---
+
 ## TO DO
 - Events
   - add join waitlist CTA to event pages
