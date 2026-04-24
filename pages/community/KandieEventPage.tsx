@@ -952,11 +952,14 @@ export const KandieEventPage: React.FC = () => {
                                     <p className="text-xs tracking-[0.08em] text-secondary-purple-rain mb-2">
                                       Confirmed ({confirmed.length})
                                     </p>
-                                    <ul className="space-y-1">
+                                    <ul className="space-y-2 md:space-y-1">
                                       {confirmed.map((p, i) => (
-                                        <li key={p.id || p.user_id || i} className="text-sm text-primary-ink">
-                                          <div className="flex items-center gap-2">
-                                            {isEventDay ? (
+                                        <li
+                                          key={p.id || p.user_id || i}
+                                          className="text-base md:text-sm text-primary-ink"
+                                        >
+                                          {isEventDay ? (
+                                            <label className="flex items-center gap-3 py-1 select-none cursor-pointer">
                                               <input
                                                 type="checkbox"
                                                 aria-label={`Mark ${p.first_name} as present`}
@@ -964,14 +967,22 @@ export const KandieEventPage: React.FC = () => {
                                                 onChange={(e) =>
                                                   updateAttendance(level.levelKey, p.id, e.target.checked)
                                                 }
-                                                className="h-4 w-4 accent-secondary-purple-rain"
+                                                className="h-6 w-6 md:h-4 md:w-4 accent-secondary-purple-rain"
                                               />
-                                            ) : null}
+                                              <span
+                                                className={p.no_show_at ? 'text-amber-700' : undefined}
+                                              >
+                                                {p.first_name}{' '}
+                                                {p.last_name ? p.last_name.charAt(0) + '.' : ''}
+                                                {p.no_show_at ? ' (no-show)' : ''}
+                                              </span>
+                                            </label>
+                                          ) : (
                                             <span className={p.no_show_at ? 'text-amber-700' : undefined}>
                                               {p.first_name} {p.last_name ? p.last_name.charAt(0) + '.' : ''}
                                               {p.no_show_at ? ' (no-show)' : ''}
                                             </span>
-                                          </div>
+                                          )}
                                         </li>
                                       ))}
                                     </ul>
