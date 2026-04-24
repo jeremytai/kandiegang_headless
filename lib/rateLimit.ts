@@ -14,13 +14,17 @@ const buckets = new Map<string, Bucket>();
 
 // Optional Redis client for cross-instance rate limiting. When not configured,
 // the helper falls back to in-memory buckets (per lambda / process).
-const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      })
-    : null;
+let redis: Redis | null = null;
+try {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL.trim(),
+      token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
+    });
+  }
+} catch (e) {
+  console.error('[rateLimit] Redis init failed, falling back to in-memory:', e);
+}
 
 function getClientIp(req: any): string {
   // Try x-forwarded-for (works for both Next.js and Vercel)

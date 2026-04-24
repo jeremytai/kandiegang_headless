@@ -72,13 +72,17 @@ type RateLimitOptions = { windowMs: number; max: number; keyPrefix: string };
 type Bucket = { count: number; resetAt: number };
 const inMemoryBuckets = new Map<string, Bucket>();
 
-const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      })
-    : null;
+let redis: Redis | null = null;
+try {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL.trim(),
+      token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
+    });
+  }
+} catch (e) {
+  console.error('[event] Redis init failed, falling back to in-memory rate limiting:', e);
+}
 
 function getClientIp(req: VercelRequest): string {
   const forwarded = req.headers['x-forwarded-for'];
