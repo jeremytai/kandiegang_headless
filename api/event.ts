@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
 import { Redis } from '@upstash/redis';
+import { generateIcs } from '../lib/ics';
 
 // ─── Shared constants ─────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -799,6 +800,12 @@ type EventSignupBody = {
   email?: string;
   turnstileToken?: string;
   registrationCode?: string;
+  /** "YYYY-MM-DD" */
+  eventDate?: string;
+  /** "HH:MM" 24h */
+  eventTime?: string;
+  /** Human-readable meeting point */
+  eventLocation?: string;
 };
 
 async function handleSignup(req: VercelRequest, res: VercelResponse) {
@@ -825,6 +832,9 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
   const eventUrl = typeof body?.eventUrl === 'string' ? body.eventUrl.trim() : undefined;
   const flintaAttested = Boolean(body?.flintaAttested);
   const firstName = typeof body?.firstName === 'string' ? body.firstName.trim() : '';
+  const eventDate = typeof body?.eventDate === 'string' ? body.eventDate.trim() : undefined;
+  const eventTime = typeof body?.eventTime === 'string' ? body.eventTime.trim() : undefined;
+  const eventLocation = typeof body?.eventLocation === 'string' ? body.eventLocation.trim() : undefined;
   const lastName = typeof body?.lastName === 'string' ? body.lastName.trim() : '';
   const guestEmail = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
   const turnstileToken = typeof body?.turnstileToken === 'string' ? body.turnstileToken : '';
@@ -1017,12 +1027,34 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
         const text = waitlisted
           ? buildWaitlistText(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl)
           : buildConfirmationText(eventTitle, rideLevel).replace('{{CANCEL_URL}}', cancelUrl);
+
+        // Attach ICS calendar file for confirmed (non-waitlist) signups only
+        const attachments =
+          !waitlisted && eventDate
+            ? [
+                {
+                  filename: 'kandie-gang-event.ics',
+                  content: Buffer.from(
+                    generateIcs({
+                      title: `${eventTitle} – ${formatRideLevel(rideLevel)}`,
+                      date: eventDate,
+                      time: eventTime,
+                      location: eventLocation,
+                      description: eventUrl,
+                    })
+                  ).toString('base64'),
+                  content_type: 'text/calendar',
+                },
+              ]
+            : undefined;
+
         await resend.emails.send({
           from: FROM_EMAIL,
           to: userEmail,
           subject: waitlisted ? 'You are on the waitlist' : 'Your event spot is saved',
           html,
           text,
+          attachments,
         });
       } catch (emailErr) {
         console.error('[event-signup] Email failed:', emailErr);

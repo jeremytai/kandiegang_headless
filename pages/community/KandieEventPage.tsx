@@ -593,6 +593,9 @@ export const KandieEventPage: React.FC = () => {
       accessNote: signupHelper,
       requiresFlintaAttestation,
       hasRegistrationCode,
+      eventDate: eventDatePart || undefined,
+      eventTime: timeLabel || undefined,
+      eventLocation: [locationName, locationStreetCity].filter(Boolean).join(', ') || undefined,
     };
     openEventSignup(intent);
   };

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { generateIcs } from '../../lib/ics';
 
 export type EventSignupIntent = {
   eventId: string;
@@ -17,6 +18,12 @@ export type EventSignupIntent = {
   hasRegistrationCode?: boolean;
   firstName?: string;
   lastName?: string;
+  /** "YYYY-MM-DD" */
+  eventDate?: string;
+  /** "HH:MM" 24h or "H:MMam/pm" */
+  eventTime?: string;
+  /** Human-readable location string */
+  eventLocation?: string;
 };
 
 export interface EventSignupPanelProps {
@@ -129,6 +136,9 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
           email: email.trim(),
           turnstileToken: turnstileToken,
           registrationCode: needsRegistrationCode ? registrationCode.trim() : undefined,
+          eventDate: intent.eventDate,
+          eventTime: intent.eventTime,
+          eventLocation: intent.eventLocation,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -195,6 +205,9 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         firstName: !trimmedLast && shouldSkipNameEntry ? (profile?.display_name ?? trimmedFirst) : trimmedFirst,
         lastName: trimmedLast,
         registrationCode: needsRegistrationCode ? registrationCode.trim() : undefined,
+        eventDate: intent.eventDate,
+        eventTime: intent.eventTime,
+        eventLocation: intent.eventLocation,
       };
       const response = await fetch('/api/event', {
         method: 'POST',
@@ -257,19 +270,48 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   }
 
   if (signupComplete) {
+    const handleAddToCalendar = () => {
+      if (!intent.eventDate) return;
+      const ics = generateIcs({
+        title: `${intent.eventTitle} – ${intent.levelLabel}`,
+        date: intent.eventDate,
+        time: intent.eventTime,
+        location: intent.eventLocation,
+        description: intent.eventUrl,
+      });
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kandie-gang-event.ics';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
     return (
       <div className="space-y-4">
         <h2 className="text-xl font-normal text-secondary-purple-rain">You're in!</h2>
         <p className="text-sm text-slate-600">
-          Your spot for <strong>{levelSummary}</strong> is confirmed! You are now logged in.
+          Your spot for <strong>{levelSummary}</strong> is confirmed!
           <br />
           <span className="text-xs text-slate-500">
-            Check your email for event details and updates. No further action is needed.
+            Check your email for a calendar invite and event details.
           </span>
         </p>
-        <button type="button" onClick={handleClose} className={btnPrimary}>
-          Close
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {intent.eventDate && (
+            <button
+              type="button"
+              onClick={handleAddToCalendar}
+              className="inline-flex items-center gap-1.5 rounded-full border border-secondary-purple-rain px-4 py-2 text-sm font-medium text-secondary-purple-rain transition hover:bg-secondary-purple-rain hover:text-white"
+            >
+              Add to Calendar
+            </button>
+          )}
+          <button type="button" onClick={handleClose} className={btnPrimary}>
+            Close
+          </button>
+        </div>
       </div>
     );
   }
