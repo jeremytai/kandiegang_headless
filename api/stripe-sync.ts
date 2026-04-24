@@ -79,10 +79,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(403).json({ error: 'Forbidden — guide access required' });
   }
 
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const emailFilter = normalizeEmail(typeof body.email === 'string' ? body.email : null);
+  const debug = Boolean(body.debug);
+
   let synced = 0;
   let totalNewOrders = 0;
   let customersLinked = 0;
   const errors: string[] = [];
+  const debugProfiles: Array<Record<string, unknown>> = [];
 
   try {
     const selectCols =
@@ -102,7 +107,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const profileById = new Map<string, (typeof withStripe)[number]>();
     for (const p of withStripe ?? []) profileById.set(p.id, p);
     for (const p of emailOnly ?? []) profileById.set(p.id, p);
-    const profiles = [...profileById.values()];
+    let profiles = [...profileById.values()];
+
+    if (emailFilter) {
+      profiles = profiles.filter((p) => {
+        if (normalizeEmail(p.email) === emailFilter) return true;
+        if (Array.isArray(p.alternate_emails)) {
+          return p.alternate_emails.some((e) => normalizeEmail(e) === emailFilter);
+        }
+        return false;
+      });
+    }
 
     for (const profile of profiles) {
       try {
@@ -133,6 +148,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           synced++;
           totalNewOrders += result.newOrders;
         }
+
+        if (debug || emailFilter) {
+          debugProfiles.push({
+            profileId: profile.id,
+            email: profile.email,
+            alternate_emails: profile.alternate_emails,
+            prior_stripe_customer_id: profile.stripe_customer_id,
+            customerIds,
+            primaryStripeCustomerId: result.primaryStripeCustomerId,
+            didLinkStripeCustomer: result.didLinkStripeCustomer,
+            newOrdersAdded: result.newOrders,
+          });
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         errors.push(`profile ${profile.id}: ${msg}`);
@@ -143,6 +171,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       synced,
       totalNewOrders,
       customersLinked,
+      ...(debug || emailFilter ? { debugProfiles } : {}),
       ...(errors.length > 0 ? { errors } : {}),
     });
   } catch (err) {
@@ -157,6 +186,10 @@ function normalizeEmail(e: string | null | undefined): string | null {
   if (!e || typeof e !== 'string') return null;
   const t = e.trim().toLowerCase();
   return t.length > 0 ? t : null;
+}
+
+function isStripeCustomerId(id: string | null | undefined): id is string {
+  return typeof id === 'string' && /^cus_[a-zA-Z0-9]+$/.test(id);
 }
 
 async function listCustomerIdsByEmail(stripe: Stripe, email: string): Promise<string[]> {
@@ -184,7 +217,9 @@ async function collectStripeCustomerIdsForProfile(
   }
 ): Promise<string[]> {
   const set = new Set<string>();
-  if (profile.stripe_customer_id) set.add(profile.stripe_customer_id);
+  // Only trust real Stripe customer IDs. We've seen legacy/other-system ids (e.g. gcus_...)
+  // stored in this column which would break invoice listing.
+  if (isStripeCustomerId(profile.stripe_customer_id)) set.add(profile.stripe_customer_id);
 
   const emails = new Set<string>();
   const primary = normalizeEmail(profile.email);
@@ -281,19 +316,26 @@ async function syncInvoicesForCustomerIds(
     const invoiceCountByCustomer = new Map<string, number>();
     const invoicesById = new Map<string, Stripe.Invoice>();
 
-    for (const cid of customerIds) {
-      const batch = await fetchAllPaidInvoicesForCustomer(stripe, cid);
-      invoiceCountByCustomer.set(cid, batch.length);
-      for (const inv of batch) {
-        if (!invoicesById.has(inv.id)) invoicesById.set(inv.id, inv);
+    const validCustomerIds = customerIds.filter((cid) => isStripeCustomerId(cid));
+
+    for (const cid of validCustomerIds) {
+      try {
+        const batch = await fetchAllPaidInvoicesForCustomer(stripe, cid);
+        invoiceCountByCustomer.set(cid, batch.length);
+        for (const inv of batch) {
+          if (!invoicesById.has(inv.id)) invoicesById.set(inv.id, inv);
+        }
+      } catch (err) {
+        // Keep going — one bad/blocked customer shouldn't prevent syncing others.
+        invoiceCountByCustomer.set(cid, 0);
       }
     }
 
     const invoices = [...invoicesById.values()];
     const primaryStripeCustomerId = pickPrimaryStripeCustomerId(
-      customerIds,
+      validCustomerIds,
       invoiceCountByCustomer,
-      existingStripeCustomerId
+      isStripeCustomerId(existingStripeCustomerId) ? existingStripeCustomerId : null
     );
 
     const existingHistory: any[] = Array.isArray(existingOrderHistory) ? existingOrderHistory : [];
