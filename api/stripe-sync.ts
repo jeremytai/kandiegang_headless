@@ -19,9 +19,17 @@ const stripe = STRIPE_SECRET_KEY
  * recalculates lifetime_value, order_count, avg_order_value,
  * last_order_date, and customer_since for every profile.
  *
- * Pass 1: profiles that already have stripe_customer_id
- * Pass 2: profiles WITHOUT stripe_customer_id — searches Stripe by email,
- *         links the customer, then syncs their invoices
+ * For each profile, collects every Stripe customer that matches:
+ * - stored stripe_customer_id, and
+ * - customers.list by primary email and alternate_emails (paginated).
+ *
+ * Paid invoices from all of those customers are merged and deduped by
+ * invoice id, so split checkouts (multiple Stripe customers for one person)
+ * still land on one profile.
+ *
+ * If stripe_customer_id is null but any customer was found by email, the
+ * profile is linked to the customer with the most paid invoices (stable
+ * target for webhooks).
  *
  * Requires guide authentication.
  */
@@ -77,78 +85,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const errors: string[] = [];
 
   try {
-    // ── Pass 1: profiles that already have stripe_customer_id ────────────────
-    const { data: linkedProfiles, error: profilesError } = await adminClient
-      .from('profiles')
-      .select('id, stripe_customer_id, order_history, customer_since')
-      .not('stripe_customer_id', 'is', null);
-
-    if (profilesError) throw profilesError;
-
-    for (const profile of linkedProfiles ?? []) {
-      if (!profile.stripe_customer_id) continue;
-      const result = await syncCustomerInvoices(
-        stripe,
-        adminClient,
-        profile.id,
-        profile.stripe_customer_id,
-        profile.order_history,
-        profile.customer_since
-      );
-      if (result.error) {
-        errors.push(`${profile.stripe_customer_id}: ${result.error}`);
-      } else if (result.updated) {
-        synced++;
-        totalNewOrders += result.newOrders;
-      }
-    }
-
-    // ── Pass 2: profiles WITHOUT stripe_customer_id — link via email ─────────
-    const { data: unlinkedProfiles } = await adminClient
-      .from('profiles')
-      .select('id, email, order_history, customer_since')
-      .is('stripe_customer_id', null)
-      .not('email', 'is', null);
-
-    for (const profile of unlinkedProfiles ?? []) {
-      if (!profile.email) continue;
-      try {
-        // Search Stripe for a customer with this email
-        const customers = await stripe.customers.list({
-          email: profile.email.toLowerCase(),
-          limit: 5,
-        });
-        if (customers.data.length === 0) continue;
-
-        // Use the most recently created Stripe customer for this email
-        const stripeCustomer = customers.data[0];
-
-        // Link the profile to the Stripe customer
-        await adminClient
+    const selectCols =
+      'id, email, alternate_emails, stripe_customer_id, order_history, customer_since';
+    const [{ data: withStripe, error: errStripe }, { data: emailOnly, error: errEmail }] =
+      await Promise.all([
+        adminClient.from('profiles').select(selectCols).not('stripe_customer_id', 'is', null),
+        adminClient
           .from('profiles')
-          .update({ stripe_customer_id: stripeCustomer.id })
-          .eq('id', profile.id);
+          .select(selectCols)
+          .is('stripe_customer_id', null)
+          .not('email', 'is', null),
+      ]);
+    if (errStripe) throw errStripe;
+    if (errEmail) throw errEmail;
 
-        customersLinked++;
+    const profileById = new Map<string, (typeof withStripe)[number]>();
+    for (const p of withStripe ?? []) profileById.set(p.id, p);
+    for (const p of emailOnly ?? []) profileById.set(p.id, p);
+    const profiles = [...profileById.values()];
 
-        // Sync their invoices
-        const result = await syncCustomerInvoices(
+    for (const profile of profiles) {
+      try {
+        const customerIds = await collectStripeCustomerIdsForProfile(stripe, {
+          stripe_customer_id: profile.stripe_customer_id,
+          email: profile.email,
+          alternate_emails: profile.alternate_emails,
+        });
+        if (customerIds.length === 0) continue;
+
+        const result = await syncInvoicesForCustomerIds(
           stripe,
           adminClient,
           profile.id,
-          stripeCustomer.id,
+          customerIds,
           profile.order_history,
-          profile.customer_since
+          profile.customer_since,
+          profile.stripe_customer_id
         );
         if (result.error) {
-          errors.push(`${stripeCustomer.id} (email lookup): ${result.error}`);
-        } else if (result.updated) {
+          errors.push(`${profile.id}: ${result.error}`);
+          continue;
+        }
+        if (result.didLinkStripeCustomer) {
+          customersLinked++;
+        }
+        if (result.updated) {
           synced++;
           totalNewOrders += result.newOrders;
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        errors.push(`email ${profile.email}: ${msg}`);
+        errors.push(`profile ${profile.id}: ${msg}`);
       }
     }
 
@@ -164,43 +151,160 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-// ── Shared helper: fetch invoices for a customer and update the profile ───────
+// ── Stripe customer discovery (multiple customers per email are common) ───────
 
-async function syncCustomerInvoices(
+function normalizeEmail(e: string | null | undefined): string | null {
+  if (!e || typeof e !== 'string') return null;
+  const t = e.trim().toLowerCase();
+  return t.length > 0 ? t : null;
+}
+
+async function listCustomerIdsByEmail(stripe: Stripe, email: string): Promise<string[]> {
+  const ids: string[] = [];
+  let startingAfter: string | undefined;
+  for (;;) {
+    const page = await stripe.customers.list({
+      email: email.toLowerCase(),
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    });
+    for (const c of page.data) ids.push(c.id);
+    if (!page.has_more || page.data.length === 0) break;
+    startingAfter = page.data[page.data.length - 1].id;
+  }
+  return ids;
+}
+
+async function collectStripeCustomerIdsForProfile(
+  stripe: Stripe,
+  profile: {
+    stripe_customer_id: string | null;
+    email: string | null;
+    alternate_emails: string[] | null;
+  }
+): Promise<string[]> {
+  const set = new Set<string>();
+  if (profile.stripe_customer_id) set.add(profile.stripe_customer_id);
+
+  const emails = new Set<string>();
+  const primary = normalizeEmail(profile.email);
+  if (primary) emails.add(primary);
+  if (Array.isArray(profile.alternate_emails)) {
+    for (const a of profile.alternate_emails) {
+      const n = normalizeEmail(a);
+      if (n) emails.add(n);
+    }
+  }
+
+  for (const em of emails) {
+    for (const id of await listCustomerIdsByEmail(stripe, em)) {
+      set.add(id);
+    }
+  }
+  return [...set];
+}
+
+async function fetchAllPaidInvoicesForCustomer(
+  stripe: Stripe,
+  stripeCustomerId: string
+): Promise<Stripe.Invoice[]> {
+  const invoices: Stripe.Invoice[] = [];
+  let hasMore = true;
+  let startingAfter: string | undefined;
+
+  while (hasMore) {
+    const page = await stripe.invoices.list({
+      customer: stripeCustomerId,
+      status: 'paid',
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    });
+    invoices.push(...page.data);
+    hasMore = page.has_more;
+    if (page.data.length > 0) {
+      startingAfter = page.data[page.data.length - 1].id;
+    }
+  }
+  return invoices;
+}
+
+/** Prefer existing linked customer for subscriptions; else the customer with the most paid invoices. */
+function pickPrimaryStripeCustomerId(
+  customerIds: string[],
+  invoiceCountByCustomer: Map<string, number>,
+  existingStripeCustomerId: string | null
+): string | null {
+  if (customerIds.length === 0) return null;
+  if (
+    existingStripeCustomerId &&
+    customerIds.includes(existingStripeCustomerId) &&
+    (invoiceCountByCustomer.get(existingStripeCustomerId) ?? 0) > 0
+  ) {
+    return existingStripeCustomerId;
+  }
+  let best = customerIds[0];
+  let bestCount = -1;
+  for (const id of customerIds) {
+    const n = invoiceCountByCustomer.get(id) ?? 0;
+    if (n > bestCount) {
+      bestCount = n;
+      best = id;
+    }
+  }
+  if (bestCount > 0) return best;
+  if (existingStripeCustomerId && customerIds.includes(existingStripeCustomerId)) {
+    return existingStripeCustomerId;
+  }
+  return customerIds[0];
+}
+
+// ── Merge paid invoices from multiple Stripe customers into one profile ───────
+
+async function syncInvoicesForCustomerIds(
   stripe: Stripe,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adminClient: any,
   profileId: string,
-  stripeCustomerId: string,
+  customerIds: string[],
   existingOrderHistory: any,
-  existingCustomerSince: string | null
-): Promise<{ updated: boolean; newOrders: number; error?: string }> {
+  existingCustomerSince: string | null,
+  existingStripeCustomerId: string | null
+): Promise<{
+  updated: boolean;
+  newOrders: number;
+  error?: string;
+  primaryStripeCustomerId: string | null;
+  /** True when this run set stripe_customer_id on a profile that had none. */
+  didLinkStripeCustomer: boolean;
+}> {
   try {
-    // Fetch all paid invoices for this customer
-    const invoices: Stripe.Invoice[] = [];
-    let hasMore = true;
-    let startingAfter: string | undefined;
+    const invoiceCountByCustomer = new Map<string, number>();
+    const invoicesById = new Map<string, Stripe.Invoice>();
 
-    while (hasMore) {
-      const page = await stripe.invoices.list({
-        customer: stripeCustomerId,
-        status: 'paid',
-        limit: 100,
-        ...(startingAfter ? { starting_after: startingAfter } : {}),
-      });
-      invoices.push(...page.data);
-      hasMore = page.has_more;
-      if (page.data.length > 0) {
-        startingAfter = page.data[page.data.length - 1].id;
+    for (const cid of customerIds) {
+      const batch = await fetchAllPaidInvoicesForCustomer(stripe, cid);
+      invoiceCountByCustomer.set(cid, batch.length);
+      for (const inv of batch) {
+        if (!invoicesById.has(inv.id)) invoicesById.set(inv.id, inv);
       }
     }
 
-    // Build order history, deduplicating by invoice ID
+    const invoices = [...invoicesById.values()];
+    const primaryStripeCustomerId = pickPrimaryStripeCustomerId(
+      customerIds,
+      invoiceCountByCustomer,
+      existingStripeCustomerId
+    );
+
     const existingHistory: any[] = Array.isArray(existingOrderHistory) ? existingOrderHistory : [];
 
-    // If Stripe has no invoices AND there are no existing orders, nothing to do
     if (invoices.length === 0 && existingHistory.length === 0) {
-      return { updated: false, newOrders: 0 };
+      return {
+        updated: false,
+        newOrders: 0,
+        primaryStripeCustomerId,
+        didLinkStripeCustomer: false,
+      };
     }
 
     const trackedIds = new Set(existingHistory.map((e: any) => String(e.order_id)));
@@ -231,10 +335,8 @@ async function syncCustomerInvoices(
       newOrdersAdded++;
     }
 
-    // Sort chronologically (oldest first)
     mergedHistory.sort((a: any, b: any) => (a.date || '').localeCompare(b.date || ''));
 
-    // Recalculate metrics from the full merged history
     const orderCount = mergedHistory.length;
     const lifetimeValue =
       Math.round(
@@ -249,26 +351,54 @@ async function syncCustomerInvoices(
     );
     const customerSince: string | null = existingCustomerSince ?? mergedHistory[0]?.date ?? null;
 
-    // Always write back: ensures lifetime_value is correct even if no new orders were added
+    const updatePayload: Record<string, unknown> = {
+      order_history: mergedHistory,
+      order_count: orderCount,
+      lifetime_value: lifetimeValue,
+      avg_order_value: avgOrderValue,
+      last_order_date: lastOrderDate,
+      customer_since: customerSince,
+    };
+
+    let didLinkStripeCustomer = false;
+    if (
+      primaryStripeCustomerId &&
+      (!existingStripeCustomerId ||
+        primaryStripeCustomerId !== existingStripeCustomerId)
+    ) {
+      updatePayload.stripe_customer_id = primaryStripeCustomerId;
+      if (!existingStripeCustomerId) didLinkStripeCustomer = true;
+    }
+
     const { error: updateError } = await adminClient
       .from('profiles')
-      .update({
-        order_history: mergedHistory,
-        order_count: orderCount,
-        lifetime_value: lifetimeValue,
-        avg_order_value: avgOrderValue,
-        last_order_date: lastOrderDate,
-        customer_since: customerSince,
-      })
+      .update(updatePayload)
       .eq('id', profileId);
 
     if (updateError) {
-      return { updated: false, newOrders: 0, error: updateError.message };
+      return {
+        updated: false,
+        newOrders: 0,
+        error: updateError.message,
+        primaryStripeCustomerId,
+        didLinkStripeCustomer: false,
+      };
     }
 
-    return { updated: true, newOrders: newOrdersAdded };
+    return {
+      updated: true,
+      newOrders: newOrdersAdded,
+      primaryStripeCustomerId,
+      didLinkStripeCustomer,
+    };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { updated: false, newOrders: 0, error: msg };
+    return {
+      updated: false,
+      newOrders: 0,
+      error: msg,
+      primaryStripeCustomerId: null,
+      didLinkStripeCustomer: false,
+    };
   }
 }
