@@ -20,6 +20,16 @@ const PAGE_TRANSITION = {
 
 export const PageTransition: React.FC = () => {
   const location = useLocation();
+  const isProductDetailRoute =
+    location.pathname.startsWith('/shop/') && location.pathname !== '/shop';
+
+  if (isProductDetailRoute) {
+    return (
+      <div key={location.pathname} className="min-h-full">
+        <Outlet />
+      </div>
+    );
+  }
 
   return (
     <motion.div

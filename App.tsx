@@ -155,6 +155,8 @@ function AppMainInner({
   const location = useLocation();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const lightMotion = useLightMotionBackdrop();
+  const shouldDisableTransformsForSticky =
+    location.pathname.startsWith('/shop/') && location.pathname !== '/shop';
 
   const { scrollYProgress } = useScroll({
     target: sentinelRef,
@@ -169,12 +171,20 @@ function AppMainInner({
     [lightMotion]
   );
   const smoothProgress = useSpring(scrollYProgress, springConfig);
-  const scale = useTransform(
-    smoothProgress,
-    [0, 0.8],
-    lightMotion ? [1, 1] : [1, 0.92]
-  );
+  const scale = useTransform(smoothProgress, [0, 0.8], lightMotion ? [1, 1] : [1, 0.92]);
   const y = useTransform(smoothProgress, [0, 1], lightMotion ? [0, 0] : [0, -20]);
+
+  const MainChrome = shouldDisableTransformsForSticky ? 'div' : motion.div;
+  const mainChromeProps = shouldDisableTransformsForSticky
+    ? {}
+    : {
+        style: {
+          scale,
+          y,
+          transformOrigin: 'bottom center',
+          ...(lightMotion ? {} : { willChange: 'transform' as const }),
+        },
+      };
 
   return (
     <div className="relative min-h-screen selection:bg-[#f9f100] selection:text-black bg-white rounded-b-[24px] rounded-t-none">
@@ -184,13 +194,8 @@ function AppMainInner({
       <WeatherStatusBackground />
       <StickyTop offsetVariant={announcementDismissed ? 'tight' : 'withBar'} />
 
-      <motion.div
-        style={{
-          scale,
-          y,
-          transformOrigin: 'bottom center',
-          ...(lightMotion ? {} : { willChange: 'transform' }),
-        }}
+      <MainChrome
+        {...mainChromeProps}
         className={[
           'relative z-10 w-full min-h-screen bg-white rounded-b-[24px] rounded-t-none',
           '[backface-visibility:hidden]',
@@ -255,7 +260,7 @@ function AppMainInner({
         <NewsletterSection />
         <div className="h-[1rem] md:h-[2rem] bg-white" aria-hidden />
         <Footer />
-      </motion.div>
+      </MainChrome>
 
       <div
         ref={sentinelRef}

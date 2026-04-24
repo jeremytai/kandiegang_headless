@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ArrowRight } from 'lucide-react';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { imageSrc } from '../../lib/images';
+import { StickySidecarLayout } from '../../components/layout/StickySidecarLayout';
 
 /** Hero gallery image base paths (no extension). Resolved via imageSrc() for dev .jpg / prod .webp. */
 const HERO_IMAGE_BASES = [
@@ -173,7 +174,6 @@ const TOOLTIP_OFFSET = 12;
 export const KandieGangCyclingClubPage: React.FC = () => {
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [stickyOffset, setStickyOffset] = useState<number | null>(null); // null = fixed, number = absolute top offset
   const [benefitTooltip, setBenefitTooltip] = useState<{
     x: number;
     y: number;
@@ -182,8 +182,6 @@ export const KandieGangCyclingClubPage: React.FC = () => {
   const mobileCarouselRef = useRef<HTMLDivElement>(null);
   const imageScrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const benefitTooltipRef = useRef<HTMLDivElement>(null);
-  const heroThumbnailsRef = useRef<HTMLDivElement>(null);
-  const heroRightColRef = useRef<HTMLDivElement>(null);
 
   // Sync active thumbnail with visible image (desktop only, IntersectionObserver)
   React.useEffect(() => {
@@ -205,28 +203,6 @@ export const KandieGangCyclingClubPage: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Handle sticky/fixed behavior for thumbnails and right column
-  // Stop being fixed at scroll position 3567px
-  React.useEffect(() => {
-    if (typeof window === 'undefined' || window.innerWidth < 1024) return;
-
-    const STICKY_END_THRESHOLD = 3567;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY >= STICKY_END_THRESHOLD) {
-        setStickyOffset(STICKY_END_THRESHOLD);
-      } else {
-        setStickyOffset(null); // fixed mode
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const scrollToHeroImage = (index: number) => {
     const target = imageScrollRefs.current[index];
     if (!target) return;
@@ -243,17 +219,8 @@ export const KandieGangCyclingClubPage: React.FC = () => {
     }
   }, [benefitTooltip]);
 
-  // Apply hero sticky absolute top (no inline style in JSX)
-  React.useEffect(() => {
-    const thumb = heroThumbnailsRef.current;
-    const right = heroRightColRef.current;
-    const top = stickyOffset !== null ? `${stickyOffset}px` : '';
-    if (thumb) thumb.style.top = top;
-    if (right) right.style.top = top;
-  }, [stickyOffset]);
-
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-white">
       {/* Benefit pill tooltip — above cursor */}
       {benefitTooltip && (
         <div
@@ -268,126 +235,117 @@ export const KandieGangCyclingClubPage: React.FC = () => {
       {/* Hero — scroll-driven image gallery with sticky thumbnails & right column */}
       <section className="relative">
         {/* Desktop layout */}
-        <div className="hidden lg:flex">
-          {/* Left column — scrolling images */}
-          <div className="w-1/2 p-3">
-            <div className="flex flex-col gap-3">
-              {HERO_IMAGE_BASES.map((src, i) => (
-                <div
-                  key={src}
-                  ref={(el) => {
-                    imageScrollRefs.current[i] = el;
-                  }}
-                  className="aspect-[3/4] w-full overflow-hidden rounded-lg"
-                >
-                  <img
-                    alt=""
-                    draggable="false"
-                    loading={i === 0 ? undefined : 'lazy'}
-                    width={1920}
-                    height={2400}
-                    src={imageSrc(src)}
-                    className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
-                  />
+        <StickySidecarLayout
+          mainClassName="p-3"
+          sidecarInnerClassName="flex flex-col items-center justify-center"
+          main={
+            <div className="relative flex">
+              {/* Sticky thumbnail rail */}
+              <div className="relative z-10 w-0 shrink-0">
+                <div className="sticky top-[var(--header-height,5rem)] h-[calc(100vh-var(--header-height,5rem))] flex items-center">
+                  <div className="translate-x-3 flex flex-col gap-3">
+                    {HERO_IMAGE_BASES.map((src, i) => (
+                      <button
+                        key={src}
+                        type="button"
+                        aria-label={`Go to image ${i + 1}`}
+                        aria-current={activeImageIndex === i}
+                        onClick={() => scrollToHeroImage(i)}
+                        className={`aspect-[3/4] w-9 cursor-pointer overflow-hidden rounded-md outline-2 outline-offset-3 transition-[outline,ring] ${
+                          activeImageIndex === i
+                            ? 'outline-secondary-current'
+                            : 'ring-1 ring-secondary-current/20 outline-transparent'
+                        } focus-visible:ring-2 focus-visible:ring-secondary-current/80`}
+                      >
+                        <img
+                          alt=""
+                          draggable="false"
+                          loading="lazy"
+                          width={1920}
+                          height={2400}
+                          src={imageSrc(src)}
+                          className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-[1.15]"
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Scrolling image stack */}
+              <div className="min-w-0 flex-1 flex flex-col gap-3">
+                {HERO_IMAGE_BASES.map((src, i) => (
+                  <div
+                    key={src}
+                    ref={(el) => {
+                      imageScrollRefs.current[i] = el;
+                    }}
+                    className="aspect-[3/4] w-full overflow-hidden rounded-lg"
+                  >
+                    <img
+                      alt=""
+                      draggable="false"
+                      loading={i === 0 ? undefined : 'lazy'}
+                      width={1920}
+                      height={2400}
+                      src={imageSrc(src)}
+                      className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-
-          {/* Right column — placeholder to maintain layout */}
-          <div className="w-1/2" />
-        </div>
-
-        {/* Fixed/Absolute thumbnails (desktop only) */}
-        <div
-          ref={heroThumbnailsRef}
-          className={`pointer-events-none hidden lg:flex h-screen items-center pl-6 z-20 ${
-            stickyOffset === null ? 'fixed top-0 left-0' : 'absolute left-0'
-          }`}
-        >
-          <div className="pointer-events-auto flex flex-col gap-3">
-            {HERO_IMAGE_BASES.map((src, i) => (
-              <button
-                key={src}
-                type="button"
-                aria-label={`Go to image ${i + 1}`}
-                aria-current={activeImageIndex === i}
-                onClick={() => scrollToHeroImage(i)}
-                className={`aspect-[3/4] w-9 cursor-pointer overflow-hidden rounded-md outline-2 outline-offset-3 transition-[outline,ring] ${
-                  activeImageIndex === i
-                    ? 'outline-secondary-current'
-                    : 'ring-1 ring-secondary-current/20 outline-transparent'
-                } focus-visible:ring-2 focus-visible:ring-secondary-current/80`}
-              >
-                <img
-                  alt=""
-                  draggable="false"
-                  loading="lazy"
-                  width={1920}
-                  height={2400}
-                  src={imageSrc(src)}
-                  className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-[1.15]"
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Fixed/Absolute right column content (desktop only) */}
-        <div
-          ref={heroRightColRef}
-          className={`hidden lg:flex items-center justify-center h-screen w-1/2 z-10 ${
-            stickyOffset === null ? 'fixed top-0 right-0' : 'absolute right-0'
-          }`}
-        >
-          <div className="flex w-full flex-col items-center justify-center gap-12 text-center px-6">
-            {/* Headlines */}
-            <div className="flex flex-col items-center">
-              <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
-                Ride with us
-              </span>
-              <AnimatedHeadline
-                as="h1"
-                text="Join the Kandie Gang Cycling Club"
-                className="font-heading text-secondary-purple-rain text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-thin tracking-normal"
-                lineHeight={1.25}
-                fullWidth
-              />
-            </div>
-
-            {/* Body text */}
-            <div className="max-w-[44ch] text-secondary-purple-rain text-base md:text-lg lg:text-xl">
-              <p>
-                The Kandie Gang Cycling Club is an active community of like-minded cyclists of all
-                ages and abilities. By becoming a member, you not only believe in our mission but
-                actively support it with your contribution.
-              </p>
-            </div>
-
-            {/* Proof points */}
-            <div className="flex flex-col items-center text-secondary-purple-rain justify-center gap-2 lg:flex-row lg:gap-6">
-              {BENEFIT_PILLS.map(({ label, sub }) => (
-                <span
-                  key={label}
-                  tabIndex={0}
-                  role="button"
-                  className="outline-none"
-                  onMouseEnter={(e) => setBenefitTooltip({ x: e.clientX, y: e.clientY, sub })}
-                  onMouseMove={(e) =>
-                    setBenefitTooltip((prev) =>
-                      prev ? { ...prev, x: e.clientX, y: e.clientY } : null
-                    )
-                  }
-                  onMouseLeave={() => setBenefitTooltip(null)}
-                >
-                  <p className="cursor-pointer text-secondary-current/70 underline decoration-dotted underline-offset-[3.5px] text-sm font-medium tracking-wide">
-                    {label}
-                  </p>
+          }
+          sidecar={
+            <div className="flex w-full flex-col items-center justify-center gap-12 text-center px-6">
+              {/* Headlines */}
+              <div className="flex flex-col items-center">
+                <span className="mb-3 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
+                  Ride with us
                 </span>
-              ))}
+                <AnimatedHeadline
+                  as="h1"
+                  text="Join the Kandie Gang Cycling Club"
+                  className="font-heading text-secondary-purple-rain text-5xl md:text-4xl lg:text-5xl xl:text-6xl font-thin tracking-normal"
+                  lineHeight={1.25}
+                  fullWidth
+                />
+              </div>
+
+              {/* Body text */}
+              <div className="max-w-[44ch] text-secondary-purple-rain text-base md:text-lg lg:text-xl">
+                <p>
+                  The Kandie Gang Cycling Club is an active community of like-minded cyclists of all
+                  ages and abilities. By becoming a member, you not only believe in our mission but
+                  actively support it with your contribution.
+                </p>
+              </div>
+
+              {/* Proof points */}
+              <div className="flex flex-col items-center text-secondary-purple-rain justify-center gap-2 lg:flex-row lg:gap-6">
+                {BENEFIT_PILLS.map(({ label, sub }) => (
+                  <span
+                    key={label}
+                    tabIndex={0}
+                    role="button"
+                    className="outline-none"
+                    onMouseEnter={(e) => setBenefitTooltip({ x: e.clientX, y: e.clientY, sub })}
+                    onMouseMove={(e) =>
+                      setBenefitTooltip((prev) =>
+                        prev ? { ...prev, x: e.clientX, y: e.clientY } : null
+                      )
+                    }
+                    onMouseLeave={() => setBenefitTooltip(null)}
+                  >
+                    <p className="cursor-pointer text-secondary-current/70 underline decoration-dotted underline-offset-[3.5px] text-sm font-medium tracking-wide">
+                      {label}
+                    </p>
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Mobile layout */}
         <div className="flex flex-col lg:hidden">

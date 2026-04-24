@@ -21,6 +21,7 @@ import { StripePaymentTrustBar } from '../../components/shop/StripePaymentTrustB
 import { getProductPrice, getStripePriceId, canPurchase, ShopProduct } from '../../lib/products';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useAuth } from '../../context/AuthContext';
+import { StickySidecarLayout } from '../../components/layout/StickySidecarLayout';
 
 /** FAQ-style accordion for product details (body + SKU). */
 function ProductDetailsAccordion({
@@ -178,11 +179,8 @@ export const ProductPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [stickyOffset, setStickyOffset] = useState<number | null>(null);
   const mobileCarouselRef = useRef<HTMLDivElement>(null);
   const imageScrollRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const heroThumbnailsRef = useRef<HTMLDivElement>(null);
-  const heroRightColRef = useRef<HTMLDivElement>(null);
 
   // Get product images (featured image + gallery blocks + fallback to HTML content)
   const productImages = useMemo(() => {
@@ -290,43 +288,11 @@ export const ProductPage: React.FC = () => {
     return () => observer.disconnect();
   }, [productImages.length]);
 
-  // Handle sticky/fixed behavior for thumbnails and right column
-  useEffect(() => {
-    if (typeof window === 'undefined' || window.innerWidth < 1024 || productImages.length === 0)
-      return;
-
-    // Calculate sticky end threshold based on image count
-    const IMAGE_HEIGHT = 800; // Approximate height per image
-    const STICKY_END_THRESHOLD = productImages.length * IMAGE_HEIGHT - window.innerHeight;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY >= STICKY_END_THRESHOLD) {
-        setStickyOffset(STICKY_END_THRESHOLD);
-      } else {
-        setStickyOffset(null); // fixed mode
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [productImages.length]);
-
   const scrollToHeroImage = (index: number) => {
     const target = imageScrollRefs.current[index];
     if (!target) return;
     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
-
-  // Apply hero sticky absolute top
-  useEffect(() => {
-    const thumb = heroThumbnailsRef.current;
-    const right = heroRightColRef.current;
-    const top = stickyOffset !== null ? `${stickyOffset}px` : '';
-    if (thumb) thumb.style.top = top;
-    if (right) right.style.top = top;
-  }, [stickyOffset]);
 
   if (loading) {
     return (
@@ -414,89 +380,75 @@ export const ProductPage: React.FC = () => {
     /love-story.*socks|cycling-socks|socks.*love-story/i.test(productSlug);
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-white">
       {/* Hero — scroll-driven image gallery with sticky thumbnails & right column */}
       <section className="relative">
         {/* Desktop layout */}
         {productImages.length > 0 && (
-          <div className="hidden lg:flex">
-            {/* Left column — scrolling images */}
-            <div className="min-w-0 flex-1 p-3">
-              <div className="flex flex-col gap-3">
-                {productImages.map((img, i) => (
-                  <div
-                    key={img.id}
-                    ref={(el) => {
-                      imageScrollRefs.current[i] = el;
-                    }}
-                    className="aspect-[3/4] w-full overflow-hidden rounded-lg"
-                  >
-                    <img
-                      alt={img.altText || product.title}
-                      draggable="false"
-                      loading={i === 0 ? undefined : 'lazy'}
-                      width={1920}
-                      height={2400}
-                      src={transformMediaUrl(img.sourceUrl)}
-                      className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
-                    />
+          <StickySidecarLayout
+            mainClassName="p-3"
+            main={
+              <div className="relative flex">
+                {/* Sticky thumbnail rail overlayed on top of the left image stack (Sunday-style) */}
+                <div className="relative z-10 w-0 shrink-0">
+                  <div className="sticky top-[var(--header-height,5rem)] h-[calc(100vh-var(--header-height,5rem))] pt-[100px]">
+                    <div className="translate-x-3 flex flex-col gap-3">
+                      {productImages.map((img, i) => (
+                        <button
+                          key={img.id}
+                          type="button"
+                          aria-label={`Go to image ${i + 1}`}
+                          aria-current={activeImageIndex === i}
+                          onClick={() => scrollToHeroImage(i)}
+                          className={`aspect-[3/4] w-9 cursor-pointer overflow-hidden rounded-md outline-2 outline-offset-3 transition-[outline,ring] ${
+                            activeImageIndex === i
+                              ? 'outline-secondary-current'
+                              : 'ring-1 ring-secondary-current/20 outline-transparent'
+                          } focus-visible:ring-2 focus-visible:ring-secondary-current/80`}
+                        >
+                          <img
+                            alt={img.altText || product.title}
+                            draggable="false"
+                            loading="lazy"
+                            width={1920}
+                            height={2400}
+                            src={transformMediaUrl(img.sourceUrl)}
+                            className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-[1.15]"
+                          />
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                </div>
+
+                <div className="min-w-0 flex-1 flex flex-col gap-3">
+                  {productImages.map((img, i) => (
+                    <div
+                      key={img.id}
+                      ref={(el) => {
+                        imageScrollRefs.current[i] = el;
+                      }}
+                      className="aspect-[3/4] w-full overflow-hidden rounded-lg"
+                    >
+                      <img
+                        alt={img.altText || product.title}
+                        draggable="false"
+                        loading={i === 0 ? undefined : 'lazy'}
+                        width={1920}
+                        height={2400}
+                        src={transformMediaUrl(img.sourceUrl)}
+                        className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* Right column — placeholder to maintain layout */}
-            <div className="w-[492px] shrink-0" />
-          </div>
-        )}
-
-        {/* Fixed/Absolute thumbnails (desktop only) */}
-        {productImages.length > 0 && (
-          <div
-            ref={heroThumbnailsRef}
-            className={`pointer-events-none hidden lg:flex h-screen items-center pl-6 z-20 ${
-              stickyOffset === null ? 'fixed top-0 left-0' : 'absolute left-0'
-            }`}
-          >
-            <div className="pointer-events-auto flex flex-col gap-3">
-              {productImages.map((img, i) => (
-                <button
-                  key={img.id}
-                  type="button"
-                  aria-label={`Go to image ${i + 1}`}
-                  aria-current={activeImageIndex === i}
-                  onClick={() => scrollToHeroImage(i)}
-                  className={`aspect-[3/4] w-9 cursor-pointer overflow-hidden rounded-md outline-2 outline-offset-3 transition-[outline,ring] ${
-                    activeImageIndex === i
-                      ? 'outline-secondary-current'
-                      : 'ring-1 ring-secondary-current/20 outline-transparent'
-                  } focus-visible:ring-2 focus-visible:ring-secondary-current/80`}
-                >
-                  <img
-                    alt={img.altText || product.title}
-                    draggable="false"
-                    loading="lazy"
-                    width={1920}
-                    height={2400}
-                    src={transformMediaUrl(img.sourceUrl)}
-                    className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-[1.15]"
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Fixed/Absolute right column content (desktop only) */}
-        <div
-          ref={heroRightColRef}
-          className={`hidden lg:flex items-start justify-center h-screen w-[492px] shrink-0 z-10 pt-[var(--header-height,5rem)] ${
-            stickyOffset === null ? 'fixed top-0 right-0' : 'absolute right-0'
-          }`}
-        >
-          <div className="flex w-full max-h-[calc(100vh-var(--header-height,5rem))] flex-col items-center justify-center gap-8 text-center px-6 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:hidden">
-            {/* Headlines — left-aligned to match first paragraph */}
-            <div className="flex w-full max-w-[44ch] flex-col items-start self-start pt-[100px] text-left">
+            }
+            sidecarInnerClassName="flex flex-col justify-start px-6 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:hidden"
+            sidecar={
+              <>
+                {/* Headlines — left-aligned to match first paragraph */}
+                <div className="flex w-full max-w-[44ch] flex-col items-start self-start pt-[100px] text-left">
               {shopProduct.productFields.membersOnly && (
                 <span className="mb-4 block w-fit rounded-full bg-secondary-purple-rain px-4 py-2 text-sm font-light text-white font-body tracking-tight">
                   Members Only
@@ -613,8 +565,10 @@ export const ProductPage: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
-        </div>
+              </>
+            }
+          />
+        )}
 
         {/* Mobile layout — order: images, thumbnails, headline, price, first paragraph, variant, add to cart, details */}
         <div className="flex flex-col lg:hidden">
