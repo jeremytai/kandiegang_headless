@@ -29,6 +29,8 @@ const EVENT_OG_QUERY = `
   }
 `;
 
+const PHOTO_GALLERY_CATEGORY_SLUG = 'photo-gallery';
+
 const STORY_OG_QUERY = `
   query GetStoryOg($slug: ID!) {
     post(id: $slug, idType: SLUG) {
@@ -40,6 +42,11 @@ const STORY_OG_QUERY = `
         }
       }
       content
+      categories {
+        nodes {
+          slug
+        }
+      }
     }
   }
 `;
@@ -199,6 +206,7 @@ async function fetchStoryOg(slug: string): Promise<OgPayload | null> {
         excerpt?: string;
         content?: string;
         featuredImage?: { node?: { sourceUrl?: string } };
+        categories?: { nodes?: Array<{ slug?: string | null } | null> | null };
       };
     };
   };
@@ -207,6 +215,19 @@ async function fetchStoryOg(slug: string): Promise<OgPayload | null> {
 
   const post = json.data?.post;
   if (!post?.title) return null;
+
+  const categorySlugs =
+    post.categories?.nodes?.map((n) => n?.slug).filter((s): s is string => Boolean(s)) ?? [];
+  const isPhotoGalleryOnly = categorySlugs.includes(PHOTO_GALLERY_CATEGORY_SLUG);
+
+  if (isPhotoGalleryOnly) {
+    return {
+      title: 'Members photo gallery | Kandie Gang',
+      description:
+        'This gallery is available to Kandie Gang Cycling Club members and ride guides. Sign in to view.',
+      image: DEFAULT_OG_IMAGE,
+    };
+  }
 
   const excerptHtml = post.excerpt?.trim() ?? '';
   const fromExcerpt = stripHtml(excerptHtml);

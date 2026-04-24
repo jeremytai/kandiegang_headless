@@ -181,6 +181,9 @@ export interface StoryBlocksData {
         altText?: string;
       };
     };
+    categories?: {
+      nodes: Array<{ slug?: string | null; name?: string | null }>;
+    };
     editorBlocks: StoryEditorBlock[];
   } | null;
   mediaItems: {

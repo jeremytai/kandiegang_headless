@@ -74,7 +74,8 @@ export interface WPPost {
   };
   categories?: {
     nodes: Array<{
-      name: string;
+      name?: string | null;
+      slug?: string | null;
     }>;
   };
   author?: {
@@ -507,6 +508,7 @@ export const GET_POST_QUERY = `
       categories {
         nodes {
           name
+          slug
         }
       }
       author {

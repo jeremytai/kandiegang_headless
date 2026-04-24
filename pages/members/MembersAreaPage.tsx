@@ -19,7 +19,7 @@ import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { MembersConfetti } from '../../components/common/MembersConfetti';
 import { MemberMetaCard } from '../../components/member/MemberMetaCard';
 import { KandieGangCyclingClubPage } from '../site/KandieGangCyclingClubPage';
-const MEMBERS_ONLY_CATEGORY_SLUG = 'photo-gallery';
+import { PHOTO_GALLERY_CATEGORY_SLUG } from '../../lib/photoGalleryCategory';
 const MEMBERS_ONLY_POSTS_FIRST = 20;
 
 /** Account status accordion for non-members. */
@@ -181,7 +181,7 @@ export const MembersAreaPage: React.FC = () => {
     let cancelled = false;
     setMembersOnlyLoading(true);
     setMembersOnlyError(null);
-    getCategoryPosts(MEMBERS_ONLY_CATEGORY_SLUG, MEMBERS_ONLY_POSTS_FIRST)
+    getCategoryPosts(PHOTO_GALLERY_CATEGORY_SLUG, MEMBERS_ONLY_POSTS_FIRST)
       .then((result) => {
         if (cancelled) return;
         setMembersOnlyPosts(result?.nodes ?? []);

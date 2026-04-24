@@ -12,6 +12,9 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { getPostBySlug, getStoryBlocks, transformMediaUrl, WPPost } from '../../lib/wordpress';
 import { buildMediaMap, normalizeBlocks } from '../../lib/storyGalleries';
 import type { NormalizedBlock } from '../../lib/storyGalleries';
+import { postHasPhotoGalleryCategory } from '../../lib/photoGalleryCategory';
+import { isGuideProfile } from '../../lib/guideAccess';
+import { useAuth } from '../../context/AuthContext';
 import { ExpandingHero } from '../../components/visual/ExpandingHero';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { StoryBlocksRenderer } from '../../components/common/StoryBlocksRenderer';
@@ -45,6 +48,7 @@ const DEMO_POST: WPPost = {
 
 export const StoryPage: React.FC = () => {
   const lightBackdrop = useLightMotionBackdrop();
+  const { status, user, profile } = useAuth();
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const fromMembers = location.state?.from === '/members';
@@ -83,6 +87,7 @@ export const StoryPage: React.FC = () => {
             date: blocksData.post.date ?? '',
             uri: blocksData.post.uri ?? `/story/${slugValue}`,
             featuredImage: blocksData.post.featuredImage,
+            categories: blocksData.post.categories,
           });
           return;
         }
@@ -127,6 +132,14 @@ export const StoryPage: React.FC = () => {
     return null;
   }, [post]);
 
+  const isPhotoGalleryPost = useMemo(() => postHasPhotoGalleryCategory(post), [post]);
+  const authResolved = status !== 'loading';
+  const canViewMembersPhotoStory = useMemo(() => {
+    if (!post || !isPhotoGalleryPost) return true;
+    if (!authResolved || !user) return false;
+    return Boolean(profile?.is_member) || isGuideProfile(profile);
+  }, [post, isPhotoGalleryPost, authResolved, user, profile]);
+
   const ogImageUrl = post?.featuredImage?.node?.sourceUrl
     ? transformMediaUrl(post.featuredImage.node.sourceUrl)
     : null;
@@ -136,10 +149,17 @@ export const StoryPage: React.FC = () => {
       ? `${window.location.origin}/story/${slug}`
       : null;
 
+  const GATED_STORY_DESCRIPTION =
+    'This gallery is for Kandie Gang Cycling Club members and ride guides. Sign in with your member account to view.';
+
   usePageMeta(
-    post ? `${stripHtml(post.title)} | Kandie Gang` : 'Story | Kandie Gang',
-    shareDescription,
-    ogImageUrl,
+    post
+      ? canViewMembersPhotoStory
+        ? `${stripHtml(post.title)} | Kandie Gang`
+        : 'Members photo gallery | Kandie Gang'
+      : 'Story | Kandie Gang',
+    post ? (canViewMembersPhotoStory ? shareDescription : GATED_STORY_DESCRIPTION) : null,
+    canViewMembersPhotoStory ? ogImageUrl : null,
     storyPageUrl
   );
 
@@ -151,10 +171,16 @@ export const StoryPage: React.FC = () => {
     );
   }
 
+  const memberGateAuthPending = Boolean(post && isPhotoGalleryPost && !authResolved);
+  const showFetchOrAuthLoader = loading || memberGateAuthPending;
+  const accessDeniedPhotoGallery = Boolean(
+    post && isPhotoGalleryPost && authResolved && !canViewMembersPhotoStory
+  );
+
   return (
     <div className="bg-primary-breath min-h-screen selection:bg-[#f9f100] selection:text-black">
       <AnimatePresence mode="wait">
-        {loading ? (
+        {showFetchOrAuthLoader ? (
           <motion.div
             key="loading"
             initial={{ opacity: 0 }}
@@ -164,7 +190,7 @@ export const StoryPage: React.FC = () => {
           >
             <Loader2 className="w-12 h-12 animate-spin text-slate-300" />
             <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-              Loading story
+              {memberGateAuthPending && !loading ? 'Checking access' : 'Loading story'}
             </p>
           </motion.div>
         ) : error || !post ? (
@@ -181,6 +207,44 @@ export const StoryPage: React.FC = () => {
                 window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
               }}
               className="inline-flex items-center gap-2 text-secondary-purple-rain font-bold hover:underline mb-20"
+            >
+              <ArrowLeft className="w-4 h-4" /> {backToLabel}
+            </Link>
+          </motion.div>
+        ) : accessDeniedPhotoGallery ? (
+          <motion.div
+            key="members-only"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen pt-32 md:pt-40 pb-40 flex flex-col items-center justify-center px-6 max-w-lg mx-auto text-center"
+          >
+            <h1 className="text-2xl md:text-3xl font-heading-thin text-secondary-purple-rain mb-4">
+              Members &amp; guides only
+            </h1>
+            <p className="text-slate-600 mb-8 leading-relaxed">
+              This photo gallery is available to Kandie Gang Cycling Club members and official ride
+              guides. Sign in with the account linked to your membership or guide access.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 items-center justify-center mb-10">
+              <Link
+                to="/login/member"
+                className="inline-flex items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition-opacity"
+              >
+                Member sign in
+              </Link>
+              <Link
+                to="/members"
+                className="inline-flex items-center justify-center rounded-full border border-secondary-purple-rain/40 px-6 py-3 text-sm font-medium text-secondary-purple-rain hover:bg-secondary-purple-rain/5 transition-colors"
+              >
+                Members area
+              </Link>
+            </div>
+            <Link
+              to={backToHref}
+              onClick={() => {
+                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+              }}
+              className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium"
             >
               <ArrowLeft className="w-4 h-4" /> {backToLabel}
             </Link>

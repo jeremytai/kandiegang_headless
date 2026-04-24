@@ -17,6 +17,12 @@ export const STORY_BLOCKS_QUERY = `
           altText
         }
       }
+      categories {
+        nodes {
+          slug
+          name
+        }
+      }
       editorBlocks {
         name
         ... on CoreParagraph {
