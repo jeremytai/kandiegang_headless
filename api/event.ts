@@ -4,7 +4,50 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
 import { Redis } from '@upstash/redis';
-import { generateIcs } from '../lib/ics';
+// ─── ICS calendar generator (inlined to avoid module resolution issues in Vercel functions) ───
+function _icsParseTime(raw: string): { h: number; m: number } | null {
+  const s = raw.trim().toLowerCase();
+  const ampm = s.endsWith('am') || s.endsWith('pm') ? s.slice(-2) : null;
+  const core = ampm ? s.slice(0, -2).trim() : s;
+  const parts = core.split(':');
+  let h = parseInt(parts[0], 10);
+  const m = parts[1] != null ? parseInt(parts[1], 10) : 0;
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  if (ampm === 'pm' && h < 12) h += 12;
+  if (ampm === 'am' && h === 12) h = 0;
+  return { h, m };
+}
+function _icsP(n: number): string { return String(n).padStart(2, '0'); }
+function _icsEscape(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+}
+function _icsFold(line: string): string {
+  const out: string[] = [];
+  while (line.length > 75) { out.push(line.slice(0, 75)); line = ' ' + line.slice(75); }
+  out.push(line);
+  return out.join('\r\n');
+}
+function generateIcs(event: { title: string; date: string; time?: string; durationMinutes?: number; location?: string; description?: string }): string {
+  const parsed = event.time ? _icsParseTime(event.time) : null;
+  const sh = parsed?.h ?? 0; const sm = parsed?.m ?? 0;
+  const dur = event.durationMinutes ?? 120;
+  const endTotalM = sh * 60 + sm + dur;
+  const eh = Math.floor(endTotalM / 60) % 24; const em = endTotalM % 60;
+  const d = event.date.replace(/-/g, '');
+  const dtstart = parsed ? `DTSTART;TZID=Europe/Berlin:${d}T${_icsP(sh)}${_icsP(sm)}00` : `DTSTART;VALUE=DATE:${d}`;
+  const dtend = parsed ? `DTEND;TZID=Europe/Berlin:${d}T${_icsP(eh)}${_icsP(em)}00` : `DTEND;VALUE=DATE:${d}`;
+  const now = new Date();
+  const dtstamp = `${now.getUTCFullYear()}${_icsP(now.getUTCMonth()+1)}${_icsP(now.getUTCDate())}T${_icsP(now.getUTCHours())}${_icsP(now.getUTCMinutes())}${_icsP(now.getUTCSeconds())}Z`;
+  const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@kandiegang.com`;
+  return [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Kandie Gang//Event//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+    'BEGIN:VEVENT', `UID:${uid}`, `DTSTAMP:${dtstamp}`, dtstart, dtend,
+    _icsFold(`SUMMARY:${_icsEscape(event.title)}`),
+    event.location ? _icsFold(`LOCATION:${_icsEscape(event.location)}`) : '',
+    event.description ? _icsFold(`DESCRIPTION:${_icsEscape(event.description)}`) : '',
+    'END:VEVENT','END:VCALENDAR',
+  ].filter(l => l !== '').join('\r\n');
+}
 
 // ─── Shared constants ─────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
