@@ -175,37 +175,48 @@ type EventAccessData = {
 
 async function fetchEventAccessData(eventId: number): Promise<EventAccessData | null> {
   const query = `query GetRideEventAccess($id: ID!) { rideEvent(id: $id, idType: DATABASE_ID) { publicReleaseDate eventDetails { isFlintaOnly workshopCapacity registrationCode level1 { guides { nodes { id } } } level2 { guides { nodes { id } } } level2plus { guides { nodes { id } } } level3 { guides { nodes { id } } } gravelGuides { nodes { id } } } } }`;
-  const response = await fetch(WP_GRAPHQL_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, variables: { id: eventId } }),
-  });
-  if (!response.ok) throw new Error(`WordPress query failed: ${response.status}`);
-  const json = await response.json();
-  if (json?.errors) throw new Error('WordPress query error');
-  const rideEvent = json?.data?.rideEvent;
-  if (!rideEvent) return null;
-  const details = rideEvent.eventDetails ?? {};
-  const guideCounts = {
-    level1: Array.isArray(details.level1?.guides?.nodes) ? details.level1.guides.nodes.length : 0,
-    level2: Array.isArray(details.level2?.guides?.nodes) ? details.level2.guides.nodes.length : 0,
-    level2plus: Array.isArray(details.level2plus?.guides?.nodes)
-      ? details.level2plus.guides.nodes.length
-      : 0,
-    level3: Array.isArray(details.level3?.guides?.nodes) ? details.level3.guides.nodes.length : 0,
-    gravel: Array.isArray(details.gravelGuides?.nodes) ? details.gravelGuides.nodes.length : 0,
-  };
-  return {
-    publicReleaseDate: rideEvent.publicReleaseDate ?? null,
-    isFlintaOnly: details.isFlintaOnly ?? null,
-    workshopCapacity:
-      typeof details.workshopCapacity === 'number' ? details.workshopCapacity : null,
-    guideCounts,
-    registrationCode:
-      typeof details.registrationCode === 'string' && details.registrationCode.trim()
-        ? details.registrationCode.trim()
-        : null,
-  };
+  const body = JSON.stringify({ query, variables: { id: eventId } });
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 800));
+    try {
+      const response = await fetch(WP_GRAPHQL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        signal: AbortSignal.timeout(7000),
+      });
+      if (!response.ok) throw new Error(`WordPress query failed: ${response.status}`);
+      const json = await response.json();
+      if (json?.errors) throw new Error('WordPress query error');
+      const rideEvent = json?.data?.rideEvent;
+      if (!rideEvent) return null;
+      const details = rideEvent.eventDetails ?? {};
+      const guideCounts = {
+        level1: Array.isArray(details.level1?.guides?.nodes) ? details.level1.guides.nodes.length : 0,
+        level2: Array.isArray(details.level2?.guides?.nodes) ? details.level2.guides.nodes.length : 0,
+        level2plus: Array.isArray(details.level2plus?.guides?.nodes)
+          ? details.level2plus.guides.nodes.length
+          : 0,
+        level3: Array.isArray(details.level3?.guides?.nodes) ? details.level3.guides.nodes.length : 0,
+        gravel: Array.isArray(details.gravelGuides?.nodes) ? details.gravelGuides.nodes.length : 0,
+      };
+      return {
+        publicReleaseDate: rideEvent.publicReleaseDate ?? null,
+        isFlintaOnly: details.isFlintaOnly ?? null,
+        workshopCapacity:
+          typeof details.workshopCapacity === 'number' ? details.workshopCapacity : null,
+        guideCounts,
+        registrationCode:
+          typeof details.registrationCode === 'string' && details.registrationCode.trim()
+            ? details.registrationCode.trim()
+            : null,
+      };
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
 }
 
 async function fetchEventMeta(eventId: number): Promise<{ title: string; link: string }> {
