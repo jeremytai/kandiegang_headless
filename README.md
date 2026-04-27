@@ -568,6 +568,7 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=...
 RESEND_API_KEY=re_...
 RESEND_FROM_EMAIL=Kandie Gang <members@yourdomain.com>
+DISCORD_ORDER_WEBHOOK_URL=https://discord.com/api/webhooks/...
 NEXT_PUBLIC_SITE_URL=https://kandiegang.com
 ```
 
@@ -663,6 +664,16 @@ You can send each contact form submission to a Discord channel using [Formspree�
    - Click the **Discord** plugin, paste the webhook URL, and click **Connect**. Formspree will send a test message to confirm.
 
 Submissions will appear as messages in that channel. The contact form already sends a hidden `_subject` field (“New contact form submission”), which Formspree uses to set the subject/title of the Discord message. To change the channel later, disconnect the plugin and reconnect with a different webhook.
+
+### Webshop order notifications
+
+Webshop orders are sent from the Stripe webhook after checkout payment is confirmed. To post new order alerts to Discord, create or reuse a Discord webhook for the target channel and set it as a server-only environment variable:
+
+```env
+DISCORD_ORDER_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+Buyer order confirmations use Resend (`RESEND_API_KEY` and `RESEND_FROM_EMAIL`). For the full buyer experience, also enable Stripe's native successful payment receipts in the Stripe Dashboard so customers receive both the Stripe receipt and the branded Kandie Gang order confirmation.
 
 ## 🛠️ Development
   

@@ -3,9 +3,16 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { sendMemberWelcomeEmail } from '../lib/memberWelcomeEmail.js';
+import {
+  sendDiscordOrderNotification,
+  sendOrderConfirmationEmail,
+  type OrderNotificationItem,
+  type OrderNotificationParams,
+} from '../lib/orderNotifications.js';
 
 const CLUB_MEMBERSHIP_SLUG = 'kandie-gang-cycling-club-membership';
 const CLUB_PLAN_NAME = 'Kandie Gang Cycling Club Membership';
+const ORDER_NOTIFICATIONS_SENT_AT_METADATA_KEY = 'order_notifications_sent_at';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -27,6 +34,104 @@ function isClubMembershipPurchase(productSlugs: string | null | undefined): bool
 
 function toDateString(d: Date): string {
   return d.toISOString().slice(0, 10);
+}
+
+function stripeDashboardSessionUrl(session: Stripe.Checkout.Session): string {
+  const testPath = session.livemode ? '' : '/test';
+  return `https://dashboard.stripe.com${testPath}/checkout/sessions/${session.id}`;
+}
+
+async function buildOrderNotificationParams(
+  session: Stripe.Checkout.Session
+): Promise<OrderNotificationParams> {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
+  const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+    limit: 100,
+    expand: ['data.price.product'],
+  });
+
+  const items: OrderNotificationItem[] = lineItems.data.map((lineItem) => ({
+    name: lineItem.description ?? 'Kandie Gang product',
+    quantity: lineItem.quantity ?? 1,
+    amountTotal: lineItem.amount_total ?? null,
+    currency: lineItem.currency ?? session.currency ?? null,
+  }));
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://kandiegang.com');
+
+  return {
+    sessionId: session.id,
+    customerEmail:
+      (session.customer_details?.email as string | undefined) ??
+      (session.customer_email as string | undefined) ??
+      null,
+    customerName: (session.customer_details?.name as string | undefined) ?? null,
+    amountTotal: session.amount_total ?? null,
+    currency: session.currency ?? null,
+    items,
+    shippingOption:
+      typeof session.metadata?.shippingOption === 'string' ? session.metadata.shippingOption : null,
+    mode: session.mode ?? null,
+    paymentStatus: session.payment_status ?? null,
+    stripeDashboardUrl: stripeDashboardSessionUrl(session),
+    siteUrl,
+  };
+}
+
+async function sendCheckoutOrderNotifications(session: Stripe.Checkout.Session): Promise<void> {
+  if (!stripe) return;
+
+  try {
+    const freshSession = await stripe.checkout.sessions.retrieve(session.id);
+    if (freshSession.metadata?.[ORDER_NOTIFICATIONS_SENT_AT_METADATA_KEY]) {
+      console.log(`[stripe-webhook] Order notifications already sent for ${session.id}`);
+      return;
+    }
+
+    const paymentReceived =
+      freshSession.payment_status === 'paid' || freshSession.amount_total === 0;
+    if (!paymentReceived) {
+      console.log(
+        `[stripe-webhook] Skipping order notifications for ${session.id}; payment_status=${freshSession.payment_status}`
+      );
+      return;
+    }
+
+    const params = await buildOrderNotificationParams(freshSession);
+    const [buyerEmailResult, discordResult] = await Promise.all([
+      sendOrderConfirmationEmail(params),
+      sendDiscordOrderNotification(params),
+    ]);
+
+    if (!buyerEmailResult.success && !buyerEmailResult.skipped) {
+      console.error('[stripe-webhook] Order confirmation email failed:', buyerEmailResult.error);
+    } else if (buyerEmailResult.skipped && buyerEmailResult.error) {
+      console.warn('[stripe-webhook] Order confirmation email skipped:', buyerEmailResult.error);
+    }
+    if (!discordResult.success && !discordResult.skipped) {
+      console.error('[stripe-webhook] Discord order notification failed:', discordResult.error);
+    } else if (discordResult.skipped && discordResult.error) {
+      console.warn('[stripe-webhook] Discord order notification skipped:', discordResult.error);
+    }
+
+    try {
+      await stripe.checkout.sessions.update(session.id, {
+        metadata: {
+          ...(freshSession.metadata ?? {}),
+          [ORDER_NOTIFICATIONS_SENT_AT_METADATA_KEY]: new Date().toISOString(),
+        },
+      });
+    } catch (metadataErr) {
+      console.error('[stripe-webhook] Failed to mark order notifications sent:', metadataErr);
+    }
+  } catch (err) {
+    console.error('[stripe-webhook] Order notification flow failed:', err);
+  }
 }
 
 async function getRawBodyAndSignature(
@@ -314,6 +419,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   const session = event.data.object as Stripe.Checkout.Session;
   const sessionId = session.id;
+  await sendCheckoutOrderNotifications(session);
+
   if (!isClubMembershipPurchase(session.metadata?.productSlugs)) {
     return res.status(200).json({ received: true });
   }
