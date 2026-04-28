@@ -546,7 +546,7 @@ The migration system includes:
 
 5. **Configure webhooks in Stripe Dashboard:**
    - Add endpoint: `https://yourdomain.com/api/stripe-webhook`
-   - Enable events: `customer.subscription.*`, `invoice.payment_*`
+   - Enable events: `checkout.session.completed`, `payment_intent.succeeded`, `customer.subscription.*`, `invoice.payment_*`
    - Copy webhook secret to `STRIPE_WEBHOOK_SECRET`
 
 6. **Send portal links to members:**

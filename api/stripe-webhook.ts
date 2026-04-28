@@ -41,6 +41,11 @@ function stripeDashboardSessionUrl(session: Stripe.Checkout.Session): string {
   return `https://dashboard.stripe.com${testPath}/checkout/sessions/${session.id}`;
 }
 
+function stripeDashboardInvoiceUrl(invoice: Stripe.Invoice): string {
+  const testPath = invoice.livemode ? '' : '/test';
+  return `https://dashboard.stripe.com${testPath}/invoices/${invoice.id}`;
+}
+
 async function buildOrderNotificationParams(
   session: Stripe.Checkout.Session
 ): Promise<OrderNotificationParams> {
@@ -83,6 +88,62 @@ async function buildOrderNotificationParams(
   };
 }
 
+function buildInvoiceOrderNotificationParams(invoice: Stripe.Invoice): OrderNotificationParams {
+  const items: OrderNotificationItem[] = ((invoice as any).lines?.data ?? []).map(
+    (lineItem: any) => ({
+      name: lineItem.description ?? 'Kandie Gang product',
+      quantity: lineItem.quantity ?? 1,
+      amountTotal: lineItem.amount ?? null,
+      currency: lineItem.currency ?? (invoice as any).currency ?? null,
+    })
+  );
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://kandiegang.com');
+
+  return {
+    sessionId: invoice.id,
+    referenceLabel: 'Stripe invoice',
+    customerEmail:
+      ((invoice as any).customer_email as string | undefined) ??
+      ((invoice as any).customer_details?.email as string | undefined) ??
+      null,
+    customerName:
+      ((invoice as any).customer_name as string | undefined) ??
+      ((invoice as any).customer_details?.name as string | undefined) ??
+      null,
+    amountTotal: ((invoice as any).amount_paid ?? (invoice as any).amount_due ?? null) as
+      | number
+      | null,
+    currency: ((invoice as any).currency as string | undefined) ?? null,
+    items,
+    shippingOption: null,
+    mode: 'subscription',
+    paymentStatus: ((invoice as any).status as string | undefined) ?? 'paid',
+    stripeDashboardUrl: stripeDashboardInvoiceUrl(invoice),
+    siteUrl,
+  };
+}
+
+async function markSubscriptionOrderNotificationsSent(
+  subscriptionId: string,
+  subscriptionMetadata: Stripe.Metadata | null | undefined
+): Promise<void> {
+  if (!stripe) return;
+
+  try {
+    await stripe.subscriptions.update(subscriptionId, {
+      metadata: {
+        ...(subscriptionMetadata ?? {}),
+        [ORDER_NOTIFICATIONS_SENT_AT_METADATA_KEY]: new Date().toISOString(),
+      },
+    });
+  } catch (metadataErr) {
+    console.error('[stripe-webhook] Failed to mark subscription notifications sent:', metadataErr);
+  }
+}
+
 async function sendCheckoutOrderNotifications(session: Stripe.Checkout.Session): Promise<void> {
   if (!stripe) return;
 
@@ -98,6 +159,18 @@ async function sendCheckoutOrderNotifications(session: Stripe.Checkout.Session):
     if (!paymentReceived) {
       console.log(
         `[stripe-webhook] Skipping order notifications for ${session.id}; payment_status=${freshSession.payment_status}`
+      );
+      return;
+    }
+
+    const checkoutSubscription =
+      typeof freshSession.subscription === 'string'
+        ? await stripe.subscriptions.retrieve(freshSession.subscription)
+        : null;
+
+    if (checkoutSubscription?.metadata?.[ORDER_NOTIFICATIONS_SENT_AT_METADATA_KEY]) {
+      console.log(
+        `[stripe-webhook] Subscription order notifications already sent for ${checkoutSubscription.id}`
       );
       return;
     }
@@ -129,9 +202,103 @@ async function sendCheckoutOrderNotifications(session: Stripe.Checkout.Session):
     } catch (metadataErr) {
       console.error('[stripe-webhook] Failed to mark order notifications sent:', metadataErr);
     }
+
+    if (checkoutSubscription?.id) {
+      await markSubscriptionOrderNotificationsSent(
+        checkoutSubscription.id,
+        checkoutSubscription.metadata
+      );
+    }
   } catch (err) {
     console.error('[stripe-webhook] Order notification flow failed:', err);
   }
+}
+
+async function sendSubscriptionCreateInvoiceNotifications(
+  invoice: Stripe.Invoice,
+  subscription: Stripe.Subscription
+): Promise<void> {
+  if (!stripe) return;
+
+  const billingReason = (invoice as any).billing_reason;
+  if (billingReason !== 'subscription_create') {
+    return;
+  }
+
+  if (subscription.metadata?.[ORDER_NOTIFICATIONS_SENT_AT_METADATA_KEY]) {
+    console.log(
+      `[stripe-webhook] Subscription order notifications already sent for ${subscription.id}`
+    );
+    return;
+  }
+
+  const params = buildInvoiceOrderNotificationParams(invoice);
+  const [buyerEmailResult, discordResult] = await Promise.all([
+    sendOrderConfirmationEmail(params),
+    sendDiscordOrderNotification(params),
+  ]);
+
+  if (!buyerEmailResult.success && !buyerEmailResult.skipped) {
+    console.error(
+      '[stripe-webhook] Subscription invoice confirmation email failed:',
+      buyerEmailResult.error
+    );
+  } else if (buyerEmailResult.skipped && buyerEmailResult.error) {
+    console.warn(
+      '[stripe-webhook] Subscription invoice confirmation email skipped:',
+      buyerEmailResult.error
+    );
+  }
+  if (!discordResult.success && !discordResult.skipped) {
+    console.error(
+      '[stripe-webhook] Subscription invoice Discord notification failed:',
+      discordResult.error
+    );
+  } else if (discordResult.skipped && discordResult.error) {
+    console.warn(
+      '[stripe-webhook] Subscription invoice Discord notification skipped:',
+      discordResult.error
+    );
+  }
+
+  await markSubscriptionOrderNotificationsSent(subscription.id, subscription.metadata);
+}
+
+async function handlePaymentIntentSucceeded(event: Stripe.Event, res: NextApiResponse) {
+  if (!stripe) {
+    console.error('[stripe-webhook] Stripe not configured');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+  try {
+    const sessions = await stripe.checkout.sessions.list({
+      limit: 1,
+      payment_intent: paymentIntent.id,
+    } as Stripe.Checkout.SessionListParams & { payment_intent: string });
+    const session = sessions.data[0];
+
+    if (!session) {
+      console.log(
+        `[stripe-webhook] No Checkout Session found for payment_intent.succeeded ${paymentIntent.id}`
+      );
+      return res.status(200).json({ received: true });
+    }
+
+    if (session.mode !== 'payment') {
+      console.log(
+        `[stripe-webhook] Skipping payment_intent fallback for ${session.id}; mode=${session.mode}`
+      );
+      return res.status(200).json({ received: true });
+    }
+
+    await sendCheckoutOrderNotifications(session);
+  } catch (err) {
+    console.error('[stripe-webhook] payment_intent.succeeded fallback failed:', err);
+  }
+
+  return res.status(200).json({ received: true });
 }
 
 async function getRawBodyAndSignature(
@@ -243,6 +410,7 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
 
   if (subscriptionId) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    await sendSubscriptionCreateInvoiceNotifications(invoice, subscription);
 
     // In Stripe API 2026-01-28+, current_period_end lives on the subscription item
     const firstItem = (subscription as any).items?.data?.[0];
@@ -284,11 +452,8 @@ async function handleInvoicePaymentSucceeded(event: Stripe.Event, res: NextApiRe
 
     const orderCount = mergedHistory.length;
     const lifetimeValue =
-      Math.round(
-        mergedHistory.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0) * 100
-      ) / 100;
-    const avgOrderValue =
-      orderCount > 0 ? Math.round((lifetimeValue / orderCount) * 100) / 100 : 0;
+      Math.round(mergedHistory.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0) * 100) / 100;
+    const avgOrderValue = orderCount > 0 ? Math.round((lifetimeValue / orderCount) * 100) / 100 : 0;
     const lastOrderDate = mergedHistory.reduce<string | null>(
       (latest, o) => (!o.date ? latest : !latest || o.date > latest ? o.date : latest),
       null
@@ -414,6 +579,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return handleInvoicePaymentFailed(event, res);
   }
 
+  if (event.type === 'payment_intent.succeeded') {
+    return handlePaymentIntentSucceeded(event, res);
+  }
+
   if (event.type !== 'checkout.session.completed') {
     return res.status(200).json({ received: true });
   }
@@ -487,8 +656,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const existingExp = existing?.membership_expiration ?? null;
   const newExpiration =
     existingExp && existingExp > membershipExpiration ? existingExp : membershipExpiration;
-  const stripeCustomerId =
-    typeof session.customer === 'string' ? session.customer : null;
+  const stripeCustomerId = typeof session.customer === 'string' ? session.customer : null;
 
   const { error: updateError } = await supabase
     .from('profiles')

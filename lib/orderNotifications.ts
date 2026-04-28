@@ -13,6 +13,7 @@ export interface OrderNotificationItem {
 
 export interface OrderNotificationParams {
   sessionId: string;
+  referenceLabel?: string;
   customerEmail: string | null;
   customerName: string | null;
   amountTotal: number | null;
@@ -248,7 +249,7 @@ export async function sendDiscordOrderNotification(
       inline: false,
     },
     {
-      name: 'Stripe session',
+      name: params.referenceLabel ?? 'Stripe session',
       value: params.stripeDashboardUrl
         ? `[${params.sessionId}](${params.stripeDashboardUrl})`
         : params.sessionId,
