@@ -106,6 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (action === 'admin-remove-participant') return handleRemoveParticipant(req, res, adminClient);
   if (action === 'admin-no-show') return handleNoShow(req, res, adminClient);
   if (action === 'admin-send-participant-email') return handleSendParticipantEmail(req, res, adminClient);
+  if (action === 'admin-promote-from-waitlist') return handlePromoteFromWaitlist(req, res, adminClient);
 
   return handleUpdate(req, res, adminClient);
 }
@@ -498,6 +499,73 @@ async function handleNoShow(
   if (updateError) {
     console.error('[admin-no-show] Update error:', updateError);
     return res.status(500).json({ error: 'Failed to mark registration as no-show' });
+  }
+
+  return res.status(200).json({ success: true });
+}
+
+// ─── Promote from waitlist action ────────────────────────────────────────────
+
+async function handlePromoteFromWaitlist(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  adminClient: SupabaseClient<any>
+) {
+  const body = req.body as { registrationId?: string };
+  const registrationId = typeof body?.registrationId === 'string' ? body.registrationId.trim() : null;
+  if (!registrationId) return res.status(400).json({ error: 'Missing registrationId' });
+
+  const { data: reg, error: regError } = await adminClient
+    .from('registrations')
+    .select('id, event_id, ride_level, user_id, email, first_name, is_waitlist, cancelled_at')
+    .eq('id', registrationId)
+    .single();
+
+  if (regError || !reg) return res.status(404).json({ error: 'Registration not found' });
+  if (reg.cancelled_at) return res.status(400).json({ error: 'Registration is cancelled' });
+  if (!reg.is_waitlist) return res.status(400).json({ error: 'Registration is not on the waitlist' });
+
+  const now = new Date().toISOString();
+  const newCancelToken = crypto.randomBytes(24).toString('base64url');
+  const newCancelTokenHash = crypto.createHash('sha256').update(newCancelToken).digest('hex');
+
+  const { error: updateError } = await adminClient
+    .from('registrations')
+    .update({
+      is_waitlist: false,
+      waitlist_joined_at: null,
+      waitlist_promoted_at: now,
+      cancel_token_hash: newCancelTokenHash,
+      cancel_token_issued_at: now,
+    })
+    .eq('id', registrationId);
+
+  if (updateError) {
+    console.error('[admin-promote-from-waitlist] Update error:', updateError);
+    return res.status(500).json({ error: 'Failed to promote registration' });
+  }
+
+  let toEmail: string | null = reg.email ?? null;
+  if (!toEmail && reg.user_id) {
+    const { data: profile } = await adminClient.from('profiles').select('email').eq('id', reg.user_id).single();
+    toEmail = profile?.email ?? null;
+  }
+
+  if (toEmail && RESEND_API_KEY) {
+    try {
+      const eventTitle = await fetchEventTitle(Number(reg.event_id));
+      const cancelUrl = `${BASE_URL}/event/cancel?token=${encodeURIComponent(newCancelToken)}`;
+      const resend = new Resend(RESEND_API_KEY);
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: toEmail,
+        subject: `A spot opened up! ${eventTitle} - ${formatRideLevel(reg.ride_level)}`,
+        html: buildPromotedHtml(eventTitle, reg.ride_level, cancelUrl),
+        text: buildPromotedText(eventTitle, reg.ride_level, cancelUrl),
+      });
+    } catch (emailErr) {
+      console.warn('[admin-promote-from-waitlist] Email failed:', emailErr);
+    }
   }
 
   return res.status(200).json({ success: true });

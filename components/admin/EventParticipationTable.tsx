@@ -67,10 +67,10 @@ function ParticipantActions({
   eventId: number;
   eventTitle: string;
   onActionComplete: () => void;
-  onOptimisticUpdate: (registrationId: string, type: 'cancel' | 'noshow') => void;
+  onOptimisticUpdate: (registrationId: string, type: 'cancel' | 'noshow' | 'promote') => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [confirming, setConfirming] = useState<'remove' | 'noshow' | null>(null);
+  const [confirming, setConfirming] = useState<'remove' | 'noshow' | 'promote' | null>(null);
   const [composing, setComposing] = useState(false);
   const [subject, setSubject] = useState(`Message about ${eventTitle}`);
   const [message, setMessage] = useState('');
@@ -139,6 +139,22 @@ function ParticipantActions({
       onActionComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to mark as no-show');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function doPromote() {
+    setLoading(true);
+    setError(null);
+    try {
+      await callApi({ action: 'admin-promote-from-waitlist', registrationId: registrant.registrationId });
+      setOpen(false);
+      setConfirming(null);
+      onOptimisticUpdate(registrant.registrationId, 'promote');
+      onActionComplete();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to promote from waitlist');
     } finally {
       setLoading(false);
     }
@@ -236,8 +252,39 @@ function ParticipantActions({
                 </button>
               </div>
             </div>
+          ) : confirming === 'promote' ? (
+            <div className="px-3 py-2">
+              <p className="text-neutral-700 text-xs mb-2">Promote {formatParticipantNameFull(registrant.firstName, registrant.lastName)} from waitlist? A confirmation email will be sent.</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={doPromote}
+                  disabled={loading}
+                  className="flex-1 py-1 px-2 bg-violet-600 text-white rounded text-xs font-medium hover:bg-violet-700 disabled:opacity-50"
+                >
+                  {loading ? 'Promoting…' : 'Confirm'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setConfirming(null); setError(null); }}
+                  disabled={loading}
+                  className="flex-1 py-1 px-2 bg-neutral-100 text-neutral-700 rounded text-xs font-medium hover:bg-neutral-200 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           ) : (
             <>
+              {registrant.isWaitlist && (
+                <button
+                  type="button"
+                  onClick={() => setConfirming('promote')}
+                  className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-violet-600 transition-colors"
+                >
+                  Promote from waitlist
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setConfirming('remove')}
@@ -349,10 +396,10 @@ function ParticipantList({
   const formatName = hideEmail ? formatParticipantName : formatParticipantNameFull;
 
   // Optimistic overrides: applied immediately on action success, cleared on next data refresh
-  const [overrides, setOverrides] = useState<Record<string, 'cancel' | 'noshow'>>({});
+  const [overrides, setOverrides] = useState<Record<string, 'cancel' | 'noshow' | 'promote'>>({});
   const [levelSort, setLevelSort] = useState<'asc' | 'desc' | null>(null);
 
-  function handleOptimisticUpdate(registrationId: string, type: 'cancel' | 'noshow') {
+  function handleOptimisticUpdate(registrationId: string, type: 'cancel' | 'noshow' | 'promote') {
     setOverrides((prev) => ({ ...prev, [registrationId]: type }));
   }
 
@@ -413,7 +460,7 @@ function ParticipantList({
             const override = overrides[r.registrationId];
             const isCancelled = Boolean(r.cancelledAt) || override === 'cancel';
             const isNoShow = (Boolean(r.noShowAt) || override === 'noshow') && !isCancelled;
-            const isWaitlist = r.isWaitlist && !isCancelled;
+            const isWaitlist = (r.isWaitlist && override !== 'promote') && !isCancelled;
             const rowClass = isCancelled ? 'opacity-50' : '';
 
             return (
@@ -445,7 +492,7 @@ function ParticipantList({
                 <td className="py-2 px-3 text-center text-neutral-500">{r.totalCancellations}</td>
                 <td className="py-2 px-3 text-right">
                   <ParticipantActions
-                    registrant={{ ...r, cancelledAt: isCancelled ? (r.cancelledAt ?? 'pending') : null, noShowAt: isNoShow ? (r.noShowAt ?? 'pending') : null }}
+                    registrant={{ ...r, cancelledAt: isCancelled ? (r.cancelledAt ?? 'pending') : null, noShowAt: isNoShow ? (r.noShowAt ?? 'pending') : null, isWaitlist }}
                     eventId={eventId}
                     eventTitle={eventTitle}
                     onActionComplete={onRefresh}
