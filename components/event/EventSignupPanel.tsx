@@ -67,6 +67,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   const [signupComplete, setSignupComplete] = useState(false);
   const [waitlisted, setWaitlisted] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const [manualEmail, setManualEmail] = useState('');
 
   // Derived values
   const hasEmail = email.trim().length > 0;
@@ -76,6 +77,9 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
     (!needsFlintaAttestation || flintaAttested) &&
     (!needsRegistrationCode || registrationCode.trim().length > 0);
   const hasAuthEmail = user?.email && user.email.length > 0;
+  const profileEmail = profile?.email && profile.email.length > 0 ? profile.email : null;
+  const needsManualEmail = !!user && !hasAuthEmail && !profileEmail;
+  const effectiveAuthEmail = profileEmail ?? user?.email ?? manualEmail.trim();
   const isMember = !!profile?.is_member;
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email || '';
   const lookupDisplayName = email;
@@ -177,8 +181,8 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       setError('Please confirm the FLINTA* self-attestation.');
       return;
     }
-    if (!hasAuthEmail) {
-      setError('Please log in again to confirm your email address.');
+    if (needsManualEmail && !manualEmail.trim()) {
+      setError('Please enter your email address.');
       return;
     }
     if (!supabase) {
@@ -195,6 +199,13 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         setIsSubmitting(false);
         return;
       }
+      if (needsManualEmail && manualEmail.trim() && supabase && user?.id) {
+        await supabase
+          .from('profiles')
+          .update({ email: manualEmail.trim().toLowerCase() })
+          .eq('id', user.id);
+      }
+
       const signupPayload = {
         eventId: intent.eventId,
         eventTitle: intent.eventTitle,
@@ -505,6 +516,27 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
         </div>
       )}
 
+      {needsManualEmail && (
+        <div>
+          <label htmlFor="event-confirm-email" className={labelClass}>
+            Email address
+          </label>
+          <input
+            id="event-confirm-email"
+            type="email"
+            autoComplete="email"
+            required
+            className={inputClass}
+            value={manualEmail}
+            onChange={(e) => setManualEmail(e.target.value)}
+            placeholder="your@email.com"
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            We need your email to send confirmation and event updates.
+          </p>
+        </div>
+      )}
+
       {!isMember && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
           <p className="font-semibold mb-1">Heads up</p>
@@ -550,7 +582,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
       <button
         type="button"
         onClick={handleConfirmSignup}
-        disabled={isSubmitting || !canSubmit || !hasNames || !hasAuthEmail}
+        disabled={isSubmitting || !canSubmit || !hasNames || (!hasAuthEmail && !profileEmail && !manualEmail.trim())}
         className="inline-flex items-center justify-center rounded-full bg-secondary-purple-rain px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-secondary-purple-rain/80 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
         {isSubmitting ? 'Submitting…' : 'Confirm signup'}
