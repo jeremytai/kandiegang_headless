@@ -681,10 +681,21 @@ export function EventParticipationTable({ hideEmail }: { hideEmail?: boolean } =
                 FLINTA Ratio
               </p>
               {summary.flintaStatus === 'available' && summary.flintaRatioPct !== null ? (
-                <p className="text-sm text-neutral-800 mt-1">
-                  {summary.flintaAttestedActive} FLINTA ({summary.flintaRatioPct.toFixed(1)}%) ·{' '}
-                  {summary.maleOrUnknownActive} male/unknown
-                </p>
+                <div className="mt-1">
+                  <p className="text-sm text-neutral-800">
+                    {summary.flintaAttestedActive} FLINTA · {summary.nonFlintaAttestedActive} non-FLINTA (
+                    {summary.flintaRatioPct.toFixed(1)}% FLINTA of known attestations)
+                  </p>
+                  {summary.unknownFlintaActive > 0 && (
+                    <p className="text-xs text-neutral-500 mt-1">
+                      {summary.unknownFlintaActive} active registration
+                      {summary.unknownFlintaActive === 1 ? '' : 's'} historical/unknown
+                      {summary.flintaKnownCoveragePct !== null
+                        ? ` · ${summary.flintaKnownCoveragePct.toFixed(1)}% attestation coverage`
+                        : ''}
+                    </p>
+                  )}
+                </div>
               ) : (
                 <p className="text-xs text-neutral-500 mt-1">
                   Unavailable: FLINTA attestation is not stored in registrations yet.

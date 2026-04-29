@@ -156,8 +156,10 @@ export interface EventParticipationSummary {
   totalActiveRegistrations: number;
   totalCancelledRegistrations: number;
   flintaAttestedActive: number;
-  maleOrUnknownActive: number;
+  nonFlintaAttestedActive: number;
+  unknownFlintaActive: number;
   flintaRatioPct: number | null;
+  flintaKnownCoveragePct: number | null;
   flintaStatus: 'available' | 'unavailable';
   flintaStatusReason: 'missing_column' | 'not_tracked' | null;
   eventsWithReleaseDate: number;

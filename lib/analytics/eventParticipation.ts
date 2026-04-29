@@ -188,12 +188,20 @@ export async function handleEventParticipation(res: NextApiResponse, adminClient
 
     const activeRows = rows.filter((row) => !row.cancelled_at);
     const cancelledRows = rows.filter((row) => Boolean(row.cancelled_at));
-    const flintaAttestedActive = hasFlintaColumn
-      ? activeRows.filter((row) => row.flinta_attested === true).length
-      : 0;
-    const maleOrUnknownActive = Math.max(activeRows.length - flintaAttestedActive, 0);
+    const knownFlintaRows = hasFlintaColumn
+      ? activeRows.filter((row) => typeof row.flinta_attested === 'boolean')
+      : [];
+    const flintaAttestedActive = knownFlintaRows.filter((row) => row.flinta_attested === true).length;
+    const nonFlintaAttestedActive = knownFlintaRows.filter((row) => row.flinta_attested === false).length;
+    const unknownFlintaActive = Math.max(activeRows.length - knownFlintaRows.length, 0);
     const flintaRatioPct =
-      hasFlintaColumn && activeRows.length > 0 ? (flintaAttestedActive / activeRows.length) * 100 : null;
+      hasFlintaColumn && knownFlintaRows.length > 0
+        ? (flintaAttestedActive / knownFlintaRows.length) * 100
+        : null;
+    const flintaKnownCoveragePct =
+      hasFlintaColumn && activeRows.length > 0
+        ? (knownFlintaRows.length / activeRows.length) * 100
+        : null;
 
     let eventsWithReleaseDate = 0;
     let earlySignupTotal = 0;
@@ -227,8 +235,10 @@ export async function handleEventParticipation(res: NextApiResponse, adminClient
       totalActiveRegistrations: activeRows.length,
       totalCancelledRegistrations: cancelledRows.length,
       flintaAttestedActive,
-      maleOrUnknownActive,
+      nonFlintaAttestedActive,
+      unknownFlintaActive,
       flintaRatioPct,
+      flintaKnownCoveragePct,
       flintaStatus: hasFlintaColumn ? 'available' : 'unavailable',
       flintaStatusReason: hasFlintaColumn ? null : 'missing_column',
       eventsWithReleaseDate,

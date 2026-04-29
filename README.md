@@ -20,6 +20,12 @@
 - Events
   - add join waitlist CTA to event pages
 - Normalize WordPress event descriptions so Markdown lists render correctly (handle en-dash/em-dash, common bullet characters, numbered markers like `)` or `.`, and strip zero-width/non-breaking spaces). Add a regression test or example content and remove dev-only debug UI after verification.
+- Deployment reliability / staging
+  - Require PR-based deploy flow (protect `main`, no direct pushes) and validate all changes on Vercel preview URLs before merge.
+  - Split Vercel env vars by environment (`preview` vs `production`) and keep production-only secrets isolated.
+  - Add a CI smoke check against preview deployments for critical endpoints/pages (`/api/event`, `/api/analytics-data`, homepage, event page) and block merge on failures.
+  - Add a deployment runbook documenting `vercel inspect`, `vercel logs`, rollback/promote, and custom domain alias verification steps.
+  - Add synthetic production uptime checks for critical APIs (especially `/api/event`) with alerting on non-200 responses.
 - Landing page suggestions (priority order)
   1. Add explicit above-the-fold dual CTAs (highest impact)
      - Primary: Join Membership (to `/kandiegangcyclingclub`)
