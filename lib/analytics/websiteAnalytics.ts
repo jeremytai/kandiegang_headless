@@ -1,8 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { checkRateLimit } from '../lib/rateLimit.js';
-import { requireGuideAuth } from '../lib/adminGuideAuth.js';
-import { getOrSetMemoryCache, invalidateMemoryCache } from '../lib/serverMemoryCache.js';
-import type { WebsiteAnalytics } from '../types/analytics.js';
+import { getOrSetMemoryCache, invalidateMemoryCache } from '../serverMemoryCache.js';
+import type { WebsiteAnalytics } from '../../types/analytics.js';
 
 const POSTHOG_API_HOST = (process.env.POSTHOG_API_HOST || 'https://eu.posthog.com').replace(
   /\/$/,
@@ -10,9 +8,9 @@ const POSTHOG_API_HOST = (process.env.POSTHOG_API_HOST || 'https://eu.posthog.co
 );
 const POSTHOG_PROJECT_ID = process.env.POSTHOG_PROJECT_ID;
 const POSTHOG_PERSONAL_API_KEY = process.env.POSTHOG_PERSONAL_API_KEY;
-const PERIOD_DAYS = 30;
-const CACHE_KEY = `website-analytics:${PERIOD_DAYS}d`;
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const WEBSITE_PERIOD_DAYS = 30;
+const WEBSITE_CACHE_KEY = `website-analytics:${WEBSITE_PERIOD_DAYS}d`;
+const WEBSITE_CACHE_TTL_MS = 5 * 60 * 1000;
 
 type HogQLResult = {
   columns?: string[];
@@ -54,32 +52,17 @@ async function runHogQL(query: string): Promise<HogQLResult> {
     throw new Error(`PostHog query failed (${response.status}): ${body.slice(0, 200)}`);
   }
 
-  const json = (await response.json()) as HogQLResult;
-  return json;
+  return (await response.json()) as HogQLResult;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  if (
-    !(await checkRateLimit(req, res, { windowMs: 60_000, max: 15, keyPrefix: 'website-analytics' }))
-  ) {
-    return;
-  }
-  if (
-    !(await requireGuideAuth(req, res, {
-      misconfiguredMessage: 'Analytics backend is not configured',
-    }))
-  ) {
-    return;
-  }
-
+export async function handleWebsiteAnalytics(req: NextApiRequest, res: NextApiResponse) {
   try {
     const shouldRefresh = req.query.refresh === '1' || req.query.refresh === 1;
-    if (shouldRefresh) invalidateMemoryCache(CACHE_KEY);
+    if (shouldRefresh) invalidateMemoryCache(WEBSITE_CACHE_KEY);
 
     const { value: payload, cached } = await getOrSetMemoryCache<WebsiteAnalytics>(
-      CACHE_KEY,
-      CACHE_TTL_MS,
+      WEBSITE_CACHE_KEY,
+      WEBSITE_CACHE_TTL_MS,
       async () => {
         const [landingQuery, sessionQuery, transitionQuery] = await Promise.all([
           runHogQL(
@@ -87,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
              FROM events
              WHERE event = '$pageview'
                AND properties.$pathname = '/'
-               AND timestamp >= now() - INTERVAL ${PERIOD_DAYS} DAY`
+               AND timestamp >= now() - INTERVAL ${WEBSITE_PERIOD_DAYS} DAY`
           ),
           runHogQL(
             `SELECT count() AS landing_sessions,
@@ -96,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     round(avg(duration), 2) AS avg_session_sec
              FROM sessions
              WHERE $entry_pathname = '/'
-               AND $start_timestamp >= now() - INTERVAL ${PERIOD_DAYS} DAY`
+               AND $start_timestamp >= now() - INTERVAL ${WEBSITE_PERIOD_DAYS} DAY`
           ),
           runHogQL(
             `WITH landing_users AS (
@@ -104,7 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                FROM events
                WHERE event = '$pageview'
                  AND properties.$pathname = '/'
-                 AND timestamp >= now() - INTERVAL ${PERIOD_DAYS} DAY
+                 AND timestamp >= now() - INTERVAL ${WEBSITE_PERIOD_DAYS} DAY
              )
              SELECT
                countIf(has_community = 1) AS landing_to_community_users,
@@ -120,14 +103,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                LEFT JOIN events e
                  ON e.distinct_id = lu.distinct_id
                 AND e.event = '$pageview'
-                AND e.timestamp >= now() - INTERVAL ${PERIOD_DAYS} DAY
+                AND e.timestamp >= now() - INTERVAL ${WEBSITE_PERIOD_DAYS} DAY
                GROUP BY lu.distinct_id
              )`
           ),
         ]);
 
         return {
-          periodDays: PERIOD_DAYS,
+          periodDays: WEBSITE_PERIOD_DAYS,
           updatedAt: new Date().toISOString(),
           landingPageviews: getNumberCell(landingQuery, 'landing_pageviews'),
           landingUsers: getNumberCell(landingQuery, 'landing_users'),

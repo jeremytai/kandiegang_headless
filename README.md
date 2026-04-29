@@ -819,7 +819,7 @@ Make sure to set environment variables in your hosting platform:
 - `VITE_SUBSTACK_PUBLICATION`: (Optional) Substack publication base URL for newsletter signup embed
 - `VITE_FORMSPREE_CONTACT_FORM_ID`: (Optional) Formspree form ID for the contact form (Contact page and modal)
 - `VITE_POSTHOG_KEY`: (Optional) PostHog project API key for consent-gated analytics; `VITE_POSTHOG_HOST` (e.g. `https://eu.i.posthog.com`) is optional for EU hosting
-- `POSTHOG_PROJECT_ID`: (Server-only) PostHog project ID used by `/api/website-analytics`
+- `POSTHOG_PROJECT_ID`: (Server-only) PostHog project ID used by `/api/analytics-data?section=website`
 - `POSTHOG_PERSONAL_API_KEY`: (Server-only) PostHog personal API key with query access
 - `POSTHOG_API_HOST`: (Optional, server-only) Defaults to `https://eu.posthog.com`
 

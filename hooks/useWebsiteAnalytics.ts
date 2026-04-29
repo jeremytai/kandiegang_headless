@@ -27,7 +27,7 @@ export function useWebsiteAnalytics() {
           throw new Error('Not authenticated');
         }
 
-        const res = await fetch('/api/website-analytics', {
+        const res = await fetch('/api/analytics-data?section=website', {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
