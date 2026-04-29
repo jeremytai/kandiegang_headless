@@ -470,11 +470,15 @@ The shop product pages (`/shop/:slug`) include Stripe Checkout integration for s
 
 ### Checkout flow
 
-- The `CheckoutButton` component (`components/CheckoutButton.tsx`) calls `/api/create-checkout-session` to create a Stripe Checkout session
-- The Vercel serverless function (`api/create-checkout-session.ts`) handles session creation securely on the server
-- Users are redirected to Stripe's hosted checkout page
-- After payment, Stripe redirects back to `/checkout/success` or `/checkout/cancel`
-- Product metadata (productId, productTitle, userId) is stored in the Stripe session for order tracking
+- The `CheckoutButton` component (`components/shop/CheckoutButton.tsx`) calls `/api/stripe-checkout` with `action=checkout` to create a Stripe Checkout session.
+- The Vercel serverless function (`api/stripe-checkout.ts`) validates the cart shape, looks up each Stripe Price ID server-side, rejects carts that mix one-time and subscription prices, calculates shipping, and creates the Checkout session.
+- Product metadata (`productIds`, `productTitles`, `productSlugs`, `userId`, `shippingOption`) is stored on the Stripe session for fulfillment and membership handling. Order totals and line-item details are always read back from Stripe in the webhook, not trusted from client metadata.
+- Users are redirected to Stripe's hosted checkout page. Successful payments return to `/checkout/success?session_id={CHECKOUT_SESSION_ID}`; cancelled checkouts return to `/shop`.
+- The success page is only a user-facing confirmation screen. Fulfillment, buyer emails, Discord notifications, membership activation, and order history updates happen from the verified Stripe webhook (`api/stripe-webhook.ts`).
+- Primary order notification event: `checkout.session.completed`. It sends the branded Resend buyer confirmation and the Discord order alert, then marks the Stripe session with `order_notifications_sent_at` to avoid duplicate sends.
+- Subscription fallback: `invoice.payment_succeeded` with `billing_reason=subscription_create` sends the same order notification when the Checkout completion event was missed, and marks the Stripe subscription with `order_notifications_sent_at`.
+- One-time payment fallback: `payment_intent.succeeded` looks up the related Checkout Session, sends the same order notification for `mode=payment`, and uses the Checkout Session metadata marker for dedupe.
+- Membership purchases continue through the existing webhook membership flow after the generic order notification runs: Supabase profile fields are updated and the member welcome email is sent when applicable.
 
 ### Product requirements
 

@@ -317,6 +317,7 @@ async function syncInvoicesForCustomerIds(
     const invoicesById = new Map<string, Stripe.Invoice>();
 
     const validCustomerIds = customerIds.filter((cid) => isStripeCustomerId(cid));
+    const deletedCustomerIds = new Set<string>();
 
     for (const cid of validCustomerIds) {
       try {
@@ -325,8 +326,12 @@ async function syncInvoicesForCustomerIds(
         for (const inv of batch) {
           if (!invoicesById.has(inv.id)) invoicesById.set(inv.id, inv);
         }
-      } catch (err) {
-        // Keep going — one bad/blocked customer shouldn't prevent syncing others.
+      } catch (err: any) {
+        if (err?.code === 'resource_missing') {
+          deletedCustomerIds.add(cid);
+        } else {
+          console.error(`[stripe-sync] Failed to fetch invoices for ${cid}:`, err);
+        }
         invoiceCountByCustomer.set(cid, 0);
       }
     }
@@ -410,6 +415,14 @@ async function syncInvoicesForCustomerIds(
     ) {
       updatePayload.stripe_customer_id = primaryStripeCustomerId;
       if (!existingStripeCustomerId) didLinkStripeCustomer = true;
+    } else if (
+      existingStripeCustomerId &&
+      deletedCustomerIds.has(existingStripeCustomerId) &&
+      !primaryStripeCustomerId
+    ) {
+      // Stored customer ID is confirmed deleted in Stripe and no replacement found — clear it.
+      updatePayload.stripe_customer_id = null;
+      console.log(`[stripe-sync] Cleared deleted stripe_customer_id ${existingStripeCustomerId} from profile ${profileId}`);
     }
 
     const { error: updateError } = await adminClient

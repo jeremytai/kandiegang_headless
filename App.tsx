@@ -204,7 +204,7 @@ function AppMainInner({
         <AnnouncementBar
           message={
             nextEvent
-              ? `Join us: ${nextEvent.title}`
+              ? `Next up: ${nextEvent.title}`
               : "We're  making some changes. Some things might not work as expected."
           }
           href={nextEvent?.href}

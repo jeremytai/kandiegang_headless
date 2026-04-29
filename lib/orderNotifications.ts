@@ -186,6 +186,54 @@ function buildOrderConfirmationText(params: OrderNotificationParams): string {
   ].join('\n');
 }
 
+function buildInternalNotificationText(params: OrderNotificationParams): string {
+  return [
+    `New order: ${params.sessionId}`,
+    '',
+    `Customer: ${params.customerName ?? 'Unknown'} <${params.customerEmail ?? 'no email'}>`,
+    `Total: ${formatCurrency(params.amountTotal, params.currency)}`,
+    `Shipping: ${formatShippingOption(params.shippingOption)}`,
+    '',
+    'Items:',
+    orderItemsText(params.items),
+    '',
+    params.stripeDashboardUrl ? `Stripe: ${params.stripeDashboardUrl}` : '',
+  ]
+    .filter((l) => l !== undefined)
+    .join('\n');
+}
+
+export async function sendOrderInternalNotificationEmail(
+  params: OrderNotificationParams
+): Promise<NotificationResult> {
+  if (!RESEND_API_KEY) {
+    return { success: false, skipped: true, error: 'RESEND_API_KEY is not set' };
+  }
+
+  const resend = new Resend(RESEND_API_KEY);
+  const customerLabel = params.customerName
+    ? `${params.customerName} (${params.customerEmail ?? 'no email'})`
+    : (params.customerEmail ?? 'Unknown customer');
+  const totalLabel = formatCurrency(params.amountTotal, params.currency);
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: 'shop@kandiegang.com',
+      subject: `New order: ${customerLabel} — ${totalLabel}`,
+      text: buildInternalNotificationText(params),
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 export async function sendOrderConfirmationEmail(
   params: OrderNotificationParams
 ): Promise<NotificationResult> {

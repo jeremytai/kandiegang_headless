@@ -6,6 +6,7 @@ import { sendMemberWelcomeEmail } from '../lib/memberWelcomeEmail.js';
 import {
   sendDiscordOrderNotification,
   sendOrderConfirmationEmail,
+  sendOrderInternalNotificationEmail,
   type OrderNotificationItem,
   type OrderNotificationParams,
 } from '../lib/orderNotifications.js';
@@ -176,8 +177,9 @@ async function sendCheckoutOrderNotifications(session: Stripe.Checkout.Session):
     }
 
     const params = await buildOrderNotificationParams(freshSession);
-    const [buyerEmailResult, discordResult] = await Promise.all([
+    const [buyerEmailResult, internalEmailResult, discordResult] = await Promise.all([
       sendOrderConfirmationEmail(params),
+      sendOrderInternalNotificationEmail(params),
       sendDiscordOrderNotification(params),
     ]);
 
@@ -185,6 +187,9 @@ async function sendCheckoutOrderNotifications(session: Stripe.Checkout.Session):
       console.error('[stripe-webhook] Order confirmation email failed:', buyerEmailResult.error);
     } else if (buyerEmailResult.skipped && buyerEmailResult.error) {
       console.warn('[stripe-webhook] Order confirmation email skipped:', buyerEmailResult.error);
+    }
+    if (!internalEmailResult.success && !internalEmailResult.skipped) {
+      console.error('[stripe-webhook] Internal notification email failed:', internalEmailResult.error);
     }
     if (!discordResult.success && !discordResult.skipped) {
       console.error('[stripe-webhook] Discord order notification failed:', discordResult.error);
@@ -233,8 +238,9 @@ async function sendSubscriptionCreateInvoiceNotifications(
   }
 
   const params = buildInvoiceOrderNotificationParams(invoice);
-  const [buyerEmailResult, discordResult] = await Promise.all([
+  const [buyerEmailResult, internalEmailResult, discordResult] = await Promise.all([
     sendOrderConfirmationEmail(params),
+    sendOrderInternalNotificationEmail(params),
     sendDiscordOrderNotification(params),
   ]);
 
@@ -247,6 +253,12 @@ async function sendSubscriptionCreateInvoiceNotifications(
     console.warn(
       '[stripe-webhook] Subscription invoice confirmation email skipped:',
       buyerEmailResult.error
+    );
+  }
+  if (!internalEmailResult.success && !internalEmailResult.skipped) {
+    console.error(
+      '[stripe-webhook] Subscription invoice internal notification email failed:',
+      internalEmailResult.error
     );
   }
   if (!discordResult.success && !discordResult.skipped) {
