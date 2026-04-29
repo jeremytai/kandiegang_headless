@@ -812,9 +812,8 @@ async function handleCapacity(req: VercelRequest, res: VercelResponse) {
 
     const { data, error } = await adminClient
       .from('registrations')
-      .select('ride_level')
+      .select('ride_level, is_waitlist')
       .eq('event_id', eventIdNumber)
-      .or('is_waitlist.is.null,is_waitlist.eq.false')
       .is('cancelled_at', null);
 
     if (error) {
@@ -825,6 +824,7 @@ async function handleCapacity(req: VercelRequest, res: VercelResponse) {
     const counts: Record<string, number> = {};
     const rows = Array.isArray(data) ? data : [];
     rows.forEach((row) => {
+      if (row.is_waitlist === true) return;
       const level =
         typeof row.ride_level === 'string' && row.ride_level.trim() ? row.ride_level : 'workshop';
       counts[level] = (counts[level] ?? 0) + 1;
