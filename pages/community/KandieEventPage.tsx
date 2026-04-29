@@ -168,7 +168,7 @@ export const KandieEventPage: React.FC = () => {
     if (!eventData?.databaseId) return;
     const controller = new AbortController();
     try {
-      const response = await fetch(`/api/event?eventId=${eventData.databaseId}`, {
+      const response = await fetch(`/api/event-capacity?eventId=${eventData.databaseId}`, {
         signal: controller.signal,
       });
       if (!response.ok) return;
