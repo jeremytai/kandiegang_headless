@@ -356,7 +356,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                             {level.isSoldOut
                               ? signupState?.allowWaitlist
                                 ? 'Join Waitlist'
-                                : 'Sold Out'
+                                : 'Poller! Schon weg'
                               : (signupState?.label ?? (isPublic ? 'Sign Up' : 'Coming Soon'))}
                           </button>
                         )}
