@@ -22,6 +22,7 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { normalizeEventType } from '../../lib/eventType';
+import { hasActiveMembership } from '../../lib/membership';
 
 export const KandieEventPage: React.FC = () => {
   const { yy, mm, dd, slug } = useParams<{ yy: string; mm: string; dd: string; slug: string }>();
@@ -498,7 +499,7 @@ export const KandieEventPage: React.FC = () => {
   const publicRelease = publicReleaseDate ? new Date(publicReleaseDate) : null;
   const hasValidPublicRelease = Boolean(publicRelease && !Number.isNaN(publicRelease.getTime()));
   const isPublic = !hasValidPublicRelease || now >= (publicRelease as Date);
-  const isMember = Boolean(profile?.is_member);
+  const isMember = hasActiveMembership(profile);
   const guidedLevels = profile?.wp_user_id
     ? levelsWithGuides.filter((level) =>
         level.guides.some((g) => String(g.id) === String(profile.wp_user_id))

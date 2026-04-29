@@ -17,6 +17,7 @@ import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { useLightMotionBackdrop } from '../hooks/useLightMotionBackdrop';
 import { isGuideProfile } from '../lib/guideAccess';
+import { hasActiveMembership } from '../lib/membership';
 
 const DELETE_ACCOUNT_CONFIRM_PHRASE = 'Yes, delete account';
 
@@ -448,7 +449,7 @@ function MemberOffcanvasAccountContent({
   const showCyclingMember = isCyclingMember(profile?.membership_plans);
   const showGuide = isGuideProfile(profile);
   const hasRolePills = showCyclingMember || showGuide;
-  const isMember = profile?.is_member === true;
+  const isMember = hasActiveMembership(profile);
 
   // FAQ-style accordion state
   const [openIndex, setOpenIndex] = useState<number | null>(null);

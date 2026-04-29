@@ -14,12 +14,13 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { Zap } from 'lucide-react';
 import { useScrollThreshold } from '../../hooks/useScrollThreshold';
 import { useAuth } from '../../context/AuthContext';
+import { hasActiveMembership } from '../../lib/membership';
 
 const MotionLink = motion.create(Link);
 
 export const StickyBottom: React.FC = () => {
-  const { user, profile } = useAuth();
-  const isMember = Boolean(user && profile?.is_member);
+  const { profile } = useAuth();
+  const isMember = hasActiveMembership(profile);
 
   const [isDismissed, setIsDismissed] = useState(() => {
     return localStorage.getItem('sunday_nav_dismissed') === 'true';

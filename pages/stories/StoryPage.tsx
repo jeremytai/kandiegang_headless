@@ -14,6 +14,7 @@ import { buildMediaMap, normalizeBlocks } from '../../lib/storyGalleries';
 import type { NormalizedBlock } from '../../lib/storyGalleries';
 import { postHasPhotoGalleryCategory } from '../../lib/photoGalleryCategory';
 import { isGuideProfile } from '../../lib/guideAccess';
+import { hasActiveMembership } from '../../lib/membership';
 import { useAuth } from '../../context/AuthContext';
 import { ExpandingHero } from '../../components/visual/ExpandingHero';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
@@ -137,7 +138,7 @@ export const StoryPage: React.FC = () => {
   const canViewMembersPhotoStory = useMemo(() => {
     if (!post || !isPhotoGalleryPost) return true;
     if (!authResolved || !user) return false;
-    return Boolean(profile?.is_member) || isGuideProfile(profile);
+    return hasActiveMembership(profile) || isGuideProfile(profile);
   }, [post, isPhotoGalleryPost, authResolved, user, profile]);
 
   const ogImageUrl = post?.featuredImage?.node?.sourceUrl

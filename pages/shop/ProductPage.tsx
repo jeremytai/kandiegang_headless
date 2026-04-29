@@ -19,6 +19,7 @@ import { AddToCartButton } from '../../components/shop/AddToCartButton';
 import { ProductVariantSelector } from '../../components/shop/ProductVariantSelector';
 import { StripePaymentTrustBar } from '../../components/shop/StripePaymentTrustBar';
 import { getProductPrice, getStripePriceId, canPurchase, ShopProduct } from '../../lib/products';
+import { hasActiveMembership } from '../../lib/membership';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useAuth } from '../../context/AuthContext';
 import { StickySidecarLayout } from '../../components/layout/StickySidecarLayout';
@@ -172,7 +173,7 @@ export const ProductPage: React.FC = () => {
   const fromMembers = location.state?.from === '/members';
   const backToShopUrl = fromMembers ? '/members' : '/shop';
   const backToShopLabel = fromMembers ? 'Back to Members' : 'Back to Shop';
-  const { user } = useAuth();
+  const { profile } = useAuth();
   const [product, setProduct] = useState<Awaited<ReturnType<typeof getProductBySlug>>>(null);
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(-1);
   const [showVariantRequiredMessage, setShowVariantRequiredMessage] = useState(false);
@@ -321,7 +322,7 @@ export const ProductPage: React.FC = () => {
     );
   }
 
-  const isMember = !!user;
+  const isMember = hasActiveMembership(profile);
   const variants = product.productFields?.variants ?? [];
   const hasVariants = variants.length > 1;
   const variantIndex = hasVariants ? selectedVariantIndex : undefined;

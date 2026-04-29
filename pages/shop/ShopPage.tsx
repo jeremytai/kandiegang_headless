@@ -18,6 +18,7 @@ import {
   getProductImageUrl,
 } from '../../lib/wordpress';
 import { canPurchase, ShopProduct } from '../../lib/products';
+import { hasActiveMembership } from '../../lib/membership';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useAuth } from '../../context/AuthContext';
@@ -26,7 +27,7 @@ export const ShopPage: React.FC = () => {
   const [products, setProducts] = useState<WPProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { profile } = useAuth();
 
   usePageMeta(
     'Shop | Kandie Gang',
@@ -148,7 +149,7 @@ export const ShopPage: React.FC = () => {
               <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
                 {shopProducts.length > 0 ? (
                   shopProducts.map((product, i) => {
-                    const isMember = !!user;
+                    const isMember = hasActiveMembership(profile);
                     const firstVariant = product.productFields?.variants?.[0];
                     const displayPrice = firstVariant
                       ? isMember && firstVariant.priceMember

@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { generateIcs } from '../../lib/ics';
+import { hasActiveMembership } from '../../lib/membership';
 
 export type EventSignupIntent = {
   eventId: string;
@@ -80,7 +81,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
   const profileEmail = profile?.email && profile.email.length > 0 ? profile.email : null;
   const needsManualEmail = !!user && !hasAuthEmail && !profileEmail;
   const effectiveAuthEmail = profileEmail ?? user?.email ?? manualEmail.trim();
-  const isMember = !!profile?.is_member;
+  const isMember = hasActiveMembership(profile);
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email || '';
   const lookupDisplayName = email;
   const [defaultFirstName, defaultLastName] = React.useMemo(() => {

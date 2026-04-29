@@ -14,6 +14,7 @@ import {
   type WPProduct,
 } from '../../lib/wordpress';
 import { canPurchase, type ShopProduct } from '../../lib/products';
+import { hasActiveMembership } from '../../lib/membership';
 import { Loader2, ArrowRight, Moon, Sun, ChevronDown } from 'lucide-react';
 import { AnimatedHeadline } from '../../components/visual/AnimatedHeadline';
 import { MembersConfetti } from '../../components/common/MembersConfetti';
@@ -146,7 +147,7 @@ export const MembersAreaPage: React.FC = () => {
   }, []);
 
   const guide = Boolean(profile?.is_guide) || isGuideFromPlans(profile?.membership_plans);
-  const cyclingMember = Boolean(profile?.is_member);
+  const cyclingMember = hasActiveMembership(profile);
   const canSeeMembersOnlyPosts = cyclingMember || guide;
 
   useEffect(() => {
