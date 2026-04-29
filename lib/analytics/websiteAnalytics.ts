@@ -17,6 +17,40 @@ type HogQLResult = {
   results?: Array<Array<string | number | null>>;
 };
 
+type WebsiteAnalyticsFailureReason = NonNullable<WebsiteAnalytics['statusReason']>;
+
+function inferFailureReason(error: unknown): WebsiteAnalyticsFailureReason {
+  const message = error instanceof Error ? error.message : String(error ?? '');
+
+  if (message.includes('(401') || message.includes('(403')) return 'invalid_api_key';
+  if (message.includes('(404')) return 'project_not_found';
+  if (message.includes('(429')) return 'rate_limited';
+  if (/fetch failed|network|ECONNRESET|ENOTFOUND|ETIMEDOUT/i.test(message)) {
+    return 'posthog_unreachable';
+  }
+  if (message.includes('PostHog query failed')) return 'query_failed';
+  return 'unknown_error';
+}
+
+function buildEmptyWebsiteAnalytics(
+  statusReason: WebsiteAnalyticsFailureReason = 'unknown_error'
+): WebsiteAnalytics {
+  return {
+    status: 'unavailable',
+    statusReason,
+    periodDays: WEBSITE_PERIOD_DAYS,
+    updatedAt: new Date().toISOString(),
+    landingPageviews: 0,
+    landingUsers: 0,
+    landingSessions: 0,
+    bounceRatePct: 0,
+    avgSessionSec: 0,
+    landingToCommunityUsers: 0,
+    landingToMembershipUsers: 0,
+    landingToShopUsers: 0,
+  };
+}
+
 function getNumberCell(result: HogQLResult, columnName: string): number {
   const columns = result.columns ?? [];
   const rows = result.results ?? [];
@@ -60,11 +94,20 @@ export async function handleWebsiteAnalytics(req: NextApiRequest, res: NextApiRe
     const shouldRefresh = req.query.refresh === '1' || req.query.refresh === 1;
     if (shouldRefresh) invalidateMemoryCache(WEBSITE_CACHE_KEY);
 
+    if (!POSTHOG_PROJECT_ID || !POSTHOG_PERSONAL_API_KEY) {
+      console.warn('[website-analytics] PostHog credentials are not configured; returning empty data');
+      res.setHeader('x-analytics-cache', 'miss');
+      res.setHeader('x-analytics-status', 'unavailable');
+      return res.status(200).json(buildEmptyWebsiteAnalytics('missing_credentials'));
+    }
+
     const { value: payload, cached } = await getOrSetMemoryCache<WebsiteAnalytics>(
       WEBSITE_CACHE_KEY,
       WEBSITE_CACHE_TTL_MS,
       async () => {
-        const [landingQuery, sessionQuery, transitionQuery] = await Promise.all([
+        let failedQueryCount = 0;
+        let firstFailureReason: WebsiteAnalyticsFailureReason | null = null;
+        const queryResults = await Promise.allSettled([
           runHogQL(
             `SELECT count() AS landing_pageviews, count(DISTINCT distinct_id) AS landing_users
              FROM events
@@ -109,7 +152,27 @@ export async function handleWebsiteAnalytics(req: NextApiRequest, res: NextApiRe
           ),
         ]);
 
+        const [landingQuery, sessionQuery, transitionQuery] = queryResults.map((result, index) => {
+          if (result.status === 'fulfilled') return result.value;
+          failedQueryCount += 1;
+          if (!firstFailureReason) {
+            firstFailureReason = inferFailureReason(result.reason);
+          }
+          const queryName = ['landing', 'session', 'transition'][index] ?? 'unknown';
+          console.error(`[website-analytics] ${queryName} query failed:`, result.reason);
+          return { columns: [], results: [] } satisfies HogQLResult;
+        });
+
+        const status =
+          failedQueryCount === 0
+            ? 'ok'
+            : failedQueryCount === queryResults.length
+              ? 'unavailable'
+              : 'partial';
+
         return {
+          status,
+          statusReason: status === 'ok' ? null : (firstFailureReason ?? 'query_failed'),
           periodDays: WEBSITE_PERIOD_DAYS,
           updatedAt: new Date().toISOString(),
           landingPageviews: getNumberCell(landingQuery, 'landing_pageviews'),
@@ -125,9 +188,12 @@ export async function handleWebsiteAnalytics(req: NextApiRequest, res: NextApiRe
     );
 
     res.setHeader('x-analytics-cache', cached ? 'hit' : 'miss');
+    if (payload.status !== 'ok') res.setHeader('x-analytics-status', payload.status);
     return res.status(200).json(payload);
   } catch (error) {
-    console.error('[website-analytics] Failed to fetch PostHog data:', error);
-    return res.status(500).json({ error: 'Failed to load website analytics' });
+    console.error('[website-analytics] Failed to fetch PostHog data; returning empty fallback:', error);
+    res.setHeader('x-analytics-cache', 'miss');
+    res.setHeader('x-analytics-status', 'unavailable');
+    return res.status(200).json(buildEmptyWebsiteAnalytics(inferFailureReason(error)));
   }
 }

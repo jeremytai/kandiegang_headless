@@ -20,6 +20,34 @@
 - Events
   - add join waitlist CTA to event pages
 - Normalize WordPress event descriptions so Markdown lists render correctly (handle en-dash/em-dash, common bullet characters, numbered markers like `)` or `.`, and strip zero-width/non-breaking spaces). Add a regression test or example content and remove dev-only debug UI after verification.
+- Landing page suggestions (priority order)
+  1. Add explicit above-the-fold dual CTAs (highest impact)
+     - Primary: Join Membership (to `/kandiegangcyclingclub`)
+     - Secondary: See Next Rides (to `/community`)
+     - Why: only 2.5% are reaching membership from landing right now.
+  2. Put a real event preview module on landing
+     - Show next 1–3 rides directly on `/` (date + level + quick CTA).
+     - Why: `/community` is your strongest post-landing destination; lean into behavior users already show.
+  3. Tighten membership value proposition in first scroll
+     - Add a short "Why join" block with concrete benefits + price framing + social proof.
+     - Why: lots of engaged traffic, but very little movement into `/kandiegangcyclingclub` and `/shop`.
+  4. Optimize for mobile first
+     - Keep CTA always visible on mobile, larger tap targets, less cognitive load in hero.
+     - Why: ~83% of landing pageviews are mobile.
+  5. Treat contact as tertiary, not primary
+     - Keep contact available, but not as a major landing path.
+     - Why: contact conversions from landing are near zero (0.3%).
+  6. Instrument landing intent events immediately
+     - Track `landing_cta_click` with `cta_target` values (`community`, `membership`, `shop`, `newsletter`).
+     - Add scroll-depth milestones.
+     - Why: current tracking is strong for checkout but weak for landing decision points.
+  - 2 experiments to run next week
+    - Experiment A (CTA architecture)
+      - Current hero vs hero with dual CTAs + membership value strip.
+      - Success metric: % users reaching `/kandiegangcyclingclub` from `/` (target: 2.5% -> 5%+).
+    - Experiment B (event-led landing)
+      - Add "Next rides this week" block above fold.
+      - Success metric: % users reaching `/community` from `/` (target: 15.8% -> 22%+), and lift in downstream `login_requested`.
 - [Done] Show event participants on each event page, grouped by ride level, for guides/admins.
 - [Done] Migrate all serverless API handlers to Next.js `pages/api/` directory.
 - [Done] Admin analytics participant management (remove, no-show, personal email).

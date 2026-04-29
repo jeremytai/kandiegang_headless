@@ -99,7 +99,20 @@ export interface MarketingOptIn {
   percentage: number;
 }
 
+export type WebsiteAnalyticsStatus = 'ok' | 'partial' | 'unavailable';
+export type WebsiteAnalyticsStatusReason =
+  | 'missing_credentials'
+  | 'invalid_api_key'
+  | 'project_not_found'
+  | 'rate_limited'
+  | 'posthog_unreachable'
+  | 'query_failed'
+  | 'unknown_error'
+  | null;
+
 export interface WebsiteAnalytics {
+  status: WebsiteAnalyticsStatus;
+  statusReason: WebsiteAnalyticsStatusReason;
   periodDays: number;
   updatedAt: string;
   landingPageviews: number;
