@@ -618,7 +618,7 @@ type SortKey = 'date' | 'title' | 'confirmed' | 'waitlist' | 'cancelled';
 type SortDir = 'asc' | 'desc';
 
 export function EventParticipationTable({ hideEmail }: { hideEmail?: boolean } = {}) {
-  const { events, loading, error, refresh } = useEventParticipation();
+  const { events, summary, loading, error, refresh } = useEventParticipation();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -666,6 +666,49 @@ export function EventParticipationTable({ hideEmail }: { hideEmail?: boolean } =
           Breakdown
         </p>
         <h2 className="text-xl font-light text-neutral-900">Event Participation</h2>
+        {summary && (
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-neutral-500">
+                Active vs Cancelled
+              </p>
+              <p className="text-sm text-neutral-800 mt-1">
+                {summary.totalActiveRegistrations} active · {summary.totalCancelledRegistrations} cancelled
+              </p>
+            </div>
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-neutral-500">
+                FLINTA Ratio
+              </p>
+              {summary.flintaStatus === 'available' && summary.flintaRatioPct !== null ? (
+                <p className="text-sm text-neutral-800 mt-1">
+                  {summary.flintaAttestedActive} FLINTA ({summary.flintaRatioPct.toFixed(1)}%) ·{' '}
+                  {summary.maleOrUnknownActive} male/unknown
+                </p>
+              ) : (
+                <p className="text-xs text-neutral-500 mt-1">
+                  Unavailable: FLINTA attestation is not stored in registrations yet.
+                </p>
+              )}
+            </div>
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-neutral-500">Early Signups</p>
+              <p className="text-sm text-neutral-800 mt-1">
+                {summary.earlySignupTotal}
+                {summary.earlySignupPct !== null ? ` (${summary.earlySignupPct.toFixed(1)}%)` : ''}
+              </p>
+            </div>
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-neutral-500">
+                Early Window Split
+              </p>
+              <p className="text-sm text-neutral-800 mt-1">
+                FLINTA window {summary.earlyFlintaWindowCount} · Member window{' '}
+                {summary.earlyMemberWindowCount}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && (

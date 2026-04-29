@@ -135,7 +135,7 @@ export const EventSignupPanel: React.FC<EventSignupPanelProps> = ({ intent, onCl
           eventUrl: intent.eventUrl,
           rideLevel: intent.levelKey,
           eventType: intent.eventType,
-          flintaAttested: intent.requiresFlintaAttestation,
+          flintaAttested,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           email: email.trim(),

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import type { EventParticipationEvent } from '../types/analytics';
+import type { EventParticipationEvent, EventParticipationSummary } from '../types/analytics';
 
 interface EventParticipationData {
   events: EventParticipationEvent[];
+  summary: EventParticipationSummary | null;
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -15,6 +16,7 @@ export function useEventParticipation(): EventParticipationData {
 
   const [data, setData] = useState<EventParticipationData>({
     events: [],
+    summary: null,
     loading: true,
     error: null,
     refresh,
@@ -40,7 +42,13 @@ export function useEventParticipation(): EventParticipationData {
         }
 
         const json = await res.json();
-        setData({ events: json.events ?? [], loading: false, error: null, refresh });
+        setData({
+          events: json.events ?? [],
+          summary: json.summary ?? null,
+          loading: false,
+          error: null,
+          refresh,
+        });
       } catch (err) {
         setData((prev) => ({
           ...prev,

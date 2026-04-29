@@ -774,7 +774,7 @@ async function handleGuideFinalizeAttendance(req: VercelRequest, res: VercelResp
     .update({ no_show_at: now })
     .eq('event_id', eventId)
     .eq('ride_level', rideLevel)
-    .eq('is_waitlist', false)
+    .or('is_waitlist.is.null,is_waitlist.eq.false')
     .is('cancelled_at', null)
     .is('checked_in_at', null)
     .is('no_show_at', null)
@@ -814,7 +814,7 @@ async function handleCapacity(req: VercelRequest, res: VercelResponse) {
       .from('registrations')
       .select('ride_level')
       .eq('event_id', eventIdNumber)
-      .eq('is_waitlist', false)
+      .or('is_waitlist.is.null,is_waitlist.eq.false')
       .is('cancelled_at', null);
 
     if (error) {
@@ -866,6 +866,15 @@ type EventSignupBody = {
   /** Human-readable meeting point */
   eventLocation?: string;
 };
+
+function isMissingFlintaColumnError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as { code?: string; message?: string; details?: string; hint?: string };
+  const code = (err.code || '').toUpperCase();
+  if (code === 'PGRST204' || code === '42703') return true;
+  const text = `${err.message || ''} ${err.details || ''} ${err.hint || ''}`.toLowerCase();
+  return text.includes('flinta_attested') && (text.includes('column') || text.includes('schema'));
+}
 
 async function handleSignup(req: VercelRequest, res: VercelResponse) {
   if (!(await checkRateLimit(req, res, { windowMs: 60_000, max: 20, keyPrefix: 'event-signup' })))
@@ -1048,6 +1057,7 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
       cancel_token_issued_at: new Date().toISOString(),
       first_name: firstName,
       last_name: lastName,
+      flinta_attested: flintaAttested,
     };
 
     const capacity = getCapacityForLevel(rideLevel, access);
@@ -1058,7 +1068,7 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
         .select('id', { count: 'exact', head: true })
         .eq('event_id', eventId)
         .eq('ride_level', rideLevel)
-        .eq('is_waitlist', false)
+        .or('is_waitlist.is.null,is_waitlist.eq.false')
         .is('cancelled_at', null);
       if (countError) {
         console.error('Event signup capacity error:', countError);
@@ -1070,7 +1080,13 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
     insertPayload.is_waitlist = waitlisted;
     if (waitlisted) insertPayload.waitlist_joined_at = new Date().toISOString();
 
-    const { error: insertError } = await adminClient.from('registrations').insert(insertPayload);
+    let { error: insertError } = await adminClient.from('registrations').insert(insertPayload);
+    if (insertError && isMissingFlintaColumnError(insertError)) {
+      delete insertPayload.flinta_attested;
+      const fallbackInsert = await adminClient.from('registrations').insert(insertPayload);
+      insertError = fallbackInsert.error;
+    }
+
     if (insertError) {
       console.error('Event signup insert error:', insertError);
       return res.status(500).json({ error: insertError.message || 'Failed to save signup' });
@@ -1190,7 +1206,7 @@ async function handleCancel(req: VercelRequest, res: VercelResponse) {
         return res.status(404).json({ error: 'Registration not found or already cancelled' });
       }
 
-      if (data.is_waitlist === false) {
+      if (data.is_waitlist !== true) {
         const { data: nextInLine } = await adminClient
           .from('registrations')
           .select('id, user_id, email, ride_level')

@@ -152,6 +152,21 @@ export interface EventParticipationEvent {
   registrants: EventParticipationRegistrant[];
 }
 
+export interface EventParticipationSummary {
+  totalActiveRegistrations: number;
+  totalCancelledRegistrations: number;
+  flintaAttestedActive: number;
+  maleOrUnknownActive: number;
+  flintaRatioPct: number | null;
+  flintaStatus: 'available' | 'unavailable';
+  flintaStatusReason: 'missing_column' | 'not_tracked' | null;
+  eventsWithReleaseDate: number;
+  earlySignupTotal: number;
+  earlySignupPct: number | null;
+  earlyFlintaWindowCount: number;
+  earlyMemberWindowCount: number;
+}
+
 export const CHART_COLORS = {
   primary: '#2A3577', // User's selected color
   secondary: '#3D4A8F', // Lighter variant
