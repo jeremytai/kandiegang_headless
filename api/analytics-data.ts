@@ -1,13 +1,9 @@
 // File removed. Logic moved to admin-report.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit } from '../lib/rateLimit.js';
-import { isGuideProfile } from '../lib/guideAccess.js';
+import { requireGuideAuth } from '../lib/adminGuideAuth.js';
 import { bucketize, aggregateByMonth, countByArea } from '../utils/dataTransformations.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 const WP_GRAPHQL_URL =
   process.env.VITE_WP_GRAPHQL_URL ||
   process.env.WP_GRAPHQL_URL ||
@@ -22,39 +18,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   ) {
     return;
   }
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(500).json({ error: 'Analytics is not configured' });
-  }
-
-  // Verify the caller is an authenticated guide
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
+  const guideAuth = await requireGuideAuth(req, res, {
+    misconfiguredMessage: 'Analytics is not configured',
   });
-
-  // Verify the JWT and check is_guide
-  const {
-    data: { user },
-    error: authError,
-  } = await adminClient.auth.getUser(token);
-  if (authError || !user) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-
-  const { data: callerProfile } = await adminClient
-    .from('profiles')
-    .select('is_guide, membership_plans')
-    .eq('id', user.id)
-    .single();
-
-  if (!isGuideProfile(callerProfile)) {
-    return res.status(403).json({ error: 'Forbidden — guide access required' });
-  }
+  if (!guideAuth) return;
+  const { adminClient } = guideAuth;
 
   // Route to sub-handler based on ?section query param
   if (req.query.section === 'events') {

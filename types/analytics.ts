@@ -99,6 +99,19 @@ export interface MarketingOptIn {
   percentage: number;
 }
 
+export interface WebsiteAnalytics {
+  periodDays: number;
+  updatedAt: string;
+  landingPageviews: number;
+  landingUsers: number;
+  landingSessions: number;
+  bounceRatePct: number;
+  avgSessionSec: number;
+  landingToCommunityUsers: number;
+  landingToMembershipUsers: number;
+  landingToShopUsers: number;
+}
+
 export interface EventParticipationRegistrant {
   registrationId: string;
   userId: string | null;

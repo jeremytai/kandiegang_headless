@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useAuth } from '../../context/AuthContext';
 import { useAnalyticsData } from '../../hooks/useAnalyticsData';
+import { useWebsiteAnalytics } from '../../hooks/useWebsiteAnalytics';
 import { supabase } from '../../lib/supabaseClient';
 import { MetricCard } from '../../components/admin/MetricCard';
 import { LTVDistributionChart } from '../../components/admin/charts/LTVDistributionChart';
@@ -14,6 +15,19 @@ import { EventParticipationTable } from '../../components/admin/EventParticipati
 import { MemberAnalytics } from '../../types/analytics';
 
 type MetricFilter = 'all' | 'active_subs' | 'at_risk' | 'has_ltv' | 'has_events';
+
+type WebsiteMetric = {
+  label: string;
+  value: string;
+  detail: string;
+};
+
+const WEBSITE_ANALYTICS_ACTIONS = [
+  'Add above-the-fold dual CTA: Join Membership + See Next Rides.',
+  'Show upcoming ride preview cards directly on landing page.',
+  'Strengthen membership value proposition in first scroll.',
+  'Prioritize mobile CTA visibility and tap-target clarity.',
+];
 
 export const AnalyticsDashboardPage: React.FC = () => {
   usePageMeta('Analytics | Kandie Gang', 'Member analytics dashboard');
@@ -29,6 +43,11 @@ export const AnalyticsDashboardPage: React.FC = () => {
     error,
     refresh,
   } = useAnalyticsData();
+  const {
+    data: websiteAnalytics,
+    loading: websiteLoading,
+    error: websiteError,
+  } = useWebsiteAnalytics();
   const [activeFilter, setActiveFilter] = useState<MetricFilter>('all');
   const [showEventBreakdown, setShowEventBreakdown] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -110,6 +129,46 @@ export const AnalyticsDashboardPage: React.FC = () => {
     return members.filter(filters[activeFilter]);
   }, [members, activeFilter]);
 
+  const websiteMetrics = useMemo<WebsiteMetric[]>(() => {
+    if (!websiteAnalytics) return [];
+    const denominator = websiteAnalytics.landingUsers > 0 ? websiteAnalytics.landingUsers : 1;
+    const toCommunityPct = (websiteAnalytics.landingToCommunityUsers / denominator) * 100;
+    const toMembershipPct = (websiteAnalytics.landingToMembershipUsers / denominator) * 100;
+
+    return [
+      {
+        label: 'Landing Pageviews',
+        value: websiteAnalytics.landingPageviews.toLocaleString(),
+        detail: `${websiteAnalytics.landingUsers.toLocaleString()} users on /`,
+      },
+      {
+        label: 'Landing Sessions',
+        value: websiteAnalytics.landingSessions.toLocaleString(),
+        detail: 'Entry sessions that started on /',
+      },
+      {
+        label: 'Bounce Rate',
+        value: `${websiteAnalytics.bounceRatePct.toFixed(2)}%`,
+        detail: 'Landing-entry session bounce rate',
+      },
+      {
+        label: 'Avg Session Duration',
+        value: `${Math.round(websiteAnalytics.avgSessionSec)}s`,
+        detail: 'Average session length from landing traffic',
+      },
+      {
+        label: 'Landing to Community',
+        value: `${toCommunityPct.toFixed(1)}%`,
+        detail: `${websiteAnalytics.landingToCommunityUsers.toLocaleString()} of ${websiteAnalytics.landingUsers.toLocaleString()} users`,
+      },
+      {
+        label: 'Landing to Membership',
+        value: `${toMembershipPct.toFixed(1)}%`,
+        detail: `${websiteAnalytics.landingToMembershipUsers.toLocaleString()} of ${websiteAnalytics.landingUsers.toLocaleString()} users`,
+      },
+    ];
+  }, [websiteAnalytics]);
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-[#fafafa] pt-32 md:pt-40 pb-40">
@@ -175,6 +234,58 @@ export const AnalyticsDashboardPage: React.FC = () => {
           <div className="text-neutral-400">Loading analytics…</div>
         ) : (
           <div className="space-y-10">
+            {/* Section 0: Website Analytics (PostHog snapshot) */}
+            <div className="bg-white border border-neutral-200 rounded-xl p-6 md:p-7">
+              <div className="mb-6">
+                <h2 className="text-2xl font-light text-neutral-900 tracking-tight">
+                  Website Analytics
+                </h2>
+                <p className="text-sm text-neutral-500 mt-2">
+                  PostHog landing-page snapshot (
+                  {websiteAnalytics ? `last ${websiteAnalytics.periodDays} days` : 'last 30 days'}).
+                </p>
+                {websiteAnalytics?.updatedAt && (
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Last updated: {new Date(websiteAnalytics.updatedAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+              {websiteLoading ? (
+                <div className="text-neutral-500 text-sm mb-6">Loading website analytics…</div>
+              ) : websiteError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 mb-6">
+                  {websiteError}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+                  {websiteMetrics.map((metric) => (
+                    <div
+                      key={metric.label}
+                      className="rounded-lg border border-neutral-200 bg-neutral-50 p-4"
+                    >
+                      <p className="text-xs uppercase tracking-[0.15em] text-neutral-500 mb-1">
+                        {metric.label}
+                      </p>
+                      <p className="text-2xl font-light text-neutral-900 tracking-tight">
+                        {metric.value}
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1">{metric.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="border-t border-neutral-200 pt-5">
+                <p className="text-xs uppercase tracking-[0.15em] text-neutral-500 mb-3">
+                  Recommended Landing Page Actions
+                </p>
+                <ul className="space-y-2 text-sm text-neutral-700">
+                  {WEBSITE_ANALYTICS_ACTIONS.map((action) => (
+                    <li key={action}>• {action}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
             {/* Section 1: Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               <MetricCard
