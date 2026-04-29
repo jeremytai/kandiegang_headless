@@ -26,6 +26,12 @@
   - Add a CI smoke check against preview deployments for critical endpoints/pages (`/api/event`, `/api/analytics-data`, homepage, event page) and block merge on failures.
   - Add a deployment runbook documenting `vercel inspect`, `vercel logs`, rollback/promote, and custom domain alias verification steps.
   - Add synthetic production uptime checks for critical APIs (especially `/api/event`) with alerting on non-200 responses.
+  - Normalize Supabase migration history so `supabase db push` works cleanly:
+    - Audit the 6 flagged files and compare against already-applied full-timestamp versions.
+    - Remove/rename duplicate legacy files in repo (or archive them).
+    - Use `supabase migration repair` to align local/remote history.
+    - Resume normal `supabase db push`.
+    - (Optional) Create an exact step-by-step repair runbook for the current migration set.
 - Landing page suggestions (priority order)
   1. Add explicit above-the-fold dual CTAs (highest impact)
      - Primary: Join Membership (to `/kandiegangcyclingclub`)
