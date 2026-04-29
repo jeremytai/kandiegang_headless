@@ -51,6 +51,7 @@ export const KandieEventPage: React.FC = () => {
       }>
     >
   >({});
+  const [participantsLoaded, setParticipantsLoaded] = useState(false);
   const [cancelledLevels, setCancelledLevels] = useState<
     Record<string, { reason: string; cancelled_at: string }>
   >({});
@@ -102,6 +103,7 @@ export const KandieEventPage: React.FC = () => {
       console.debug('[KandieEventPage] Supabase participants query result:', { data, error });
       if (error) {
         console.warn('Participant lookup failed:', error);
+        setParticipantsLoaded(false);
         return;
       }
       const grouped: Record<
@@ -142,8 +144,10 @@ export const KandieEventPage: React.FC = () => {
 
       console.debug('[KandieEventPage] participantsByLevel grouped:', grouped);
       setParticipantsByLevel(grouped);
+      setParticipantsLoaded(true);
     } catch (err) {
       console.warn('Participant lookup failed:', err);
+      setParticipantsLoaded(false);
     }
   }, [eventData?.databaseId, supabase]);
 
@@ -173,6 +177,7 @@ export const KandieEventPage: React.FC = () => {
       });
       if (!response.ok) {
         console.warn('[refreshCapacity] Capacity API returned', response.status, 'for eventId', eventData.databaseId);
+        setCapacityCounts(null);
         return;
       }
       const data = (await response.json().catch(() => ({}))) as unknown;
@@ -184,6 +189,7 @@ export const KandieEventPage: React.FC = () => {
       }
     } catch (err) {
       console.warn('[refreshCapacity] Failed to load capacity for eventId', eventData.databaseId, err);
+      setCapacityCounts(null);
     } finally {
       controller.abort();
     }
@@ -529,8 +535,10 @@ export const KandieEventPage: React.FC = () => {
   const canSignupNow = isPublic || isMemberWindow || (isFlintaOnlyWindow && !isMember);
   const requiresFlintaAttestation = isFlintaOnly || (!isPublic && !isMember);
   const allowWaitlist = canSignupNow;
-  const confirmedCountForLevel = (levelKey: string) =>
-    (participantsByLevel[levelKey] ?? []).filter((participant) => !participant.is_waitlist).length;
+  const confirmedCountForLevel = (levelKey: string): number | null => {
+    if (!participantsLoaded) return null;
+    return (participantsByLevel[levelKey] ?? []).filter((participant) => !participant.is_waitlist).length;
+  };
 
   const formatCountdown = (target: Date | null): string | null => {
     if (!target) return null;
@@ -1264,9 +1272,9 @@ export const KandieEventPage: React.FC = () => {
                         capacityCounts !== null ? (capacityCounts[level.levelKey] ?? 0) : null;
                       const usedFromParticipantRows = confirmedCountForLevel(level.levelKey);
                       const used =
-                        usedFromCapacityApi === null
-                          ? usedFromParticipantRows
-                          : Math.max(usedFromCapacityApi, usedFromParticipantRows);
+                        usedFromCapacityApi === null && usedFromParticipantRows === null
+                          ? null
+                          : Math.max(usedFromCapacityApi ?? 0, usedFromParticipantRows ?? 0);
                       const spotsLeft = used !== null ? Math.max(places - used, 0) : null;
                       return {
                         ...level,

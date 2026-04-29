@@ -274,8 +274,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                         <div>
                           <p className={labelClass}>Spots Available</p>
                           <p className={valueClass}>
-                            {level.places ?? placesPerGuide * level.guides.length}
-                            {level.spotsLeft != null && ` total · ${level.spotsLeft} left`}
+                            {level.spotsLeft == null
+                              ? 'Updating availability...'
+                              : `${level.places ?? placesPerGuide * level.guides.length} total · ${level.spotsLeft} left`}
                           </p>
                         </div>
                         {typeof level.distanceKm === 'number' && (
@@ -431,7 +432,9 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                             <p className={level.isCancelledByGuide ? 'text-sm text-red-500 font-medium' : valueClass}>
                               {level.isCancelledByGuide
                                 ? 'Cancelled'
-                                : `${level.places ?? placesPerGuide * level.guides.length}${level.spotsLeft != null ? ` total · ${level.spotsLeft} left` : ''}`}
+                                : level.spotsLeft == null
+                                  ? 'Updating availability...'
+                                  : `${level.places ?? placesPerGuide * level.guides.length} total · ${level.spotsLeft} left`}
                             </p>
                           </div>
                           {typeof level.distanceKm === 'number' && (
