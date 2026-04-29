@@ -529,6 +529,8 @@ export const KandieEventPage: React.FC = () => {
   const canSignupNow = isPublic || isMemberWindow || (isFlintaOnlyWindow && !isMember);
   const requiresFlintaAttestation = isFlintaOnly || (!isPublic && !isMember);
   const allowWaitlist = canSignupNow;
+  const confirmedCountForLevel = (levelKey: string) =>
+    (participantsByLevel[levelKey] ?? []).filter((participant) => !participant.is_waitlist).length;
 
   const formatCountdown = (target: Date | null): string | null => {
     if (!target) return null;
@@ -1258,7 +1260,13 @@ export const KandieEventPage: React.FC = () => {
                     typeLabel={primaryTypeRaw}
                     levels={levelsWithGuides.map((level) => {
                       const places = level.guides.length * 7;
-                      const used = capacityCounts !== null ? (capacityCounts[level.levelKey] ?? 0) : null;
+                      const usedFromCapacityApi =
+                        capacityCounts !== null ? (capacityCounts[level.levelKey] ?? 0) : null;
+                      const usedFromParticipantRows = confirmedCountForLevel(level.levelKey);
+                      const used =
+                        usedFromCapacityApi === null
+                          ? usedFromParticipantRows
+                          : Math.max(usedFromCapacityApi, usedFromParticipantRows);
                       const spotsLeft = used !== null ? Math.max(places - used, 0) : null;
                       return {
                         ...level,
@@ -1284,7 +1292,14 @@ export const KandieEventPage: React.FC = () => {
                       isWorkshop && workshopCapacity
                         ? {
                             capacity: workshopCapacity,
-                            spotsLeft: workshopCount !== null ? Math.max(workshopCapacity - workshopCount, 0) : undefined,
+                            spotsLeft:
+                              workshopCount !== null
+                                ? Math.max(
+                                    workshopCapacity -
+                                      Math.max(workshopCount, confirmedCountForLevel('workshop')),
+                                    0
+                                  )
+                                : undefined,
                           }
                         : undefined
                     }
