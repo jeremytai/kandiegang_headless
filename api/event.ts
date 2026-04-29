@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
 import { Redis } from '@upstash/redis';
-import { hasActiveMembership } from '../lib/membership';
+import { hasActiveMembership } from '../lib/membership.js';
 // ─── ICS calendar generator (inlined to avoid module resolution issues in Vercel functions) ───
 function _icsParseTime(raw: string): { h: number; m: number } | null {
   const s = raw.trim().toLowerCase();
