@@ -42,7 +42,7 @@ export const Footer: React.FC = () => {
                   Explore
                 </p>
               </li>
-              <FooterLink to="/community" label="Community" />
+              <FooterLink to="/community" label="Ride Calendar" />
               <FooterLink to="/stories" label="Stories" />
               <FooterMemberLink openMemberLogin={openMemberLogin} isLoggedIn={Boolean(user)} />
               <FooterLink to="/shop" label="Shop" />

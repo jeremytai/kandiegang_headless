@@ -315,7 +315,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div className="space-y-6">
                     <nav className="flex flex-col gap-2">
-                      <NavLink label="Rides & Events" to="/community" onClick={handleToggle} />
+                      <NavLink label="Ride Calendar" to="/community" onClick={handleToggle} />
                       {showMemberAreaLink ? (
                         <NavLink label="Member Area" to="/members" onClick={handleToggle} />
                       ) : (
@@ -327,7 +327,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                       )}
                       <NavLink label="Stories" to="/stories" onClick={handleToggle} />
                       <NavLink label="Shop" to="/shop" onClick={handleToggle} />
-                      <NavLink label="About" to="/about" onClick={handleToggle} />
+                      <NavLink label="About Us" to="/about" onClick={handleToggle} />
                     </nav>
                   </div>
                   <div className="rounded-xl p-6 flex flex-col justify-center border border-black/[0.03] aspect-[4/3] relative overflow-hidden">

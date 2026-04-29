@@ -1,0 +1,17 @@
+{
+  "name": "Kandie Gang Cycling Club",
+  "short_name": "Kandie Gang",
+  "description": "Hamburg's inclusive cycling community for group rides, events, and FLINTA* and BIPOC cyclists.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#46519c",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -15,8 +15,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="cloudflare-rocket-loader" content="off">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/logos/kandiegang_white.png">
+    <!-- Favicons / app identity -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#46519c">
+    <meta name="application-name" content="Kandie Gang">
 
     <!-- Primary Meta Tags -->
     <title>Kandie Gang Cycling Club – Hamburg's Most Inclusive Cycling Community for FLINTA* & BIPOC</title>
@@ -49,20 +52,55 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "SportsOrganization",
-      "name": "Kandie Gang Cycling Club",
-      "description": "Quite possibly Germany's most inclusive cycling community providing a safe space for FLINTA* and BIPOC cyclists with group rides and events.",
-      "url": "https://kandiegang.com",
-      "logo": "https://kandiegang.com/logos/kandiegang_purplerain_logo.png",
-      "image": "https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2026/02/22071119/kandiegang_fb_opengraph.jpg",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Hamburg",
-        "addressCountry": "DE"
-      },
-      "sameAs": [
-        "https://www.instagram.com/kandiegang/",
-        "https://www.strava.com/clubs/kandiegang"
+      "@graph": [
+        {
+          "@type": "SportsOrganization",
+          "@id": "https://kandiegang.com/#organization",
+          "name": "Kandie Gang Cycling Club",
+          "alternateName": "Kandie Gang",
+          "description": "Quite possibly Germany's most inclusive cycling community providing a safe space for FLINTA* and BIPOC cyclists with group rides and events.",
+          "url": "https://kandiegang.com",
+          "logo": "https://kandiegang.com/logos/kandiegang_purplerain_logo.png",
+          "image": "https://leckerbisschen.s3.eu-central-1.amazonaws.com/wp-content/uploads/2026/02/22071119/kandiegang_fb_opengraph.jpg",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Hamburg",
+            "addressCountry": "DE"
+          },
+          "sameAs": [
+            "https://www.instagram.com/kandie_gang/",
+            "https://www.strava.com/clubs/968945"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://kandiegang.com/#website",
+          "url": "https://kandiegang.com",
+          "name": "Kandie Gang Cycling Club",
+          "publisher": {
+            "@id": "https://kandiegang.com/#organization"
+          }
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "@id": "https://kandiegang.com/#site-navigation",
+          "name": [
+            "Calendar",
+            "About Us",
+            "Shop",
+            "Cycling Club",
+            "Stories",
+            "Contact"
+          ],
+          "url": [
+            "https://kandiegang.com/community",
+            "https://kandiegang.com/about",
+            "https://kandiegang.com/shop",
+            "https://kandiegang.com/kandiegangcyclingclub",
+            "https://kandiegang.com/stories",
+            "https://kandiegang.com/contact"
+          ]
+        }
       ]
     }
     </script>
