@@ -32,7 +32,7 @@ export const KandieEventPage: React.FC = () => {
   const [eventData, setEventData] = useState<KandieEventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [restoredSignup, setRestoredSignup] = useState(false);
-  const [capacityCounts, setCapacityCounts] = useState<Record<string, number>>({});
+  const [capacityCounts, setCapacityCounts] = useState<Record<string, number> | null>(null);
   const [hasRegistrationCode, setHasRegistrationCode] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [registrations, setRegistrations] = useState<Record<string, { isWaitlist: boolean }>>({});
@@ -171,7 +171,10 @@ export const KandieEventPage: React.FC = () => {
       const response = await fetch(`/api/event?eventId=${eventData.databaseId}`, {
         signal: controller.signal,
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        console.warn('[refreshCapacity] Capacity API returned', response.status, 'for eventId', eventData.databaseId);
+        return;
+      }
       const data = (await response.json().catch(() => ({}))) as unknown;
       if (data && typeof data === 'object' && 'counts' in data) {
         setCapacityCounts(data.counts as Record<string, number>);
@@ -179,8 +182,8 @@ export const KandieEventPage: React.FC = () => {
       if (data && typeof data === 'object' && 'hasRegistrationCode' in data) {
         setHasRegistrationCode(Boolean((data as { hasRegistrationCode?: boolean }).hasRegistrationCode));
       }
-    } catch {
-      // Capacity is optional; ignore errors.
+    } catch (err) {
+      console.warn('[refreshCapacity] Failed to load capacity for eventId', eventData.databaseId, err);
     } finally {
       controller.abort();
     }
@@ -494,7 +497,7 @@ export const KandieEventPage: React.FC = () => {
   const levelsWithGuides = isGravelRide ? gravelLevelsWithGuides : baseLevelsWithGuides;
 
   const workshopCapacity = eventDetails?.workshopCapacity ?? null;
-  const workshopCount = capacityCounts.workshop ?? 0;
+  const workshopCount = capacityCounts !== null ? (capacityCounts.workshop ?? 0) : null;
   const now = new Date(nowMs);
   const publicRelease = publicReleaseDate ? new Date(publicReleaseDate) : null;
   const hasValidPublicRelease = Boolean(publicRelease && !Number.isNaN(publicRelease.getTime()));
@@ -1255,13 +1258,13 @@ export const KandieEventPage: React.FC = () => {
                     typeLabel={primaryTypeRaw}
                     levels={levelsWithGuides.map((level) => {
                       const places = level.guides.length * 7;
-                      const used = capacityCounts[level.levelKey] ?? 0;
-                      const spotsLeft = Math.max(places - used, 0);
+                      const used = capacityCounts !== null ? (capacityCounts[level.levelKey] ?? 0) : null;
+                      const spotsLeft = used !== null ? Math.max(places - used, 0) : null;
                       return {
                         ...level,
                         places,
-                        spotsLeft,
-                        isSoldOut: spotsLeft === 0,
+                        spotsLeft: spotsLeft ?? undefined,
+                        isSoldOut: spotsLeft !== null && spotsLeft === 0,
                         isCancelledByGuide: !!cancelledLevels[level.levelKey],
                       };
                     })}
@@ -1281,7 +1284,7 @@ export const KandieEventPage: React.FC = () => {
                       isWorkshop && workshopCapacity
                         ? {
                             capacity: workshopCapacity,
-                            spotsLeft: Math.max(workshopCapacity - workshopCount, 0),
+                            spotsLeft: workshopCount !== null ? Math.max(workshopCapacity - workshopCount, 0) : undefined,
                           }
                         : undefined
                     }

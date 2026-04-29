@@ -389,11 +389,13 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                           {!isOpen && (
                             level.isCancelledByGuide
                               ? <span className="text-xs font-normal text-red-500">Cancelled</span>
-                              : level.spotsLeft != null && level.places != null && (
-                                  <span className="text-xs font-normal text-slate-500">
-                                    {`${level.spotsLeft} of ${level.places} Spots available`}
-                                  </span>
-                                )
+                              : level.isSoldOut
+                                ? <span className="text-xs font-normal text-slate-500">Sold Out</span>
+                                : level.spotsLeft != null && level.places != null && (
+                                    <span className="text-xs font-normal text-slate-500">
+                                      {`${level.spotsLeft} of ${level.places} Spots available`}
+                                    </span>
+                                  )
                           )}
                         </button>
                         <div className="flex items-center shrink-0">
