@@ -19,7 +19,7 @@ export function useGuideRidePlanning(): RidePlanningHookState {
 
   const refresh = useCallback(() => setTick((v) => v + 1), []);
 
-  const request = useCallback(async (method: 'GET' | 'POST', payload?: Record<string, unknown>) => {
+  const request = useCallback(async (method: 'FETCH' | 'POST', payload?: Record<string, unknown>) => {
     const {
       data: { session },
     } = (await supabase?.auth.getSession()) ?? { data: { session: null } };
@@ -28,13 +28,15 @@ export function useGuideRidePlanning(): RidePlanningHookState {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch('/api/guide-ride-planning', {
-      method,
+    const response = await fetch('/api/admin-update-profile', {
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${session.access_token}`,
-        ...(method === 'POST' ? { 'Content-Type': 'application/json' } : {}),
+        'Content-Type': 'application/json',
       },
-      ...(method === 'POST' ? { body: JSON.stringify(payload ?? {}) } : {}),
+      body: JSON.stringify(
+        method === 'FETCH' ? { action: 'guide-ride-fetch' } : payload ?? {}
+      ),
     });
 
     const body = await response.json().catch(() => ({}));
@@ -70,7 +72,7 @@ export function useGuideRidePlanning(): RidePlanningHookState {
       try {
         setLoading(true);
         setError(null);
-        const result = await request('GET');
+        const result = await request('FETCH');
         if (!mounted) return;
         setData(result as RidePlanningData);
       } catch (err) {

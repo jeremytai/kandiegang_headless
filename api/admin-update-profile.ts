@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
 import { checkRateLimit } from '../lib/rateLimit.js';
+import { handleGuideRidePlanningAction } from '../lib/guideRidePlanning.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY =
@@ -100,6 +101,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (!callerProfile?.is_guide) {
     return res.status(403).json({ error: 'Forbidden — guide access required' });
+  }
+
+  const ridePlanningResult = await handleGuideRidePlanningAction({
+    action,
+    body: (req.body as Record<string, unknown>) ?? {},
+    adminClient,
+    userId: user.id,
+  });
+  if (ridePlanningResult) {
+    return res.status(ridePlanningResult.status).json(ridePlanningResult.payload);
   }
 
   if (action === 'merge') return handleMerge(req, res, adminClient);
