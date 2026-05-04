@@ -552,9 +552,13 @@ async function handleCoordinatorAssignGuide(
   const planId = typeof body.planId === 'string' ? body.planId : '';
   const rideDate = typeof body.rideDate === 'string' ? body.rideDate : '';
   const rideLevel = typeof body.rideLevel === 'string' ? body.rideLevel : '';
+  const assignmentStatus = typeof body.assignmentStatus === 'string' ? body.assignmentStatus : 'assigned';
   const guideProfileId = typeof body.guideProfileId === 'string' ? body.guideProfileId : '';
   if (!guideProfileId) return { status: 400, payload: { error: 'guideProfileId is required' } };
   if (!RIDE_LEVELS.has(rideLevel)) return { status: 400, payload: { error: 'rideLevel must be one of: 2, 2+, 3' } };
+  if (assignmentStatus !== 'assigned' && assignmentStatus !== 'standby') {
+    return { status: 400, payload: { error: 'assignmentStatus must be assigned or standby' } };
+  }
   const validity = await validatePlanAndDate(adminClient, planId, rideDate);
   if (!validity.ok) return { status: validity.status, payload: { error: validity.error } };
   const { data: guide, error: guideError } = await adminClient
@@ -570,8 +574,11 @@ async function handleCoordinatorAssignGuide(
     userId: guideProfileId,
     notes: null,
     source: 'in_window',
-    decisionStatus: 'assigned',
-    overrideReason: 'Coordinator manual assignment',
+    decisionStatus: assignmentStatus,
+    overrideReason:
+      assignmentStatus === 'standby'
+        ? 'Coordinator manual Springer assignment'
+        : 'Coordinator manual assignment',
   });
   if (error || !assignment) return { status: 500, payload: { error: error?.message || 'Failed to assign guide manually' } };
   await adminClient.from('guide_ride_availability').upsert(

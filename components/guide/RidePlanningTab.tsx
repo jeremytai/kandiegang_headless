@@ -42,6 +42,26 @@ function sortConflictCandidates(entries: GuideAssignmentEntry[]): GuideAssignmen
   });
 }
 
+function isStandbyEntry(entry: GuideAssignmentEntry): boolean {
+  return entry.decision_status === 'standby';
+}
+
+function isUnavailableEntry(entry: GuideAssignmentEntry): boolean {
+  return entry.decision_status === 'unavailable';
+}
+
+function selectStandbyEntries(entries: GuideAssignmentEntry[]): GuideAssignmentEntry[] {
+  return entries.filter(isStandbyEntry);
+}
+
+function selectLevelDetailEntries(entries: GuideAssignmentEntry[]): GuideAssignmentEntry[] {
+  return entries.filter((entry) => !isStandbyEntry(entry));
+}
+
+function selectLevelSummaryEntries(entries: GuideAssignmentEntry[]): GuideAssignmentEntry[] {
+  return entries.filter((entry) => !isStandbyEntry(entry) && !isUnavailableEntry(entry));
+}
+
 function toDashboardDate(value: string): string {
   const date = new Date(`${value}T00:00:00Z`);
   return date.toISOString().slice(0, 10);
@@ -118,7 +138,7 @@ export function RidePlanningTab({
   currentUserId: string;
   isCoordinator: boolean;
 }) {
-  const { data, loading, error, mutate, runAction } = useGuideRidePlanning();
+  const { data, loading, error, mutate, runAction, refresh } = useGuideRidePlanning();
   const canCoordinate = Boolean(data?.caller?.isCoordinator) || isCoordinator;
   const [weekStartDateInput, setWeekStartDateInput] = useState('');
   const [proposal, setProposal] = useState({
@@ -131,16 +151,19 @@ export function RidePlanningTab({
   const [actionError, setActionError] = useState<string | null>(null);
   const [discordPreview, setDiscordPreview] = useState<{ title: string; message: string } | null>(null);
   const [isWorking, setIsWorking] = useState(false);
+  const [showPastEvents, setShowPastEvents] = useState(false);
   const [manualAssignment, setManualAssignment] = useState<{
     planId: string;
     rideDate: string;
     rideLevel: RideLevel;
-    guideProfileId: string;
+    assignmentStatus: 'assigned' | 'standby';
+    guideProfileIds: string[];
   }>({
     planId: '',
     rideDate: '',
     rideLevel: '2',
-    guideProfileId: '',
+    assignmentStatus: 'assigned',
+    guideProfileIds: [],
   });
 
   const plans = data?.plans ?? [];
@@ -166,11 +189,23 @@ export function RidePlanningTab({
     [tuesdayPlans]
   );
   const overviewDates = useMemo(() => buildTuesdayWindow(), []);
+  const todayDateIso = useMemo(() => {
+    const source = data?.nowIso ? new Date(data.nowIso) : new Date();
+    return source.toISOString().slice(0, 10);
+  }, [data?.nowIso]);
+  const upcomingPlans = useMemo(
+    () => plans.filter((plan) => plan.week_start_date >= todayDateIso),
+    [plans, todayDateIso]
+  );
+  const pastPlans = useMemo(
+    () => plans.filter((plan) => plan.week_start_date < todayDateIso),
+    [plans, todayDateIso]
+  );
+  const visiblePlans = showPastEvents ? [...upcomingPlans, ...pastPlans] : upcomingPlans;
 
   const levelGuidesByPlanDate = useMemo(() => {
     const map: Record<string, Record<RideLevel, Array<{ id: string; display_name: string | null; username: string | null; avatar_url: string | null }>>> = {};
-    for (const row of assignments) {
-      if (row.decision_status === 'unavailable') continue;
+    for (const row of selectLevelSummaryEntries(assignments)) {
       if (!row.guide) continue;
       const key = `${row.plan_id}|${row.ride_date}`;
       if (!map[key]) {
@@ -179,6 +214,24 @@ export function RidePlanningTab({
       const bucket = map[key][row.ride_level as RideLevel];
       if (!bucket.some((g) => g.id === row.guide!.id)) {
         bucket.push({
+          id: row.guide.id,
+          display_name: row.guide.display_name,
+          username: row.guide.username,
+          avatar_url: row.guide.avatar_url ?? null,
+        });
+      }
+    }
+    return map;
+  }, [assignments]);
+
+  const springerGuidesByPlanDate = useMemo(() => {
+    const map: Record<string, Array<{ id: string; display_name: string | null; username: string | null; avatar_url: string | null }>> = {};
+    for (const row of selectStandbyEntries(assignments)) {
+      if (!row.guide) continue;
+      const key = `${row.plan_id}|${row.ride_date}`;
+      if (!map[key]) map[key] = [];
+      if (!map[key].some((guide) => guide.id === row.guide!.id)) {
+        map[key].push({
           id: row.guide.id,
           display_name: row.guide.display_name,
           username: row.guide.username,
@@ -244,23 +297,45 @@ export function RidePlanningTab({
   }
 
   async function assignGuideManually() {
-    if (!manualAssignment.planId || !manualAssignment.rideDate || !manualAssignment.guideProfileId) {
+    if (
+      !manualAssignment.planId ||
+      !manualAssignment.rideDate ||
+      manualAssignment.guideProfileIds.length === 0
+    ) {
       return;
     }
     await guardedAction(async () => {
-      await mutate({
-        action: 'coordinator-assign-guide',
-        planId: manualAssignment.planId,
-        rideDate: manualAssignment.rideDate,
-        rideLevel: manualAssignment.rideLevel,
-        guideProfileId: manualAssignment.guideProfileId,
-      });
-      const selectedGuide = guideRoster.find((guide) => guide.id === manualAssignment.guideProfileId);
-      const guideLabel = selectedGuide?.display_name ?? selectedGuide?.username ?? 'Guide';
+      for (const guideProfileId of manualAssignment.guideProfileIds) {
+        await runAction(
+          {
+            action: 'coordinator-assign-guide',
+            planId: manualAssignment.planId,
+            rideDate: manualAssignment.rideDate,
+            rideLevel: manualAssignment.rideLevel,
+            assignmentStatus: manualAssignment.assignmentStatus,
+            guideProfileId,
+          },
+          { refresh: false }
+        );
+      }
+      refresh();
+      const assignmentLabel = manualAssignment.assignmentStatus === 'standby' ? 'as Springer (standby)' : `to Level ${manualAssignment.rideLevel}`;
+      const selectedCount = manualAssignment.guideProfileIds.length;
+      const previewGuides = manualAssignment.guideProfileIds
+        .slice(0, 2)
+        .map((id) => {
+          const selectedGuide = guideRoster.find((guide) => guide.id === id);
+          return selectedGuide?.display_name ?? selectedGuide?.username ?? 'Guide';
+        })
+        .join(', ');
       toast.success(
-        `${guideLabel} assigned to Level ${manualAssignment.rideLevel} on ${toDashboardDate(
-          manualAssignment.rideDate
-        )}.`
+        selectedCount === 1
+          ? `${previewGuides} assigned ${assignmentLabel} on ${toDashboardDate(
+              manualAssignment.rideDate
+            )}.`
+          : `${selectedCount} guides assigned ${assignmentLabel} on ${toDashboardDate(
+              manualAssignment.rideDate
+            )} (${previewGuides}${selectedCount > 2 ? ', …' : ''}).`
       );
     });
   }
@@ -449,6 +524,24 @@ export function RidePlanningTab({
                   );
                 })}
               </tr>
+              <tr className="border-t border-neutral-200 bg-white">
+                <td className="sticky left-0 z-10 bg-white px-2 py-2 font-medium text-neutral-800 whitespace-nowrap">
+                  Springer
+                </td>
+                {overviewDates.map((dateIso) => {
+                  const plan = planByDate[dateIso];
+                  const guides = plan ? springerGuidesByPlanDate[`${plan.id}|${dateIso}`] ?? [] : [];
+                  const count = guides.length;
+                  return (
+                    <td key={`${dateIso}-total-springer`} className="px-1 py-1">
+                      <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-between gap-2">
+                        {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
+                        <span className="text-neutral-500">{plan ? count : '—'}</span>
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
             </tbody>
           </table>
         </div>
@@ -595,25 +688,47 @@ export function RidePlanningTab({
                     <option value="3">Level 3</option>
                   </select>
                 </label>
-                <label className="text-sm text-neutral-700 md:col-span-2">
-                  Guide
+                <label className="text-sm text-neutral-700">
+                  Assignment
                   <select
                     className="w-full mt-1 border border-neutral-200 rounded-lg px-3 py-2 text-sm"
-                    value={manualAssignment.guideProfileId}
+                    value={manualAssignment.assignmentStatus}
                     onChange={(e) =>
                       setManualAssignment((prev) => ({
                         ...prev,
-                        guideProfileId: e.target.value,
+                        assignmentStatus: e.target.value as 'assigned' | 'standby',
                       }))
                     }
                   >
-                    <option value="">Select guide</option>
+                    <option value="assigned">Level assignment</option>
+                    <option value="standby">Springer (standby)</option>
+                  </select>
+                </label>
+                <label className="text-sm text-neutral-700 md:col-span-2">
+                  Guides
+                  <select
+                    multiple
+                    size={Math.min(8, Math.max(4, guideRoster.length))}
+                    className="w-full mt-1 border border-neutral-200 rounded-lg px-3 py-2 text-sm"
+                    value={manualAssignment.guideProfileIds}
+                    onChange={(e) =>
+                      setManualAssignment((prev) => ({
+                        ...prev,
+                        guideProfileIds: Array.from(e.target.selectedOptions).map(
+                          (option) => option.value
+                        ),
+                      }))
+                    }
+                  >
                     {guideRoster.map((guide) => (
                       <option key={guide.id} value={guide.id}>
                         {guide.display_name ?? guide.username ?? guide.id}
                       </option>
                     ))}
                   </select>
+                  <p className="mt-1 text-xs text-neutral-500">
+                    Select multiple guides with Cmd/Ctrl or Shift.
+                  </p>
                 </label>
               </div>
               <button
@@ -623,11 +738,11 @@ export function RidePlanningTab({
                   isWorking ||
                   !manualAssignment.planId ||
                   !manualAssignment.rideDate ||
-                  !manualAssignment.guideProfileId
+                  manualAssignment.guideProfileIds.length === 0
                 }
                 className="px-4 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-800 hover:bg-neutral-100 disabled:opacity-50"
               >
-                Assign guide to level
+                Assign guides
               </button>
             </div>
 
@@ -666,11 +781,32 @@ export function RidePlanningTab({
           </div>
         )}
 
-        {plans.map((plan) => {
+        {pastPlans.length > 0 && (
+          <div className="flex items-center justify-end">
+            <button
+              type="button"
+              onClick={() => setShowPastEvents((prev) => !prev)}
+              className="px-3 py-1.5 rounded-md border border-neutral-200 text-xs text-neutral-700 hover:bg-neutral-100"
+            >
+              {showPastEvents
+                ? `Hide ${pastPlans.length} past events`
+                : `Show ${pastPlans.length} past events`}
+            </button>
+          </div>
+        )}
+
+        {plans.length > 0 && visiblePlans.length === 0 && (
+          <div className="bg-white border border-neutral-200 rounded-lg p-5 text-sm text-neutral-500">
+            No upcoming events. {pastPlans.length > 0 ? `Use "Show ${pastPlans.length} past events".` : ''}
+          </div>
+        )}
+
+        {visiblePlans.map((plan) => {
           const planAssignments = assignmentsByPlan[plan.id] ?? [];
+          const springerEntries = sortConflictCandidates(selectStandbyEntries(planAssignments));
 
           const grouped = new Map<string, GuideAssignmentEntry[]>();
-          for (const row of planAssignments) {
+          for (const row of selectLevelDetailEntries(planAssignments)) {
             const key = `${row.ride_date}|${row.ride_level}`;
             if (!grouped.has(key)) grouped.set(key, []);
             grouped.get(key)?.push(row);
@@ -823,6 +959,41 @@ export function RidePlanningTab({
                   </div>
                 );
               })}
+
+              {springerEntries.length > 0 && (
+                <div className="border border-neutral-200 rounded-lg p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <p className="text-sm font-medium text-neutral-900">Springer</p>
+                    <p className="text-xs text-neutral-500">Standby / Springer Guides</p>
+                  </div>
+                  <div className="space-y-2">
+                    {springerEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="border border-neutral-200 rounded-lg px-3 py-2 flex flex-wrap items-center justify-between gap-2"
+                      >
+                        <div>
+                          <p className="text-sm text-neutral-900">
+                            {entry.guide?.display_name ?? 'Unknown guide'}
+                          </p>
+                          <p className="text-xs text-neutral-500">
+                            {toDashboardDate(entry.ride_date)} · submitted{' '}
+                            {toDashboardDateTime(entry.submitted_at)} ·{' '}
+                            {entry.source === 'late' ? 'Late' : 'In window'}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex border rounded-full px-2 py-1 text-xs font-medium ${statusBadgeClass(
+                            entry.decision_status
+                          )}`}
+                        >
+                          {entry.decision_status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
