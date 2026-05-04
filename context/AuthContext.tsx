@@ -33,6 +33,12 @@ export interface Profile {
   membership_expiration: string | null;
   /** Whether the user is a Kandie Gang Guide (manual or admin updates). */
   is_guide: boolean;
+  /** Whether the user is part of the internal race/team area. */
+  is_team: boolean;
+  /** Dedicated coordinator role for guide ride planning workflows. */
+  guide_is_coordinator: boolean;
+  /** Coordinator-verified FLINTA priority flag for guide assignment logic. */
+  guide_flinta_priority: boolean;
   /** True when email matches a Substack/Mailchimp subscriber export (synced via script). */
   is_substack_subscriber: boolean;
   /** Newsletter opt-in date (YYYY-MM-DD) from CSV sync, when available. */
@@ -212,6 +218,9 @@ async function loadUserAndProfile(): Promise<{
     member_since: raw.member_since ?? null,
     membership_expiration: raw.membership_expiration ?? null,
     is_guide: Boolean(raw.is_guide),
+    is_team: Boolean(raw.is_team),
+    guide_is_coordinator: Boolean(raw.guide_is_coordinator),
+    guide_flinta_priority: Boolean(raw.guide_flinta_priority),
     is_substack_subscriber: Boolean(raw.is_substack_subscriber),
     newsletter_opted_in_at: raw.newsletter_opted_in_at ?? null,
     discord_id: raw.discord_id ?? null,
