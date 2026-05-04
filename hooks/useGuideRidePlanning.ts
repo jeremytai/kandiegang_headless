@@ -70,7 +70,9 @@ export function useGuideRidePlanning(): RidePlanningHookState {
 
     async function load() {
       try {
-        setLoading(true);
+        if (!data) {
+          setLoading(true);
+        }
         setError(null);
         const result = await request('FETCH');
         if (!mounted) return;

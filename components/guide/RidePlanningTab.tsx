@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useGuideRidePlanning } from '../../hooks/useGuideRidePlanning';
 import type {
@@ -151,7 +151,10 @@ export function RidePlanningTab({
   const [actionError, setActionError] = useState<string | null>(null);
   const [discordPreview, setDiscordPreview] = useState<{ title: string; message: string } | null>(null);
   const [isWorking, setIsWorking] = useState(false);
+  const [workingMessage, setWorkingMessage] = useState<string | null>(null);
   const [showPastEvents, setShowPastEvents] = useState(false);
+  const [optimisticChoices, setOptimisticChoices] = useState<Record<string, GuideChoice | ''>>({});
+  const [pendingChoiceKeys, setPendingChoiceKeys] = useState<Record<string, boolean>>({});
   const [manualAssignment, setManualAssignment] = useState<{
     planId: string;
     rideDate: string;
@@ -209,6 +212,10 @@ export function RidePlanningTab({
     [plans, todayDateIso]
   );
   const visiblePlans = showPastEvents ? [...upcomingPlans, ...pastPlans] : upcomingPlans;
+  const nextUpcomingOverviewDate = useMemo(
+    () => overviewDates.find((dateIso) => dateIso >= todayDateIso) ?? null,
+    [overviewDates, todayDateIso]
+  );
 
   const levelGuidesByPlanDate = useMemo(() => {
     const map: Record<string, Record<RideLevel, Array<{ id: string; display_name: string | null; username: string | null; avatar_url: string | null }>>> = {};
@@ -257,15 +264,33 @@ export function RidePlanningTab({
     return map;
   }, [myChoices]);
 
-  async function guardedAction(task: () => Promise<void>) {
+  useEffect(() => {
+    setOptimisticChoices((previous) => {
+      let changed = false;
+      const next = { ...previous };
+      for (const [key, value] of Object.entries(previous)) {
+        if (pendingChoiceKeys[key]) continue;
+        const serverValue = myChoiceByPlanDate[key] ?? '';
+        if (serverValue === value) {
+          delete next[key];
+          changed = true;
+        }
+      }
+      return changed ? next : previous;
+    });
+  }, [myChoiceByPlanDate, pendingChoiceKeys]);
+
+  async function guardedAction(task: () => Promise<void>, message = 'Saving changes...') {
     try {
       setActionError(null);
       setIsWorking(true);
+      setWorkingMessage(message);
       await task();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setIsWorking(false);
+      setWorkingMessage(null);
     }
   }
 
@@ -293,14 +318,36 @@ export function RidePlanningTab({
   }
 
   async function setGuideChoice(planId: string, rideDate: string, choice: GuideChoice) {
-    await guardedAction(async () => {
-      await mutate({
-        action: 'set-guide-choice',
-        planId,
-        rideDate,
-        choice,
+    const key = `${planId}|${rideDate}`;
+    const previousChoice = optimisticChoices[key] ?? myChoiceByPlanDate[key] ?? '';
+    setOptimisticChoices((prev) => ({ ...prev, [key]: choice }));
+    setPendingChoiceKeys((prev) => ({ ...prev, [key]: true }));
+    try {
+      setActionError(null);
+      setIsWorking(true);
+      setWorkingMessage('Saving your selection...');
+      await runAction(
+        {
+          action: 'set-guide-choice',
+          planId,
+          rideDate,
+          choice,
+        },
+        { refresh: false }
+      );
+      refresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Something went wrong');
+      setOptimisticChoices((prev) => ({ ...prev, [key]: previousChoice }));
+    } finally {
+      setPendingChoiceKeys((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
       });
-    });
+      setIsWorking(false);
+      setWorkingMessage(null);
+    }
   }
 
   async function assignGuideManually() {
@@ -407,8 +454,8 @@ export function RidePlanningTab({
     });
   }
 
-  if (loading) {
-    return <div className="text-neutral-400 text-sm">Poller…</div>;
+  if (loading && !data) {
+    return <div className="text-neutral-400 text-sm">Loading ride planning…</div>;
   }
 
   if (error) {
@@ -432,6 +479,7 @@ export function RidePlanningTab({
       </div>
 
       {actionError && <div className="text-sm text-red-500">{actionError}</div>}
+      {isWorking && workingMessage && <div className="text-xs text-neutral-500">{workingMessage}</div>}
 
       <div className="bg-white border border-neutral-200 rounded-lg p-5 space-y-3">
         <h3 className="text-sm uppercase tracking-[0.1em] text-neutral-500">
@@ -454,6 +502,7 @@ export function RidePlanningTab({
                     className="bg-white text-left px-2 py-2 text-neutral-500 uppercase tracking-[0.08em] whitespace-nowrap"
                   >
                     {toDashboardDate(dateIso)}
+                    {dateIso === nextUpcomingOverviewDate ? ' 🌈' : ''}
                   </th>
                 ))}
               </tr>
@@ -466,7 +515,11 @@ export function RidePlanningTab({
                 {overviewDates.map((dateIso) => {
                   const plan = planByDate[dateIso];
                   const locked = !plan || plan.status !== 'draft';
-                  const selectedChoice = plan ? myChoiceByPlanDate[`${plan.id}|${dateIso}`] ?? '' : '';
+                  const choiceKey = plan ? `${plan.id}|${dateIso}` : '';
+                  const selectedChoice = plan
+                    ? optimisticChoices[choiceKey] ?? myChoiceByPlanDate[choiceKey] ?? ''
+                    : '';
+                  const isChoicePending = Boolean(choiceKey && pendingChoiceKeys[choiceKey]);
                   return (
                     <td key={`${dateIso}-choice`} className="px-1 py-1">
                       {!plan ? (
@@ -474,25 +527,30 @@ export function RidePlanningTab({
                           Not opened yet
                         </div>
                       ) : (
-                        <select
-                          value={selectedChoice}
-                          disabled={isWorking || locked}
-                          onChange={(e) =>
-                            setGuideChoice(plan.id, dateIso, e.target.value as GuideChoice)
-                          }
-                          aria-label={`Guide choice for ${toDashboardDate(dateIso)}`}
-                          title={`Guide choice for ${toDashboardDate(dateIso)}`}
-                          className="w-full min-w-[150px] rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm text-neutral-800 disabled:opacity-50"
-                        >
-                          <option value="" disabled>
-                            —
-                          </option>
-                          {GUIDE_CHOICE_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
+                        <div className="w-full min-w-[150px]">
+                          <select
+                            value={selectedChoice}
+                            disabled={locked || isChoicePending}
+                            onChange={(e) =>
+                              setGuideChoice(plan.id, dateIso, e.target.value as GuideChoice)
+                            }
+                            aria-label={`Guide choice for ${toDashboardDate(dateIso)}`}
+                            title={`Guide choice for ${toDashboardDate(dateIso)}`}
+                            className="w-full rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm text-neutral-800 disabled:opacity-50"
+                          >
+                            <option value="" disabled>
+                              —
                             </option>
-                          ))}
-                        </select>
+                            {GUIDE_CHOICE_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          {isChoicePending && (
+                            <p className="mt-1 text-[10px] text-neutral-500">Saving...</p>
+                          )}
+                        </div>
                       )}
                     </td>
                   );
@@ -508,7 +566,7 @@ export function RidePlanningTab({
                   const count = guides.length;
                   return (
                     <td key={`${dateIso}-total-l2`} className="px-1 py-1">
-                      <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-between gap-2">
+                      <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-start gap-2">
                         <span className="text-neutral-500">{plan ? count : '—'}</span>
                         {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                       </div>
@@ -526,7 +584,7 @@ export function RidePlanningTab({
                   const count = guides.length;
                   return (
                     <td key={`${dateIso}-total-l2plus`} className="px-1 py-1">
-                      <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-between gap-2">
+                      <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-start gap-2">
                         <span className="text-neutral-500">{plan ? count : '—'}</span>
                         {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                       </div>
@@ -544,7 +602,7 @@ export function RidePlanningTab({
                   const count = guides.length;
                   return (
                     <td key={`${dateIso}-total-l3`} className="px-1 py-1">
-                      <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-between gap-2">
+                      <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-start gap-2">
                         <span className="text-neutral-500">{plan ? count : '—'}</span>
                         {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                       </div>
@@ -562,7 +620,7 @@ export function RidePlanningTab({
                   const count = guides.length;
                   return (
                     <td key={`${dateIso}-total-springer`} className="px-1 py-1">
-                      <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-between gap-2">
+                      <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-start gap-2">
                         <span className="text-neutral-500">{plan ? count : '—'}</span>
                         {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                       </div>
