@@ -628,6 +628,40 @@ async function handleSetGuideCoordinator(
   return { status: 200, payload: { profile: data } };
 }
 
+async function handleSetGuideDisplayName(
+  adminClient: SupabaseClient,
+  caller: CallerProfile,
+  body: Record<string, unknown>
+): Promise<ActionResult> {
+  if (!caller.guide_is_coordinator) return { status: 403, payload: { error: 'Coordinator access required' } };
+  const guideProfileId = typeof body.guideProfileId === 'string' ? body.guideProfileId : '';
+  const displayNameRaw = typeof body.displayName === 'string' ? body.displayName : '';
+  const displayName = displayNameRaw.trim();
+  if (!guideProfileId) return { status: 400, payload: { error: 'guideProfileId is required' } };
+  if (!displayName) return { status: 400, payload: { error: 'displayName is required' } };
+  if (displayName.length > 80) return { status: 400, payload: { error: 'displayName must be at most 80 characters' } };
+
+  const { data: guide, error: guideError } = await adminClient
+    .from('profiles')
+    .select('id, is_guide')
+    .eq('id', guideProfileId)
+    .single();
+  if (guideError || !guide || !guide.is_guide) {
+    return { status: 400, payload: { error: 'Selected profile is not a valid guide' } };
+  }
+
+  const { data, error } = await adminClient
+    .from('profiles')
+    .update({ display_name: displayName })
+    .eq('id', guideProfileId)
+    .select('id, display_name, username')
+    .single();
+  if (error || !data) {
+    return { status: 500, payload: { error: error?.message || 'Failed to update guide name' } };
+  }
+  return { status: 200, payload: { profile: data } };
+}
+
 export async function handleGuideRidePlanningAction(params: {
   action: string;
   body: Record<string, unknown>;
@@ -651,5 +685,7 @@ export async function handleGuideRidePlanningAction(params: {
     return handleCoordinatorAssignGuide(adminClient, caller, body);
   if (action === 'set-guide-coordinator')
     return handleSetGuideCoordinator(adminClient, caller, body);
+  if (action === 'set-guide-display-name')
+    return handleSetGuideDisplayName(adminClient, caller, body);
   return null;
 }

@@ -114,13 +114,18 @@ function AvatarStack({
   );
 }
 
-function buildTuesdayWindow(): string[] {
+function buildTuesdayWindow(lastOpenedDateIso?: string): string[] {
   const now = new Date();
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   while (start.getUTCDay() !== 2) {
     start.setUTCDate(start.getUTCDate() + 1);
   }
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 2, 0));
+  const defaultEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 2, 0));
+  const openedEnd = lastOpenedDateIso ? new Date(`${lastOpenedDateIso}T00:00:00Z`) : null;
+  const end =
+    openedEnd && !Number.isNaN(openedEnd.getTime()) && openedEnd > defaultEnd
+      ? openedEnd
+      : defaultEnd;
 
   const dates: string[] = [];
   const cursor = new Date(start);
@@ -175,6 +180,13 @@ export function RidePlanningTab({
     guideProfileId: '',
     isCoordinator: 'true',
   });
+  const [guideNameForm, setGuideNameForm] = useState<{
+    guideProfileId: string;
+    displayName: string;
+  }>({
+    guideProfileId: '',
+    displayName: '',
+  });
 
   const plans = data?.plans ?? [];
   const assignments = data?.assignments ?? [];
@@ -198,7 +210,14 @@ export function RidePlanningTab({
     () => Object.fromEntries(tuesdayPlans.map((plan) => [plan.week_start_date, plan])),
     [tuesdayPlans]
   );
-  const overviewDates = useMemo(() => buildTuesdayWindow(), []);
+  const lastOpenedDateIso = useMemo(
+    () => tuesdayPlans[tuesdayPlans.length - 1]?.week_start_date,
+    [tuesdayPlans]
+  );
+  const overviewDates = useMemo(
+    () => buildTuesdayWindow(lastOpenedDateIso),
+    [lastOpenedDateIso]
+  );
   const todayDateIso = useMemo(() => {
     const source = data?.nowIso ? new Date(data.nowIso) : new Date();
     return source.toISOString().slice(0, 10);
@@ -424,6 +443,19 @@ export function RidePlanningTab({
     });
   }
 
+  async function updateGuideDisplayName() {
+    if (!guideNameForm.guideProfileId || !guideNameForm.displayName.trim()) return;
+    await guardedAction(async () => {
+      await mutate({
+        action: 'set-guide-display-name',
+        guideProfileId: guideNameForm.guideProfileId,
+        displayName: guideNameForm.displayName.trim(),
+      });
+      toast.success(`Guide name updated to ${guideNameForm.displayName.trim()}.`);
+      setGuideNameForm({ guideProfileId: '', displayName: '' });
+    }, 'Updating guide name...');
+  }
+
   async function markUnavailable(assignmentId: string) {
     const reason = window.prompt('Reason for unavailability (optional):') ?? '';
     await guardedAction(async () => {
@@ -455,7 +487,7 @@ export function RidePlanningTab({
   }
 
   if (loading && !data) {
-    return <div className="text-neutral-400 text-sm">Loading ride planning…</div>;
+    return <div className="text-neutral-400 text-sm">Poller…</div>;
   }
 
   if (error) {
@@ -891,6 +923,58 @@ export function RidePlanningTab({
                       .join(', ')
                   : 'None'}
               </p>
+            </div>
+
+            <div className="border-t border-neutral-100 pt-4 space-y-3">
+              <h4 className="text-xs uppercase tracking-[0.1em] text-neutral-500">Guide name</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label className="text-sm text-neutral-700">
+                  Guide
+                  <select
+                    className="w-full mt-1 border border-neutral-200 rounded-lg px-3 py-2 text-sm"
+                    value={guideNameForm.guideProfileId}
+                    onChange={(e) => {
+                      const selectedGuide = guideRoster.find((guide) => guide.id === e.target.value);
+                      setGuideNameForm({
+                        guideProfileId: e.target.value,
+                        displayName: selectedGuide?.display_name ?? selectedGuide?.username ?? '',
+                      });
+                    }}
+                  >
+                    <option value="">Select guide</option>
+                    {guideRoster.map((guide) => (
+                      <option key={guide.id} value={guide.id}>
+                        {guide.display_name ?? guide.username ?? guide.id}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm text-neutral-700">
+                  Display name
+                  <input
+                    type="text"
+                    className="w-full mt-1 border border-neutral-200 rounded-lg px-3 py-2 text-sm"
+                    value={guideNameForm.displayName}
+                    onChange={(e) =>
+                      setGuideNameForm((prev) => ({ ...prev, displayName: e.target.value }))
+                    }
+                    placeholder="Sebastian"
+                    maxLength={80}
+                  />
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={updateGuideDisplayName}
+                disabled={
+                  isWorking ||
+                  !guideNameForm.guideProfileId ||
+                  !guideNameForm.displayName.trim()
+                }
+                className="px-4 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-800 hover:bg-neutral-100 disabled:opacity-50"
+              >
+                Save guide name
+              </button>
             </div>
 
             <div className="border-t border-neutral-100 pt-4 space-y-4">
