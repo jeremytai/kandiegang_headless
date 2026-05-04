@@ -509,8 +509,8 @@ export function RidePlanningTab({
                   return (
                     <td key={`${dateIso}-total-l2`} className="px-1 py-1">
                       <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-between gap-2">
-                        {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                         <span className="text-neutral-500">{plan ? count : '—'}</span>
+                        {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                       </div>
                     </td>
                   );
@@ -527,8 +527,8 @@ export function RidePlanningTab({
                   return (
                     <td key={`${dateIso}-total-l2plus`} className="px-1 py-1">
                       <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-between gap-2">
-                        {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                         <span className="text-neutral-500">{plan ? count : '—'}</span>
+                        {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                       </div>
                     </td>
                   );
@@ -545,8 +545,8 @@ export function RidePlanningTab({
                   return (
                     <td key={`${dateIso}-total-l3`} className="px-1 py-1">
                       <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-between gap-2">
-                        {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                         <span className="text-neutral-500">{plan ? count : '—'}</span>
+                        {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                       </div>
                     </td>
                   );
@@ -563,8 +563,8 @@ export function RidePlanningTab({
                   return (
                     <td key={`${dateIso}-total-springer`} className="px-1 py-1">
                       <div className="w-full min-w-[150px] px-1 py-1 text-[11px] text-neutral-700 flex items-center justify-between gap-2">
-                        {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                         <span className="text-neutral-500">{plan ? count : '—'}</span>
+                        {plan ? <AvatarStack guides={guides} /> : <span className="text-neutral-400">—</span>}
                       </div>
                     </td>
                   );
