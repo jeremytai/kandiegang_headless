@@ -138,7 +138,9 @@ export const GuideAnalyticsPage: React.FC = () => {
   usePageMeta('Guide Dashboard | Kandie Gang', 'Guide event dashboard');
   const { user, profile } = useAuth();
   const { events, loading, error } = useEventParticipation();
-  const [activeTab, setActiveTab] = useState<'analytics' | 'ride-planning'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'events-rides' | 'ride-planning'>(
+    'analytics'
+  );
 
   const stats = useMemo(() => computeStats(events), [events]);
 
@@ -181,6 +183,17 @@ export const GuideAnalyticsPage: React.FC = () => {
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab('events-rides')}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                activeTab === 'events-rides'
+                  ? 'bg-[#ff611a] text-white'
+                  : 'text-neutral-600 hover:bg-neutral-100'
+              }`}
+            >
+              Events/ Rides
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('ride-planning')}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                 activeTab === 'ride-planning'
@@ -188,7 +201,7 @@ export const GuideAnalyticsPage: React.FC = () => {
                   : 'text-neutral-600 hover:bg-neutral-100'
               }`}
             >
-              Ride Planning
+              Planning
             </button>
           </div>
         </div>
@@ -319,9 +332,34 @@ export const GuideAnalyticsPage: React.FC = () => {
 
                 </div>
 
-                {/* ─── Full event & participant table ─── */}
-                <EventParticipationTable hideEmail />
               </>
+            )}
+          </>
+        )}
+
+        {activeTab === 'events-rides' && (
+          <>
+            {loading && (
+              <div className="text-neutral-400 text-sm">Kurzer…</div>
+            )}
+            {error && (
+              <div className="text-red-500 text-sm">{error}</div>
+            )}
+            {!loading && !error && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[#ff611a] text-xs font-medium uppercase tracking-[0.2em] mb-1">
+                    Events/ Rides
+                  </p>
+                  <h2 className="text-lg font-light text-neutral-900">
+                    Breakdown Event Participation
+                  </h2>
+                  <p className="text-sm text-neutral-500 mt-1">
+                    Per-event signup, waitlist, cancellation, and no-show breakdown.
+                  </p>
+                </div>
+                <EventParticipationTable hideEmail />
+              </div>
             )}
           </>
         )}

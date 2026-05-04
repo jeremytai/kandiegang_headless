@@ -280,11 +280,12 @@ async function handleFetch(adminClient: SupabaseClient, userId: string): Promise
     username: string | null;
     avatar_url: string | null;
     guide_flinta_priority: boolean;
+    guide_is_coordinator: boolean;
   }> = [];
   if (caller.guide_is_coordinator) {
     const { data: rosterRows, error: rosterError } = await adminClient
       .from('profiles')
-      .select('id, display_name, username, avatar_url, guide_flinta_priority, is_guide')
+      .select('id, display_name, username, avatar_url, guide_flinta_priority, guide_is_coordinator, is_guide')
       .eq('is_guide', true)
       .order('display_name', { ascending: true, nullsFirst: false });
     if (rosterError) {
@@ -296,6 +297,7 @@ async function handleFetch(adminClient: SupabaseClient, userId: string): Promise
       username: row.username ?? null,
       avatar_url: row.avatar_url ?? null,
       guide_flinta_priority: Boolean(row.guide_flinta_priority),
+      guide_is_coordinator: Boolean(row.guide_is_coordinator),
     }));
   }
 
@@ -594,6 +596,38 @@ async function handleCoordinatorAssignGuide(
   return { status: 200, payload: { assignment } };
 }
 
+async function handleSetGuideCoordinator(
+  adminClient: SupabaseClient,
+  caller: CallerProfile,
+  body: Record<string, unknown>
+): Promise<ActionResult> {
+  if (!caller.guide_is_coordinator) return { status: 403, payload: { error: 'Coordinator access required' } };
+  const guideProfileId = typeof body.guideProfileId === 'string' ? body.guideProfileId : '';
+  const isCoordinator = typeof body.isCoordinator === 'boolean' ? body.isCoordinator : null;
+  if (!guideProfileId) return { status: 400, payload: { error: 'guideProfileId is required' } };
+  if (isCoordinator === null) return { status: 400, payload: { error: 'isCoordinator must be boolean' } };
+
+  const { data: guide, error: guideError } = await adminClient
+    .from('profiles')
+    .select('id, is_guide')
+    .eq('id', guideProfileId)
+    .single();
+  if (guideError || !guide || !guide.is_guide) {
+    return { status: 400, payload: { error: 'Selected profile is not a valid guide' } };
+  }
+
+  const { data, error } = await adminClient
+    .from('profiles')
+    .update({ guide_is_coordinator: isCoordinator })
+    .eq('id', guideProfileId)
+    .select('id, display_name, username, guide_is_coordinator')
+    .single();
+  if (error || !data) {
+    return { status: 500, payload: { error: error?.message || 'Failed to update coordinator access' } };
+  }
+  return { status: 200, payload: { profile: data } };
+}
+
 export async function handleGuideRidePlanningAction(params: {
   action: string;
   body: Record<string, unknown>;
@@ -615,5 +649,7 @@ export async function handleGuideRidePlanningAction(params: {
   if (action === 'build-discord-copy') return handleDiscordCopy(adminClient, body);
   if (action === 'coordinator-assign-guide')
     return handleCoordinatorAssignGuide(adminClient, caller, body);
+  if (action === 'set-guide-coordinator')
+    return handleSetGuideCoordinator(adminClient, caller, body);
   return null;
 }

@@ -55,6 +55,7 @@ export interface RidePlanningData {
     username: string | null;
     avatar_url: string | null;
     guide_flinta_priority: boolean;
+    guide_is_coordinator: boolean;
   }>;
   nowIso: string;
   caller: {

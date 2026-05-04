@@ -165,6 +165,13 @@ export function RidePlanningTab({
     assignmentStatus: 'assigned',
     guideProfileIds: [],
   });
+  const [coordinatorRoleForm, setCoordinatorRoleForm] = useState<{
+    guideProfileId: string;
+    isCoordinator: 'true' | 'false';
+  }>({
+    guideProfileId: '',
+    isCoordinator: 'true',
+  });
 
   const plans = data?.plans ?? [];
   const assignments = data?.assignments ?? [];
@@ -351,6 +358,25 @@ export function RidePlanningTab({
     });
   }
 
+  async function updateGuideCoordinatorAccess() {
+    if (!coordinatorRoleForm.guideProfileId) return;
+    await guardedAction(async () => {
+      await mutate({
+        action: 'set-guide-coordinator',
+        guideProfileId: coordinatorRoleForm.guideProfileId,
+        isCoordinator: coordinatorRoleForm.isCoordinator === 'true',
+      });
+      const selectedGuide = guideRoster.find((guide) => guide.id === coordinatorRoleForm.guideProfileId);
+      const guideLabel = selectedGuide?.display_name ?? selectedGuide?.username ?? 'Guide';
+      toast.success(
+        coordinatorRoleForm.isCoordinator === 'true'
+          ? `${guideLabel} now has coordinator access.`
+          : `${guideLabel} coordinator access removed.`
+      );
+      setCoordinatorRoleForm((prev) => ({ ...prev, guideProfileId: '' }));
+    });
+  }
+
   async function markUnavailable(assignmentId: string) {
     const reason = window.prompt('Reason for unavailability (optional):') ?? '';
     await guardedAction(async () => {
@@ -382,12 +408,14 @@ export function RidePlanningTab({
   }
 
   if (loading) {
-    return <div className="text-neutral-400 text-sm">Loading ride planning…</div>;
+    return <div className="text-neutral-400 text-sm">Poller…</div>;
   }
 
   if (error) {
     return <div className="text-red-500 text-sm">{error}</div>;
   }
+
+  const currentCoordinators = guideRoster.filter((guide) => guide.guide_is_coordinator);
 
   return (
     <div className="space-y-6">
@@ -398,7 +426,7 @@ export function RidePlanningTab({
         </p>
         <h2 className="text-xl font-light text-neutral-900">Guide Ride Planning</h2>
         <p className="text-neutral-500 text-sm mt-2">
-          Tuesday social rides only. FLINTA-first, then first-come-first-serve within the same
+          Tuesday Social Rides only. FLINTA-first, then first-come-first-serve within the same
           priority group. Late proposals are accepted only for unfilled slots.
         </p>
       </div>
@@ -744,6 +772,67 @@ export function RidePlanningTab({
               >
                 Assign guides
               </button>
+            </div>
+
+            <div className="border-t border-neutral-100 pt-4 space-y-3">
+              <h4 className="text-xs uppercase tracking-[0.1em] text-neutral-500">
+                Coordinator access
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label className="text-sm text-neutral-700">
+                  Guide
+                  <select
+                    className="w-full mt-1 border border-neutral-200 rounded-lg px-3 py-2 text-sm"
+                    value={coordinatorRoleForm.guideProfileId}
+                    onChange={(e) =>
+                      setCoordinatorRoleForm((prev) => ({
+                        ...prev,
+                        guideProfileId: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Select guide</option>
+                    {guideRoster.map((guide) => (
+                      <option key={guide.id} value={guide.id}>
+                        {guide.display_name ?? guide.username ?? guide.id}
+                        {guide.guide_is_coordinator ? ' (Coordinator)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm text-neutral-700">
+                  Access
+                  <select
+                    className="w-full mt-1 border border-neutral-200 rounded-lg px-3 py-2 text-sm"
+                    value={coordinatorRoleForm.isCoordinator}
+                    onChange={(e) =>
+                      setCoordinatorRoleForm((prev) => ({
+                        ...prev,
+                        isCoordinator: e.target.value as 'true' | 'false',
+                      }))
+                    }
+                  >
+                    <option value="true">Grant coordinator</option>
+                    <option value="false">Remove coordinator</option>
+                  </select>
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={updateGuideCoordinatorAccess}
+                disabled={isWorking || !coordinatorRoleForm.guideProfileId}
+                className="px-4 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-800 hover:bg-neutral-100 disabled:opacity-50"
+              >
+                Save coordinator access
+              </button>
+              <p className="text-xs text-neutral-500">
+                Current coordinators:{' '}
+                {currentCoordinators.length > 0
+                  ? currentCoordinators
+                      .map((guide) => guide.display_name ?? guide.username ?? 'Unknown')
+                      .join(', ')
+                  : 'None'}
+              </p>
             </div>
 
             <div className="border-t border-neutral-100 pt-4 space-y-4">
