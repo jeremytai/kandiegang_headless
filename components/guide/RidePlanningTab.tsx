@@ -17,7 +17,7 @@ const GUIDE_CHOICE_OPTIONS: Array<{ value: GuideChoice; label: string }> = [
   { value: 'level3', label: 'Level 3' },
   { value: 'participant', label: 'Teilnehmer:in' },
   { value: 'no_time', label: 'Keine Zeit' },
-  { value: 'injured', label: 'verletzt' },
+  { value: 'injured', label: 'Verletzt' },
 ];
 
 function statusBadgeClass(status: GuideDecisionStatus): string {
@@ -363,9 +363,7 @@ export function RidePlanningTab({
                 {overviewDates.map((dateIso) => {
                   const plan = planByDate[dateIso];
                   const locked = !plan || plan.status !== 'draft';
-                  const selectedChoice = plan
-                    ? myChoiceByPlanDate[`${plan.id}|${dateIso}`] ?? 'no_time'
-                    : 'no_time';
+                  const selectedChoice = plan ? myChoiceByPlanDate[`${plan.id}|${dateIso}`] ?? '' : '';
                   return (
                     <td key={`${dateIso}-choice`} className="px-1 py-1">
                       {!plan ? (
@@ -383,6 +381,9 @@ export function RidePlanningTab({
                           title={`Guide choice for ${toDashboardDate(dateIso)}`}
                           className="w-full min-w-[150px] rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm text-neutral-800 disabled:opacity-50"
                         >
+                          <option value="" disabled>
+                            —
+                          </option>
                           {GUIDE_CHOICE_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
                               {option.label}

@@ -407,13 +407,35 @@ async function handleSetGuideChoice(
   const rideDate = typeof req.body?.rideDate === 'string' ? req.body.rideDate : '';
   const choice = typeof req.body?.choice === 'string' ? req.body.choice : '';
 
-  if (!GUIDE_CHOICES.has(choice)) {
-    return res.status(400).json({ error: 'Invalid choice' });
-  }
-
   const validity = await validatePlanAndDate(adminClient, planId, rideDate);
   if (!validity.ok) {
     return res.status(validity.status).json({ error: validity.error });
+  }
+
+  if (choice === '') {
+    await adminClient
+      .from('guide_ride_availability')
+      .delete()
+      .eq('plan_id', planId)
+      .eq('ride_date', rideDate)
+      .eq('guide_profile_id', userId);
+
+    const { error: deleteError } = await adminClient
+      .from('guide_ride_assignments')
+      .delete()
+      .eq('plan_id', planId)
+      .eq('ride_date', rideDate)
+      .eq('guide_profile_id', userId);
+
+    if (deleteError) {
+      return res.status(500).json({ error: deleteError.message || 'Failed to clear assignment' });
+    }
+
+    return res.status(200).json({ choice: null, assignment: null });
+  }
+
+  if (!GUIDE_CHOICES.has(choice)) {
+    return res.status(400).json({ error: 'Invalid choice' });
   }
 
   const { data: choiceRow, error: choiceError } = await adminClient
