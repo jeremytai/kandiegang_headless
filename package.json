@@ -9,6 +9,7 @@
     "verify:share-fonts": "node scripts/verify-share-fonts.mjs",
     "prebuild": "npm run verify:share-fonts",
     "build": "vite build && node scripts/optimize-images.js",
+    "test": "vitest run lib",
     "test:membership": "vitest run lib/membership.test.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

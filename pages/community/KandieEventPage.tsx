@@ -23,6 +23,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { normalizeEventType } from '../../lib/eventType';
 import { hasActiveMembership } from '../../lib/membership';
+import { normalizeWordPressEventDescription } from '../../lib/normalizeWordPressEventDescription';
 
 export const KandieEventPage: React.FC = () => {
   const { yy, mm, dd, slug } = useParams<{ yy: string; mm: string; dd: string; slug: string }>();
@@ -366,31 +367,7 @@ export const KandieEventPage: React.FC = () => {
   const { title, featuredImage, eventDetails, excerpt, publicReleaseDate } = eventData;
   const description = eventDetails?.description || '';
   const rawExcerpt = excerpt || eventDetails?.excerpt || '';
-  // Normalize newlines and common bullet characters so soft line-break lists
-  // (or lists using en/em dashes or bullets from WP) become proper markdown lists
-  const normalizedDescription = description
-    // Convert common WP HTML paragraph/line-break tags into markdown-friendly newlines
-    .replace(/<br\s*\/?>(\n)?/gi, '\n')
-    .replace(/<\/p>\s*<p>/gi, '\n\n')
-    .replace(/<\/?p>/gi, '')
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    // normalize common non-breaking/zero-width spaces
-    .replace(/\u00A0/g, ' ')
-    .replace(/[\u200B\uFEFF\u2060]/g, '')
-    // Convert en-dash / em-dash list markers at line-start to hyphen
-    .replace(/^\s*[–—]\s+/gm, '- ')
-    // Convert common bullet characters to hyphen
-    .replace(/^\s*[•·]\s+/gm, '- ')
-    // Convert lines starting with various bullet-like markers (including tabs/spaces) to hyphen
-    .replace(/^[\s\u00A0\u200B\uFEFF\u2060]*[*+\u2022\u00B7\u2023-]\s+/gm, '- ')
-    // Convert numbered lists using ')' or '.' to canonical numbered form (e.g., '1.' stays '1.')
-    .replace(/^[\s\u00A0\u200B\uFEFF\u2060]*(\d+)[).]+\s*/gm, (_m, n) => `${n}. `)
-    // Ensure a blank line before list markers (hyphen, asterisk, plus, or numbered with '.' or ')')
-    .replace(/([^\n])\n(?=\s*(?:[-*+]|\d+[.)])\s)/g, '$1\n\n')
-    // Collapse excessive blank lines
-    .replace(/\n{3,}/g, '\n\n');
-  // Debug logs removed for production
+  const normalizedDescription = normalizeWordPressEventDescription(description);
   const intro = rawExcerpt.trim() || description.split('\n')[0].trim();
 
   const rawRideCategory = eventDetails?.rideCategory;

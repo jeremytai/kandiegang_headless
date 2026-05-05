@@ -17,9 +17,6 @@
 ---
 
 ## TO DO
-- Events
-  - add join waitlist CTA to event pages
-- Normalize WordPress event descriptions so Markdown lists render correctly (handle en-dash/em-dash, common bullet characters, numbered markers like `)` or `.`, and strip zero-width/non-breaking spaces). Add a regression test or example content and remove dev-only debug UI after verification.
 - Deployment reliability / staging
   - Require PR-based deploy flow (protect `main`, no direct pushes) and validate all changes on Vercel preview URLs before merge.
   - Split Vercel env vars by environment (`preview` vs `production`) and keep production-only secrets isolated.
