@@ -391,7 +391,7 @@ const EventSidebarCard: React.FC<EventSidebarCardProps> = ({
                             level.isCancelledByGuide
                               ? <span className="text-xs font-normal text-red-500">Cancelled</span>
                               : level.isSoldOut
-                                ? <span className="text-xs font-normal text-slate-500">Sold Out</span>
+                                ? <span className="text-xs font-normal text-slate-500">Oh, Snap!</span>
                                 : level.spotsLeft != null && level.places != null && (
                                     <span className="text-xs font-normal text-slate-500">
                                       {`${level.spotsLeft} of ${level.places} Spots available`}
