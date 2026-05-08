@@ -447,8 +447,10 @@ const CookiePreferencesModalWrapper: React.FC = () => {
 const LandingPage = ({ minimal = false }: { minimal?: boolean }) => (
   <>
     <HomepageRotatingHeadline minimal={minimal} />
-    <ExpandingHero />
-    {!minimal && <ScrollingHeadline />}
+    <div className="hidden md:block">
+      <ExpandingHero />
+      {!minimal && <ScrollingHeadline />}
+    </div>
   </>
 );
 
