@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useGuideRidePlanning } from '../../hooks/useGuideRidePlanning';
 import type {
@@ -191,6 +192,8 @@ export function RidePlanningTab({
   const [springerTargetLevelByAssignmentId, setSpringerTargetLevelByAssignmentId] = useState<
     Record<string, RideLevel>
   >({});
+  const [coordinatorControlsOpen, setCoordinatorControlsOpen] = useState(true);
+  const [eventsSectionOpen, setEventsSectionOpen] = useState(true);
 
   const plans = data?.plans ?? [];
   const assignments = data?.assignments ?? [];
@@ -799,9 +802,25 @@ export function RidePlanningTab({
         )}
 
         {canCoordinate && (
-          <div className="bg-white border border-neutral-200 rounded-lg p-5 space-y-5">
-            <h3 className="text-sm uppercase tracking-[0.1em] text-neutral-500">Coordinator Controls</h3>
-
+          <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setCoordinatorControlsOpen((open) => !open)}
+              aria-expanded={coordinatorControlsOpen}
+              className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-neutral-50/90 transition-colors"
+            >
+              <h3 className="text-sm uppercase tracking-[0.1em] text-neutral-500">
+                Coordinator Controls
+              </h3>
+              <ChevronDown
+                className={`h-5 w-5 shrink-0 text-neutral-400 transition-transform duration-200 ${
+                  coordinatorControlsOpen ? 'rotate-180' : ''
+                }`}
+                aria-hidden
+              />
+            </button>
+            {coordinatorControlsOpen && (
+              <div className="px-5 pb-5 space-y-5 border-t border-neutral-100 pt-4">
             <div className="space-y-3">
               <h4 className="text-xs uppercase tracking-[0.1em] text-neutral-500">
                 Manual level assignment
@@ -1041,11 +1060,44 @@ export function RidePlanningTab({
                 replacing the Google Sheet flow.
               </p>
             </div>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      <div className="space-y-4">
+      <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setEventsSectionOpen((open) => !open)}
+          aria-expanded={eventsSectionOpen}
+          className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-neutral-50/90 transition-colors"
+        >
+          <div className="min-w-0">
+            <h3 className="text-sm uppercase tracking-[0.1em] text-neutral-500">
+              Events &amp; proposals
+            </h3>
+            <p className="text-xs text-neutral-500 mt-1 truncate">
+              {plans.length === 0
+                ? 'No planning weeks yet'
+                : `${visiblePlans.length} upcoming week${visiblePlans.length === 1 ? '' : 's'} on file${
+                    pastPlans.length > 0
+                      ? showPastEvents
+                        ? ` · including ${pastPlans.length} past`
+                        : ` · ${pastPlans.length} past hidden`
+                      : ''
+                  }`}
+            </p>
+          </div>
+          <ChevronDown
+            className={`h-5 w-5 shrink-0 text-neutral-400 transition-transform duration-200 ${
+              eventsSectionOpen ? 'rotate-180' : ''
+            }`}
+            aria-hidden
+          />
+        </button>
+        {eventsSectionOpen && (
+      <div className="px-5 pb-5 space-y-4 border-t border-neutral-100 pt-4">
         {plans.length === 0 && (
           <div className="bg-white border border-neutral-200 rounded-lg p-5 text-sm text-neutral-500">
             No planning weeks yet. {canCoordinate ? 'Create the first week above.' : 'Ask a coordinator to create one.'}
@@ -1326,6 +1378,8 @@ export function RidePlanningTab({
             </div>
           );
         })}
+      </div>
+        )}
       </div>
 
       {discordPreview && (
