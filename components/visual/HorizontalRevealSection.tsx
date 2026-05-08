@@ -5,7 +5,7 @@
  * - Translates vertical scroll progress into horizontal movement across multiple cards.
  * - Persistent side-navigation dots that reflect current progress.
  * - SegmentedNav: A bottom navigation pill that jumps between scroll quarters per card (Safari / reduced-motion: in-flow nav + native horizontal scroll).
- * - Responsive adjustments: Cards occupy more screen space on mobile.
+ * - Mobile (< md): shows the next four upcoming ride events; desktop: marketing panels (Let's Ride, Stories, etc.).
  */
 
 import React, { useRef, useState, useEffect, useCallback, useLayoutEffect, useMemo } from 'react';
@@ -16,17 +16,11 @@ import {
   useLatestStoryFeaturedImage,
   STORIES_PANEL_FALLBACK_IMAGE,
 } from '../../hooks/useLatestStoryFeaturedImage';
+import { useUpcomingHorizontalRevealCards, type HorizontalRevealCard } from '../../hooks/useUpcomingHorizontalRevealCards';
 import { SectionHeader } from './SectionHeader';
 
-/* ─── Card data ─── */
-interface CardData {
-  title: string;
-  desc: string;
-  img: string;
-  to: string;
-}
-
-const CARDS: CardData[] = [
+/* ─── Marketing cards (desktop) ─── */
+const MARKETING_CARDS_BASE: Omit<HorizontalRevealCard, 'pillLabel'>[] = [
   {
     title: "Let's Ride",
     desc: 'People join us for our community rides, to exchange bicycle knowledge and build friendships\u2014no matter their gender, race or social background.',
@@ -53,16 +47,29 @@ const CARDS: CardData[] = [
   },
 ];
 
-/** One pill label per card; vertical scroll progress maps to four equal bands. */
-const SEGMENT_LABELS = ['Rides', 'Stories', 'Membership', 'Shop'] as const;
+const MARKETING_PILL_LABELS = ['Rides', 'Stories', 'Membership', 'Shop'] as const;
 
-const CARD_COUNT = CARDS.length;
-const SEGMENT_COUNT = SEGMENT_LABELS.length;
+function cardsWithLatestStoryImage(storiesFeaturedUrl: string): HorizontalRevealCard[] {
+  return MARKETING_CARDS_BASE.map((c, i) => ({
+    ...c,
+    img: c.title === 'Stories' ? storiesFeaturedUrl : c.img,
+    pillLabel: MARKETING_PILL_LABELS[i],
+  }));
+}
 
-/* ─── Side dot: hook usage is valid (one hook per component instance) ─── */
-function SideIndicatorDot({ index, progress }: { index: number; progress: MotionValue<number> }) {
-  const start = index / CARD_COUNT;
-  const end = (index + 1) / CARD_COUNT;
+/* ─── Side dot ─── */
+function SideIndicatorDot({
+  index,
+  progress,
+  cardCount,
+}: {
+  index: number;
+  progress: MotionValue<number>;
+  cardCount: number;
+}) {
+  const safe = Math.max(1, cardCount);
+  const start = index / safe;
+  const end = (index + 1) / safe;
   const opacity = useTransform(progress, [start, start + 0.1, end - 0.1, end], [0.1, 0.4, 0.4, 0.1]);
   return (
     <motion.div
@@ -74,9 +81,11 @@ function SideIndicatorDot({ index, progress }: { index: number; progress: Motion
 }
 
 function SegmentedNavPill({
+  segmentLabels,
   activeIndex,
   onSelect,
 }: {
+  segmentLabels: string[];
   activeIndex: number;
   onSelect: (index: number) => void;
 }) {
@@ -120,17 +129,18 @@ function SegmentedNavPill({
         animate={{ left: highlight.left, width: highlight.width }}
         transition={{ type: 'spring', stiffness: 400, damping: 32 }}
       />
-      {SEGMENT_LABELS.map((segment, i) => (
+      {segmentLabels.map((segment, i) => (
         <button
-          key={segment}
+          key={`${segment}-${i}`}
           ref={(el) => {
             itemRefs.current[i] = el;
           }}
           type="button"
           onClick={() => onSelect(i)}
-          className={`relative z-10 inline-flex h-8 shrink-0 flex-nowrap items-center justify-center px-3 py-1.5 text-[12px] font-medium transition-colors duration-300 md:h-9 md:px-4 md:text-sm rounded-full ${
+          className={`relative z-10 inline-flex h-8 shrink-0 flex-nowrap items-center justify-center px-3 py-1.5 text-[12px] font-medium transition-colors duration-300 md:h-9 md:px-4 md:text-sm rounded-full max-w-[28vw] truncate ${
             activeIndex === i ? 'text-secondary-blush' : 'text-secondary-purple-rain'
           }`}
+          title={segment}
         >
           {segment}
         </button>
@@ -139,26 +149,23 @@ function SegmentedNavPill({
   );
 }
 
-/**
- * Pill sits inside the sticky viewport with `absolute` — not `fixed`, because the homepage
- * content lives under a transformed `motion.div` in App.tsx; fixed would anchor to that
- * ancestor and render far below the visible viewport.
- */
 function SegmentedNavInStickyViewport({
+  segmentLabels,
   activeIndex,
   onSelect,
 }: {
+  segmentLabels: string[];
   activeIndex: number;
   onSelect: (index: number) => void;
 }) {
   return (
     <div className="pointer-events-none absolute bottom-8 left-0 right-0 z-[100] flex justify-center px-6 md:bottom-10">
-      <SegmentedNavPill activeIndex={activeIndex} onSelect={onSelect} />
+      <SegmentedNavPill segmentLabels={segmentLabels} activeIndex={activeIndex} onSelect={onSelect} />
     </div>
   );
 }
 
-const HorizontalCard: React.FC<CardData> = ({ title, desc, img, to }) => (
+const HorizontalCard: React.FC<HorizontalRevealCard> = ({ title, desc, img, to }) => (
   <div className="relative flex-none w-[90vw] md:w-[60vw] aspect-[4/5] md:aspect-[16/10] rounded-xl overflow-hidden p-8 md:p-20 flex flex-col justify-end bg-slate-900 text-white group snap-start">
     <div className="relative z-10 max-w-xl">
       <Link
@@ -168,41 +175,38 @@ const HorizontalCard: React.FC<CardData> = ({ title, desc, img, to }) => (
         <h3 className="text-3xl md:text-5xl font-light tracking-tight mb-2 md:mb-3 group-hover:scale-105 transition-transform duration-700 origin-left text-balance">
           {title}
         </h3>
-        <p className="opacity-60 text-sm md:text-base leading-tight font-light tracking-tight text-balance">{desc}</p>
+        <p className="opacity-60 text-sm md:text-base leading-tight font-light tracking-tight text-balance line-clamp-6 md:line-clamp-none">
+          {desc}
+        </p>
       </Link>
     </div>
     <div className="absolute inset-0 z-0">
-      <img
-        width={1200}
-        height={800}
-        className="w-full h-full object-cover"
-        alt={title}
-        loading="lazy"
-        src={img}
-      />
+      <img width={1200} height={800} className="w-full h-full object-cover" alt={title} loading="lazy" src={img} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
     </div>
   </div>
 );
 
-function sectionScrollProgressToSegment(v: number): number {
-  return Math.min(SEGMENT_COUNT - 1, Math.floor(v * SEGMENT_COUNT));
+function sectionScrollProgressToSegment(v: number, segmentCount: number): number {
+  const safe = Math.max(1, segmentCount);
+  return Math.min(safe - 1, Math.floor(v * safe));
 }
 
 export type HorizontalRevealSectionProps = {
-  /** Title for the purple band; pins with the card strip. */
   sectionTitle?: string;
+  /** Headline in the purple band below the `md` breakpoint (events carousel). */
+  sectionTitleMobile?: string;
   showSectionScrollHint?: boolean;
 };
 
-type HorizontalRevealInnerProps = HorizontalRevealSectionProps & {
-  cards: CardData[];
+type HorizontalRevealInnerProps = Omit<HorizontalRevealSectionProps, 'sectionTitleMobile'> & {
+  cards: HorizontalRevealCard[];
+  /** Tailwind height classes for the scroll-scrub section (e.g. h-[400vh]) */
+  scrubSectionHeightClass: string;
 };
 
-function cardsWithLatestStoryImage(storiesFeaturedUrl: string): CardData[] {
-  return CARDS.map((c) =>
-    c.title === 'Stories' ? { ...c, img: storiesFeaturedUrl } : c
-  );
+function segmentLabelsFromCards(cards: HorizontalRevealCard[]): string[] {
+  return cards.map((c) => c.pillLabel);
 }
 
 /** Native horizontal scroll when Safari / reduced-motion avoids vertical scroll-scrub. */
@@ -210,17 +214,19 @@ function HorizontalRevealFallback({
   sectionTitle = 'Community is the Catalyst',
   showSectionScrollHint = true,
   cards,
-}: HorizontalRevealInnerProps) {
+}: Omit<HorizontalRevealInnerProps, 'scrubSectionHeightClass'>) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeCard, setActiveCard] = useState(0);
   const [activeSegment, setActiveSegment] = useState(0);
+  const segmentLabels = segmentLabelsFromCards(cards);
+  const n = cards.length;
 
   const scrollToCard = useCallback((index: number) => {
     const track = trackRef.current;
     if (!track) return;
-    const cards = track.children;
-    if (!cards[index]) return;
-    (cards[index] as HTMLElement).scrollIntoView({
+    const children = track.children;
+    if (!children[index]) return;
+    (children[index] as HTMLElement).scrollIntoView({
       behavior: 'smooth',
       block: 'nearest',
       inline: 'start',
@@ -229,9 +235,9 @@ function HorizontalRevealFallback({
 
   const scrollToSegment = useCallback(
     (segmentIndex: number) => {
-      scrollToCard(Math.min(segmentIndex, CARD_COUNT - 1));
+      scrollToCard(Math.min(segmentIndex, Math.max(0, n - 1)));
     },
-    [scrollToCard]
+    [scrollToCard, n]
   );
 
   useEffect(() => {
@@ -258,7 +264,9 @@ function HorizontalRevealFallback({
     track.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => track.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [n]);
+
+  if (n === 0) return null;
 
   return (
     <section className="relative bg-[#fdfdfd]">
@@ -271,7 +279,7 @@ function HorizontalRevealFallback({
             <div className="absolute left-4 md:left-12 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-2">
               {cards.map((_c, i) => (
                 <button
-                  key={cards[i].title}
+                  key={`${cards[i].to}-${i}`}
                   type="button"
                   aria-label={`Go to ${cards[i].title}`}
                   onClick={() => scrollToCard(i)}
@@ -287,41 +295,35 @@ function HorizontalRevealFallback({
               className="no-scrollbar flex h-full min-h-0 w-full gap-6 md:gap-8 overflow-x-auto px-[5vw] md:px-[15vw] items-center snap-x snap-mandatory scroll-pl-[5vw] md:scroll-pl-[15vw]"
             >
               {cards.map((card) => (
-                <HorizontalCard key={card.title} {...card} />
+                <HorizontalCard key={card.to} {...card} />
               ))}
             </div>
           </div>
         </div>
 
-        <SegmentedNavInStickyViewport activeIndex={activeSegment} onSelect={scrollToSegment} />
+        <SegmentedNavInStickyViewport
+          segmentLabels={segmentLabels}
+          activeIndex={activeSegment}
+          onSelect={scrollToSegment}
+        />
       </div>
     </section>
   );
 }
 
-export const HorizontalRevealSection: React.FC<HorizontalRevealSectionProps> = (props) => {
-  const lightMotion = useLightMotionBackdrop();
-  const storiesFeaturedUrl = useLatestStoryFeaturedImage();
-  const cards = useMemo(
-    () => cardsWithLatestStoryImage(storiesFeaturedUrl),
-    [storiesFeaturedUrl]
-  );
-  if (lightMotion) {
-    return <HorizontalRevealFallback {...props} cards={cards} />;
-  }
-  return <HorizontalRevealScrub {...props} cards={cards} />;
-};
-
 function HorizontalRevealScrub({
   sectionTitle = 'Community is the Catalyst',
   showSectionScrollHint = true,
   cards,
+  scrubSectionHeightClass,
 }: HorizontalRevealInnerProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [maxShift, setMaxShift] = useState(0);
   const [activeSegment, setActiveSegment] = useState(0);
+  const segmentLabels = segmentLabelsFromCards(cards);
+  const segmentCount = Math.max(1, cards.length);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -351,20 +353,25 @@ function HorizontalRevealScrub({
 
   useEffect(() => {
     return scrollYProgress.on('change', (v) => {
-      setActiveSegment(sectionScrollProgressToSegment(v));
+      setActiveSegment(sectionScrollProgressToSegment(v, segmentCount));
     });
-  }, [scrollYProgress]);
+  }, [scrollYProgress, segmentCount]);
 
-  const scrollToSegment = useCallback((index: number) => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const top = window.scrollY + el.getBoundingClientRect().top;
-    const h = el.scrollHeight;
-    window.scrollTo({ top: top + (h / SEGMENT_COUNT) * index, behavior: 'smooth' });
-  }, []);
+  const scrollToSegment = useCallback(
+    (index: number) => {
+      const el = sectionRef.current;
+      if (!el) return;
+      const top = window.scrollY + el.getBoundingClientRect().top;
+      const h = el.scrollHeight;
+      window.scrollTo({ top: top + (h / segmentCount) * index, behavior: 'smooth' });
+    },
+    [segmentCount]
+  );
+
+  if (cards.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="relative h-[400vh] md:h-[500vh] bg-[#fdfdfd]">
+    <section ref={sectionRef} className={`relative ${scrubSectionHeightClass} bg-[#fdfdfd]`}>
       <div
         ref={viewportRef}
         className="sticky top-0 flex h-screen w-full flex-col overflow-hidden bg-secondary-purple-rain"
@@ -376,7 +383,12 @@ function HorizontalRevealScrub({
           <div className="relative min-h-0 w-full flex-1 pb-24">
             <div className="absolute left-4 md:left-12 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-2">
               {cards.map((_c, i) => (
-                <SideIndicatorDot key={cards[i].title} index={i} progress={scrollYProgress} />
+                <SideIndicatorDot
+                  key={`${cards[i].to}-${i}`}
+                  index={i}
+                  progress={scrollYProgress}
+                  cardCount={cards.length}
+                />
               ))}
             </div>
 
@@ -386,14 +398,60 @@ function HorizontalRevealScrub({
               className="relative flex h-full min-h-0 w-max items-center gap-6 md:gap-8 px-[5vw] md:px-[15vw]"
             >
               {cards.map((card) => (
-                <HorizontalCard key={card.title} {...card} />
+                <HorizontalCard key={card.to} {...card} />
               ))}
             </motion.div>
           </div>
         </div>
 
-        <SegmentedNavInStickyViewport activeIndex={activeSegment} onSelect={scrollToSegment} />
+        <SegmentedNavInStickyViewport
+          segmentLabels={segmentLabels}
+          activeIndex={activeSegment}
+          onSelect={scrollToSegment}
+        />
       </div>
     </section>
   );
 }
+
+export const HorizontalRevealSection: React.FC<HorizontalRevealSectionProps> = (props) => {
+  const lightMotion = useLightMotionBackdrop();
+  const storiesFeaturedUrl = useLatestStoryFeaturedImage();
+  const marketingCards = useMemo(() => cardsWithLatestStoryImage(storiesFeaturedUrl), [storiesFeaturedUrl]);
+  const { cards: eventCards, ready: eventsReady } = useUpcomingHorizontalRevealCards(4);
+  const mobileCards = !eventsReady ? marketingCards : eventCards.length > 0 ? eventCards : marketingCards;
+  const { sectionTitleMobile = 'Upcoming Events & Rides', ...sharedProps } = props;
+
+  if (lightMotion) {
+    return (
+      <>
+        <div className="md:hidden">
+          <HorizontalRevealFallback
+            {...sharedProps}
+            sectionTitle={sectionTitleMobile}
+            cards={mobileCards}
+          />
+        </div>
+        <div className="hidden md:block">
+          <HorizontalRevealFallback {...sharedProps} cards={marketingCards} />
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="md:hidden">
+        <HorizontalRevealScrub
+          {...sharedProps}
+          sectionTitle={sectionTitleMobile}
+          cards={mobileCards}
+          scrubSectionHeightClass="h-[400vh]"
+        />
+      </div>
+      <div className="hidden md:block">
+        <HorizontalRevealScrub {...sharedProps} cards={marketingCards} scrubSectionHeightClass="h-[500vh]" />
+      </div>
+    </>
+  );
+};

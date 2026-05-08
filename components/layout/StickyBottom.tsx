@@ -91,7 +91,8 @@ export const StickyBottom: React.FC = () => {
                   <span className="text-[11px] font-medium text-black/60">€80.00/year</span>
                 ) : (
                   <>
-                    <span className="text-[11px] font-medium text-black/60">
+                    <span className="text-[11px] font-medium text-black/60 md:hidden">Get early access</span>
+                    <span className="hidden md:inline text-[11px] font-medium text-black/60">
                       Support the movement
                     </span>
                     <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />

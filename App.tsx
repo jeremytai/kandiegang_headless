@@ -14,7 +14,7 @@ import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Preloader } from './components/layout/Preloader';
 import { WeatherStatusBackground } from './components/visual/WeatherStatusBackground';
 import { ExpandingHero } from './components/visual/ExpandingHero';
-import { ScrollingHeadline } from './components/visual/ScrollingHeadline';
+import { ScrollingHeadline, ScrollingHeadlineMobilePinned } from './components/visual/ScrollingHeadline';
 import { HomepageRotatingHeadline } from './components/visual/HomepageRotatingHeadline';
 import { HorizontalRevealSection } from './components/visual/HorizontalRevealSection';
 import { CompanySection } from './components/sections/CompanySection';
@@ -219,6 +219,7 @@ function AppMainInner({
                   <>
                     <LandingPage />
                     <HorizontalRevealSection />
+                    <ScrollingHeadlineMobilePinned />
                     <CompanySection />
                     <FAQSection />
                   </>
