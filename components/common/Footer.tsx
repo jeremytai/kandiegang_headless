@@ -30,8 +30,7 @@ export const Footer: React.FC = () => {
             <p className="text-center md:text-left text-secondary-current tracking-tight text-base font-normal">
               <span className="font-bold">Kandie Gang</span>
               <br />
-              We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture
-              (without excluding men).
+              We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture.
             </p>
           </div>
 

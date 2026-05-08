@@ -57,7 +57,7 @@ export const AboutPage: React.FC = () => {
   // Default content to display if WordPress content is not available
   const defaultContent = {
     intro:
-      "We're on a mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).",
+      "We're on a mission to provide a safe space that brings FLINTA* and BIPOC closer to cycling culture.",
     visionTitle: 'A cycling culture in which every rider and path belong.',
     visionText: [
       'By breaking old norms and centering diversity, creativity, and empathy, every ride, path, and connection becomes a space shaped by those who show up and participate.',

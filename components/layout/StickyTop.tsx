@@ -344,8 +344,7 @@ export const StickyTop: React.FC<StickyTopProps> = ({ offsetVariant = 'withBar' 
                   </div>
                 </div>
                 <p className="w-full px-8 pb-6 pt-0 -mt-2 text-center text-xs font-body text-slate-600 leading-relaxed">
-                  We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture
-                  (without excluding men).
+                  We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture.
                 </p>
               </motion.div>
             )}

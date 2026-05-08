@@ -24,7 +24,7 @@ function isMobileViewport(): boolean {
 }
 
 const DEFAULT_ALT =
-  'We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture (without excluding men).';
+  'We provide a safe space that brings FLINTA* and BIPOC closer to cycling culture.';
 
 const HERO_IMAGES = [
   '/images/240707_humanrides-75',
