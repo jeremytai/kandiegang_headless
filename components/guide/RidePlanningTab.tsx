@@ -187,6 +187,10 @@ export function RidePlanningTab({
     guideProfileId: '',
     displayName: '',
   });
+  /** Target level when moving or promoting a Springer (standby) entry; key = assignment id */
+  const [springerTargetLevelByAssignmentId, setSpringerTargetLevelByAssignmentId] = useState<
+    Record<string, RideLevel>
+  >({});
 
   const plans = data?.plans ?? [];
   const assignments = data?.assignments ?? [];
@@ -367,6 +371,42 @@ export function RidePlanningTab({
       setIsWorking(false);
       setWorkingMessage(null);
     }
+  }
+
+  function getSpringerTargetLevel(entry: GuideAssignmentEntry): RideLevel {
+    return springerTargetLevelByAssignmentId[entry.id] ?? entry.ride_level;
+  }
+
+  async function coordinatorReassignStandby(
+    entry: GuideAssignmentEntry,
+    rideLevel: RideLevel,
+    assignmentStatus: 'assigned' | 'standby'
+  ) {
+    await guardedAction(async () => {
+      await runAction(
+        {
+          action: 'coordinator-assign-guide',
+          planId: entry.plan_id,
+          rideDate: entry.ride_date,
+          rideLevel,
+          assignmentStatus,
+          guideProfileId: entry.guide_profile_id,
+        },
+        { refresh: false }
+      );
+      refresh();
+      const name = entry.guide?.display_name ?? entry.guide?.username ?? 'Guide';
+      toast.success(
+        assignmentStatus === 'standby'
+          ? `${name} is Springer for Level ${rideLevel} on ${toDashboardDate(entry.ride_date)}.`
+          : `${name} assigned to Level ${rideLevel} on ${toDashboardDate(entry.ride_date)}.`
+      );
+      setSpringerTargetLevelByAssignmentId((prev) => {
+        const next = { ...prev };
+        delete next[entry.id];
+        return next;
+      });
+    });
   }
 
   async function assignGuideManually() {
@@ -1198,30 +1238,88 @@ export function RidePlanningTab({
                     <p className="text-xs text-neutral-500">Standby / Springer Guides</p>
                   </div>
                   <div className="space-y-2">
-                    {springerEntries.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="border border-neutral-200 rounded-lg px-3 py-2 flex flex-wrap items-center justify-between gap-2"
-                      >
-                        <div>
-                          <p className="text-sm text-neutral-900">
-                            {entry.guide?.display_name ?? 'Unknown guide'}
-                          </p>
-                          <p className="text-xs text-neutral-500">
-                            {toDashboardDate(entry.ride_date)} · submitted{' '}
-                            {toDashboardDateTime(entry.submitted_at)} ·{' '}
-                            {entry.source === 'late' ? 'Late' : 'In window'}
-                          </p>
-                        </div>
-                        <span
-                          className={`inline-flex border rounded-full px-2 py-1 text-xs font-medium ${statusBadgeClass(
-                            entry.decision_status
-                          )}`}
+                    {springerEntries.map((entry) => {
+                      const targetLevel = getSpringerTargetLevel(entry);
+                      return (
+                        <div
+                          key={entry.id}
+                          className="border border-neutral-200 rounded-lg px-3 py-2 flex flex-wrap items-center justify-between gap-2"
                         >
-                          {entry.decision_status}
-                        </span>
-                      </div>
-                    ))}
+                          <div className="min-w-[12rem] flex-1">
+                            <p className="text-sm text-neutral-900">
+                              {entry.guide?.display_name ?? 'Unknown guide'}
+                            </p>
+                            <p className="text-xs text-neutral-500">
+                              {toDashboardDate(entry.ride_date)} · Level {entry.ride_level} · submitted{' '}
+                              {toDashboardDateTime(entry.submitted_at)} ·{' '}
+                              {entry.source === 'late' ? 'Late' : 'In window'}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`inline-flex border rounded-full px-2 py-1 text-xs font-medium ${statusBadgeClass(
+                                entry.decision_status
+                              )}`}
+                            >
+                              {entry.decision_status}
+                            </span>
+                            {canCoordinate && (
+                              <>
+                                <label className="flex items-center gap-1.5 text-xs text-neutral-600">
+                                  <span className="whitespace-nowrap">Reassign to</span>
+                                  <select
+                                    className="border border-neutral-200 rounded-md px-2 py-1 text-xs text-neutral-900 bg-white"
+                                    value={targetLevel}
+                                    onChange={(e) =>
+                                      setSpringerTargetLevelByAssignmentId((prev) => ({
+                                        ...prev,
+                                        [entry.id]: e.target.value as RideLevel,
+                                      }))
+                                    }
+                                    disabled={isWorking}
+                                  >
+                                    {LEVELS.map((lvl) => (
+                                      <option key={lvl} value={lvl}>
+                                        Level {lvl}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <button
+                                  type="button"
+                                  disabled={
+                                    isWorking ||
+                                    (targetLevel === entry.ride_level && entry.decision_status === 'standby')
+                                  }
+                                  onClick={() => coordinatorReassignStandby(entry, targetLevel, 'standby')}
+                                  className="px-2 py-1 text-xs rounded border border-neutral-200 hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="Keep as Springer; only change which level they cover"
+                                >
+                                  Move Springer
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isWorking}
+                                  onClick={() => coordinatorReassignStandby(entry, targetLevel, 'assigned')}
+                                  className="px-2 py-1 text-xs rounded border border-emerald-200 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                                  title="Confirm as assigned guide for the selected level"
+                                >
+                                  Assign level
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isWorking}
+                                  onClick={() => setDecision(entry.id, 'proposed')}
+                                  className="px-2 py-1 text-xs rounded border border-neutral-200 hover:bg-neutral-100 disabled:opacity-50"
+                                >
+                                  Reset
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
