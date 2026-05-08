@@ -276,7 +276,7 @@ function HorizontalRevealFallback({
         </div>
         <div className="relative flex min-h-0 flex-1 flex-col">
           <div className="relative min-h-0 w-full flex-1 pb-24">
-            <div className="absolute left-4 md:left-12 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-2">
+            <div className="absolute left-4 md:left-12 top-1/2 z-30 hidden md:flex -translate-y-1/2 flex-col gap-2">
               {cards.map((_c, i) => (
                 <button
                   key={`${cards[i].to}-${i}`}
@@ -381,7 +381,7 @@ function HorizontalRevealScrub({
         </div>
         <div className="relative flex min-h-0 flex-1 flex-col">
           <div className="relative min-h-0 w-full flex-1 pb-24">
-            <div className="absolute left-4 md:left-12 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-2">
+            <div className="absolute left-4 md:left-12 top-1/2 z-30 hidden md:flex -translate-y-1/2 flex-col gap-2">
               {cards.map((_c, i) => (
                 <SideIndicatorDot
                   key={`${cards[i].to}-${i}`}

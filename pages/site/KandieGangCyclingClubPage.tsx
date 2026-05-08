@@ -440,7 +440,7 @@ export const KandieGangCyclingClubPage: React.FC = () => {
             {/* Body text */}
             <div className="max-w-[44ch] px-4 text-secondary-current text-base md:text-lg lg:px-8 lg:text-xl">
               <p className="[&+&]:mt-[1em]">
-                Be part of an inclusive cycling community. Group rides, training, and a crew that
+                Be part of an inclusive cycling club. Group rides, training, and a community that
                 supports every rider—no matter your level or background.
               </p>
             </div>
