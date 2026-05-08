@@ -165,7 +165,7 @@ export function RidePlanningTab({
     planId: string;
     rideDate: string;
     rideLevel: RideLevel;
-    assignmentStatus: 'assigned' | 'standby';
+    assignmentStatus: 'assigned' | 'standby' | 'unavailable';
     guideProfileIds: string[];
   }>({
     planId: '',
@@ -435,7 +435,12 @@ export function RidePlanningTab({
         );
       }
       refresh();
-      const assignmentLabel = manualAssignment.assignmentStatus === 'standby' ? 'as Springer (standby)' : `to Level ${manualAssignment.rideLevel}`;
+      const assignmentLabel =
+        manualAssignment.assignmentStatus === 'standby'
+          ? 'as Springer (standby)'
+          : manualAssignment.assignmentStatus === 'unavailable'
+            ? `unavailable (Level ${manualAssignment.rideLevel})`
+            : `to Level ${manualAssignment.rideLevel}`;
       const selectedCount = manualAssignment.guideProfileIds.length;
       const previewGuides = manualAssignment.guideProfileIds
         .slice(0, 2)
@@ -444,12 +449,13 @@ export function RidePlanningTab({
           return selectedGuide?.display_name ?? selectedGuide?.username ?? 'Guide';
         })
         .join(', ');
+      const assignVerb = manualAssignment.assignmentStatus === 'unavailable' ? 'marked' : 'assigned';
       toast.success(
         selectedCount === 1
-          ? `${previewGuides} assigned ${assignmentLabel} on ${toDashboardDate(
+          ? `${previewGuides} ${assignVerb} ${assignmentLabel} on ${toDashboardDate(
               manualAssignment.rideDate
             )}.`
-          : `${selectedCount} guides assigned ${assignmentLabel} on ${toDashboardDate(
+          : `${selectedCount} guides ${assignVerb} ${assignmentLabel} on ${toDashboardDate(
               manualAssignment.rideDate
             )} (${previewGuides}${selectedCount > 2 ? ', …' : ''}).`
       );
@@ -873,12 +879,13 @@ export function RidePlanningTab({
                     onChange={(e) =>
                       setManualAssignment((prev) => ({
                         ...prev,
-                        assignmentStatus: e.target.value as 'assigned' | 'standby',
+                        assignmentStatus: e.target.value as 'assigned' | 'standby' | 'unavailable',
                       }))
                     }
                   >
                     <option value="assigned">Level assignment</option>
                     <option value="standby">Springer (standby)</option>
+                    <option value="unavailable">Unavailable</option>
                   </select>
                 </label>
                 <label className="text-sm text-neutral-700 md:col-span-2">

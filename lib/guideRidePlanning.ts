@@ -558,8 +558,8 @@ async function handleCoordinatorAssignGuide(
   const guideProfileId = typeof body.guideProfileId === 'string' ? body.guideProfileId : '';
   if (!guideProfileId) return { status: 400, payload: { error: 'guideProfileId is required' } };
   if (!RIDE_LEVELS.has(rideLevel)) return { status: 400, payload: { error: 'rideLevel must be one of: 2, 2+, 3' } };
-  if (assignmentStatus !== 'assigned' && assignmentStatus !== 'standby') {
-    return { status: 400, payload: { error: 'assignmentStatus must be assigned or standby' } };
+  if (assignmentStatus !== 'assigned' && assignmentStatus !== 'standby' && assignmentStatus !== 'unavailable') {
+    return { status: 400, payload: { error: 'assignmentStatus must be assigned, standby, or unavailable' } };
   }
   const validity = await validatePlanAndDate(adminClient, planId, rideDate);
   if (!validity.ok) return { status: validity.status, payload: { error: validity.error } };
@@ -580,19 +580,30 @@ async function handleCoordinatorAssignGuide(
     overrideReason:
       assignmentStatus === 'standby'
         ? 'Coordinator manual Springer assignment'
-        : 'Coordinator manual assignment',
+        : assignmentStatus === 'unavailable'
+          ? 'Coordinator manual unavailable'
+          : 'Coordinator manual assignment',
   });
   if (error || !assignment) return { status: 500, payload: { error: error?.message || 'Failed to assign guide manually' } };
-  await adminClient.from('guide_ride_availability').upsert(
-    {
-      plan_id: planId,
-      ride_date: rideDate,
-      guide_profile_id: guideProfileId,
-      choice: CHOICE_BY_LEVEL[rideLevel as '2' | '2+' | '3'],
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'plan_id,ride_date,guide_profile_id' }
-  );
+  if (assignmentStatus === 'unavailable') {
+    await adminClient
+      .from('guide_ride_availability')
+      .delete()
+      .eq('plan_id', planId)
+      .eq('ride_date', rideDate)
+      .eq('guide_profile_id', guideProfileId);
+  } else {
+    await adminClient.from('guide_ride_availability').upsert(
+      {
+        plan_id: planId,
+        ride_date: rideDate,
+        guide_profile_id: guideProfileId,
+        choice: CHOICE_BY_LEVEL[rideLevel as '2' | '2+' | '3'],
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'plan_id,ride_date,guide_profile_id' }
+    );
+  }
   return { status: 200, payload: { assignment } };
 }
 
