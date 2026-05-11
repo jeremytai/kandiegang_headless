@@ -40,9 +40,9 @@ export const ImprintPage: React.FC = () => {
 
           <h3 className={SUBHEADING_CLASS}>Address</h3>
           <p className={PARAGRAPH_CLASS}>
-            Postfach 13 03 90
+            Bindestraße 24
             <br />
-            20103 Hamburg, Germany
+            20146 Hamburg, Germany
           </p>
 
           <h3 className={SUBHEADING_CLASS}>Contact</h3>
