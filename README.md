@@ -180,7 +180,8 @@ A high-fidelity replication of the experimental UI and interactions from Kandie 
    STRIPE_SECRET_KEY=sk_test_...
    # PostHog (optional – analytics only load after user accepts analytics cookies)
    # VITE_POSTHOG_KEY=phc_...
-   # VITE_POSTHOG_HOST=https://eu.i.posthog.com   # optional; default is US
+   # VITE_POSTHOG_HOST=https://g.kandiegang.com   # reverse-proxy ingest (first-party); see lib/posthog.ts
+   # VITE_POSTHOG_UI_HOST=https://eu.posthog.com # real EU app URL for toolbar/replay links (optional)
    ```
 
 4. **Start the development server**
@@ -455,15 +456,18 @@ UPSTASH_REDIS_REST_TOKEN=...
 ### Setup
 
 1. Create a project at [posthog.com](https://posthog.com) and copy your **Project API Key** (e.g. `phc_...`).
-2. In `.env` or your host's environment variables:
+2. Set up a [reverse proxy](https://posthog.com/docs/advanced/proxy) on a first-party subdomain (e.g. `https://g.kandiegang.com`) so browser requests avoid third-party blockers.
+3. In `.env` or your host's environment variables:
    ```env
    VITE_POSTHOG_KEY=phc_your_project_key
+   VITE_POSTHOG_HOST=https://g.kandiegang.com
+   VITE_POSTHOG_UI_HOST=https://eu.posthog.com
    ```
-   Optional (for EU data residency):
-   ```env
-   VITE_POSTHOG_HOST=https://eu.i.posthog.com
-   ```
-3. Restart the dev server or redeploy so the env vars are picked up.
+   - **`VITE_POSTHOG_HOST`**: ingest URL your proxy serves (must match PostHog proxy docs / your DNS).
+   - **`VITE_POSTHOG_UI_HOST`**: the real PostHog **app** host for your region (`https://eu.posthog.com` for EU, `https://us.posthog.com` for US). Do not point this at the proxy.
+
+   Defaults in `lib/posthog.ts` match the production proxy (`https://g.kandiegang.com`) and EU UI host if env vars are omitted.
+4. Restart the dev server or redeploy so the env vars are picked up.
 
 If `VITE_POSTHOG_KEY` is not set, PostHog is never initialized and no analytics are sent.
 
@@ -850,7 +854,9 @@ Make sure to set environment variables in your hosting platform:
 - `VITE_SUPABASE_ANON_KEY`: Supabase anon (public) key
 - `VITE_SUBSTACK_PUBLICATION`: (Optional) Substack publication base URL for newsletter signup embed
 - `VITE_FORMSPREE_CONTACT_FORM_ID`: (Optional) Formspree form ID for the contact form (Contact page and modal)
-- `VITE_POSTHOG_KEY`: (Optional) PostHog project API key for consent-gated analytics; `VITE_POSTHOG_HOST` (e.g. `https://eu.i.posthog.com`) is optional for EU hosting
+- `VITE_POSTHOG_KEY`: PostHog project API key (public) for consent-gated analytics — **required** for the SDK to initialize
+- `VITE_POSTHOG_HOST`: (Optional) First-party reverse-proxy ingest URL (default `https://g.kandiegang.com` in code)
+- `VITE_POSTHOG_UI_HOST`: (Optional) Real PostHog app host for your region (default `https://eu.posthog.com`)
 - `POSTHOG_PROJECT_ID`: (Server-only) PostHog project ID used by `/api/analytics-data?section=website`
 - `POSTHOG_PERSONAL_API_KEY`: (Server-only) PostHog personal API key with query access
 - `POSTHOG_API_HOST`: (Optional, server-only) Defaults to `https://eu.posthog.com`
